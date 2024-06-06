@@ -17,16 +17,7 @@ struct Flp {
     redc_param: [Field; 3]
 }
 
-impl<N> FpParams<N> for Flp {
-    fn bar(self) -> Field {
-        
-        let mut x: Field = 0;
-        for i in 0..2 {
-            x += self.foo[i];
-        }
-        x
-    }
-}
+
 
 
 
@@ -586,7 +577,7 @@ pub fn evaluate_quadratic_expression<N, NU, N2, N2U, N3, N3U, LHS1_N, RHS1_N, LH
     let mut t1: [Field; N] = [0; N];
     let mut t2: [Field; N] = [0; N];
     let mut t3: [Field; N] = [0; N];
-    let mut t4: [Field; N] = [0; N];
+                    let mut t4: [Field; N] = [0; N];
     for i in 0..N {
         for j in 0..LHS1_N {
             t0[i] += first_lhs_products[j].limbs[i];
