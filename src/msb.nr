@@ -85,7 +85,6 @@ unconstrained fn get_msb<N>(a: [Field; N]) -> u64 {
     count
 }
 
-
 // Decomposes a single field into two 120 bit fields and a carry
 unconstrained fn compute_decomposition(x: Field) -> (Field, Field, Field) {
     let x_bytes = x.to_le_bytes(32);
