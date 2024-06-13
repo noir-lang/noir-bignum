@@ -20,7 +20,7 @@ impl bignum::ParameterTrait<3> for BNParams {
     }
     fn double_modulus() -> [Field; 3] {
         [
-            0x0000000000000000000000000000000000816a916871ca8d3c208c16d87cfd47, 0x00000000000000000000000000000000004e72e131a029b85045b68181585d97, 0x0000000000000000000000000000000000000000000000000000000000003064
+            0x000000000000000000000000000000000002d522d0e3951a7841182db0f9fa8e, 0x00000000000000000000000000000000009ce5c263405370a08b6d0302b0bb2f, 0x00000000000000000000000000000000000000000000000000000000000060c8
         ]
     }
     fn k() -> u64 {
@@ -40,16 +40,13 @@ fn main(x: Field, y: pub Field) {
     let a = z * z;
     let b = a * a;
     let c = b * b;
-    let q = c * c;
-    let r = q * q;
-    let s = r * r;
 
     let mut lhs: Fq= bignum::BigNum { limbs: [x, y, z] };
     let rhs: Fq = bignum::BigNum { limbs: [a, b, c] };
     let mut lhs2 = BNExpressionInput::new(lhs, false);
     let rhs2= BNExpressionInput::new(rhs, false);
 
-    for i in 0..100 {
+    for _ in 0..100 {
         let out: Fq = lhs2.value.__mulmod(rhs2.value);
         out.validate_in_range();
         let rem2 = BNExpressionInput::new(out, true);
@@ -68,13 +65,10 @@ fn test_invmod() {
     ];
 
     let u: Fq = bignum::BigNum { limbs: a };
-    for i in 0..1 {
-        println(f"i = {i}");
+    for _ in 0..1 {
         let v = u.__invmod();
         let result = u.__mulmod(v);
         let expected = bignum::BigNum::one();
-        println(f"result {result}");
-        println(f"expected {expected}");
         assert(result.limbs == expected.limbs);
     }
 }
@@ -85,25 +79,25 @@ fn test_main() {
         0x000000000000000000000000000000000083684820ff40795b8d9f1be2220cba, 0x0000000000000000000000000000000000d4924fbdc522b07b6cd0ef5508fd66, 0x0000000000000000000000000000000000d48f6c43c5930f3d70d6db09a48f4a,
         0x0000000000000000000000000000000000e7f72b2c0756704bea85be38352b34, 0x00000000000000000000000000000000000000000000000000000000b05d5ac5, 0
     ];
-    let a: [Field; 3] = [
-        0x000000000000000000000000000000000007f3d8208337197826e2e9ea000ed5,
-        0x0000000000000000000000000000000000ea48d38740680101b43f6d17de8e35,
-        0x0000000000000000000000000000000000000000000000000000000000000355
-    ];
-    let b: [Field; 3] = [
-        0x00000000000000000000000000000000009575f594e04080471712c1d7f18e89,
-        0x0000000000000000000000000000000000c4a832748da6ad742a1fd81b787643,
-        0x000000000000000000000000000000000000000000000000000000000034df93
-    ];
+    // let a: [Field; 3] = [
+    //     0x000000000000000000000000000000000007f3d8208337197826e2e9ea000ed5,
+    //     0x0000000000000000000000000000000000ea48d38740680101b43f6d17de8e35,
+    //     0x0000000000000000000000000000000000000000000000000000000000000355
+    // ];
+    // let b: [Field; 3] = [
+    //     0x00000000000000000000000000000000009575f594e04080471712c1d7f18e89,
+    //     0x0000000000000000000000000000000000c4a832748da6ad742a1fd81b787643,
+    //     0x000000000000000000000000000000000000000000000000000000000034df93
+    // ];
     let expected_quotient: [Field; 3] = [
         0x0000000000000000000000000000000000373423c664d7b4108a16631d271c48, 0x0000000000000000000000000000000000dc52b6fd67c3293670f369cd9100b6, 0x000000000000000000000000000000000000000000000000000000000003a4fe
     ];
-    let expected_remainder: [Field; 3] = [
-        0x00000000000000000000000000000000007ad74a6ab59fc786b288d0b2760cc2, 0x0000000000000000000000000000000000545d50595a9a818a28cdc8eb0237dc, 0x0000000000000000000000000000000000000000000000000000000000002427
-    ];
+    // let expected_remainder: [Field; 3] = [
+    //     0x00000000000000000000000000000000007ad74a6ab59fc786b288d0b2760cc2, 0x0000000000000000000000000000000000545d50595a9a818a28cdc8eb0237dc, 0x0000000000000000000000000000000000000000000000000000000000002427
+    // ];
 
-    let u: Fq = bignum::BigNum { limbs: a };
-    let v: Fq = bignum::BigNum { limbs: b };
+    // let u: Fq = bignum::BigNum { limbs: a };
+    // let v: Fq = bignum::BigNum { limbs: b };
 
     let y: Fq = bignum::BigNum {
         limbs: [
@@ -124,8 +118,8 @@ fn test_main() {
     println(f"zz = {z}");
 
     assert(yy.limbs == z.limbs);
-    let r2: Fq = u.__mulmod(v);
-    let r2neg = r2.__negate();
+    // let r2: Fq = u.__mulmod(v);
+    // let r2neg = r2.__negate();
     //  let foo = bignum::BigNum::compute_quadratic_expression_quotient([u], [v], [], [], [r2neg]);
     let mut ffq = expected_quotient;
     ffq[0] += 1;
@@ -174,6 +168,7 @@ fn test_main() {
     let zE: bignum::BNExpressionInput<3, BNParams> = bignum::BNExpressionInput { value: z, is_negative: true };
 
     bignum::BigNum::evaluate_quadratic_expression([[uuE], [wE]], [[vvE], [xE]], [zE]);
+    bignum::BigNum::evaluate_quadratic_expression([[uuE], [wE]], [[vvE], [xE]], [yE]);
 
     let wx_constrained = w * x;
     assert(wx_constrained.limbs == wx.limbs);

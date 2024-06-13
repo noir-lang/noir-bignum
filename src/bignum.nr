@@ -92,7 +92,7 @@ impl<N, Params> BigNum<N, Params> {
         let modulus_u60: U60Repr<N, 2> = U60Repr::from_array(Params::modulus());
         let one_u60: U60Repr<N, 2> = U60Repr::from_array(BigNum::one().limbs);
         let exponent = modulus_u60.sub(one_u60.add(one_u60));
-        self.__powmod(BigNum { limbs: exponent.into_Array() })
+        self.__powmod(BigNum { limbs: exponent.into_array() })
     }
 
     unconstrained fn __divmod(self: Self, divisor: Self) -> Self where Params: ParameterTrait<N> {
@@ -118,8 +118,8 @@ impl<N, Params> BigNum<N, Params> {
         let mut quotient_u60 = mulout_u60.shr((k + k));
 
         // N.B. we assume that the shifted quotient cannot exceed 2 times original bit size.
-        //      (I think this is correct? tests seem to pass...)
-        let partial_quotient: ArrayX<Field, N, 2> = quotient_u60.into_ArrayX();
+        //      (partial_quotient should be just slightly larger than the modulus, we could probably represent with a size N+1 array)
+        let partial_quotient: ArrayX<Field, N, 2> = quotient_u60.into_arrayX();
 
         // quotient_mul_modulus can never exceed input value `x` so can fit into size-2 array
         let mut quotient_mul_modulus: ArrayX<Field, N, 2>  = ArrayX { segments: [[0; N]; 2] };
@@ -152,8 +152,8 @@ impl<N, Params> BigNum<N, Params> {
             quotient_u60 = quotient_u60 + one3u;
         }
 
-        let t1: ArrayX<Field, N, 2> = quotient_u60.into_ArrayX();
-        let t2: ArrayX<Field, N, 2> = remainder_u60.into_ArrayX();
+        let t1: ArrayX<Field, N, 2> = quotient_u60.into_arrayX();
+        let t2: ArrayX<Field, N, 2> = remainder_u60.into_arrayX();
         let mut quotient_fields: [Field; N] = [0; N];
         let mut remainder_fields: [Field; N] = [0; N];
         for i in 0..N {
@@ -197,14 +197,14 @@ impl<N, Params> BigNum<N, Params> {
         if z_u60.gte(modulus_u60) {
             z_u60 = z_u60 - modulus_u60;
         }
-        Self { limbs: z_u60.into_Array() }
+        Self { limbs: z_u60.into_array() }
     }
 
     // // TODO subtract 2x modulus
     unconstrained fn __negate(self) -> Self where Params: ParameterTrait<N> {
         let x_u60 : U60Repr<N, 2> = U60Repr::from_array(self.limbs);
         let modulus_u60 : U60Repr<N, 2> = U60Repr::from_array(Params::modulus());
-        Self { limbs: (modulus_u60 - x_u60).into_Array() }
+        Self { limbs: (modulus_u60 - x_u60).into_array() }
     }
 
     // // TODO subtract 2x modulus
@@ -254,7 +254,6 @@ impl<N, Params> BigNum<N, Params> {
             modulus,
             Params::one3u()
         );
-
         let mut mulout_n: ArrayX<Field, N,2> = ArrayX::new();
         for i in 0..N {
             for j in 0..N {
@@ -318,7 +317,7 @@ impl<N, Params> BigNum<N, Params> {
 
         let mulout_pu60: U60Repr<N, 4> = U60Repr::new(T0);
         let mulout_nu60: U60Repr<N, 4> = U60Repr::new(T1);
-        let relation_result: ArrayX<Field, N, 2> = BigNum::__normalize_limbs((mulout_pu60 - mulout_nu60).into_ArrayX(), N + N - 1);
+        let relation_result: ArrayX<Field, N, 2> = BigNum::__normalize_limbs((mulout_pu60 - mulout_nu60).into_arrayX(), N + N - 1);
 
         let modulus: [Field; N] = Params::modulus();
         let (quotient, remainder) = BigNum::__barrett_reduction(
@@ -367,7 +366,7 @@ impl<N, Params> BigNum<N, Params> {
         // We want to evaluate that t0 * t1 + t2 * t3 + t4 - Quotient * Modulus = 0, evaluated over the integers
         // For this we need to be able to borrow values from more-significant limbs into less-significant limbs,
         // so that we can ensure that no limbs will underflow for an honest Prover
-        let mut product_limbs: ArrayX<Field, N,2> = ArrayX::new();
+        let mut product_limbs: ArrayX<Field,N,2> = ArrayX::new();
         //       let fff: [Field; N] = quotient.limbs;
         //      let mut borrow_flags: ArrayX<Field, N,2> = BigNum::get_borrow_flags3(t0, t1, t2, t3, t4, fff, Params::modulus());
 
@@ -382,6 +381,14 @@ impl<N, Params> BigNum<N, Params> {
             product_limbs.sub_assign(i, remainder.limbs[i]);
         }
 
+        // a < b
+
+        // 1. decompose a/b into 128-bit slices a0, a1, b0, b1
+        // 2. validate a0 + 2^{128}a1 < field modulus (over the integers)
+        // 3. validate a0 + 2^{128}a1 < field modulus (over the integers)
+        // 4. use range checks to determine whether r0 = a0 > b0, r1 = a1 > b1
+        // 5. compute < result from r0, r1
+    
         // each limb product represents the sum of 120-bit products.
         // by setting the borrow value to 2^246 we are restricting this method's completeness to expressions
         // where no more than 64 limb products are summed together.
@@ -418,7 +425,7 @@ impl<N, Params> BigNum<N, Params> {
         // (the probability of an underflow value satisfying a 126-bit range constraint is approx. 2^{k - 126},
         //  where k is the number of bits in the prime field)
         // We then add the result into the next limb and repeat.
-        let hi_shift: Field = 0x1000000000000000000000000000000;
+        let hi_shift: Field = 0x1000000000000000000000000000000; // 2^{120}
         let hi_downshift: Field = 1 / hi_shift;
         for i in 0..N + N - 2 {
             product_limbs.mul_assign(i, hi_downshift);
@@ -592,11 +599,11 @@ impl<N, Params> std::ops::Mul for BigNum<N, Params> where Params: ParameterTrait
     //       via evaluate_quadratic_expression
     // e.g. performing a sum of multiple multiplications and additions via `evaluate_quadratic_expression`
     //      will create much fewer constraints than calling `mul` and `add` directly
+    // N.B. evaluate_mul is used because witness generation is probably faster - not sure increased code complexity is worth
     fn mul(self, other: Self) -> Self {
         let result = BigNum::evaluate_mul(
             self,
             other
-            // [BNExpressionInput::new(result, true)]
         );
         result
     }
