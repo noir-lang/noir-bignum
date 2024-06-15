@@ -17,16 +17,18 @@ struct U60Repr<N, NumSegments>
 
 impl<N, NumSegments> std::ops::Add for U60Repr<N, NumSegments> {
     fn add(self, b: Self) -> Self {
-        let a = self;
         let mut result: Self = U60Repr { limbs: ArrayX { segments: [[0; N]; NumSegments] } };
 
         let mut carry: u64 = 0;
-        for i in 0..(N * NumSegments) {
-            let mut add: u64 = a.limbs.get(i) + b.limbs.get(i) + carry;
-            carry = add >> 60;
-            add = add - (carry << 60);
-            result.limbs.set(i, add);
+        for j in 0..NumSegments {
+            for i in 0..N {
+                let mut add: u64 = self.limbs.segments[j][i] + b.limbs.segments[j][i] + carry;
+                carry = add >> 60;
+                add = add - (carry << 60);
+                result.limbs.segments[j][i] = add;
+            }
         }
+
         result
     }
 }
@@ -37,11 +39,14 @@ impl<N, NumSegments> std::ops::Sub for U60Repr<N, NumSegments> {
 
         let mut borrow: u64 = 0;
         let mut borrow_in: u64 = 0;
-        for i in 0..(N * NumSegments) {
-            borrow = ((b.limbs.get(i) + borrow_in) > self.limbs.get(i)) as u64;
-            let sub = (borrow << 60) + self.limbs.get(i) - b.limbs.get(i) - borrow_in;
-            result.limbs.set(i, sub);
-            borrow_in = borrow;
+
+        for j in 0..NumSegments {
+            for i in 0..N {
+                borrow = ((b.limbs.segments[j][i] + borrow_in) > self.limbs.segments[j][i]) as u64;
+                let sub = (borrow << 60) + self.limbs.segments[j][i] - b.limbs.segments[j][i] - borrow_in;
+                result.limbs.segments[j][i] = sub;
+                borrow_in = borrow;
+            }
         }
         result
     }
@@ -142,12 +147,32 @@ impl<N, NumSegments> U60Repr<N, NumSegments> {
                 i,
                 (self.limbs.get(i + num_shifted_limbs as u64) >> limb_shift as u8)
             );
-            //    if (i > 0) {
             let remainder: u64 = (self.limbs.get(i + num_shifted_limbs as u64) << remainder_shift as u8) & mask;
             result.limbs.set(i - 1, result.limbs.get(i - 1) + remainder);
-            //    }
         }
-        //    }
         result
+    }
+
+    fn increment(&mut self) {
+        let mut carry: u64 = 0;
+
+        let mut add: u64 = self.limbs.segments[0][0] + 1;
+        carry = add >> 60;
+        add = add - (carry << 60);
+        self.limbs.segments[0][0] = add;
+        for i in 1..N {
+            let mut add: u64 = self.limbs.segments[0][i] + carry;
+            carry = add >> 60;
+            add = add - (carry << 60);
+            self.limbs.segments[0][i] = add;
+        }
+        for j in 1..NumSegments {
+            for i in 0..N {
+                let mut add: u64 = self.limbs.segments[j][i] + carry;
+                carry = add >> 60;
+                add = add - (carry << 60);
+                self.limbs.segments[j][i] = add;
+            }
+        }
     }
 }

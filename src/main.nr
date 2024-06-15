@@ -3,11 +3,82 @@ mod split_bits;
 mod u60_representation;
 mod arrayX;
 use crate::arrayX::ArrayX;
+use crate::bignum::BigNum;
 use crate::bignum::BNExpressionInput;
 use crate::u60_representation::U60Repr;
 
+struct Test2048Params {}
+impl bignum::BigNumParamsTrait<18> for Test2048Params {
+    fn modulus() -> [Field; 18] {[
+        0x0000000000000000000000000000000000c0a197a5ae0fcdceb052c9732614fe,
+        0x0000000000000000000000000000000000656ae034423283422243918ab83be3,
+        0x00000000000000000000000000000000006bf590da48a7c1070b7d5aabaac678,
+        0x00000000000000000000000000000000000cce39f530238b606f24b296e2bda9,
+        0x000000000000000000000000000000000001e1fef9bb9c1c3ead98f226f1bfa0,
+        0x0000000000000000000000000000000000ad8c1c816e12e0ed1379055e373abf,
+        0x0000000000000000000000000000000000cebe80e474f753aa9d1461c435123d,
+        0x0000000000000000000000000000000000aee5a18ceedef88d115a8b93c167ad,
+        0x0000000000000000000000000000000000268ba83c4a65c4307427fc495d9e44,
+        0x0000000000000000000000000000000000dd2777926848667b7df79f342639d4,
+        0x0000000000000000000000000000000000f455074c96855ca0068668efe7da3d,
+        0x00000000000000000000000000000000005ddba6b30bbc168bfb3a1225f27d65,
+        0x0000000000000000000000000000000000591fec484f36707524133bcd6f4258,
+        0x000000000000000000000000000000000059641b756766aeebe66781dd01d062,
+        0x000000000000000000000000000000000058bc5eaff4b165e142bf9e2480eebb,
+        0x0000000000000000000000000000000000667a3964f08e06df772ce64b229a72,
+        0x00000000000000000000000000000000009c1fdb18907711bfe3e3c1cf918395,
+        0x00000000000000000000000000000000000000000000000000000000000000b8
+    ]}
+    fn double_modulus() -> [Field; 18] {[
+        0x000000000000000000000000000000000081432f4b5c1f9b9d60a592e64c29fc,
+        0x0000000000000000000000000000000000cad5c06884650684448723157077c7,
+        0x0000000000000000000000000000000000d7eb21b4914f820e16fab557558cf0,
+        0x0000000000000000000000000000000000199c73ea604716c0de49652dc57b52,
+        0x000000000000000000000000000000000003c3fdf37738387d5b31e44de37f40,
+        0x00000000000000000000000000000000005b183902dc25c1da26f20abc6e757e,
+        0x00000000000000000000000000000000009d7d01c8e9eea7553a28c3886a247b,
+        0x00000000000000000000000000000000005dcb4319ddbdf11a22b5172782cf5b,
+        0x00000000000000000000000000000000004d17507894cb8860e84ff892bb3c89,
+        0x0000000000000000000000000000000000ba4eef24d090ccf6fbef3e684c73a8,
+        0x0000000000000000000000000000000000e8aa0e992d0ab9400d0cd1dfcfb47b,
+        0x0000000000000000000000000000000000bbb74d6617782d17f674244be4facb,
+        0x0000000000000000000000000000000000b23fd8909e6ce0ea4826779ade84b0,
+        0x0000000000000000000000000000000000b2c836eacecd5dd7cccf03ba03a0c4,
+        0x0000000000000000000000000000000000b178bd5fe962cbc2857f3c4901dd76,
+        0x0000000000000000000000000000000000ccf472c9e11c0dbeee59cc964534e4,
+        0x0000000000000000000000000000000000383fb63120ee237fc7c7839f23072a,
+        0x0000000000000000000000000000000000000000000000000000000000000171
+    ]}
+    fn redc_param() -> [Field; 18] {[
+        0x000000000000000000000000000000000091697def7100cd5cf8d890b4ef2ec3,
+        0x00000000000000000000000000000000006765ba8304214dac764d3f4adc3185,
+        0x000000000000000000000000000000000048404bd14d927ea230e60d4bebf940,
+        0x00000000000000000000000000000000007c4d53a23bacc251ecbfc4b7ba5a0b,
+        0x000000000000000000000000000000000093eaf3499474a6f5b2fff83f1259c8,
+        0x00000000000000000000000000000000005bff4c737b97281f1a5f2384a8c16d,
+        0x000000000000000000000000000000000061b4cf2f55358476b5323782999055,
+        0x00000000000000000000000000000000001e7a804e8eacfe3a2a5673bc3885b8,
+        0x0000000000000000000000000000000000eabadeae4282906c817adf70eab4ae,
+        0x0000000000000000000000000000000000166f7df257fe2bf27f0809aceed9b0,
+        0x00000000000000000000000000000000007d90fb7428901b8bed11f6b81e36bf,
+        0x0000000000000000000000000000000000f36e6ba885c60b7024c563605df7e0,
+        0x000000000000000000000000000000000052b7c58d2fb5d2c8478963ae6d4a44,
+        0x000000000000000000000000000000000036ee761de26635f114ccc3f7d74f85,
+        0x0000000000000000000000000000000000e3fb726a10cf2220897513f05243de,
+        0x0000000000000000000000000000000000f43a26bbd732496eb4d828591b8056,
+        0x0000000000000000000000000000000000ff4e42304e60fb3a54fca735499f2c,
+        0x0000000000000000000000000000000000000000000000000000000000000162
+    ]}
+    fn k() -> u64 {
+        2048
+    }
+    fn modulus_bits() -> u64 {
+        2048
+    }
+}
+
 struct BNParams {}
-impl bignum::ParameterTrait<3> for BNParams {
+impl bignum::BigNumParamsTrait<3> for BNParams {
     fn redc_param() -> [Field; 3] {
         [
             0x000000000000000000000000000000000059785d9f353021bcebb62866fe4394, 0x0000000000000000000000000000000000d18988e8129eac1d2961a01cc04eba, 0x0000000000000000000000000000000000000000000000000000000000015291
@@ -29,25 +100,24 @@ impl bignum::ParameterTrait<3> for BNParams {
     fn modulus_bits() -> u64 {
         254
     }
-    fn one3u() -> U60Repr<3, 6> {
-       U60Repr { limbs: ArrayX{ segments: [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]] }}
-    }
 }
+
 type Fq = bignum::BigNum<3, BNParams>;
+type Fqq = bignum::BigNum<18, Test2048Params>;
 
 fn main(x: Field, y: pub Field) {
     let z = x + y;
     let a = z * z;
     let b = a * a;
-    let c = b * b;
 
-    let mut lhs: Fq= bignum::BigNum { limbs: [x, y, z] };
-    let rhs: Fq = bignum::BigNum { limbs: [a, b, c] };
+    let mut lhs: Fqq= bignum::BigNum::__derive_from_seed([a as u8]);
+    let mut rhs: Fqq= bignum::BigNum::__derive_from_seed([b as u8]);
+
     let mut lhs2 = BNExpressionInput::new(lhs, false);
     let rhs2= BNExpressionInput::new(rhs, false);
 
-    for _ in 0..100 {
-        let out: Fq = lhs2.value.__mulmod(rhs2.value);
+    for _ in 0..1 {
+        let out: Fqq = lhs2.value.__mulmod(rhs2.value);
         out.validate_in_range();
         let rem2 = BNExpressionInput::new(out, true);
         bignum::BigNum::evaluate_quadratic_expression([[lhs2]], [[rhs2]], [rem2]);
@@ -55,16 +125,44 @@ fn main(x: Field, y: pub Field) {
     }
     // 68?
 }
+// 98760
+// 99689
+// 929 gates for a 2048 bit mul
+fn test_mul<N, Params>(_: BigNum<N, Params>) where Params: bignum::BigNumParamsTrait<N> {
+    let a: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
+    let b: BigNum<N, Params> = BigNum::__derive_from_seed([4, 5, 6, 7]);
 
-#[test]
-fn test_invmod() {
-    let a: [Field; 3] = [
-        0x000000000000000000000000000000000007f3d8208337197826e2e9ea000ed5,
-        0x0000000000000000000000000000000000ea48d38740680101b43f6d17de8e35,
-        0x0000000000000000000000000000000000000000000000000000000000000355
-    ];
+    let c = (a + b) * (a + b);
+    let d = (a * a) + (b * b) + (a * b) + (a * b);
+    assert(c == d);
+}
 
-    let u: Fq = bignum::BigNum { limbs: a };
+fn test_add<N, Params>(_: BigNum<N, Params>) where Params: bignum::BigNumParamsTrait<N> {
+    let a: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
+    let b: BigNum<N, Params> = BigNum::__derive_from_seed([4, 5, 6, 7]);
+    let one: BigNum<N, Params> = BigNum::one();
+    let mut c = (a + b);
+    c += c;
+    let d = (a + b) * (one + one);
+    assert(c == d);
+
+    let e = one + one;
+    for i in 1..N {
+        assert(e.limbs[i] == 0);
+    }
+    assert(e.limbs[0] == 2);
+}
+
+fn test_div<N, Params>(_: BigNum<N, Params>) where Params: bignum::BigNumParamsTrait<N> {
+    let a: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
+    let b: BigNum<N, Params> = BigNum::__derive_from_seed([4, 5, 6, 7]);
+
+    let c = a / b;
+    assert(b * c == a);
+}
+
+fn test_invmod<N, Params>(_: BigNum<N, Params>) where Params: bignum::BigNumParamsTrait<N> {
+    let u: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
     for _ in 0..1 {
         let v = u.__invmod();
         let result = u.__mulmod(v);
@@ -74,39 +172,147 @@ fn test_invmod() {
 }
 
 #[test]
-fn test_main() {
+fn test_mul_BN() {
+    let stub: BigNum<3, BNParams> = BigNum::new();
+    test_mul(stub);
+}
+
+#[test]
+fn test_add_BN() {
+    let stub: BigNum<3, BNParams> = BigNum::new();
+    test_add(stub);
+}
+
+#[test]
+fn test_div_BN() {
+    let stub: BigNum<3, BNParams> = BigNum::new();
+    test_div(stub);
+}
+
+#[test]
+fn test_invmod_BN() {
+    let stub: BigNum<3, BNParams> = BigNum::new();
+    test_invmod(stub);
+}
+
+#[test]
+fn test_mul_2048() {
+    let stub: BigNum<18, Test2048Params> = BigNum::new();
+    test_mul(stub);
+}
+
+#[test]
+fn test_add_2048() {
+    let stub: BigNum<18, Test2048Params> = BigNum::new();
+    test_add(stub);
+}
+
+// N.B. witness generation times make these tests take ~15 minutes each! Uncomment at your peril
+// #[test]
+// fn test_div_2048() {
+//     let stub: BigNum<18, Test2048Params> = BigNum::new();
+//     test_div(stub);
+// }
+
+// N.B. witness generation times make these tests take ~15 minutes each! Uncomment at your peril
+// #[test]
+// fn test_invmod_2048() {
+//     let stub: BigNum<18, Test2048Params> = BigNum::new();
+//     test_invmod(stub);
+// }
+
+#[test]
+fn test_2048_bit_quadratic_expression() {
+    let a: [Field; 18] = [
+        0x000000000000000000000000000000000083684820ff40795b8d9f1be2220cba,
+        0x0000000000000000000000000000000000d4924fbdc522b07b6cd0ef5508fd66,
+        0x0000000000000000000000000000000000d48f6c43c5930f3d70d6db09a48f4a,
+        0x0000000000000000000000000000000000e7f72b2c0756704bea85be38352b34,
+        0x00000000000000000000000000000000008337197826e2e9ea000ed5b05d5ac5,
+        0x000000000000000000000000000000000040680101b43f6d17de8e3507f3d820,
+        0x00000000000000000000000000000000000c6ba0cdcf77cff1c10355ea48d387,
+        0x0000000000000000000000000000000000e51717a72902214a9dbeb90e4f225f,
+        0x0000000000000000000000000000000000c1bd5bec78406b691f71cbcddb4574,
+        0x00000000000000000000000000000000001ce5e532cfb306d7b52e7d9f1aa442,
+        0x000000000000000000000000000000000019575932f75ddf00595b22782e1ba2,
+        0x0000000000000000000000000000000000d630b3fbf0a9e55861e4399900feb9,
+        0x0000000000000000000000000000000000d6b37aeb2daa8d2e2f7e29b0f7752a,
+        0x0000000000000000000000000000000000e9cacdd93406256b9eb46b73948849,
+        0x00000000000000000000000000000000001400e1f0a38695db66993fe042c48b,
+        0x0000000000000000000000000000000000e1d829cb4fa8cabb7d0265efbd8527,
+        0x000000000000000000000000000000000055f1a92a5dd099ef2bcd89ac175b52,
+        0x00000000000000000000000000000000000000000000000000000000000000fc
+    ];
+    let b: [Field; 18] = [
+        0x0000000000000000000000000000000000c5694493e9bcc76e68dfcf73e0fde1,
+        0x0000000000000000000000000000000000ede5e4b8b3e0dec1f4705c35521620,
+        0x00000000000000000000000000000000007aa800bab1b33eda0f07695af6c583,
+        0x000000000000000000000000000000000045892edea2c02bf0b8b1d2d9a4ebcc,
+        0x00000000000000000000000000000000004dffb06bf396f3d0a5b67cff714bdd,
+        0x00000000000000000000000000000000004d691db495235e1e032f1ef3e90274,
+        0x0000000000000000000000000000000000d92c069d0f2675b2f46cb497aa62d4,
+        0x00000000000000000000000000000000003d3f23584f113cef1a4b8b7d183f5c,
+        0x0000000000000000000000000000000000289ba11d897837f9cec57dcc430bfc,
+        0x0000000000000000000000000000000000765dc64f6ed4a6efd7b26c38f79e59,
+        0x00000000000000000000000000000000008edf31fabf5c330ecf7f92fb6487cd,
+        0x000000000000000000000000000000000053392f8b14dd78af702b3be2e0d557,
+        0x000000000000000000000000000000000034abf357bfd56e9786a7e47ed9a5ae,
+        0x0000000000000000000000000000000000a9ebb234064c8ab10d4e7900d4b973,
+        0x00000000000000000000000000000000002a6850cce14a20463913002ddc0fa6,
+        0x0000000000000000000000000000000000a97e3b06586bfa62325ef7557ab536,
+        0x0000000000000000000000000000000000b942b0d26e5be2e08cd425107c59f7,
+        0x0000000000000000000000000000000000000000000000000000000000000031
+    ];
+    let c_expected: [Field; 18] = [
+        0x00000000000000000000000000000000004518a874adebbcf963fed876dfcf78,
+        0x00000000000000000000000000000000002b1535070c2deca63e2dc7145a9997,
+        0x0000000000000000000000000000000000d9b738665a290c09f09202043d9387,
+        0x0000000000000000000000000000000000c88853b11034fe12661eb7a5e41ca7,
+        0x0000000000000000000000000000000000357cc4053e7eb127abc2c1430972a1,
+        0x0000000000000000000000000000000000224df5e1be31a51562f8574027a992,
+        0x000000000000000000000000000000000070ad9287e6326d534f1d2835e159ad,
+        0x00000000000000000000000000000000000efa138f75f20b5117955e15bbb447,
+        0x0000000000000000000000000000000000d9f45c310be1865ad23fbcdeb1d93f,
+        0x00000000000000000000000000000000004f74ca4cf3df59a83f2df796fc9beb,
+        0x0000000000000000000000000000000000ed1801428ebf7db771deb45f4311eb,
+        0x00000000000000000000000000000000002ded3b46e3a84cda43157d4d927162,
+        0x00000000000000000000000000000000009bcd6ac8f90601a44a84a026d4b383,
+        0x0000000000000000000000000000000000ab098478b39031a1de85062fd5712b,
+        0x00000000000000000000000000000000004432a79276f4375ff3ec2ced8b6cf6,
+        0x0000000000000000000000000000000000a0922d75e96e3f9e31c0cbbcbd708a,
+        0x00000000000000000000000000000000004013822c9e9aa5b5b1e9c33e4332b7,
+        0x0000000000000000000000000000000000000000000000000000000000000058
+    ];
+
+    let a_bn: BigNum<18, Test2048Params> = BigNum { limbs: a };
+    let b_bn: BigNum<18, Test2048Params> = BigNum { limbs: b };
+    let c_bn = a_bn.__mulmod(b_bn);
+    assert(c_bn.limbs == c_expected);
+
+    a_bn.validate_in_range();
+
+    bignum::BigNum::evaluate_quadratic_expression(
+        [[BNExpressionInput::new(a_bn, false)]],
+        [[BNExpressionInput::new(b_bn, false)]],
+        [BNExpressionInput::new(c_bn, true)]
+    );
+}
+
+#[test]
+fn test_expressions() {
     let x: [Field; 6] = [
         0x000000000000000000000000000000000083684820ff40795b8d9f1be2220cba, 0x0000000000000000000000000000000000d4924fbdc522b07b6cd0ef5508fd66, 0x0000000000000000000000000000000000d48f6c43c5930f3d70d6db09a48f4a,
         0x0000000000000000000000000000000000e7f72b2c0756704bea85be38352b34, 0x00000000000000000000000000000000000000000000000000000000b05d5ac5, 0
     ];
-    // let a: [Field; 3] = [
-    //     0x000000000000000000000000000000000007f3d8208337197826e2e9ea000ed5,
-    //     0x0000000000000000000000000000000000ea48d38740680101b43f6d17de8e35,
-    //     0x0000000000000000000000000000000000000000000000000000000000000355
-    // ];
-    // let b: [Field; 3] = [
-    //     0x00000000000000000000000000000000009575f594e04080471712c1d7f18e89,
-    //     0x0000000000000000000000000000000000c4a832748da6ad742a1fd81b787643,
-    //     0x000000000000000000000000000000000000000000000000000000000034df93
-    // ];
-    let expected_quotient: [Field; 3] = [
-        0x0000000000000000000000000000000000373423c664d7b4108a16631d271c48, 0x0000000000000000000000000000000000dc52b6fd67c3293670f369cd9100b6, 0x000000000000000000000000000000000000000000000000000000000003a4fe
-    ];
-    // let expected_remainder: [Field; 3] = [
-    //     0x00000000000000000000000000000000007ad74a6ab59fc786b288d0b2760cc2, 0x0000000000000000000000000000000000545d50595a9a818a28cdc8eb0237dc, 0x0000000000000000000000000000000000000000000000000000000000002427
-    // ];
 
-    // let u: Fq = bignum::BigNum { limbs: a };
-    // let v: Fq = bignum::BigNum { limbs: b };
-
-    let y: Fq = bignum::BigNum {
+    let y: Fq = BigNum {
         limbs: [
             0x1,
             0x1,
             0x0
         ]
     };
-    let z: Fq = bignum::BigNum {
+    let z: Fq = BigNum {
         limbs: [
             0x2,
             0x2,
@@ -114,42 +320,31 @@ fn test_main() {
         ]
     };
     let yy = y.__addmod(y);
-    println(f"yy = {yy}");
-    println(f"zz = {z}");
 
     assert(yy.limbs == z.limbs);
-    // let r2: Fq = u.__mulmod(v);
-    // let r2neg = r2.__negate();
-    //  let foo = bignum::BigNum::compute_quadratic_expression_quotient([u], [v], [], [], [r2neg]);
-    let mut ffq = expected_quotient;
-    ffq[0] += 1;
-    //  let xxx = foo.limbs;
-    //   println(f"result = {xxx}");
-    //   println(f"expected = {ffq}");
-    //   assert(foo.limbs == ffq);
 
-    let uu: Fq = bignum::BigNum {
+    let uu: Fq = BigNum {
         limbs: [
             0x0000000000000000000000000000000000b4a832748da6ad742a1fd81b787643,
             0x00000000000000000000000000000000009575f594e04080471712c1d7f18e89,
             0x000000000000000000000000000000000000000000000000000000000000063
         ]
     };
-    let vv: Fq = bignum::BigNum {
+    let vv: Fq = BigNum {
         limbs: [
             0x0000000000000000000000000000000000b4aec2748da6ad742a1fd81b787643,
             0x00000000000000000000000000000000009575f594e0408047171a01d7f18e89,
             0x0000000000000000000000000000000000000000000000000000000000000062
         ]
     };
-    let w: Fq = bignum::BigNum {
+    let w: Fq = BigNum {
         limbs: [
             0x0000000000000000000000000000000000b4a832748da6ad742a1fd81b787643,
             0x00000000000000000000000000000000009575f594e04080471712c1d7f18e89,
             0x0000000000000000000000000000000000000000000000000000000000001f93
         ]
     };
-    let x: Fq = bignum::BigNum {
+    let x: Fq = BigNum {
         limbs: [
             0x0000000000000000000000000000000000b4aec2748da6ad742a1fd81b787643,
             0x00000000000000000000000000000000009575f594e0408047171a01d7f18e89,
@@ -160,182 +355,21 @@ fn test_main() {
     let uv = uu.__mulmod(vv);
     let y = (uv.__addmod(wx)).__negate();
     let z = uv.__addmod(wx);
-    let uuE: bignum::BNExpressionInput<3, BNParams> = bignum::BNExpressionInput { value: uu, is_negative: false };
-    let vvE: bignum::BNExpressionInput<3, BNParams> = bignum::BNExpressionInput { value: vv, is_negative: false };
-    let wE: bignum::BNExpressionInput<3, BNParams> = bignum::BNExpressionInput { value: w, is_negative: false };
-    let xE: bignum::BNExpressionInput<3, BNParams> = bignum::BNExpressionInput { value: x, is_negative: false };
-    let yE: bignum::BNExpressionInput<3, BNParams> = bignum::BNExpressionInput { value: y, is_negative: false };
-    let zE: bignum::BNExpressionInput<3, BNParams> = bignum::BNExpressionInput { value: z, is_negative: true };
+    let uuE = BNExpressionInput::new(uu, false);
+    let vvE = BNExpressionInput::new(vv, false);
+    let wE = BNExpressionInput::new(w, false);
+    let xE = BNExpressionInput::new(x, false);
+    let yE = BNExpressionInput::new(y, false);
+    let zE = BNExpressionInput::new(z, true);
 
-    bignum::BigNum::evaluate_quadratic_expression([[uuE], [wE]], [[vvE], [xE]], [zE]);
-    bignum::BigNum::evaluate_quadratic_expression([[uuE], [wE]], [[vvE], [xE]], [yE]);
+    BigNum::evaluate_quadratic_expression([[uuE], [wE]], [[vvE], [xE]], [zE]);
+    BigNum::evaluate_quadratic_expression([[uuE], [wE]], [[vvE], [xE]], [yE]);
 
     let wx_constrained = w * x;
     assert(wx_constrained.limbs == wx.limbs);
-    main(1, 2);
-    //main(1, 1);
-    // assert(quotient == expected_quotient);
-    // assert(remainder == expected_remainder);
-    // // uv + wx - y = 0
-    // let uu: Fq = bignum::BigNum {
-    //     limbs: [
-    //         0x0000000000000000000000000000000000b4a832748da6ad742a1fd81b787643,
-    //         0x00000000000000000000000000000000009575f594e04080471712c1d7f18e89,
-    //         0x000000000000000000000000000000000000000000000000000000000000063
-    //     ],
-    //     foobar: [0; 3]
-    // };
-    // let vv: Fq = bignum::BigNum {
-    //     limbs: [
-    //         0x0000000000000000000000000000000000b4aec2748da6ad742a1fd81b787643,
-    //         0x00000000000000000000000000000000009575f594e0408047171a01d7f18e89,
-    //         0x0000000000000000000000000000000000000000000000000000000000000062
-    //     ],
-    //     foobar: [0; 3]
-    // };
-    // let w: Fq = bignum::BigNum {
-    //     limbs: [
-    //         0x0000000000000000000000000000000000b4a832748da6ad742a1fd81b787643,
-    //         0x00000000000000000000000000000000009575f594e04080471712c1d7f18e89,
-    //         0x0000000000000000000000000000000000000000000000000000000000001f93
-    //     ],
-    //     foobar: [0; 3]
-    // };
-    // let x: Fq = bignum::BigNum {
-    //     limbs: [
-    //         0x0000000000000000000000000000000000b4aec2748da6ad742a1fd81b787643,
-    //         0x00000000000000000000000000000000009575f594e0408047171a01d7f18e89,
-    //         0x0000000000000000000000000000000000000000000000000000000000000f93
-    //     ],
-    //     foobar: [0; 3]
-    // };
-    // let uv = uu.mulmod(vv, params);
-    // let q = uv.negate(params);
-    // Fq::compute_quadratic_expression_quotient([uu], [vv], [], [], [q], params);
-    // let wx = w.mulmod(x, params);
-    // let y = (uv.addmod(wx, params)).negate(params);
-    // Fq::compute_quadratic_expression_quotient([uu], [vv], [w], [x], [y], params);
-    // Fq::evaluate_quadratic_expression([uu], [vv], [w], [x], [y], params);
-    // //main(1, 2);
-    // // Uncomment to make test fail
-    // // main(1, 1);
 }
 
-// fn test_main() {
-//     let x: [Field; 6] = [
-//         0x000000000000000000000000000000000083684820ff40795b8d9f1be2220cba, 0x0000000000000000000000000000000000d4924fbdc522b07b6cd0ef5508fd66, 0x0000000000000000000000000000000000d48f6c43c5930f3d70d6db09a48f4a,
-//         0x0000000000000000000000000000000000e7f72b2c0756704bea85be38352b34, 0x00000000000000000000000000000000000000000000000000000000b05d5ac5, 0
-//     ];
-//     let a: [Field; 3] = [
-//         0x000000000000000000000000000000000007f3d8208337197826e2e9ea000ed5,
-//         0x0000000000000000000000000000000000ea48d38740680101b43f6d17de8e35,
-//         0x0000000000000000000000000000000000000000000000000000000000000355
-//     ];
-//     let b: [Field; 3] = [
-//         0x00000000000000000000000000000000009575f594e04080471712c1d7f18e89,
-//         0x0000000000000000000000000000000000c4a832748da6ad742a1fd81b787643,
-//         0x000000000000000000000000000000000000000000000000000000000034df93
-//     ];
-//     let expected_quotient: [Field; 3] = [
-//         0x0000000000000000000000000000000000373423c664d7b4108a16631d271c48, 0x0000000000000000000000000000000000dc52b6fd67c3293670f369cd9100b6, 0x000000000000000000000000000000000000000000000000000000000003a4fe
-//     ];
-//     let expected_remainder: [Field; 3] = [
-//         0x00000000000000000000000000000000007ad74a6ab59fc786b288d0b2760cc2, 0x0000000000000000000000000000000000545d50595a9a818a28cdc8eb0237dc, 0x0000000000000000000000000000000000000000000000000000000000002427
-//     ];
-//     let params = BarrettParams {
-//         redc_param: [
-//             0x000000000000000000000000000000000059785d9f353021bcebb62866fe4394, 0x0000000000000000000000000000000000d18988e8129eac1d2961a01cc04eba, 0x0000000000000000000000000000000000000000000000000000000000015291
-//         ],
-//         modulus: [
-//             0x0000000000000000000000000000000000816a916871ca8d3c208c16d87cfd47, 0x00000000000000000000000000000000004e72e131a029b85045b68181585d97, 0x0000000000000000000000000000000000000000000000000000000000003064
-//         ],
-//         k: 255,
-//         modulus_bits: 254,
-//         one: [1, 0, 0],
-//         oneu: [1, 0, 0, 0, 0, 0],
-//         one2: [1, 0, 0, 0, 0, 0],
-//         one2u: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-//         one3: [1, 0, 0, 0, 0, 0, 0, 0, 0],
-//         one3u: U60Repr { limbs: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] }
-//     };
-//     let (quotient, remainder) = barrett_reduction(x, params);
-//     let (q2, r2) = mulmod(a, b, params);
-//     println(f"q2 = {q2}");
-//     println(f"r2 = {r2}");
-//     let expected_r2: [Field; 3] = [
-//         0x000000000000000000000000000000000097ca8371adfb2eeec697c6ec1b1605,
-//         0x0000000000000000000000000000000000d9acea8fce502aa3551906ae653500,
-//         0x0000000000000000000000000000000000000000000000000000000000002143
-//     ];
-//     assert(q2 == expected_quotient);
-//     assert(r2 == expected_r2);
-
-//     let mut r2neg: bignum::BigNum<3, 6, 9, 12, 18, BNParams> = bignum::BigNum { limbs: r2, foobar: [0; 6] };
-//     r2neg = r2neg.negate();
-
-//     let u: Fq = bignum::BigNum { limbs: a, foobar: [0; 6] };
-//     let v: Fq = bignum::BigNum { limbs: b, foobar: [0; 6] };
-
-//     let foo = Fq::compute_quadratic_expression_quotient([u], [v], [], [], [r2neg], params);
-//     let mut ffq = expected_quotient;
-//     ffq[0] += 1;
-//     assert(foo.limbs == ffq);
-//     // println(f"foo = {foo}");
-//     // let (quotient, remainder) = barrett_reduction(x, params);
-//     // println(f"quotient = {quotient}");
-//     // println(f"remainder = {remainder}");
-
-//     assert(quotient == expected_quotient);
-//     assert(remainder == expected_remainder);
-
-//     // uv + wx - y = 0
-
-//     let uu: Fq = bignum::BigNum {
-//         limbs: [
-//             0x0000000000000000000000000000000000b4a832748da6ad742a1fd81b787643,
-//             0x00000000000000000000000000000000009575f594e04080471712c1d7f18e89,
-//             0x000000000000000000000000000000000000000000000000000000000000063
-//         ],
-//         foobar: [0; 3]
-//     };
-//     let vv: Fq = bignum::BigNum {
-//         limbs: [
-//             0x0000000000000000000000000000000000b4aec2748da6ad742a1fd81b787643,
-//             0x00000000000000000000000000000000009575f594e0408047171a01d7f18e89,
-//             0x0000000000000000000000000000000000000000000000000000000000000062
-//         ],
-//         foobar: [0; 3]
-//     };
-
-//     let w: Fq = bignum::BigNum {
-//         limbs: [
-//             0x0000000000000000000000000000000000b4a832748da6ad742a1fd81b787643,
-//             0x00000000000000000000000000000000009575f594e04080471712c1d7f18e89,
-//             0x0000000000000000000000000000000000000000000000000000000000001f93
-//         ],
-//         foobar: [0; 3]
-//     };
-//     let x: Fq = bignum::BigNum {
-//         limbs: [
-//             0x0000000000000000000000000000000000b4aec2748da6ad742a1fd81b787643,
-//             0x00000000000000000000000000000000009575f594e0408047171a01d7f18e89,
-//             0x0000000000000000000000000000000000000000000000000000000000000f93
-//         ],
-//         foobar: [0; 3]
-//     };
-
-//     let uv = uu.mulmod(vv, params);
-//     let q = uv.negate(params);
-//     Fq::compute_quadratic_expression_quotient([uu], [vv], [], [], [q], params);
-
-//     let wx = w.mulmod(x, params);
-//     let y = (uv.addmod(wx, params)).negate(params);
-
-//     Fq::compute_quadratic_expression_quotient([uu], [vv], [w], [x], [y], params);
-
-//     Fq::evaluate_quadratic_expression([uu], [vv], [w], [x], [y], params);
-//     //main(1, 2);
-//     // Uncomment to make test fail
-//     // main(1, 1);
-// }
-
+#[test]
+fn test_main() {
+    main(1, 2);
+}

@@ -1,7 +1,7 @@
 
 // Decomposes a single field into two 120 bit fields and a carry
 unconstrained pub fn split_120_bits(x: Field) -> (Field, Field) {
-    let x_bytes = x.to_le_bytes(32);
+    let x_bytes: [u8] = x.to_le_bytes(32);
 
     let mut low: Field = 0;
     let mut high: Field = 0;
@@ -18,7 +18,6 @@ unconstrained pub fn split_120_bits(x: Field) -> (Field, Field) {
     assert(x_bytes[31] == 0);
     (low, high)
 }
-
 
 /**
  * @brief Decomposes a single field into two 60 bit fields
