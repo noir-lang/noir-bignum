@@ -1,7 +1,7 @@
 use dep::std;
 
-use crate::arrayX::ArrayX;
-use crate::split_bits;
+use crate::utils::arrayX::ArrayX;
+use crate::utils::split_bits;
 
 /**
  * @brief U60Repr represents a BigNum element as a sequence of 60-bit unsigned integers.
@@ -52,22 +52,41 @@ impl<N, NumSegments> std::ops::Sub for U60Repr<N, NumSegments> {
     }
 }
 
+impl<N, NumSegments> std::convert::From<[Field; N]> for U60Repr<N, NumSegments> { 
+    fn from(input: [Field; N]) -> Self {
+        let mut result: Self = U60Repr { limbs: ArrayX { segments: [[0; N]; NumSegments] } };
+        for i in 0..(N) {
+            let (lo, hi) = split_bits::split_60_bits(input[i]);
+            result.limbs.set(2 * i, lo);
+            result.limbs.set(2 * i + 1, hi);
+        }
+        result
+    }
+}
+
+impl<N, NumSegments> std::convert::Into<[Field; N]> for U60Repr<N, NumSegments> {
+    fn into(x: U60Repr<N, NumSegments>) -> [Field; N] {
+        let mut result: [Field; N] = [0; N];
+        let two_pow_60: Field = 0x1000000000000000;
+        for i in 0..N {
+            result[i] = x.limbs.get(2 * i) as Field + (x.limbs.get(2 * i + 1) as Field * two_pow_60);
+        }
+        result
+    }
+}
+
+impl<N, NumSegments> std::cmp::Eq for U60Repr<N, NumSegments> { 
+    fn eq(self, other: Self) -> bool {
+        self.limbs == other.limbs
+    }
+}
+
 impl<N, NumSegments> U60Repr<N, NumSegments> {
 
     unconstrained fn new<NumFieldSegments>(x: ArrayX<Field, N, NumFieldSegments>) -> Self {
         let mut result: Self = U60Repr { limbs: ArrayX { segments: [[0; N]; NumSegments] } };
         for i in 0..(N * NumFieldSegments) {
             let (lo, hi) = split_bits::split_60_bits(x.get(i));
-            result.limbs.set(2 * i, lo);
-            result.limbs.set(2 * i + 1, hi);
-        }
-        result
-    }
-
-    unconstrained fn from_array(x: [Field; N]) -> Self {
-        let mut result: Self = U60Repr { limbs: ArrayX { segments: [[0; N]; NumSegments] } };
-        for i in 0..(N) {
-            let (lo, hi) = split_bits::split_60_bits(x[i]);
             result.limbs.set(2 * i, lo);
             result.limbs.set(2 * i + 1, hi);
         }
@@ -82,15 +101,6 @@ impl<N, NumSegments> U60Repr<N, NumSegments> {
                 i,
                 x.limbs.get(2 * i) as Field + (x.limbs.get(2 * i + 1) as Field * two_pow_60)
             );
-        }
-        result
-    }
-
-    unconstrained fn into_array(x: U60Repr<N, NumSegments>) -> [Field; N] {
-        let mut result: [Field; N] = [0; N];
-        let two_pow_60: Field = 0x1000000000000000;
-        for i in 0..N {
-            result[i] = x.limbs.get(2 * i) as Field + (x.limbs.get(2 * i + 1) as Field * two_pow_60);
         }
         result
     }
@@ -131,11 +141,6 @@ impl<N, NumSegments> U60Repr<N, NumSegments> {
         let num_shifted_limbs: u64 = shift / 60;
         let limb_shift = shift % 60;
         let remainder_shift = 60 - limb_shift;
-        // if (limb_shift == 0) {
-        //     for i in 0..(N * NumSegments) as u64 {
-        //         result.limbs.set(i, self.limbs.get(i + num_shifted_limbs as u64));
-        //     }
-        // } else {
         let mask: u64 = (((1 as u64) << limb_shift as u8) - 1) << remainder_shift as u8;
         result.limbs.set(
             0,

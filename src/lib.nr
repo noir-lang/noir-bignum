@@ -1,7 +1,11 @@
+mod utils;
+mod bignum_test;
+mod fields;
+
 use dep::std;
-use crate::split_bits;
-use crate::u60_representation::U60Repr;
-use crate::arrayX::ArrayX;
+use crate::utils::u60_representation::U60Repr;
+use crate::utils::arrayX::ArrayX;
+use crate::utils::split_bits;
 
 /**
  * @brief BigNumParamsTrait defines a "field" with which to parametrise BigNum.
@@ -140,7 +144,7 @@ impl<N, Params> BigNum<N, Params> {
         let modulus: [Field; N] = Params::modulus();
         flags[0] = modulus[0].lt(self.limbs[0]);
         for i in 1..N - 1 {
-            flags[i] = self.limbs[i].lt(modulus[i] + flags[i - 1] as Field);
+            flags[i] = modulus[i].lt(self.limbs[i] + flags[i - 1] as Field);
         }
         flags
     }
@@ -163,7 +167,7 @@ impl<N, Params> BigNum<N, Params> {
     }
 
     unconstrained fn __powmod(self: Self, exponent: Self) -> Self where Params: BigNumParamsTrait<N> {
-        let x: U60Repr<N, 2> = U60Repr::from_array(exponent.limbs);
+        let x: U60Repr<N, 2> = U60Repr::from(exponent.limbs);
 
         let num_bits = Params::modulus_bits() + 1;
 
@@ -179,10 +183,10 @@ impl<N, Params> BigNum<N, Params> {
     }
 
     unconstrained fn __invmod(self: Self) -> Self where Params: BigNumParamsTrait<N> {
-        let modulus_u60: U60Repr<N, 2> = U60Repr::from_array(Params::modulus());
-        let one_u60: U60Repr<N, 2> = U60Repr::from_array(BigNum::one().limbs);
+        let modulus_u60: U60Repr<N, 2> = U60Repr::from(Params::modulus());
+        let one_u60: U60Repr<N, 2> = U60Repr::from(BigNum::one().limbs);
         let exponent = modulus_u60.sub(one_u60.add(one_u60));
-        self.__powmod(BigNum { limbs: exponent.into_array() })
+        self.__powmod(BigNum { limbs: U60Repr::into(exponent) })
     }
 
     unconstrained fn __divmod(self: Self, divisor: Self) -> Self where Params: BigNumParamsTrait<N> {
@@ -234,13 +238,13 @@ impl<N, Params> BigNum<N, Params> {
 
         let mut remainder_u60 = x_u60 - quotient_mul_modulus_u60;
 
-        let modulus_u60: U60Repr<N, 4> = U60Repr::from_array(modulus);
+        let modulus_u60: U60Repr<N, 4> = U60Repr::from(modulus);
         if (remainder_u60.gte(modulus_u60)) {
             remainder_u60 = remainder_u60 - modulus_u60;
             quotient_u60.increment();
         }
 
-        (quotient_u60.into_array(), remainder_u60.into_array())
+        (U60Repr::into(quotient_u60), U60Repr::into(remainder_u60))
     }
 
     unconstrained fn __mulmod_with_quotient(self, rhs: Self) -> (Self, Self) where Params: BigNumParamsTrait<N> {
@@ -266,16 +270,16 @@ impl<N, Params> BigNum<N, Params> {
     }
 
     unconstrained fn __addmod(self, rhs: Self) -> Self where Params: BigNumParamsTrait<N> {
-        let x_u60 : U60Repr<N, 2> = U60Repr::from_array(self.limbs);
-        let y_u60 : U60Repr<N, 2> = U60Repr::from_array(rhs.limbs);
+        let x_u60 : U60Repr<N, 2> = U60Repr::from(self.limbs);
+        let y_u60 : U60Repr<N, 2> = U60Repr::from(rhs.limbs);
 
         let mut z_u60 = x_u60 + y_u60;
 
-        let modulus_u60 : U60Repr<N,2> = U60Repr::from_array(Params::modulus());
+        let modulus_u60 : U60Repr<N,2> = U60Repr::from(Params::modulus());
         if z_u60.gte(modulus_u60) {
             z_u60 = z_u60 - modulus_u60;
         }
-        Self { limbs: z_u60.into_array() }
+        Self { limbs: U60Repr::into(z_u60) }
     }
 
     /**
@@ -289,9 +293,10 @@ impl<N, Params> BigNum<N, Params> {
      *              because such a check is expensive and usually unneccesary.
      */
     unconstrained fn __negate(self) -> Self where Params: BigNumParamsTrait<N> {
-        let x_u60 : U60Repr<N, 2> = U60Repr::from_array(self.limbs);
-        let modulus_u60 : U60Repr<N, 2> = U60Repr::from_array(Params::double_modulus());
-        Self { limbs: (modulus_u60 - x_u60).into_array() }
+        let f: [Field; N] = self.limbs;
+        let x_u60 : U60Repr<N, 2> = U60Repr::from(f);
+        let modulus_u60 : U60Repr<N, 2> = U60Repr::from(Params::double_modulus());
+        Self { limbs: U60Repr::into(modulus_u60 - x_u60) }
     }
 
     /**
