@@ -1,10 +1,12 @@
 # noir-bignum
 
-A big number library for Noir
+An optimized big number library for Noir
 
 noir-bignum evaluates modular arithmetic for large integers of any length.
 
 BigNum instances are parametrised by a struct that satisfies BigNumParamsTrait.
+
+Multiplication operations for a 2048-bit prime field cost approx. 930 gates.
 
 bignum can evaluate large integer arithmetic by defining a modulus() that is a power of 2. 
 
