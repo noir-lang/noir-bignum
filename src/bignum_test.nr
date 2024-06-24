@@ -172,6 +172,58 @@ fn test_invmod<N, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<
     }
 }
 
+fn assert_is_not_equal<N, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
+    let a: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
+    let b: BigNum<N, Params> = BigNum::__derive_from_seed([4, 5, 6, 7]);
+
+    a.assert_is_not_equal(b);
+}
+
+fn assert_is_not_equal_fail<N, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
+    let a: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
+    let b: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
+
+    a.assert_is_not_equal(b);
+}
+
+fn assert_is_not_equal_overloaded_lhs_fail<N, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
+    let a: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
+    let b: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
+
+    let modulus = Params::modulus();
+
+    let t0: U60Repr<N, 2> = U60Repr::from(a.limbs);
+    let t1: U60Repr<N, 2> = U60Repr::from(modulus);
+    let a_plus_modulus: BigNum<N, Params> = BigNum { limbs: U60Repr::into(t0 + t1) };
+    a_plus_modulus.assert_is_not_equal(b);
+}
+
+fn assert_is_not_equal_overloaded_rhs_fail<N, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
+    let a: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
+    let b: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
+
+    let modulus = Params::modulus();
+
+    let t0: U60Repr<N, 2> = U60Repr::from(b.limbs);
+    let t1: U60Repr<N, 2> = U60Repr::from(modulus);
+    let b_plus_modulus: BigNum<N, Params> = BigNum { limbs: U60Repr::into(t0 + t1) };
+    a.assert_is_not_equal(b_plus_modulus);
+}
+
+fn assert_is_not_equal_overloaded_fail<N, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
+    let a: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
+    let b: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
+
+    let modulus = Params::modulus();
+
+    let t0: U60Repr<N, 2> = U60Repr::from(a.limbs);
+    let t1: U60Repr<N, 2> = U60Repr::from(b.limbs);
+    let t2: U60Repr<N, 2> = U60Repr::from(modulus);
+    let a_plus_modulus: BigNum<N, Params> = BigNum { limbs: U60Repr::into(t0 + t2) };
+    let b_plus_modulus: BigNum<N, Params> = BigNum { limbs: U60Repr::into(t1 + t2) };
+    a_plus_modulus.assert_is_not_equal(b_plus_modulus);
+}
+
 #[test]
 fn test_mul_BN() {
     let stub: BigNum<3, BNParams> = BigNum::new();
@@ -197,6 +249,36 @@ fn test_invmod_BN() {
 }
 
 #[test]
+fn test_assert_is_not_equal_BN() {
+    let stub: BigNum<3, BNParams> = BigNum::new();
+    assert_is_not_equal(stub);
+}
+
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn test_assert_is_not_equal_fail_BN() {
+    let stub: BigNum<3, BNParams> = BigNum::new();
+    assert_is_not_equal_fail(stub);
+}
+
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn test_assert_is_not_equal_overloaded_lhs_fail_BN() {
+    let stub: BigNum<3, BNParams> = BigNum::new();
+    assert_is_not_equal_overloaded_lhs_fail(stub);
+}
+
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn test_assert_is_not_equal_overloaded_rhs_fail_BN() {
+    let stub: BigNum<3, BNParams> = BigNum::new();
+    assert_is_not_equal_overloaded_rhs_fail(stub);
+}
+
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn test_assert_is_not_equal_overloaded_fail_BN() {
+    let stub: BigNum<3, BNParams> = BigNum::new();
+    assert_is_not_equal_overloaded_fail(stub);
+}
+
+#[test]
 fn test_mul_2048() {
     let stub: BigNum<18, Test2048Params> = BigNum::new();
     test_mul(stub);
@@ -206,6 +288,36 @@ fn test_mul_2048() {
 fn test_add_2048() {
     let stub: BigNum<18, Test2048Params> = BigNum::new();
     test_add(stub);
+}
+
+#[test]
+fn test_assert_is_not_equal_2048() {
+    let stub: BigNum<18, Test2048Params> = BigNum::new();
+    assert_is_not_equal(stub);
+}
+
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn test_assert_is_not_equal_fail_2048() {
+    let stub: BigNum<18, Test2048Params> = BigNum::new();
+    assert_is_not_equal_fail(stub);
+}
+
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn test_assert_is_not_equal_overloaded_lhs_fail_2048() {
+    let stub: BigNum<18, Test2048Params> = BigNum::new();
+    assert_is_not_equal_overloaded_lhs_fail(stub);
+}
+
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn test_assert_is_not_equal_overloaded_rhs_fail_2048() {
+    let stub: BigNum<18, Test2048Params> = BigNum::new();
+    assert_is_not_equal_overloaded_rhs_fail(stub);
+}
+
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn test_assert_is_not_equal_overloaded_fail_2048() {
+    let stub: BigNum<18, Test2048Params> = BigNum::new();
+    assert_is_not_equal_overloaded_fail(stub);
 }
 
 // N.B. witness generation times make these tests take ~15 minutes each! Uncomment at your peril

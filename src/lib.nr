@@ -460,6 +460,37 @@ impl<N, Params> BigNum<N, Params> {
     }
 
     /**
+     * @brief Validate self != other
+     * @details If A == B, then A == B mod N.
+     *          We can efficiently evaluate A == B mod N where N = circuit modulus
+     *          This method is *sound*, but not *complete* (i.e. A != B but A == B mod N)
+     *          However the probability of an honest Prover being unable to satisfy this check is tiny!
+     *          (todo: compute how tiny)
+     **/
+    fn assert_is_not_equal(self, other: Self) where Params: BigNumParamsTrait<N> {
+        let mut lhs: Field = 0;
+        let mut rhs: Field = 0;
+        let mut modulus_mod_n: Field = 0;
+        let mut two_pow_120: Field = 0x1000000000000000000000000000000;
+        let modulus = Params::modulus();
+        for i in 0..N {
+            lhs *= two_pow_120;
+            rhs *= two_pow_120;
+            modulus_mod_n *= two_pow_120;
+            lhs += self.limbs[N - i - 1];
+            rhs += other.limbs[N - i - 1] ;
+            modulus_mod_n += modulus[N - i - 1];
+        }
+
+        // lhs can be either X mod N or P + X mod N
+        // rhs can be either Y mod N or P + Y mod N
+        // If lhs - rhs = 0 mod P then lhs - rhs = 0, P or -P mod N
+        let mut diff = lhs - rhs;
+        let mut target = diff * (diff + modulus_mod_n) * (diff - modulus_mod_n);
+        assert(target != 0, "asssert_is_not_equal fail");
+    }
+
+    /**
      * @brief validate quotient produced from `evaluate_quadratic_expression` is well-formed
      * @description because the inputs into evaluate_quadratic_expression may cause the quotient to extend beyond `Params::modulus_bits`.
      *              We allow the quotient to extend 6 bits beyond Params::modulus_bits()
