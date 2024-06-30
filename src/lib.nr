@@ -247,6 +247,14 @@ impl<N, Params> BigNum<N, Params> {
         (U60Repr::into(quotient_u60), U60Repr::into(remainder_u60))
     }
 
+    unconstrained fn __is_zero(self) -> bool {
+        let mut result: bool = true;
+        for i in 0..N {
+            result = result & (self.limbs[i] == 0);
+        }
+        result
+    }
+
     unconstrained fn __mulmod_with_quotient(self, rhs: Self) -> (Self, Self) where Params: BigNumParamsTrait<N> {
         let mut mul: ArrayX<Field, N, 2> = ArrayX::new();
         for i in 0..N {
@@ -276,6 +284,10 @@ impl<N, Params> BigNum<N, Params> {
         let mut z_u60 = x_u60 + y_u60;
 
         let modulus_u60 : U60Repr<N,2> = U60Repr::from(Params::modulus());
+        if z_u60.gte(modulus_u60) {
+            z_u60 = z_u60 - modulus_u60;
+        }
+        // TODO: shouldn't need this extra one, is because __negate subtracts x from 2x modulus
         if z_u60.gte(modulus_u60) {
             z_u60 = z_u60 - modulus_u60;
         }
