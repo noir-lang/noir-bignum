@@ -11,7 +11,7 @@ use crate::utils::split_bits;
  * @brief BigNumParamsTrait defines a "field" with which to parametrise BigNum.
  * @description The "field" does not need to be prime, any value *should* work (TODO: test!)
 **/
-trait BigNumParamsTrait<N> {
+trait BigNumParamsTrait<let N: u32> {
     /**
      * @brief modulus: all BigNum operations are evaluated modulo this value
      **/
@@ -27,32 +27,32 @@ trait BigNumParamsTrait<N> {
     /**
      * @brief k used for __barrett_reduction. Should be at least modulus_bits() + 1
      **/
-    fn k() -> u64;
+    fn k() -> u32;
     /**
      * @brief modulus_bits = log2(modulus) rounded up
      **/
-    fn modulus_bits() -> u64;
+    fn modulus_bits() -> u32;
 }
 
 /**
  * @brief BNExpressionInput used to define inputs into `BigNum::evaluate_quadratic_expression`
  *        (evaluate_quadratic_expression is the basic building block for efficiently evaluating BigNum algebra)
 **/
-struct BNExpressionInput<N, Params> {
+struct BNExpressionInput<let N: u32, Params> {
     value: BigNum<N, Params>,
     is_negative: bool,
  }
-impl<N, Params> BNExpressionInput<N, Params> {
+impl<let N: u32, Params> BNExpressionInput<N, Params> {
     fn new(input: BigNum<N, Params>, _is_negative: bool) -> Self {
         BNExpressionInput { value: input, is_negative: _is_negative }
     }
 }
 
-struct BigNum<N,Params> {
+struct BigNum<let N: u32,Params> {
     limbs: [Field; N],
 }
 
-impl<N, Params> BigNum<N, Params> {
+impl<let N: u32, Params> BigNum<N, Params> {
 
     // ####################################################################################################################
     // ####################################################################################################################
@@ -75,9 +75,9 @@ impl<N, Params> BigNum<N, Params> {
      *               is precisely large enough to cover Params::modulus_bits()
      * @param x: input byte array
      **/
-    fn from_byte_be<NBytes>(x: [u8; NBytes]) -> Self where Params: BigNumParamsTrait<N> {
-        let num_bits: u64 = NBytes * 8;
-        let modulus_bits: u64 = Params::modulus_bits();
+    fn from_byte_be<let NBytes: u32>(x: [u8; NBytes]) -> Self where Params: BigNumParamsTrait<N> {
+        let num_bits: u32 = NBytes * 8;
+        let modulus_bits: u32 = Params::modulus_bits() as u32;
         assert(num_bits > modulus_bits);
         assert(num_bits - modulus_bits < 8);
         let mut result = BigNum::new();
@@ -106,11 +106,11 @@ impl<N, Params> BigNum<N, Params> {
     // ####################################################################################################################
 
     // N.B. not cryptographically secure! only use in tests
-    unconstrained fn __derive_from_seed<SeedBytes>(seed: [u8; SeedBytes]) -> Self where Params: BigNumParamsTrait<N> {
+    unconstrained fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self where Params: BigNumParamsTrait<N> {
         let mut rolling_seed = seed;
         let mut unreduced: Self = Self { limbs: [0; N] };
 
-        let half_N: u64 = N / 2;
+        let half_N: u32 = N / 2;
         for i in 0..(half_N) {
             let hash: [u8; 32] = std::hash::sha256(rolling_seed);
             let mut lo: Field = 0;
@@ -149,7 +149,7 @@ impl<N, Params> BigNum<N, Params> {
         flags
     }
 
-    unconstrained fn __normalize_limbs<NumSegments>(x: ArrayX<Field, N, NumSegments>, range: u64) -> ArrayX<Field, N, NumSegments> {
+    unconstrained fn __normalize_limbs<let NumSegments: u32>(x: ArrayX<Field, N, NumSegments>, range: u32) -> ArrayX<Field, N, NumSegments> {
         let mut normalized: ArrayX<Field, N, NumSegments> = ArrayX::new();
         let mut inp = x;
         for i in 0..(range - 1) {
@@ -197,7 +197,7 @@ impl<N, Params> BigNum<N, Params> {
     unconstrained fn __barrett_reduction(
         x: ArrayX<Field, N, 2>,
         redc_param: [Field; N],
-        k: u64,
+        k: u32,
         modulus: [Field; N]
     ) -> ([Field; N], [Field; N]) {
         let mut mulout: ArrayX<Field, N, 3>  = ArrayX { segments: [[0; N]; 3] };
@@ -312,7 +312,7 @@ impl<N, Params> BigNum<N, Params> {
      * @description This method computes separate totals for positive/negative BNExpressionInput values.
      *              This is so that we can later evaluate which BigNum limbs will underflow when combining positive/negative sums
      **/
-    unconstrained fn __add_linear_expression<M>(x: [BNExpressionInput<N, Params>; M]) -> ([Field; N], [Field; N]) where Params: BigNumParamsTrait<N> {
+    unconstrained fn __add_linear_expression<let M: u32>(x: [BNExpressionInput<N, Params>; M]) -> ([Field; N], [Field; N]) where Params: BigNumParamsTrait<N> {
         // TODO, validate we do not overflow N2 when multiplying and N when adding
         let mut lhs_sum_p: [Field; N] = [0; N];
         let mut lhs_sum_n: [Field; N] = [0; N];
@@ -358,7 +358,7 @@ impl<N, Params> BigNum<N, Params> {
      * @param rhs_terms a 2D array of BNExpressionInput
      * @param linear_terms a 2D array of BNExpressionInput
      **/
-    unconstrained fn __compute_quadratic_expression_quotient<LHS_N, RHS_N, NUM_PRODUCTS, ADD_N>(
+    unconstrained fn __compute_quadratic_expression_quotient<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
         lhs_terms: [[BNExpressionInput<N, Params>; LHS_N]; NUM_PRODUCTS],
         rhs_terms: [[BNExpressionInput<N, Params>; RHS_N]; NUM_PRODUCTS],
         linear_terms: [BNExpressionInput<N, Params>; ADD_N]
@@ -575,7 +575,7 @@ impl<N, Params> BigNum<N, Params> {
      * @param rhs_terms a 2D array of BNExpressionInput
      * @param linear_terms a 2D array of BNExpressionInput
      **/
-    fn evaluate_quadratic_expression<LHS_N, RHS_N, NUM_PRODUCTS, ADD_N>(
+    fn evaluate_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
         lhs_products: [[BNExpressionInput<N, Params>; LHS_N]; NUM_PRODUCTS],
         rhs_products: [[BNExpressionInput<N, Params>; RHS_N]; NUM_PRODUCTS],
         linear_terms: [BNExpressionInput<N, Params>; ADD_N]
@@ -704,7 +704,7 @@ impl<N, Params> BigNum<N, Params> {
     }
 }
 
-impl<N, Params> std::ops::Add for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u32, Params> std::ops::Add for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
     // Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
     //       via evaluate_quadratic_expression
     fn add(self, other: Self) -> Self {
@@ -720,7 +720,7 @@ impl<N, Params> std::ops::Add for BigNum<N, Params> where Params: BigNumParamsTr
     }
 }
 
-impl<N, Params> std::ops::Sub for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u32, Params> std::ops::Sub for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
     // Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
     //       via evaluate_quadratic_expression
     fn sub(self, other: Self) -> Self {
@@ -736,7 +736,7 @@ impl<N, Params> std::ops::Sub for BigNum<N, Params> where Params: BigNumParamsTr
     }
 }
 
-impl<N, Params> std::ops::Mul for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u32, Params> std::ops::Mul for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
     // Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
     //       via evaluate_quadratic_expression
     // e.g. performing a sum of multiple multiplications and additions via `evaluate_quadratic_expression`
@@ -752,7 +752,7 @@ impl<N, Params> std::ops::Mul for BigNum<N, Params> where Params: BigNumParamsTr
     }
 }
 
-impl<N, Params> std::ops::Div for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u32, Params> std::ops::Div for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
     // Note: this method is expensive! Witness computation is extremely expensive as it requires modular exponentiation
     fn div(self, other: Self) -> Self {
         let result = self.__divmod(other);
@@ -765,7 +765,7 @@ impl<N, Params> std::ops::Div for BigNum<N, Params> where Params: BigNumParamsTr
     }
 }
 
-impl<N, Params> std::cmp::Eq for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u32, Params> std::cmp::Eq for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
     // Note: this method is expensive! Witness computation is extremely expensive as it requires modular exponentiation
     fn eq(self, other: Self) -> bool {
         self.limbs == other.limbs

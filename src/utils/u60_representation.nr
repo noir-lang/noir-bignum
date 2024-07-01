@@ -10,12 +10,12 @@ use crate::utils::split_bits;
  * It is helpful to use u60 types when evaluating addition operations that can overflow the field modulus,
  * as well as when performing bit shifts.
  */
-struct U60Repr<N, NumSegments>
+struct U60Repr<let N: u32, let NumSegments: u32>
 {
     limbs: ArrayX<u64, N, NumSegments>
 }
 
-impl<N, NumSegments> std::ops::Add for U60Repr<N, NumSegments> {
+impl<let N: u32, let NumSegments: u32> std::ops::Add for U60Repr<N, NumSegments> {
     fn add(self, b: Self) -> Self {
         let mut result: Self = U60Repr { limbs: ArrayX { segments: [[0; N]; NumSegments] } };
 
@@ -33,7 +33,7 @@ impl<N, NumSegments> std::ops::Add for U60Repr<N, NumSegments> {
     }
 }
 
-impl<N, NumSegments> std::ops::Sub for U60Repr<N, NumSegments> {
+impl<let N: u32, let NumSegments: u32> std::ops::Sub for U60Repr<N, NumSegments> {
     fn sub(self, b: Self) -> Self {
         let mut result: Self = U60Repr { limbs: ArrayX { segments: [[0; N]; NumSegments] } };
 
@@ -52,7 +52,7 @@ impl<N, NumSegments> std::ops::Sub for U60Repr<N, NumSegments> {
     }
 }
 
-impl<N, NumSegments> std::convert::From<[Field; N]> for U60Repr<N, NumSegments> { 
+impl<let N: u32, let NumSegments: u32> std::convert::From<[Field; N]> for U60Repr<N, NumSegments> { 
     fn from(input: [Field; N]) -> Self {
         let mut result: Self = U60Repr { limbs: ArrayX { segments: [[0; N]; NumSegments] } };
         for i in 0..(N) {
@@ -64,7 +64,7 @@ impl<N, NumSegments> std::convert::From<[Field; N]> for U60Repr<N, NumSegments> 
     }
 }
 
-impl<N, NumSegments> std::convert::Into<[Field; N]> for U60Repr<N, NumSegments> {
+impl<let N: u32, let NumSegments: u32> std::convert::Into<[Field; N]> for U60Repr<N, NumSegments> {
     fn into(x: U60Repr<N, NumSegments>) -> [Field; N] {
         let mut result: [Field; N] = [0; N];
         let two_pow_60: Field = 0x1000000000000000;
@@ -75,15 +75,15 @@ impl<N, NumSegments> std::convert::Into<[Field; N]> for U60Repr<N, NumSegments> 
     }
 }
 
-impl<N, NumSegments> std::cmp::Eq for U60Repr<N, NumSegments> { 
+impl<let N: u32, let NumSegments: u32> std::cmp::Eq for U60Repr<N, NumSegments> { 
     fn eq(self, other: Self) -> bool {
         self.limbs == other.limbs
     }
 }
 
-impl<N, NumSegments> U60Repr<N, NumSegments> {
+impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
 
-    unconstrained fn new<NumFieldSegments>(x: ArrayX<Field, N, NumFieldSegments>) -> Self {
+    unconstrained fn new<let NumFieldSegments: u32>(x: ArrayX<Field, N, NumFieldSegments>) -> Self {
         let mut result: Self = U60Repr { limbs: ArrayX { segments: [[0; N]; NumSegments] } };
         for i in 0..(N * NumFieldSegments) {
             let (lo, hi) = split_bits::split_60_bits(x.get(i));
@@ -93,7 +93,7 @@ impl<N, NumSegments> U60Repr<N, NumSegments> {
         result
     }
 
-    unconstrained fn into_arrayX<NumFieldSegments>(x: U60Repr<N, NumSegments>) -> ArrayX<Field, N, NumFieldSegments> {
+    unconstrained fn into_arrayX<let NumFieldSegments: u32>(x: U60Repr<N, NumSegments>) -> ArrayX<Field, N, NumFieldSegments> {
         let mut result: ArrayX<Field, N, NumFieldSegments> = ArrayX { segments: [[0; N]; NumFieldSegments] };
         let two_pow_60: Field = 0x1000000000000000;
         for i in 0..(N * NumFieldSegments) {
@@ -125,7 +125,7 @@ impl<N, NumSegments> U60Repr<N, NumSegments> {
         result
     }
 
-    fn get_bit(self, bit: u64) -> bool {
+    fn get_bit(self, bit: u32) -> bool {
         let segment_index = bit / 60;
         let uint_index = bit % 60;
 
@@ -135,24 +135,24 @@ impl<N, NumSegments> U60Repr<N, NumSegments> {
     }
 
     // note: shr cannot satisfy `Shr` Trait due to `shift` parameter being u64 and not u8 (shift value might be greater than 255)
-    fn shr(self, shift: u64) -> Self {
+    fn shr(self, shift: u32) -> Self {
         let mut result: Self = U60Repr { limbs: ArrayX { segments: [[0; N]; NumSegments] } };
 
-        let num_shifted_limbs: u64 = shift / 60;
+        let num_shifted_limbs: u32 = shift / 60;
         let limb_shift = shift % 60;
         let remainder_shift = 60 - limb_shift;
         let mask: u64 = (((1 as u64) << limb_shift as u8) - 1) << remainder_shift as u8;
         result.limbs.set(
             0,
-            (self.limbs.get(0 + num_shifted_limbs as u64) >> limb_shift as u8)
+            (self.limbs.get(0 + num_shifted_limbs) >> limb_shift as u8)
         );
 
-        for i in 1..((N * NumSegments) - num_shifted_limbs) as u64 {
+        for i in 1..((N * NumSegments) - num_shifted_limbs) {
             result.limbs.set(
                 i,
-                (self.limbs.get(i + num_shifted_limbs as u64) >> limb_shift as u8)
+                (self.limbs.get(i + num_shifted_limbs) >> limb_shift as u8)
             );
-            let remainder: u64 = (self.limbs.get(i + num_shifted_limbs as u64) << remainder_shift as u8) & mask;
+            let remainder: u64 = (self.limbs.get(i + num_shifted_limbs) << remainder_shift as u8) & mask;
             result.limbs.set(i - 1, result.limbs.get(i - 1) + remainder);
         }
         result
