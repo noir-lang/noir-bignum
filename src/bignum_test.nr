@@ -129,7 +129,7 @@ fn test_mul<let N: u64, Params>(_: BigNum<N, Params>) where Params: BigNumParams
 
     let c = (a + b) * (a + b);
     let d = (a * a) + (b * b) + (a * b) + (a * b);
-    assert(c == d);
+    assert(c.eq(d));
 }
 
 fn test_add<let N: u64, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
@@ -144,7 +144,7 @@ fn test_add<let N: u64, Params>(_: BigNum<N, Params>) where Params: BigNumParams
     let mut c = (a + b);
     c += c;
     let d = (a + b) * (one + one);
-    assert(c == d);
+    assert(c.eq(d));
 
     let e = one + one;
     for i in 1..N {
@@ -158,7 +158,7 @@ fn test_div<let N: u64, Params>(_: BigNum<N, Params>) where Params: BigNumParams
     let b: BigNum<N, Params> = BigNum::__derive_from_seed([4, 5, 6, 7]);
 
     let c = a / b;
-    assert(b * c == a);
+    assert((b * c).eq(a));
 }
 
 fn test_invmod<let N: u64, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
@@ -166,7 +166,7 @@ fn test_invmod<let N: u64, Params>(_: BigNum<N, Params>) where Params: BigNumPar
     for _ in 0..1 {
         let v = u.__invmod();
         let result = u.__mulmod(v);
-        let expected = BigNum::one();
+        let expected: BigNum<N, Params> = BigNum::one();
         assert(result.limbs == expected.limbs);
     }
 }
