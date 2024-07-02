@@ -11,7 +11,7 @@ use crate::utils::split_bits;
  * @brief BigNumParamsTrait defines a "field" with which to parametrise BigNum.
  * @description The "field" does not need to be prime, any value *should* work (TODO: test!)
 **/
-trait BigNumParamsTrait<N> {
+trait BigNumParamsTrait<let N: u64> {
     /**
      * @brief modulus: all BigNum operations are evaluated modulo this value
      **/
@@ -34,25 +34,23 @@ trait BigNumParamsTrait<N> {
     fn modulus_bits() -> u64;
 }
 
-/**
- * @brief BNExpressionInput used to define inputs into `BigNum::evaluate_quadratic_expression`
- *        (evaluate_quadratic_expression is the basic building block for efficiently evaluating BigNum algebra)
-**/
-struct BNExpressionInput<N, Params> {
-    value: BigNum<N, Params>,
-    is_negative: bool,
- }
-impl<N, Params> BNExpressionInput<N, Params> {
-    fn new(input: BigNum<N, Params>, _is_negative: bool) -> Self {
-        BNExpressionInput { value: input, is_negative: _is_negative }
-    }
-}
 
-struct BigNum<N,Params> {
+
+trait BigNumTrait {
+    fn new() -> Self;
+    fn one() -> Self;
+    fn __derive_from_seed() -> Self;
+    fn __powmod(exponent: u64) -> Self;
+    fn __invmod() -> Self;
+    fn __mulmod(self, other: Self) -> Self;
+    fn __addmod(self, other: Self) -> Self;
+
+}
+struct BigNum<let N: u64,Params> {
     limbs: [Field; N],
 }
 
-impl<N, Params> BigNum<N, Params> {
+impl<let N: u64, Params> BigNum<N, Params> {
 
     // ####################################################################################################################
     // ####################################################################################################################
@@ -75,7 +73,7 @@ impl<N, Params> BigNum<N, Params> {
      *               is precisely large enough to cover Params::modulus_bits()
      * @param x: input byte array
      **/
-    fn from_byte_be<NBytes>(x: [u8; NBytes]) -> Self where Params: BigNumParamsTrait<N> {
+    fn from_byte_be<let NBytes: u64>(x: [u8; NBytes]) -> Self where Params: BigNumParamsTrait<N> {
         let num_bits: u64 = NBytes * 8;
         let modulus_bits: u64 = Params::modulus_bits();
         assert(num_bits > modulus_bits);
@@ -106,7 +104,7 @@ impl<N, Params> BigNum<N, Params> {
     // ####################################################################################################################
 
     // N.B. not cryptographically secure! only use in tests
-    unconstrained fn __derive_from_seed<SeedBytes>(seed: [u8; SeedBytes]) -> Self where Params: BigNumParamsTrait<N> {
+    unconstrained fn __derive_from_seed<let SeedBytes: u64>(seed: [u8; SeedBytes]) -> Self where Params: BigNumParamsTrait<N> {
         let mut rolling_seed = seed;
         let mut unreduced: Self = Self { limbs: [0; N] };
 
@@ -149,7 +147,7 @@ impl<N, Params> BigNum<N, Params> {
         flags
     }
 
-    unconstrained fn __normalize_limbs<NumSegments>(x: ArrayX<Field, N, NumSegments>, range: u64) -> ArrayX<Field, N, NumSegments> {
+    unconstrained fn __normalize_limbs<let NumSegments: u64>(x: ArrayX<Field, N, NumSegments>, range: u64) -> ArrayX<Field, N, NumSegments> {
         let mut normalized: ArrayX<Field, N, NumSegments> = ArrayX::new();
         let mut inp = x;
         for i in 0..(range - 1) {
@@ -295,8 +293,35 @@ impl<N, Params> BigNum<N, Params> {
     unconstrained fn __negate(self) -> Self where Params: BigNumParamsTrait<N> {
         let f: [Field; N] = self.limbs;
         let x_u60 : U60Repr<N, 2> = U60Repr::from(f);
-        let modulus_u60 : U60Repr<N, 2> = U60Repr::from(Params::double_modulus());
+        let modulus_u60 : U60Repr<N, 2> = U60Repr::from(Params::modulus());
         Self { limbs: U60Repr::into(modulus_u60 - x_u60) }
+    }
+
+    unconstrained fn __negate_with_flags(self) -> (Self, [bool; N]) where Params: BigNumParamsTrait<N> {
+        let f: [Field; N] = self.limbs;
+        let x_u60 : U60Repr<N, 2> = U60Repr::from(f);
+        let modulus_u60 : U60Repr<N, 2> = U60Repr::from(Params::modulus());
+        let mut result_u60 : U60Repr<N, 2> = U60Repr{ limbs: ArrayX::new() };
+
+        let mut borrow: u64 = 0;
+        let mut borrow_in: u64 = 0;
+
+        let mut borrow_flags: [bool; N] = [false; N];
+        for j in 0..2 {
+            for i in 0..N {
+                borrow = ((x_u60.limbs.segments[j][i] + borrow_in) > modulus_u60.limbs.segments[j][i]) as u64;
+                let sub = (borrow << 60) + modulus_u60.limbs.segments[j][i] - x_u60.limbs.segments[j][i] - borrow_in;
+                result_u60.limbs.segments[j][i] = sub;
+                borrow_in = borrow;
+                if ((j * N + i) & 1 == 1)
+                {
+                    let idx = (j * N + i - 1) / 2;
+                    borrow_flags[idx] = borrow as bool;
+                }
+            }
+        }
+
+        (Self { limbs: U60Repr::into(result_u60) }, borrow_flags)
     }
 
     /**
@@ -308,32 +333,94 @@ impl<N, Params> BigNum<N, Params> {
     }
 
     /**
-     * @brief Computes the result of a linear combination of BNExpressionInput values (unconstrained)
-     * @description This method computes separate totals for positive/negative BNExpressionInput values.
-     *              This is so that we can later evaluate which BigNum limbs will underflow when combining positive/negative sums
+     * @brief Computes the result of a linear combination of (possibly negative) BigNum values (unconstrained)
      **/
-    unconstrained fn __add_linear_expression<M>(x: [BNExpressionInput<N, Params>; M]) -> ([Field; N], [Field; N]) where Params: BigNumParamsTrait<N> {
+    // NOTE: modulus2 is structured such that all limbs will be greater than 0, even when subtracting.
+    // To do this, when computing `p - x`, we ensure that each limb in `p` is greater than each limb in `x`.
+    // We know that, for a valid bignum element, the limbs in `x` will be <2^{120}
+    // Therefore each of the limbs in `p` (except the most significant) will borrow 2^{120} from the more significant limb.
+    // Finally, to ensure we do not underflow in the most significant limb, we use `2p` instead of `p`
+    unconstrained fn __add_linear_expression<let M: u64>(x: [Self; M], flags: [bool; M]) -> ([Field; N]) where Params: BigNumParamsTrait<N> {
         // TODO, validate we do not overflow N2 when multiplying and N when adding
-        let mut lhs_sum_p: [Field; N] = [0; N];
-        let mut lhs_sum_n: [Field; N] = [0; N];
+        let mut sum: [Field; N] = [0; N];
         let modulus2: [Field;N] = Params::double_modulus();
         for i in 0..M {
-            if (x[i].is_negative) {
+            if (flags[i]) {
                 for j in 0..N {
-                    lhs_sum_p[j] = lhs_sum_p[j] + modulus2[j];
-                    lhs_sum_n[j] = lhs_sum_n[j] + x[i].value.limbs[j];
+                    sum[j] = sum[j] + modulus2[j] - x[i].limbs[j];
+                    assert(x[i].limbs[j].lt(modulus2[j]));
                 }
             } else {
                 for j in 0..N {
-                    lhs_sum_p[j] = lhs_sum_p[j] + x[i].value.limbs[j];
+                    sum[j] = sum[j] + x[i].limbs[j];
                 }
             }
         }
         // problem if we normalize when used in computing quotient
-        (lhs_sum_p, lhs_sum_n)
+        sum
         //   let result_p: ArrayX<Field, N, 1> = BigNum::__normalize_limbs(ArrayX::from_array(lhs_sum_p), N);
         //  let result_n: ArrayX<Field, N, 1> = BigNum::__normalize_limbs(ArrayX::from_array(lhs_sum_n), N);
         //  (result_p.segments[0], result_n.segments[0])
+    }
+
+    /**
+     * @brief computes the limb products of a quadratic expression
+     * @details see __compute_quadratic_expression_with_borrow_flags for full description
+     **/
+    unconstrained fn __compute_quadratic_expression_product<let LHS_N: u64, let RHS_N: u64, let NUM_PRODUCTS: u64, let ADD_N: u64>(
+        lhs_terms: [[Self; LHS_N]; NUM_PRODUCTS],
+        lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
+        rhs_terms: [[Self; RHS_N]; NUM_PRODUCTS],
+        rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
+        linear_terms: [Self; ADD_N],
+        linear_flags: [bool; ADD_N],
+    ) -> ArrayX<Field, N, 2> where Params: BigNumParamsTrait<N> {
+        // TODO, validate we do not overflow N2 when multiplying and N when adding
+        let mut lhs: [[Field; N]; NUM_PRODUCTS] = [[0; N]; NUM_PRODUCTS];
+        let mut rhs: [[Field; N]; NUM_PRODUCTS] = [[0; N]; NUM_PRODUCTS];
+        let mut add: [Field; N] = [0; N];
+
+        for i in 0..NUM_PRODUCTS {
+            lhs[i] = BigNum::__add_linear_expression(lhs_terms[i], lhs_flags[i]);
+            rhs[i]= BigNum::__add_linear_expression(rhs_terms[i], rhs_flags[i]);
+        }
+
+        let add: [Field; N] = BigNum::__add_linear_expression(linear_terms, linear_flags);
+
+        let mut mulout: ArrayX<Field, N,2> = ArrayX::new();
+
+        for i in 0..N {
+            for j in 0..N {
+                for k in 0..NUM_PRODUCTS {
+                    mulout.add_assign(i + j, (lhs[k][i] * rhs[k][j]));
+                }
+            }
+            mulout.add_assign(i, add[i]);
+        }
+        mulout
+    }
+
+
+    /**
+     * @brief computes the quotient/remainder of a quadratic expression
+     * @details see __compute_quadratic_expression_with_borrow_flags for full description
+     **/
+    unconstrained fn __compute_quadratic_expression<let LHS_N: u64, let RHS_N: u64, let NUM_PRODUCTS: u64, let ADD_N: u64>(
+        lhs_terms: [[Self; LHS_N]; NUM_PRODUCTS],
+        lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
+        rhs_terms: [[Self; RHS_N]; NUM_PRODUCTS],
+        rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
+        linear_terms: [Self; ADD_N],
+        linear_flags: [bool; ADD_N],
+    ) -> (Self, Self) where Params: BigNumParamsTrait<N> {
+        // TODO, validate we do not overflow N2 when multiplying and N when adding
+        let mulout = BigNum::__compute_quadratic_expression_product(lhs_terms, lhs_flags, rhs_terms, rhs_flags, linear_terms, linear_flags);
+        let relation_result: ArrayX<Field, N, 2> = BigNum::__normalize_limbs(mulout, N + N - 1);
+
+        let modulus: [Field; N] = Params::modulus();
+        let (quotient, remainder) = BigNum::__barrett_reduction(relation_result, Params::redc_param(), Params::k(), modulus);
+
+        (Self { limbs: quotient }, Self { limbs: remainder })
     }
 
     /**
@@ -354,57 +441,28 @@ impl<N, Params> BigNum<N, Params> {
      * In the above example, the value represented by these two limbs is zero despite each limb being nonzero.
      * In this case, to correctly constrain the result, we must add (at least) 2^{120} from the first limb and subtract 1 from the second.
      *
-     * @param lhs_terms a 2D array of BNExpressionInput
-     * @param rhs_terms a 2D array of BNExpressionInput
-     * @param linear_terms a 2D array of BNExpressionInput
+     * @param lhs_terms a 2D array of BigNum
+     * @param lhs_flags a 2D array of sign flags
+     * @param rhs_terms a 2D array of BigNum
+     * @param rhs_flags a 2D array of sign flags
+     * @param linear_terms an array of BigNum
+     * @param linear_flags an array of sign flags
      **/
-    unconstrained fn __compute_quadratic_expression_quotient<LHS_N, RHS_N, NUM_PRODUCTS, ADD_N>(
-        lhs_terms: [[BNExpressionInput<N, Params>; LHS_N]; NUM_PRODUCTS],
-        rhs_terms: [[BNExpressionInput<N, Params>; RHS_N]; NUM_PRODUCTS],
-        linear_terms: [BNExpressionInput<N, Params>; ADD_N]
-    ) -> (Self, ArrayX<Field, N, 2>) where Params: BigNumParamsTrait<N> {
+    unconstrained fn __compute_quadratic_expression_with_borrow_flags<let LHS_N: u64, let RHS_N: u64, let NUM_PRODUCTS: u64, let ADD_N: u64>(
+        lhs_terms: [[Self; LHS_N]; NUM_PRODUCTS],
+        lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
+        rhs_terms: [[Self; RHS_N]; NUM_PRODUCTS],
+        rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
+        linear_terms: [Self; ADD_N],
+        linear_flags: [bool; ADD_N],
+    ) -> (Self, Self, ArrayX<Field, N, 2>) where Params: BigNumParamsTrait<N> {
         // TODO, validate we do not overflow N2 when multiplying and N when adding
-        let mut lhs_p: [[Field; N]; NUM_PRODUCTS] = [[0; N]; NUM_PRODUCTS];
-        let mut lhs_n: [[Field; N]; NUM_PRODUCTS] = [[0; N]; NUM_PRODUCTS];
-        let mut rhs_p: [[Field; N]; NUM_PRODUCTS] = [[0; N]; NUM_PRODUCTS];
-        let mut rhs_n: [[Field; N]; NUM_PRODUCTS] = [[0; N]; NUM_PRODUCTS];
-        let mut add_p: [Field; N] = [0; N];
-        let mut add_n: [Field; N] = [0; N];
 
-        for i in 0..NUM_PRODUCTS {
-            let (l_p, l_n): ([Field; N], [Field; N]) = BigNum::__add_linear_expression(lhs_terms[i]);
-            let (r_p, r_n): ([Field; N], [Field; N]) = BigNum::__add_linear_expression(rhs_terms[i]);
-            lhs_p[i] = l_p;
-            lhs_n[i] = l_n;
-            rhs_p[i] = r_p;
-            rhs_n[i] = r_n;
-        }
-
-        let (add_p, add_n): ([Field; N], [Field; N]) = BigNum::__add_linear_expression(linear_terms);
-
-        let mut mulout_p: ArrayX<Field, N,2> = ArrayX::new();
+        let mut mulout_p = BigNum::__compute_quadratic_expression_product(lhs_terms, lhs_flags, rhs_terms, rhs_flags, linear_terms, linear_flags);
         let mut mulout_n: ArrayX<Field, N,2> = ArrayX::new();
 
-        for i in 0..N {
-            for j in 0..N {
-                for k in 0..NUM_PRODUCTS {
-                    assert(lhs_n[k][i] == 0);
-                    assert(rhs_n[k][i] == 0);
-                    mulout_p.add_assign(i + j, lhs_p[k][i] * rhs_p[k][j]);
-                    mulout_n.add_assign(i + j, lhs_n[k][i] * rhs_n[k][j]);
-                }
-            }
-            mulout_p.add_assign(i, add_p[i]);
-            mulout_n.add_assign(i, add_n[i]);
-        }
-
-        let T0: ArrayX<Field, N, 2> = BigNum::__normalize_limbs(mulout_p, N + N - 1);
-        let T1: ArrayX<Field, N, 2> = BigNum::__normalize_limbs(mulout_n, N + N - 1);
-
-        let mulout_pu60: U60Repr<N, 4> = U60Repr::new(T0);
-        let mulout_nu60: U60Repr<N, 4> = U60Repr::new(T1);
-        let relation_result: ArrayX<Field, N, 2> = BigNum::__normalize_limbs((mulout_pu60 - mulout_nu60).into_arrayX(), N + N - 1);
-
+       
+        let relation_result: ArrayX<Field, N, 2> = BigNum::__normalize_limbs(mulout_p, N + N - 1);
         let modulus: [Field; N] = Params::modulus();
         let (quotient, remainder) = BigNum::__barrett_reduction(relation_result, Params::redc_param(), Params::k(), modulus);
         assert(remainder == [0; N]);
@@ -443,7 +501,7 @@ impl<N, Params> BigNum<N, Params> {
                 - (borrow_flags.get(i - 1) * borrow_carry)) * downshift;
         }
 
-        (Self { limbs: quotient }, borrow_flags)
+        (Self { limbs: quotient }, Self { limbs: remainder }, borrow_flags)
     }
 
     // ####################################################################################################################
@@ -550,6 +608,7 @@ impl<N, Params> BigNum<N, Params> {
      *
      * The intent is to capture an arbitrary degree-2 expression within the limitations of Noir (no efficient dynamically-sized vectors)
      *
+     * Note: this method requires the remainder term of the expression to be ZERO
      * When performing BigNum arithmetic, we want to represent desired BigNum operations in a way that minimizes the number of modular reductions that are required.
      * This can be achieved by minimizing the number of degree-2 relations required.
      *
@@ -571,17 +630,23 @@ impl<N, Params> BigNum<N, Params> {
      * (it is. we could go higher, up to the number of bits in the CircuitModulus - 121, but 126 *should be* sufficient and is much cheaper)
      * TODO: apply checks in this method to validate twiddle_factor does not exceed 6
      * 
-     * @param lhs_terms a 2D array of BNExpressionInput
-     * @param rhs_terms a 2D array of BNExpressionInput
-     * @param linear_terms a 2D array of BNExpressionInput
+     * @param lhs_terms a 2D array of BigNum
+     * @param lhs_flags a 2D array of sign flags
+     * @param rhs_terms a 2D array of BigNum
+     * @param rhs_flags a 2D array of sign flags
+     * @param linear_terms an array of BigNum
+     * @param linear_flags an array of sign flags
      **/
-    fn evaluate_quadratic_expression<LHS_N, RHS_N, NUM_PRODUCTS, ADD_N>(
-        lhs_products: [[BNExpressionInput<N, Params>; LHS_N]; NUM_PRODUCTS],
-        rhs_products: [[BNExpressionInput<N, Params>; RHS_N]; NUM_PRODUCTS],
-        linear_terms: [BNExpressionInput<N, Params>; ADD_N]
+    fn evaluate_quadratic_expression<let LHS_N: u64, let RHS_N: u64, let NUM_PRODUCTS: u64, let ADD_N: u64>(
+        lhs_terms: [[Self; LHS_N]; NUM_PRODUCTS],
+        lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
+        rhs_terms: [[Self; RHS_N]; NUM_PRODUCTS],
+        rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
+        linear_terms: [Self; ADD_N],
+        linear_flags: [bool; ADD_N],
     ) where Params: BigNumParamsTrait<N> {
         // use an unconstrained function to compute the value of the quotient
-        let (quotient, borrow_flags): (Self, ArrayX<Field, N, 2>) = BigNum::__compute_quadratic_expression_quotient(lhs_products, rhs_products, linear_terms);
+        let (quotient, _, borrow_flags): (Self, Self, ArrayX<Field, N, 2>) = BigNum::__compute_quadratic_expression_with_borrow_flags(lhs_terms, lhs_flags, rhs_terms, rhs_flags, linear_terms, linear_flags);
         // constrain the quotient to be in the range [0, ..., 2^{m} - 1], where `m` is log2(modulus) rounded up.
         // Additionally, validate quotient limbs are also in the range [0, ..., 2^{120} - 1]
         quotient.validate_quotient_in_range();
@@ -597,33 +662,30 @@ impl<N, Params> BigNum<N, Params> {
             for i in 0..N {
                 for j in 0..LHS_N {
                     // note: if is_negative is not known at comptime this is very expensive
-                    let is_negative: bool = lhs_products[k][j].is_negative;
-                    if (is_negative) {
-                        t0[k][i] -= lhs_products[k][j].value.limbs[i];
+                    if (lhs_flags[k][j]) {
+                        t0[k][i] -= lhs_terms[k][j].limbs[i];
                         t0[k][i] += double_modulus[i];
                     } else {
-                        t0[k][i] += lhs_products[k][j].value.limbs[i];
+                        t0[k][i] += lhs_terms[k][j].limbs[i];
                     }
                 }
                 for j in 0..RHS_N {
-                    let is_negative: bool = rhs_products[k][j].is_negative;
-                    if (is_negative) {
-                        t1[k][i] -= rhs_products[k][j].value.limbs[i];
+                    if (rhs_flags[k][j]) {
+                        t1[k][i] -= rhs_terms[k][j].limbs[i];
                         t1[k][i] += double_modulus[i];
                     } else {
-                        t1[k][i] += rhs_products[k][j].value.limbs[i];
+                        t1[k][i] += rhs_terms[k][j].limbs[i];
                     }
                 }
             }
         }
         for i in 0..N {
             for j in 0..ADD_N {
-                let is_negative: bool = linear_terms[j].is_negative;
-                if (is_negative) {
-                    t4[i] -= linear_terms[j].value.limbs[i];
+                if (linear_flags[j]) {
+                    t4[i] -= linear_terms[j].limbs[i];
                     t4[i] += double_modulus[i];
                 } else {
-                    t4[i] += linear_terms[j].value.limbs[i];
+                    t4[i] += linear_terms[j].limbs[i];
                 }
             }
         }
@@ -702,41 +764,67 @@ impl<N, Params> BigNum<N, Params> {
         // the most significant limb has no limb to "carry" values into - the entire limb must equal zero
         assert(product_limbs.get(N + N - 2) == 0);
     }
+
+
+    fn neg(self) -> Self where Params: BigNumParamsTrait<N> {
+        // so we do... p - x - r = 0 and there might be borrow flags
+        let (result, borrow_flags) = self.__negate_with_flags();
+        result.validate_in_range();
+        let modulus = Params::modulus();
+        let borrow_shift = 0x1000000000000000000000000000000;
+        let result_limb = modulus[0] - self.limbs[0] - result.limbs[0] + (borrow_flags[0] as Field * borrow_shift);
+        assert(result_limb == 0);
+        for i in 0..N - 1 {
+            let result_limb = modulus[i] - self.limbs[i] - result.limbs[i] - borrow_flags[i-1] as Field + (borrow_flags[i] as Field * borrow_shift);
+            assert(result_limb == 0);
+        }
+        let result_limb = modulus[N-1] - self.limbs[N-1] - result.limbs[N-1] - borrow_flags[N-2] as Field;
+        assert(result_limb == 0);
+        result
+    }
 }
 
-impl<N, Params> std::ops::Add for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u64, Params> std::ops::Add for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
     // Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
     //       via evaluate_quadratic_expression
     fn add(self, other: Self) -> Self {
         let result = self.__addmod(other);
         // N.B. using `[]` as a parameter input does not produce a 2D array of size 0 (it's a 2D array of size-1 where the inner array is empty)
-        let empty_expression: [[BNExpressionInput<N, Params>; 0]; 0] = [];
+        let empty_expression: [[BigNum<N, Params>; 0]; 0] = [];
+        let empty_flags: [[bool; 0]; 0] = [];
         BigNum::evaluate_quadratic_expression(
             empty_expression,
+            empty_flags,
             empty_expression,
-            [BNExpressionInput::new(self, false), BNExpressionInput::new(other, false), BNExpressionInput::new(result, true)]
+            empty_flags,
+            [self, other, result],
+            [false, false, true],
         );
         result
     }
 }
 
-impl<N, Params> std::ops::Sub for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u64, Params> std::ops::Sub for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
     // Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
     //       via evaluate_quadratic_expression
     fn sub(self, other: Self) -> Self {
         let result = self.__submod(other);
         // N.B. using `[]` as a parameter input does not produce a 2D array of size 0 (it's a 2D array of size-1 where the inner array is empty)
-        let empty_expression: [[BNExpressionInput<N, Params>; 0]; 0] = [];
+        let empty_expression: [[BigNum<N, Params>; 0]; 0] = [];
+        let empty_flags: [[bool; 0]; 0] = [];
         BigNum::evaluate_quadratic_expression(
             empty_expression,
+            empty_flags,
             empty_expression,
-            [BNExpressionInput::new(self, true), BNExpressionInput::new(other, false), BNExpressionInput::new(result, false)]
+            empty_flags,
+            [self, other, result],
+            [true, false, false],
         );
         result
     }
 }
 
-impl<N, Params> std::ops::Mul for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u64, Params> std::ops::Mul for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
     // Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
     //       via evaluate_quadratic_expression
     // e.g. performing a sum of multiple multiplications and additions via `evaluate_quadratic_expression`
@@ -744,28 +832,34 @@ impl<N, Params> std::ops::Mul for BigNum<N, Params> where Params: BigNumParamsTr
     fn mul(self, other: Self) -> Self {
     let result = self.__mulmod(other);
         BigNum::evaluate_quadratic_expression(
-            [[BNExpressionInput::new(self, false)]],
-            [[BNExpressionInput::new(other, false)]],
-            [BNExpressionInput::new(result, true)]
+            [[self]],
+            [[false]],
+            [[other]],
+            [[false]],
+            [result],
+            [true],
         );
         result
     }
 }
 
-impl<N, Params> std::ops::Div for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u64, Params> std::ops::Div for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
     // Note: this method is expensive! Witness computation is extremely expensive as it requires modular exponentiation
     fn div(self, other: Self) -> Self {
         let result = self.__divmod(other);
         BigNum::evaluate_quadratic_expression(
-            [[BNExpressionInput::new(result, false)]],
-            [[BNExpressionInput::new(other, false)]],
-            [BNExpressionInput::new(self, true)]
+            [[result]],
+            [[false]],
+            [[other]],
+            [[false]],
+            [self],
+            [true],
         );
         result
     }
 }
 
-impl<N, Params> std::cmp::Eq for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u64, Params> std::cmp::Eq for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
     // Note: this method is expensive! Witness computation is extremely expensive as it requires modular exponentiation
     fn eq(self, other: Self) -> bool {
         self.limbs == other.limbs

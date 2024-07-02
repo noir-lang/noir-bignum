@@ -7,11 +7,11 @@ use dep::std;
  *       e.g. [Field; N * 2] is not currently possible
  *       This abstraction can be removed once Noir supports arithmetic on generics.
 **/
-struct ArrayX<T, N, SizeMultiplier> {
+struct ArrayX<T, let N: u64, let SizeMultiplier: u64> {
     segments: [[T; N]; SizeMultiplier]
 }
 
-impl<T, N, SizeMultiplier> std::convert::From<[T; N]> for ArrayX<T, N, SizeMultiplier> where T: std::default::Default { 
+impl<T, let N: u64, let SizeMultiplier: u64> std::convert::From<[T; N]> for ArrayX<T, N, SizeMultiplier> where T: std::default::Default { 
     fn from(input: [T; N]) -> Self {
         assert(N == 1);
         let mut result = ArrayX::new();
@@ -20,13 +20,13 @@ impl<T, N, SizeMultiplier> std::convert::From<[T; N]> for ArrayX<T, N, SizeMulti
     }
 }
 
-impl<T, N, SizeMultiplier> std::convert::From<[[T; N]; SizeMultiplier]> for ArrayX<T, N, SizeMultiplier> where T: std::default::Default { 
+impl<T, let N: u64, let SizeMultiplier: u64> std::convert::From<[[T; N]; SizeMultiplier]> for ArrayX<T, N, SizeMultiplier> where T: std::default::Default { 
     fn from(input: [[T; N]; SizeMultiplier]) -> Self {
         ArrayX{ segments: input }
     }
 }
 
-impl<T, N, SizeMultiplier> std::cmp::Eq for ArrayX<T, N, SizeMultiplier> where T: std::cmp::Eq { 
+impl<T, let N: u64, let SizeMultiplier: u64> std::cmp::Eq for ArrayX<T, N, SizeMultiplier> where T: std::cmp::Eq { 
     fn eq(self, other: Self) -> bool {
         let mut result: bool = true;
         for i in 0..SizeMultiplier {
@@ -38,7 +38,7 @@ impl<T, N, SizeMultiplier> std::cmp::Eq for ArrayX<T, N, SizeMultiplier> where T
     }
 }
 
-impl<T, N, SizeMultiplier> ArrayX<T, N, SizeMultiplier> {
+impl<T, let N: u64, let SizeMultiplier: u64> ArrayX<T, N, SizeMultiplier> {
 
     fn new() -> Self where T: std::default::Default {
         ArrayX { segments: [[T::default(); N]; SizeMultiplier] }

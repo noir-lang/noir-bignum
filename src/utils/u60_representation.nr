@@ -10,12 +10,12 @@ use crate::utils::split_bits;
  * It is helpful to use u60 types when evaluating addition operations that can overflow the field modulus,
  * as well as when performing bit shifts.
  */
-struct U60Repr<N, NumSegments>
+struct U60Repr<let N: u64, let NumSegments: u64>
 {
     limbs: ArrayX<u64, N, NumSegments>
 }
 
-impl<N, NumSegments> std::ops::Add for U60Repr<N, NumSegments> {
+impl<let N: u64, let NumSegments: u64> std::ops::Add for U60Repr<N, NumSegments> {
     fn add(self, b: Self) -> Self {
         let mut result: Self = U60Repr { limbs: ArrayX { segments: [[0; N]; NumSegments] } };
 
@@ -33,7 +33,7 @@ impl<N, NumSegments> std::ops::Add for U60Repr<N, NumSegments> {
     }
 }
 
-impl<N, NumSegments> std::ops::Sub for U60Repr<N, NumSegments> {
+impl<let N: u64, let NumSegments: u64> std::ops::Sub for U60Repr<N, NumSegments> {
     fn sub(self, b: Self) -> Self {
         let mut result: Self = U60Repr { limbs: ArrayX { segments: [[0; N]; NumSegments] } };
 
@@ -52,7 +52,7 @@ impl<N, NumSegments> std::ops::Sub for U60Repr<N, NumSegments> {
     }
 }
 
-impl<N, NumSegments> std::convert::From<[Field; N]> for U60Repr<N, NumSegments> { 
+impl<let N: u64, let NumSegments: u64> std::convert::From<[Field; N]> for U60Repr<N, NumSegments> { 
     fn from(input: [Field; N]) -> Self {
         let mut result: Self = U60Repr { limbs: ArrayX { segments: [[0; N]; NumSegments] } };
         for i in 0..(N) {
@@ -64,7 +64,7 @@ impl<N, NumSegments> std::convert::From<[Field; N]> for U60Repr<N, NumSegments> 
     }
 }
 
-impl<N, NumSegments> std::convert::Into<[Field; N]> for U60Repr<N, NumSegments> {
+impl<let N: u64, let NumSegments: u64> std::convert::Into<[Field; N]> for U60Repr<N, NumSegments> {
     fn into(x: U60Repr<N, NumSegments>) -> [Field; N] {
         let mut result: [Field; N] = [0; N];
         let two_pow_60: Field = 0x1000000000000000;
@@ -75,15 +75,15 @@ impl<N, NumSegments> std::convert::Into<[Field; N]> for U60Repr<N, NumSegments> 
     }
 }
 
-impl<N, NumSegments> std::cmp::Eq for U60Repr<N, NumSegments> { 
+impl<let N: u64, let NumSegments: u64> std::cmp::Eq for U60Repr<N, NumSegments> { 
     fn eq(self, other: Self) -> bool {
         self.limbs == other.limbs
     }
 }
 
-impl<N, NumSegments> U60Repr<N, NumSegments> {
+impl<let N: u64, let NumSegments: u64> U60Repr<N, NumSegments> {
 
-    unconstrained fn new<NumFieldSegments>(x: ArrayX<Field, N, NumFieldSegments>) -> Self {
+    unconstrained fn new<let NumFieldSegments: u64>(x: ArrayX<Field, N, NumFieldSegments>) -> Self {
         let mut result: Self = U60Repr { limbs: ArrayX { segments: [[0; N]; NumSegments] } };
         for i in 0..(N * NumFieldSegments) {
             let (lo, hi) = split_bits::split_60_bits(x.get(i));
@@ -93,7 +93,7 @@ impl<N, NumSegments> U60Repr<N, NumSegments> {
         result
     }
 
-    unconstrained fn into_arrayX<NumFieldSegments>(x: U60Repr<N, NumSegments>) -> ArrayX<Field, N, NumFieldSegments> {
+    unconstrained fn into_arrayX<let NumFieldSegments: u64>(x: U60Repr<N, NumSegments>) -> ArrayX<Field, N, NumFieldSegments> {
         let mut result: ArrayX<Field, N, NumFieldSegments> = ArrayX { segments: [[0; N]; NumFieldSegments] };
         let two_pow_60: Field = 0x1000000000000000;
         for i in 0..(N * NumFieldSegments) {

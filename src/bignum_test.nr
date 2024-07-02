@@ -1,7 +1,6 @@
 use crate::utils::arrayX::ArrayX;
 use crate::BigNum;
 use crate::BigNumParamsTrait;
-use crate::BNExpressionInput;
 use crate::utils::u60_representation::U60Repr;
 use crate::fields::bn254Fq::BNParams as BNParams;
 
@@ -28,24 +27,24 @@ impl BigNumParamsTrait<18> for Test2048Params {
         0x00000000000000000000000000000000000000000000000000000000000000b8
     ]}
     fn double_modulus() -> [Field; 18] {[
-        0x000000000000000000000000000000000081432f4b5c1f9b9d60a592e64c29fc,
-        0x0000000000000000000000000000000000cad5c06884650684448723157077c7,
-        0x0000000000000000000000000000000000d7eb21b4914f820e16fab557558cf0,
-        0x0000000000000000000000000000000000199c73ea604716c0de49652dc57b52,
-        0x000000000000000000000000000000000003c3fdf37738387d5b31e44de37f40,
-        0x00000000000000000000000000000000005b183902dc25c1da26f20abc6e757e,
-        0x00000000000000000000000000000000009d7d01c8e9eea7553a28c3886a247b,
-        0x00000000000000000000000000000000005dcb4319ddbdf11a22b5172782cf5b,
-        0x00000000000000000000000000000000004d17507894cb8860e84ff892bb3c89,
-        0x0000000000000000000000000000000000ba4eef24d090ccf6fbef3e684c73a8,
-        0x0000000000000000000000000000000000e8aa0e992d0ab9400d0cd1dfcfb47b,
-        0x0000000000000000000000000000000000bbb74d6617782d17f674244be4facb,
-        0x0000000000000000000000000000000000b23fd8909e6ce0ea4826779ade84b0,
-        0x0000000000000000000000000000000000b2c836eacecd5dd7cccf03ba03a0c4,
-        0x0000000000000000000000000000000000b178bd5fe962cbc2857f3c4901dd76,
-        0x0000000000000000000000000000000000ccf472c9e11c0dbeee59cc964534e4,
-        0x0000000000000000000000000000000000383fb63120ee237fc7c7839f23072a,
-        0x0000000000000000000000000000000000000000000000000000000000000171
+        0x000000000000000000000000000000000181432f4b5c1f9b9d60a592e64c29fc,
+        0x0000000000000000000000000000000001cad5c06884650684448723157077c6,
+        0x0000000000000000000000000000000001d7eb21b4914f820e16fab557558cef,
+        0x0000000000000000000000000000000001199c73ea604716c0de49652dc57b51,
+        0x000000000000000000000000000000000103c3fdf37738387d5b31e44de37f3f,
+        0x00000000000000000000000000000000015b183902dc25c1da26f20abc6e757d,
+        0x00000000000000000000000000000000019d7d01c8e9eea7553a28c3886a247a,
+        0x00000000000000000000000000000000015dcb4319ddbdf11a22b5172782cf5a,
+        0x00000000000000000000000000000000014d17507894cb8860e84ff892bb3c88,
+        0x0000000000000000000000000000000001ba4eef24d090ccf6fbef3e684c73a7,
+        0x0000000000000000000000000000000001e8aa0e992d0ab9400d0cd1dfcfb47a,
+        0x0000000000000000000000000000000001bbb74d6617782d17f674244be4faca,
+        0x0000000000000000000000000000000001b23fd8909e6ce0ea4826779ade84af,
+        0x0000000000000000000000000000000001b2c836eacecd5dd7cccf03ba03a0c3,
+        0x0000000000000000000000000000000001b178bd5fe962cbc2857f3c4901dd75,
+        0x0000000000000000000000000000000001ccf472c9e11c0dbeee59cc964534e3,
+        0x0000000000000000000000000000000001383fb63120ee237fc7c7839f230729,
+        0x0000000000000000000000000000000000000000000000000000000000000170
     ]}
     fn redc_param() -> [Field; 18] {[
         0x000000000000000000000000000000000091697def7100cd5cf8d890b4ef2ec3,
@@ -124,7 +123,7 @@ type Fqq = BigNum<18, Test2048Params>;
 // 98760
 // 99689
 // 929 gates for a 2048 bit mul
-fn test_mul<N, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
+fn test_mul<let N: u64, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
     let a: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
     let b: BigNum<N, Params> = BigNum::__derive_from_seed([4, 5, 6, 7]);
 
@@ -133,7 +132,7 @@ fn test_mul<N, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> 
     assert(c == d);
 }
 
-fn test_add<N, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
+fn test_add<let N: u64, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
     let a: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
     let b: BigNum<N, Params> = BigNum::__derive_from_seed([4, 5, 6, 7]);
     let one: BigNum<N, Params> = BigNum::one();
@@ -154,7 +153,7 @@ fn test_add<N, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> 
     assert(e.limbs[0] == 2);
 }
 
-fn test_div<N, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
+fn test_div<let N: u64, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
     let a: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
     let b: BigNum<N, Params> = BigNum::__derive_from_seed([4, 5, 6, 7]);
 
@@ -162,7 +161,7 @@ fn test_div<N, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> 
     assert(b * c == a);
 }
 
-fn test_invmod<N, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
+fn test_invmod<let N: u64, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
     let u: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
     for _ in 0..1 {
         let v = u.__invmod();
@@ -172,21 +171,21 @@ fn test_invmod<N, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<
     }
 }
 
-fn assert_is_not_equal<N, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
+fn assert_is_not_equal<let N: u64, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
     let a: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
     let b: BigNum<N, Params> = BigNum::__derive_from_seed([4, 5, 6, 7]);
 
     a.assert_is_not_equal(b);
 }
 
-fn assert_is_not_equal_fail<N, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
+fn assert_is_not_equal_fail<let N: u64, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
     let a: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
     let b: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
 
     a.assert_is_not_equal(b);
 }
 
-fn assert_is_not_equal_overloaded_lhs_fail<N, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
+fn assert_is_not_equal_overloaded_lhs_fail<let N: u64, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
     let a: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
     let b: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
 
@@ -198,7 +197,7 @@ fn assert_is_not_equal_overloaded_lhs_fail<N, Params>(_: BigNum<N, Params>) wher
     a_plus_modulus.assert_is_not_equal(b);
 }
 
-fn assert_is_not_equal_overloaded_rhs_fail<N, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
+fn assert_is_not_equal_overloaded_rhs_fail<let N: u64, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
     let a: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
     let b: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
 
@@ -210,7 +209,7 @@ fn assert_is_not_equal_overloaded_rhs_fail<N, Params>(_: BigNum<N, Params>) wher
     a.assert_is_not_equal(b_plus_modulus);
 }
 
-fn assert_is_not_equal_overloaded_fail<N, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
+fn assert_is_not_equal_overloaded_fail<let N: u64, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
     let a: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
     let b: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
 
@@ -404,11 +403,7 @@ fn test_2048_bit_quadratic_expression() {
 
     a_bn.validate_in_range();
 
-    BigNum::evaluate_quadratic_expression(
-        [[BNExpressionInput::new(a_bn, false)]],
-        [[BNExpressionInput::new(b_bn, false)]],
-        [BNExpressionInput::new(c_bn, true)]
-    );
+    BigNum::evaluate_quadratic_expression([[a_bn]], [[false]], [[b_bn]], [[false]], [c_bn], [true]);
 }
 
 #[test]
@@ -468,15 +463,23 @@ fn test_expressions() {
     let uv = uu.__mulmod(vv);
     let y = (uv.__addmod(wx)).__negate();
     let z = uv.__addmod(wx);
-    let uuE = BNExpressionInput::new(uu, false);
-    let vvE = BNExpressionInput::new(vv, false);
-    let wE = BNExpressionInput::new(w, false);
-    let xE = BNExpressionInput::new(x, false);
-    let yE = BNExpressionInput::new(y, false);
-    let zE = BNExpressionInput::new(z, true);
 
-    BigNum::evaluate_quadratic_expression([[uuE], [wE]], [[vvE], [xE]], [zE]);
-    BigNum::evaluate_quadratic_expression([[uuE], [wE]], [[vvE], [xE]], [yE]);
+    BigNum::evaluate_quadratic_expression(
+        [[uu], [w]],
+        [[false], [false]],
+        [[vv], [x]],
+        [[false], [false]],
+        [z],
+        [true]
+    );
+    BigNum::evaluate_quadratic_expression(
+        [[uu], [w]],
+        [[false], [false]],
+        [[vv], [x]],
+        [[false], [false]],
+        [y],
+        [false]
+    );
 
     let wx_constrained = w * x;
     assert(wx_constrained.limbs == wx.limbs);
