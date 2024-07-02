@@ -245,6 +245,15 @@ impl<let N: u64, Params> BigNum<N, Params> {
         (U60Repr::into(quotient_u60), U60Repr::into(remainder_u60))
     }
 
+
+    unconstrained fn __is_zero(self) -> bool {
+        let mut result: bool = true;
+        for i in 0..N {
+            result = result & (self.limbs[i] == 0);
+        }
+        result
+    }
+    
     unconstrained fn __mulmod_with_quotient(self, rhs: Self) -> (Self, Self) where Params: BigNumParamsTrait<N> {
         let mut mul: ArrayX<Field, N, 2> = ArrayX::new();
         for i in 0..N {
