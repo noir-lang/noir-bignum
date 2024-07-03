@@ -120,6 +120,22 @@ type Fqq = BigNum<18, Test2048Params>;
 //     // 68?
 // }
 
+fn test_eq<let N: u64, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> {
+    let a: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
+    let b: BigNum<N, Params> = BigNum::__derive_from_seed([1, 2, 3, 4]);
+    let c: BigNum<N, Params> = BigNum::__derive_from_seed([2, 2, 3, 4]);
+
+    let modulus: BigNum<N, Params> = BigNum { limbs: Params::modulus() };
+    let t0: U60Repr<N, 2> = (U60Repr::from(modulus.limbs));
+    let t1: U60Repr<N, 2> = (U60Repr::from(b.limbs));
+    let b_plus_modulus: BigNum<N, Params> = BigNum { limbs: U60Repr::into(t0 + t1) };
+
+    assert(a.eq(b) == true);
+    assert(a.eq(b_plus_modulus) == true);
+    assert(c.eq(b) == false);
+    assert(c.eq(a) == false);
+}
+
 // 98760
 // 99689
 // 929 gates for a 2048 bit mul
@@ -224,13 +240,96 @@ fn assert_is_not_equal_overloaded_fail<let N: u64, Params>(_: BigNum<N, Params>)
 }
 
 #[test]
+fn test_eq_BN() {
+    let stub: BigNum<3, BNParams> = BigNum::new();
+    test_eq(stub);
+}
+#[test]
+fn test_add_BN() {
+    let mut a: Fq = BigNum { limbs: BNParams::modulus() };
+    let mut b: Fq = BigNum { limbs: BNParams::modulus() };
+    let mut expected: Fq = BigNum { limbs: BNParams::modulus() };
+
+    a.limbs[0] -= 1;
+    b.limbs[0] -= 1;
+    expected.limbs[0] -= 2;
+
+    let result = a.add(b);
+    println(f"result = {result}");
+    assert(result.eq(expected));
+}
+
+#[test]
+fn test_sub_test_BN() {
+    // 0 - 1 should equal p - 1
+    let mut a: Fq = BigNum::new();
+    let mut b: Fq = BigNum::one();
+    let mut expected: Fq = BigNum { limbs: BNParams::modulus() };
+    expected.limbs[0] -= 1; // p - 1
+
+    let result = a.sub(b);
+    assert(result.eq(expected));
+}
+
+#[test]
+fn test_sub_modulus_limit() {
+    // if we underflow, maximum result should be ...
+    // 0 - 1 = o-1
+    // 0 - p = 0
+    let mut a: Fq = BigNum::new();
+    let mut b: Fq = BigNum { limbs: BNParams::modulus() };
+    let mut expected = BigNum::new();
+
+    let result = a.sub(b);
+    assert(result.eq(expected));
+}
+
+#[test(should_fail_with = "call to assert_max_bit_size")]
+fn test_sub_modulus_underflow() {
+    // 0 - (p + 1) is smaller than p and should produce unsatisfiable constraints
+    let mut a: Fq = BigNum::new();
+    let mut b: Fq = BigNum { limbs: BNParams::modulus() };
+    b.limbs[0] += 1;
+    let mut expected = BigNum::one();
+
+    let result = a.sub(b);
+    assert(result.eq(expected));
+}
+
+#[test]
+fn test_add_modulus_limit() {
+    // p + 2^{254} - 1 should be the maximum allowed value fed into an add operation
+    // when adding, if the result overflows the modulus, we conditionally subtract the modulus, producing 2^{254} -  1
+    // this is the largest value that will satisfy the range check applied when constructing a bignum
+    let p : U60Repr<3, 2> = U60Repr::from(BNParams::modulus());
+    let two_pow_254_minus_1: U60Repr<3, 2> = U60Repr::from([0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x3fff]);
+    let a: Fq = BigNum { limbs: U60Repr::into(p) };
+    let b: Fq = BigNum { limbs: U60Repr::into(two_pow_254_minus_1) };
+    let result = a.add(b);
+    assert(result.eq(b));
+}
+
+#[test(should_fail_with = "call to assert_max_bit_size")]
+fn test_add_modulus_overflow() {
+    //(2^{254} - 1) + (p - 1) = 2^{254} + p
+    // after subtracting modulus, result is 2^{254} will does not satisfy the range check applied when constructing a BigNum
+    let p : U60Repr<3, 2> = U60Repr::from(BNParams::modulus());
+    let two_pow_254_minus_1: U60Repr<3, 2> = U60Repr::from([0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x3fff]);
+    let one = U60Repr::from([1, 0, 0]);
+    let a: Fq = BigNum { limbs: U60Repr::into(p + one) };
+    let b: Fq = BigNum { limbs: U60Repr::into(two_pow_254_minus_1) };
+    let result = a.add(b);
+    assert(result.eq(b));
+}
+
+#[test]
 fn test_mul_BN() {
     let stub: BigNum<3, BNParams> = BigNum::new();
     test_mul(stub);
 }
 
 #[test]
-fn test_add_BN() {
+fn test_add_BN2() {
     let stub: BigNum<3, BNParams> = BigNum::new();
     test_add(stub);
 }
@@ -275,6 +374,12 @@ fn test_assert_is_not_equal_overloaded_rhs_fail_BN() {
 fn test_assert_is_not_equal_overloaded_fail_BN() {
     let stub: BigNum<3, BNParams> = BigNum::new();
     assert_is_not_equal_overloaded_fail(stub);
+}
+
+#[test]
+fn test_eq_2048() {
+    let stub: BigNum<18, Test2048Params> = BigNum::new();
+    test_eq(stub);
 }
 
 #[test]

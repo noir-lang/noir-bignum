@@ -93,6 +93,12 @@ impl<let N: u64, let NumSegments: u64> U60Repr<N, NumSegments> {
         result
     }
 
+    unconstrained fn one() -> Self {
+        let mut result: Self = U60Repr { limbs: ArrayX { segments: [[0; N]; NumSegments] } };
+        result.limbs.set(0, 1);
+        result
+    }
+
     unconstrained fn into_arrayX<let NumFieldSegments: u64>(x: U60Repr<N, NumSegments>) -> ArrayX<Field, N, NumFieldSegments> {
         let mut result: ArrayX<Field, N, NumFieldSegments> = ArrayX { segments: [[0; N]; NumFieldSegments] };
         let two_pow_60: Field = 0x1000000000000000;

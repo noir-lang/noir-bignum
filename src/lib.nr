@@ -58,6 +58,7 @@ trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::M
     fn __invmod(self) -> Self;
     fn __batch_invert(to_invert: &mut [Self]);
     fn __is_zero(self) -> bool;
+    fn __eq(self, other: Self) -> bool;
     fn __compute_quadratic_expression<let LHS_N: u64, let RHS_N: u64, let NUM_PRODUCTS: u64, let ADD_N: u64>(lhs: [[Self; LHS_N]; NUM_PRODUCTS], lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS], rhs: [[Self; RHS_N]; NUM_PRODUCTS], rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS], add: [Self; ADD_N], add_flags: [bool; ADD_N]) -> (Self, Self);
     fn evaluate_quadratic_expression<let LHS_N: u64, let RHS_N: u64, let NUM_PRODUCTS: u64, let ADD_N: u64>(lhs: [[Self; LHS_N]; NUM_PRODUCTS], lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS], rhs: [[Self; RHS_N]; NUM_PRODUCTS], rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS], add: [Self; ADD_N], add_flags: [bool; ADD_N]);
     fn validate_in_range(self);
@@ -82,8 +83,20 @@ impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
     fn get(self) -> [Field] { self.limbs }
 
     fn eq(self, other: Self) -> bool {
-        self.limbs == other.limbs
+        let diff: Self = self - other;
+        // if self == other, possible values of `diff` will be `p` or `0`
+        // (the subtract operator constrains diff to be < ceil(log(p)))
+        let modulus: Self = BigNum{ limbs: Params::modulus() };
+        // TODO: can do this more efficiently via witngen in unconstrained functions?
+        let mut is_equal_modulus: bool = true;
+        let mut is_equal_zero: bool = true;
+        for i in 0..N {
+            is_equal_modulus = is_equal_modulus & (diff.limbs[i] == modulus.limbs[i]);
+            is_equal_zero = is_equal_zero & (diff.limbs[i] == 0);
+        }
+        is_equal_modulus | is_equal_zero
     }
+
     // ####################################################################################################################
     // ####################################################################################################################
     // ### C  O  N  S  T  R  U  C  T  O  R  S
@@ -144,6 +157,10 @@ impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
 
     fn __is_zero(self) -> bool {
         self.__is_zero_impl()
+    }
+
+    fn __eq(self, other: Self) -> bool {
+        self.__eq_impl(other)
     }
 
     fn __compute_quadratic_expression<let LHS_N: u64, let RHS_N: u64, let NUM_PRODUCTS: u64, let ADD_N: u64>(
@@ -331,7 +348,7 @@ impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
     /**
      * @brief Validate a BigNum instance is correctly range constrained to contain no more than Params::modulus_bits()
      **/
-    fn validate_in_range(self) where Params: BigNumParamsTrait<N> {
+    fn validate_in_range(self) {
         for i in 0..(N - 1) {
             self.limbs[i].assert_max_bit_size(120);
         }
@@ -347,7 +364,7 @@ impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
      *          However the probability of an honest Prover being unable to satisfy this check is tiny!
      *          (todo: compute how tiny)
      **/
-    fn assert_is_not_equal(self, other: Self) where Params: BigNumParamsTrait<N> {
+    fn assert_is_not_equal(self, other: Self) {
         let mut lhs: Field = 0;
         let mut rhs: Field = 0;
         let mut modulus_mod_n: Field = 0;
@@ -386,11 +403,10 @@ impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
         assert(result_limb == 0);
         result
     }
+
 }
 
 impl<let N: u64, Params> BigNum<N, Params> {
-
-
 
     // N.B. not cryptographically secure! only use in tests
     unconstrained fn __derive_from_seed_impl<let SeedBytes: u64>(seed: [u8; SeedBytes]) -> Self where Params: BigNumParamsTrait<N> {
@@ -568,6 +584,10 @@ impl<let N: u64, Params> BigNum<N, Params> {
         result
     }
 
+    unconstrained fn __eq_impl(self, other: Self) -> bool {
+        self.limbs == other.limbs
+    }
+
     unconstrained fn __mulmod_with_quotient(self, rhs: Self) -> (Self, Self) where Params: BigNumParamsTrait<N> {
         let mut mul: ArrayX<Field, N, 2> = ArrayX::new();
         for i in 0..N {
@@ -618,6 +638,101 @@ impl<let N: u64, Params> BigNum<N, Params> {
         let x_u60 : U60Repr<N, 2> = U60Repr::from(f);
         let modulus_u60 : U60Repr<N, 2> = U60Repr::from(Params::modulus());
         Self { limbs: U60Repr::into(modulus_u60 - x_u60) }
+    }
+
+    unconstrained fn __add_with_flags(self, other: Self) -> (Self, [bool; N], [bool; N], bool) where Params: BigNumParamsTrait<N> {
+        let a_u60 : U60Repr<N, 2> = U60Repr::from(self.limbs);
+        let b_u60 : U60Repr<N, 2> = U60Repr::from(other.limbs);
+        let add_u60 = a_u60 + b_u60;
+        let modulus_u60 : U60Repr<N, 2> = U60Repr::from(Params::modulus());
+
+        let overflow = add_u60.gte(modulus_u60);
+
+        let mut subtrahend_u60 : U60Repr<N, 2> = U60Repr{ limbs: ArrayX::new() };
+        let mut result_u60 : U60Repr<N, 2> = U60Repr{ limbs: ArrayX::new() };
+
+        if overflow {
+            subtrahend_u60 = modulus_u60;
+        }
+
+        let mut carry: u64 = 0;
+        let mut carry_in: u64 = 0;
+        let mut borrow: u64 = 0;
+        let mut borrow_in: u64 = 0;
+        let mut borrow_flags: [bool; N] = [false; N];
+        let mut carry_flags: [bool; N] = [false; N];
+        for j in 0..2 {
+            for i in 0..N {
+                let mut add_term: u64 = a_u60.limbs.segments[j][i] + b_u60.limbs.segments[j][i] + carry_in;
+                carry = (add_term >= 0x1000000000000000) as u64;
+                add_term -= (carry as u64 * 0x1000000000000000);
+                result_u60.limbs.segments[j][i] = add_term;
+                carry_in = carry as u64;
+                borrow = ((subtrahend_u60.limbs.segments[j][i] + borrow_in) > result_u60.limbs.segments[j][i]) as u64;
+                let sub = (borrow << 60) + result_u60.limbs.segments[j][i] - subtrahend_u60.limbs.segments[j][i] - borrow_in;
+                result_u60.limbs.segments[j][i] = sub;
+                borrow_in = borrow;
+
+                if ((j * N + i) & 1 == 1)
+                {
+                    let idx = (j * N + i - 1) / 2;
+                    if (carry & borrow == 1) {
+                        carry = 0;
+                        borrow = 0;
+                    }
+                    carry_flags[idx] = carry as bool;
+                    borrow_flags[idx] = borrow as bool;
+                }
+            }
+        }
+        (Self { limbs: U60Repr::into(result_u60) }, carry_flags, borrow_flags, overflow)
+    }
+
+    unconstrained fn __sub_with_flags(self, other: Self) -> (Self, [bool; N], [bool; N], bool) where Params: BigNumParamsTrait<N> {
+        let a_u60 : U60Repr<N, 2> = U60Repr::from(self.limbs);
+        let b_u60 : U60Repr<N, 2> = U60Repr::from(other.limbs);
+        let modulus_u60 : U60Repr<N, 2> = U60Repr::from(Params::modulus());
+
+        let underflow = b_u60.gte(a_u60 + U60Repr::one());
+
+        let mut addend_u60 : U60Repr<N, 2> = U60Repr{ limbs: ArrayX::new() };
+        let mut result_u60 : U60Repr<N, 2> = U60Repr{ limbs: ArrayX::new() };
+
+        if underflow {
+            addend_u60 = modulus_u60;
+        }
+
+        let mut carry: u64 = 0;
+        let mut carry_in: u64 = 0;
+        let mut borrow: u64 = 0;
+        let mut borrow_in: u64 = 0;
+        let mut borrow_flags: [bool; N] = [false; N];
+        let mut carry_flags: [bool; N] = [false; N];
+        for j in 0..2 {
+            for i in 0..N {
+                let mut add_term: u64 = a_u60.limbs.segments[j][i] + addend_u60.limbs.segments[j][i] + carry_in;
+                carry = (add_term >= 0x1000000000000000) as u64;
+                add_term -= (carry as u64 * 0x1000000000000000);
+                result_u60.limbs.segments[j][i] = add_term;
+                carry_in = carry as u64;
+                borrow = ((b_u60.limbs.segments[j][i] + borrow_in) > result_u60.limbs.segments[j][i]) as u64;
+                let sub = (borrow << 60) + result_u60.limbs.segments[j][i] - b_u60.limbs.segments[j][i] - borrow_in;
+                result_u60.limbs.segments[j][i] = sub;
+                borrow_in = borrow;
+
+                if ((j * N + i) & 1 == 1)
+                {
+                    let idx = (j * N + i - 1) / 2;
+                    if (carry & borrow == 1) {
+                        carry = 0;
+                        borrow = 0;
+                    }
+                    carry_flags[idx] = carry as bool;
+                    borrow_flags[idx] = borrow as bool;
+                }
+            }
+        }
+        (Self { limbs: U60Repr::into(result_u60) }, carry_flags, borrow_flags, underflow)
     }
 
     unconstrained fn __negate_with_flags(self) -> (Self, [bool; N]) where Params: BigNumParamsTrait<N> {
@@ -929,18 +1044,25 @@ impl<let N: u64, Params> std::ops::Add for BigNum<N, Params> where Params: BigNu
     // Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
     //       via evaluate_quadratic_expression
     fn add(self, other: Self) -> Self {
-        let result = self.__addmod(other);
-        // N.B. using `[]` as a parameter input does not produce a 2D array of size 0 (it's a 2D array of size-1 where the inner array is empty)
-        let empty_expression: [[BigNum<N, Params>; 0]; 0] = [];
-        let empty_flags: [[bool; 0]; 0] = [];
-        BigNum::evaluate_quadratic_expression(
-            empty_expression,
-            empty_flags,
-            empty_expression,
-            empty_flags,
-            [self, other, result],
-            [false, false, true],
-        );
+        // so we do... p - x - r = 0 and there might be borrow flags
+        let (result, carry_flags, borrow_flags, overflow_modulus) = self.__add_with_flags(other);
+        result.validate_in_range();
+        let modulus = Params::modulus();
+        let borrow_shift = 0x1000000000000000000000000000000;
+        let carry_shift = 0x1000000000000000000000000000000;
+
+        let mut subtrahend: [Field; N] = [0; N];
+        if (overflow_modulus) {
+            subtrahend = modulus;
+        }
+        let result_limb = self.limbs[0] + other.limbs[0] - subtrahend[0] - result.limbs[0] + (borrow_flags[0] as Field * borrow_shift) - (carry_flags[0] as Field * carry_shift);
+        assert(result_limb == 0);
+        for i in 1..N - 1 {
+            let result_limb = self.limbs[i] + other.limbs[i] - subtrahend[i] - result.limbs[i] - borrow_flags[i-1] as Field + carry_flags[i - 1] as Field + ((borrow_flags[i] as Field - carry_flags[i] as Field) * borrow_shift);
+            assert(result_limb == 0);
+        }
+        let result_limb = self.limbs[N-1] + other.limbs[N - 1] - subtrahend[N - 1] - result.limbs[N-1] - borrow_flags[N-2] as Field + carry_flags[N - 2] as Field;
+        assert(result_limb == 0);
         result
     }
 }
@@ -949,18 +1071,25 @@ impl<let N: u64, Params> std::ops::Sub for BigNum<N, Params> where Params: BigNu
     // Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
     //       via evaluate_quadratic_expression
     fn sub(self, other: Self) -> Self {
-        let result = self.__submod(other);
-        // N.B. using `[]` as a parameter input does not produce a 2D array of size 0 (it's a 2D array of size-1 where the inner array is empty)
-        let empty_expression: [[BigNum<N, Params>; 0]; 0] = [];
-        let empty_flags: [[bool; 0]; 0] = [];
-        BigNum::evaluate_quadratic_expression(
-            empty_expression,
-            empty_flags,
-            empty_expression,
-            empty_flags,
-            [self, other, result],
-            [true, false, false],
-        );
+        // so we do... p - x - r = 0 and there might be borrow flags
+        let (result, carry_flags, borrow_flags, underflow) = self.__sub_with_flags(other);
+        result.validate_in_range();
+        let modulus = Params::modulus();
+        let borrow_shift = 0x1000000000000000000000000000000;
+        let carry_shift = 0x1000000000000000000000000000000;
+
+        let mut addend: [Field; N] = [0; N];
+        if (underflow) {
+            addend = modulus;
+        }
+        let result_limb = self.limbs[0] - other.limbs[0] + addend[0] - result.limbs[0] + (borrow_flags[0] as Field * borrow_shift) - (carry_flags[0] as Field * carry_shift);
+        assert(result_limb == 0);
+        for i in 1..N - 1 {
+            let result_limb = self.limbs[i] - other.limbs[i] + addend[i] - result.limbs[i] - borrow_flags[i-1] as Field + carry_flags[i - 1] as Field + ((borrow_flags[i] as Field - carry_flags[i] as Field) * borrow_shift);
+            assert(result_limb == 0);
+        }
+        let result_limb = self.limbs[N-1] - other.limbs[N - 1] + addend[N - 1] - result.limbs[N-1] - borrow_flags[N-2] as Field + carry_flags[N - 2] as Field;
+        assert(result_limb == 0);
         result
     }
 }
