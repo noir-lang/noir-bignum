@@ -48,6 +48,7 @@ trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::M
     fn from(limbs: [Field]) -> Self;
     fn new() -> Self;
     fn one() -> Self;
+    fn num_limbs() -> u64;
     fn __derive_from_seed<let SeedBytes: u64>(seed: [u8; SeedBytes]) -> Self;
     fn __powmod(self, exponent: Self) -> Self;
     fn __negate(self) -> Self;
@@ -62,6 +63,7 @@ trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::M
     fn __compute_quadratic_expression<let LHS_N: u64, let RHS_N: u64, let NUM_PRODUCTS: u64, let ADD_N: u64>(lhs: [[Self; LHS_N]; NUM_PRODUCTS], lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS], rhs: [[Self; RHS_N]; NUM_PRODUCTS], rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS], add: [Self; ADD_N], add_flags: [bool; ADD_N]) -> (Self, Self);
     fn evaluate_quadratic_expression<let LHS_N: u64, let RHS_N: u64, let NUM_PRODUCTS: u64, let ADD_N: u64>(lhs: [[Self; LHS_N]; NUM_PRODUCTS], lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS], rhs: [[Self; RHS_N]; NUM_PRODUCTS], rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS], add: [Self; ADD_N], add_flags: [bool; ADD_N]);
     fn validate_in_range(self);
+    fn validate_in_field(self);
     fn assert_is_not_equal(self, other: Self);
     fn neg(self) -> Self;
     fn add(self, other: Self) -> Self { self + other }
@@ -70,6 +72,9 @@ trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::M
     fn div(self, other: Self) -> Self { self / other }
     fn eq(self, other: Self) -> bool;
     fn get(self) -> [Field];
+    fn get_limb(self, idx: u64) -> Field;
+    fn set_limb(&mut self, idx: u64, value: Field);
+    fn modulus_bits() -> u64;
 }
 
 
@@ -81,7 +86,9 @@ impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
 
     fn from(limbs: [Field]) -> Self { BigNum{ limbs: limbs.as_array() }}
     fn get(self) -> [Field] { self.limbs }
-
+    fn get_limb(self, idx: u64) -> Field { self.limbs[idx] }
+    fn set_limb(&mut self, idx: u64, value: Field) { self.limbs[idx] = value; }
+    fn modulus_bits() -> u64 { Params::modulus_bits() }
     fn eq(self, other: Self) -> bool {
         let diff: Self = self - other;
         // if self == other, possible values of `diff` will be `p` or `0`
@@ -179,7 +186,7 @@ impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
     // ### C O N S T R A I N E D    F U N C T I O N S
     // ####################################################################################################################
     // ####################################################################################################################
-
+    fn num_limbs() -> u64 { N }
     /**
      * @brief Constrain a degree-2 BigNum expression to be equal to 0 modulo Params::modulus()
      * @description The expression is of the form (when evaluated as an integer relation):
@@ -356,6 +363,23 @@ impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
         self.limbs[N - 1].assert_max_bit_size(final_limb_bits as u32);
     }
 
+    fn validate_in_field(self: Self) {
+        // N.B. need to combine with validate_in_range if `self` limbs have not been range constrained
+        let mut p_minus_self: [Field; N] = [0; N];
+        let modulus: [Field; N] = Params::modulus();
+        for i in 0..N {
+            p_minus_self[i] = modulus[i] - self.limbs[i];
+        }
+        let borrow_flags = self.__validate_in_field_compute_borrow_flags();
+        let two_pow_120: Field = 0x1000000000000000000000000000000;
+        p_minus_self[0] += borrow_flags[0] as Field * two_pow_120;
+        for i in 1..N - 1 {
+            p_minus_self[i] += (borrow_flags[i] as Field * two_pow_120 - borrow_flags[i-1] as Field);
+        }
+        p_minus_self[N - 1] -= borrow_flags[N - 2] as Field;
+        (Self { limbs: p_minus_self }).validate_in_range();
+    }
+
     /**
      * @brief Validate self != other
      * @details If A == B, then A == B mod N.
@@ -408,36 +432,101 @@ impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
 
 impl<let N: u64, Params> BigNum<N, Params> {
 
-    // N.B. not cryptographically secure! only use in tests
+    // Repeatedly hashes a seed to produce enough entropy to cover (modulus_bits * 2) number of bits 
+    // The result is then reduced modulo p to produce an element of the prime field
     unconstrained fn __derive_from_seed_impl<let SeedBytes: u64>(seed: [u8; SeedBytes]) -> Self where Params: BigNumParamsTrait<N> {
         let mut rolling_seed = seed;
-        let mut unreduced: Self = Self { limbs: [0; N] };
 
-        let half_N: u64 = N / 2;
-        for i in 0..(half_N) {
+        let mut to_reduce: ArrayX<Field, N, 2> = ArrayX { segments: [[0; N], [0; N]] };
+
+        let mut double_modulus_bits = Params::modulus_bits() * 2;
+        let mut double_modulus_bytes = (double_modulus_bits) / 8 + (double_modulus_bits % 8 != 0) as u64;
+
+        let mut last_limb_bytes = double_modulus_bytes % 15;
+        if (last_limb_bytes == 0) {
+            last_limb_bytes = 15;
+        }
+        let mut last_limb_bits = double_modulus_bits % 8;
+        if (last_limb_bits == 0) {
+            last_limb_bits = 8;
+        }
+        // i = 0 to 2 * (N - 1)
+
+        // i = 0 to N - 1
+        // x[2 * i] = 2* N - 2 = bottom
+        // x[2 * i + 1] = 2 * N - 1 = xxx
+
+        // i = 0 to N - 2
+        // x[2 * i] = 2N - 6
+        // x[2 * i + 1] = 2N - 5
+
+        // i = N - 2
+        // x[2 * i] = 2N - 4
+        // x[2 * i + 1] = 2N - 3
+
+        // i = N - 1
+        // x[2 * i] = 2N - 2 = important
+        // x[2 * i + 1] = 2N - 1 = x do not want
+        for i in 0..(N - 1) {
             let hash: [u8; 32] = std::hash::sha256(rolling_seed);
             let mut lo: Field = 0;
             let mut hi: Field = 0;
             for j in 0..15 {
                 hi *= 256;
                 lo *= 256;
-                hi += hash[j] as Field;
-                lo += hash[j + 15] as Field;
+                
+                if (i < 2 * N - 2) {
+                    lo += hash[j + 15] as Field;
+                    hi += hash[j] as Field;
+                }
+                // if ((i == N - 1) & (j == last_limb_bytes - 1)) {
+
+                // }
             }
-            unreduced.limbs[2 * i] = hi;
-            unreduced.limbs[2 * i + 1] = lo;
+            to_reduce.set(2 * i, lo);
+            to_reduce.set(2 * i + 1, hi);
             rolling_seed[0] += 1;
         }
-        if (half_N * 2 != N) {
+
+        {
             let hash: [u8; 32] = std::hash::sha256(rolling_seed);
             let mut hi: Field = 0;
-            for j in 0..15 {
+            for j in 0..(last_limb_bytes - 1) {
                 hi *= 256;
                 hi += hash[j] as Field;
             }
-            unreduced.limbs[N - 1] = hi;
+            hi *= 256;
+            let last_byte = hash[last_limb_bytes - 1];
+            let mask = (1 as u64 << (last_limb_bits) as u8) - 1;
+            let last_bits = last_byte as u64 & mask;
+            hi += last_bits as Field;
+            to_reduce.set(2 * N - 2, hi);
         }
-        let to_reduce: ArrayX<Field, N, 2> = ArrayX { segments: [unreduced.limbs, [0; N]] };
+        // (N - 2) => 2N - 4, 2N - 3
+        // 2N - 2
+        // {
+        //     let mut lo: Field = 0;
+        //     let mut hi: Field = 0;
+        //     for j in 0..15 {
+        //         lo *= 256;
+        //         lo += hash[j + 15] as Field;
+        //     }
+        //     println(f"LAST LIMB BYTES = {last_limb_bytes}");
+        //     for j in 0..(last_limb_bytes - 1) {
+        //         hi *= 256;
+        //         hi += hash[j] as Field;
+        //     }
+        //             println(f"LAST LIMB VAL = {hi}");
+        //     to_reduce.set(N - 1, lo);
+        //     to_reduce.set(2 * N - 2, hi);
+        // }
+        // 254 * 2 = 508
+
+        // 508 / 8 = 63.5 = 64 bytes
+        // = 4 limbs + 4 bytes on 5th limb
+        // Q * P + R
+        // Q cannot exceed 2^254
+        // Q * P cannot 
         let (_, remainder) = BigNum::__barrett_reduction(to_reduce, Params::redc_param(), Params::k(), Params::modulus());
         BigNum { limbs: remainder }
     }
@@ -1004,23 +1093,6 @@ impl<let N: u64, Params> BigNum<N, Params> {
         // Note: replace magic number 6 with definition
         let final_limb_bits = Params::modulus_bits() - ((N - 1) * 120) + 6;
         self.limbs[N - 1].assert_max_bit_size(final_limb_bits as u32);
-    }
-
-    fn validate_in_field(self: Self) where Params: BigNumParamsTrait<N> {
-        // N.B. need to combine with validate_in_range if `self` limbs have not been range constrained
-        let mut p_minus_self: [Field; N] = [0; N];
-        let modulus: [Field; N] = Params::modulus();
-        for i in 0..N {
-            p_minus_self[i] = modulus[i] - self.limbs[i];
-        }
-        let borrow_flags = self.__validate_in_field_compute_borrow_flags();
-        let two_pow_120: Field = 0x1000000000000000000000000000000;
-        p_minus_self[0] += borrow_flags[0] as Field * two_pow_120;
-        for i in 1..N - 1 {
-            p_minus_self[i] += (borrow_flags[i] as Field * two_pow_120 - borrow_flags[i-1] as Field);
-        }
-        p_minus_self[N - 1] -= borrow_flags[N - 2] as Field;
-        (Self { limbs: p_minus_self }).validate_in_range();
     }
 
     /**
