@@ -75,6 +75,7 @@ trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::M
     fn get_limb(self, idx: u64) -> Field;
     fn set_limb(&mut self, idx: u64, value: Field);
     fn modulus_bits() -> u64;
+    fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self;
 }
 
 
@@ -102,6 +103,14 @@ impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
             is_equal_zero = is_equal_zero & (diff.limbs[i] == 0);
         }
         is_equal_modulus | is_equal_zero
+    }
+
+    fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self {
+        let mut result: Self = BigNum::new();
+        for i in 0..N {
+            result.limbs[i] = (lhs.limbs[i] - rhs.limbs[i]) * predicate as Field + rhs.limbs[i];
+        }
+        result
     }
 
     // ####################################################################################################################
