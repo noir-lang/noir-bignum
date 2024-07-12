@@ -552,11 +552,24 @@ impl<let N: u64, Params> BigNum<N, Params> {
         assert(num_bits > modulus_bits);
         assert(num_bits - modulus_bits < 8);
         let mut result = BigNum::new();
-        for i in 0..N {
+        
+        let excess_bytes = N * 15 - NBytes;
+        let final_limb_bytes = 15 - excess_bytes;
+        let mut limb: Field = 0;
+        let mut k = 0;
+        for _j in 0..final_limb_bytes {
+            limb *= 256;
+            limb += x[k] as Field;
+            k += 1;
+        }
+        result.limbs[N - 1] = limb;
+
+        for i in 1..N {
             let mut limb: Field = 0;
-            for j in 0..15 {
+            for _j in 0..15 {
                 limb *= 256;
-                limb += x[i * 15 + j] as Field;
+                limb += x[k] as Field;
+                k += 1;
             }
             result.limbs[N - i - 1] = limb;
         }
@@ -566,7 +579,8 @@ impl<let N: u64, Params> BigNum<N, Params> {
         if num_bits == modulus_bits {
             max_bits_in_most_significant_byte = 8;
         }
-        let most_significant_byte: Field = x[N * 15 - 1] as Field;
+        
+        let most_significant_byte: Field = x[NBytes - 1] as Field;
         most_significant_byte.assert_max_bit_size(max_bits_in_most_significant_byte as u32);
         result
     }
