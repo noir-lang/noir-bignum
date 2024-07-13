@@ -11,7 +11,7 @@ impl BigNumParamsTrait<3> for Bls12_381_Fr_Params {
         [ 0xbda402fffe5bfeffffffff00000001, 0xa753299d7d483339d80809a1d80553, 0x0073ed ]
     }
     fn double_modulus() -> [Field; 3] {
-        [ 0x7b4805fffcb7fdfffffffe00000002, 0x4ea6533afa906673b0101343b00aa7, 0x00e7db ]
+        [ 0x017b4805fffcb7fdfffffffe00000002, 0x014ea6533afa906673b0101343b00aa6, 0xe7da ]
     }
     fn k() -> u64 {
         255
@@ -20,3 +20,4 @@ impl BigNumParamsTrait<3> for Bls12_381_Fr_Params {
         255
     }
 }
+
