@@ -48,7 +48,41 @@ See `bignum_test.nr` for examples.
 
 Note: `__divmod`, `__powmod` and `div` are expensive due to requiring modular exponentiations during witness computation. It is worth modifying witness generation algorithms to minimize the number of modular exponentiations required. (for example, using batch inverses)
 
-### Deriving BNInstance parameters: `modulus`, `redc_param`
+### `evaluate_quadratic_expression`
+
+The method `evaluate_quadratic_expression` has the following interface:
+
+```rust
+    fn evaluate_quadratic_expression<let LHS_N: u64, let RHS_N: u64, let NUM_PRODUCTS: u64, let ADD_N: u64>(
+        self,
+        lhs_terms: [[BN; LHS_N]; NUM_PRODUCTS],
+        lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
+        rhs_terms: [[BN; RHS_N]; NUM_PRODUCTS],
+        rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
+        linear_terms: [BN; ADD_N],
+        linear_flags: [bool; ADD_N]
+    );
+```
+
+`NUM_PRODUCTS` represents the number of multiplications being summed (e.g. for `a*b + c*d == 0`, `NUM_PRODUCTS` = 2).
+
+`LHS_N, RHS_N` represents the number of `BigNum` objects being summed in the left and right operands of each product. For example, for `(a + b) * c + (d + e) * f == 0`, `LHS_N = 2`, `RHS_N = 1`.
+
+`ADD_N` represents the number of `BigNum` objects being added into the product (e.g. for `a * b + c + d == 0`, `ADD_N = 2`).
+
+The flag parameters `lhs_flags, rhs_flags, add_flags` define whether an operand in the expression will be negated. For example, for `(a + b) * c + (d - e) * f - g == 0`, we would have:
+
+```
+let lhs_terms = [[a, b], [d, e]];
+let lhs_flags = [[false, false], [false, true]];
+let rhs_terms = [[c], [f]];
+let rhs_flags = [[false], [false]];
+let add_terms = [g];
+let add_flags = [true];
+instance.evaluate_quadratic_expresson(lhs_terms, lhs_flags, rhs_terms, rhs_flags, linear_terms, linear_flags);
+```
+
+# Deriving BNInstance parameters: `modulus`, `redc_param`
 
 For common fields, the intention is that BNInstance parameters do not have to be derived; `BigNum::fields` contains `BigNumInstance` constructors for common fields (if you need a field that is missing, please create an issue).
 
