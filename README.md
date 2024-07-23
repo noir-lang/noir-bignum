@@ -72,7 +72,7 @@ The method `evaluate_quadratic_expression` has the following interface:
 
 The flag parameters `lhs_flags, rhs_flags, add_flags` define whether an operand in the expression will be negated. For example, for `(a + b) * c + (d - e) * f - g == 0`, we would have:
 
-```
+```rust
 let lhs_terms = [[a, b], [d, e]];
 let lhs_flags = [[false, false], [false, true]];
 let rhs_terms = [[c], [f]];
