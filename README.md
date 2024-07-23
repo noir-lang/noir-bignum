@@ -27,7 +27,7 @@ BigNumInstance parameters (`modulus`, `redc_param`) can be provided at runtime v
 
 Example usage:
 
-```
+```rust
 use crate::bignum::fields::bn254Fq::BNParams as BNParams;
 use crate::bignum::fields::BN254Instance;
 
