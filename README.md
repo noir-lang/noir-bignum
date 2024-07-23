@@ -84,6 +84,19 @@ let add_flags = [true];
 instance.evaluate_quadratic_expresson(lhs_terms, lhs_flags, rhs_terms, rhs_flags, linear_terms, linear_flags);
 ```
 
+### Computing witness values
+
+When computing inputs to `evaluate_quadratic_expresson` , unconstrained functions `__addmod`, `__submod`, `__mulmod`, `__divmod` can be used to compute witness values.
+
+e.g. if we wanted to compute `(a + b) * c + (d - e) * f = g` by evaluating the above example, `g` can be derived via:
+
+```
+let bn: BigNumInstance<3, BNParams> = BNInstance();
+let t0 = bn.__mulmod(bn.__addmod(a, b), c);
+let t1 = bn.__mulmod(bn.__addmod(d, bn.__neg(e)), f);
+let g = bn.__addmod(t0, t1);
+```
+
 # Deriving BNInstance parameters: `modulus`, `redc_param`
 
 For common fields, the intention is that BNInstance parameters do not have to be derived; `BigNum::fields` contains `BigNumInstance` constructors for common fields (if you need a field that is missing, please create an issue).
