@@ -1,4 +1,5 @@
 use dep::std;
+use crate::utils::split_bits;
 
 /**
  * @brief Array abstraction, whose size is a known multiplier `SizeMultiplier` of an initial size `N`
@@ -72,5 +73,39 @@ impl<T, let N: u64, let SizeMultiplier: u64> ArrayX<T, N, SizeMultiplier> {
         let segment = i / N;
         let index = i % N;
         self.segments[segment][index]
+    }
+
+    unconstrained fn __normalize_limbs<let NumSegments: u64>(x: ArrayX<Field, N, NumSegments>, range: u64) -> ArrayX<Field, N, NumSegments> {
+        let mut normalized: ArrayX<Field, N, NumSegments> = ArrayX::new();
+        let mut inp = x;
+        // (9 limb mul = 17 product terms)
+
+        // a2 a1 a0
+        // b2 b1 b0
+
+        // a0b0
+        // a1b0 a0b1
+        // a2b0 a1b1 a0b2
+        // a2b1 a1b2
+        // a2b2
+
+        // r0 lo
+        // r0 hi + r1 lo
+        // r1 hi + r2 lo
+        // r2 hi + r3 lo
+        // r3 hi + r4 lo
+        // r4 hi = 6?
+        for i in 0..(range - 1) {
+            let (lo, hi) = split_bits::split_120_bits(inp.get(i));
+
+            normalized.set(i, lo);
+            inp.set(i + 1, inp.get(i + 1) + hi);
+        }
+        {
+            let (lo, hi) = split_bits::split_120_bits(inp.get(range - 1));
+            normalized.set(range - 1, lo);
+            assert(hi == 0);
+        }
+        normalized
     }
 }

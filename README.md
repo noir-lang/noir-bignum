@@ -1,6 +1,7 @@
 # noir-bignum
 
-An optimized big number library for Noir
+An optimized big number library for Noir. Requires noir version >= 0.32.
+For barretenberg backend requires bb version at least 0.46.1 (`bbup -v 0.46.1`)
 
 noir-bignum evaluates modular arithmetic for large integers of any length.
 
@@ -8,42 +9,53 @@ BigNum instances are parametrised by a struct that satisfies BigNumParamsTrait.
 
 Multiplication operations for a 2048-bit prime field cost approx. 930 gates.
 
-bignum can evaluate large integer arithmetic by defining a modulus() that is a power of 2. 
+bignum can evaluate large integer arithmetic by defining a modulus() that is a power of 2.
 
-```rust
-/**
- * @brief BigNumParamsTrait defines a "field" with which to parametrise BigNum.
-**/
-trait BigNumParamsTrait<N> {
-    /**
-     * @brief modulus: all BigNum operations are evaluated modulo this value
-     **/
-    fn modulus() -> [Field; N];
-    /**
-     * @brief double_modulus: used when performing negations and subtractions
-     **/
-    fn double_modulus() -> [Field; N];
-    /**
-     * @brief redc_param used for __barrett_reduction. See https://en.wikipedia.org/wiki/Barrett_reduction
-     **/
-    fn redc_param() -> [Field; N];
-    /**
-     * @brief k used for __barrett_reduction. Should be at least modulus_bits() + 1
-     **/
-    fn k() -> u64;
-    /**
-     * @brief modulus_bits = log2(modulus) rounded up
-     **/
-    fn modulus_bits() -> u64;
-}
-```
+# Types
+
+bignum operations are evaluated using two structs and a trait: `ParamsTrait`, `BigNum<N, Params>`, `BigNumInstance<N, Params>`
+
+`ParamsTrait` defines the compile-time properties of a BigNum instance: the number of modulus bits and the Barret reduction parameter `k` (TODO: these two values should be the same?!)
+
+`BigNumInstance` is a generator type that is used to create `BigNum` objects and evaluate operations on `BigNum` objects. It wraps BigNum parameters that may not be known at compile time (the `modulus` and a reduction parameter required for Barret reductions (`redc_param`))
+
+The `BigNum` struct represents individual big numbers.
+
+BigNumInstance parameters (`modulus`, `redc_param`) can be provided at runtime via witnesses (e.g. RSA verification). The `redc_param` is only used in unconstrained functions and does not need to be derived from `modulus` in-circuit.
 
 # Usage
 
-Basic expressions can be evaluated using `BigNum::Add, BigNum::Sub, BigNum::Mul`. However, when evaluating relations (up to degree 2) that are more complex than single operations, the function `BigNum::evaluate_quadratic_expression` is more efficient (due to needing only a single modular reduction).
+Example usage:
 
-Unconstrained functions `__mulmod, __addmod, __submod, __divmod, __powmod` can be used to compute witnesses that can then be fed into `BigNum::evaluate_quadratic_expression`.
+```
+use crate::bignum::fields::bn254Fq::BNParams as BNParams;
+use crate::bignum::fields::BN254Instance;
+
+type Fq = BigNum<3, BNParams>;
+type FqInst = BigNumInstance<3, BNParams>;
+
+fn example(Fq a, Fq b) -> Fq {
+    let instance = BN254Instance();
+    instance.mul(a, b)
+}
+```
+
+Basic expressions can be evaluated using `BigNumInstance::add, BigNumInstance::sub, BigNumInstance::mul`. However, when evaluating relations (up to degree 2) that are more complex than single operations, the function `BigNumInstance::evaluate_quadratic_expression` is more efficient (due to needing only a single modular reduction).
+
+Unconstrained functions `__mulmod, __addmod, __submod, __divmod, __powmod` can be used to compute witnesses that can then be fed into `BigNumInstance::evaluate_quadratic_expression`.
 
 See `bignum_test.nr` for examples.
 
-Note: `__divmod`, `__powmod` and `Div` are expensive due to requiring modular exponentiations during witness computation. It is worth modifying witness generation algorithms to minimize the number of modular exponentiations required. (for example, using batch inverses)
+Note: `__divmod`, `__powmod` and `div` are expensive due to requiring modular exponentiations during witness computation. It is worth modifying witness generation algorithms to minimize the number of modular exponentiations required. (for example, using batch inverses)
+
+### Deriving BNInstance parameters: `modulus`, `redc_param`
+
+For common fields, the intention is that BNInstance parameters do not have to be derived; `BigNum::fields` contains `BigNumInstance` constructors for common fields (if you need a field that is missing, please create an issue).
+
+For other moduli (e.g. those used in RSA verification), both `modulus` and `redc_param` must be computed and formatted according to the following speficiations:
+
+`modulus` represents the BigNum modulus, encoded as an array of `Field` elements that each encode 120 bits of the modulus. The first array element represents the least significant 120 bits.
+
+`redc_param` is equal to `(1 << (2 * Params::modulus_bits())) / modulus` . This must be computed outside of the circuit and provided either as a private witness or hardcoded constant. (computing it via an unconstrained function would be very expensive until noir witness computation times improve)
+
+For example derivations see `https://github.com/noir-lang/noir_rsa`
