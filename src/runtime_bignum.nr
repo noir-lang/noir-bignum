@@ -89,13 +89,19 @@ trait BigNumParamsTrait<let N: u64> {
     fn modulus_bits() -> u64;
 }
 
-// add modulus_u60?
 struct BigNumInstance<let N: u64, Params> {
     
-    // /**
-    //  * @brief modulus: all BigNum operations are evaluated modulo this value
-    //  **/
+    /**
+     * @brief modulus: all BigNum operations are evaluated modulo this value
+     **/
     modulus: [Field; N],
+
+    /**
+     * @brief modulus but represented in a U60Repr form
+     **/
+    modulus_u60: U60Repr<N, 2>,
+    modulus_u60_x4: U60Repr<N, 4>,
+
     // /**
     //  * @brief double_modulus: used when performing negations and subtractions
     //  **/
@@ -706,7 +712,13 @@ impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
     // ####################################################################################################################
 
     fn new(modulus: [Field; N], redc_param: [Field; N]) -> Self {
-        Self { redc_param, modulus, double_modulus: get_double_modulus(modulus) }
+        Self {
+            redc_param,
+            modulus,
+            modulus_u60: U60Repr::from(modulus),
+            modulus_u60_x4: U60Repr::from(modulus),
+            double_modulus: get_double_modulus(modulus)
+        }
     }
 
     unconstrained fn __derive_from_seed_impl<let SeedBytes: u64>(self, seed: [u8; SeedBytes]) -> BigNum<N, Params> {
@@ -759,7 +771,13 @@ impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
             to_reduce.set(2 * N - 2, hi);
         }
 
-        let (_, remainder) = __barrett_reduction(to_reduce, self.redc_param, Params::k(), self.modulus);
+        let (_, remainder) = __barrett_reduction(
+            to_reduce,
+            self.redc_param,
+            Params::k(),
+            self.modulus,
+            self.modulus_u60_x4
+        );
         let mut result = BigNum::new();
         result.limbs = remainder;
         result
@@ -812,7 +830,8 @@ impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
             mul.__normalize_limbs(N + N),
             self.redc_param,
             Params::k(),
-            self.modulus
+            self.modulus,
+            self.modulus_u60_x4
         );
 
         let mut quotient = BigNum::from_array(q);
@@ -831,9 +850,8 @@ impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
 
         let mut z_u60 = x_u60 + y_u60;
 
-        let modulus_u60 : U60Repr<N,2> = U60Repr::from(self.modulus);
-        if z_u60.gte(modulus_u60) {
-            z_u60 = z_u60 - modulus_u60;
+        if z_u60.gte(self.modulus_u60) {
+            z_u60 = z_u60 - self.modulus_u60;
         }
         let mut result = BigNum::from_array(U60Repr::into(z_u60));
         result
@@ -852,8 +870,7 @@ impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
     unconstrained fn __negate_impl(self, val: BigNum<N, Params>) -> BigNum<N, Params> {
         let f: [Field; N] = val.limbs;
         let x_u60 : U60Repr<N, 2> = U60Repr::from(f);
-        let modulus_u60 : U60Repr<N, 2> = U60Repr::from(self.modulus);
-        let mut result = BigNum::from_array(U60Repr::into(modulus_u60 - x_u60));
+        let mut result = BigNum::from_array(U60Repr::into(self.modulus_u60 - x_u60));
         result
     }
 
@@ -865,15 +882,14 @@ impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         let a_u60 : U60Repr<N, 2> = U60Repr::from(lhs.limbs);
         let b_u60 : U60Repr<N, 2> = U60Repr::from(rhs.limbs);
         let add_u60 = a_u60 + b_u60;
-        let modulus_u60 : U60Repr<N, 2> = U60Repr::from(self.modulus);
 
-        let overflow = add_u60.gte(modulus_u60);
+        let overflow = add_u60.gte(self.modulus_u60);
 
         let mut subtrahend_u60 : U60Repr<N, 2> = U60Repr { limbs: ArrayX::new() };
         let mut result_u60 : U60Repr<N, 2> = U60Repr { limbs: ArrayX::new() };
 
         if overflow {
-            subtrahend_u60 = modulus_u60;
+            subtrahend_u60 = self.modulus_u60;
         }
 
         let mut carry: u64 = 0;
@@ -919,7 +935,6 @@ impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
     ) -> (BigNum<N, Params>, [bool; N], [bool; N], bool) {
         let a_u60 : U60Repr<N, 2> = U60Repr::from(lhs.limbs);
         let b_u60 : U60Repr<N, 2> = U60Repr::from(rhs.limbs);
-        let modulus_u60 : U60Repr<N, 2> = U60Repr::from(self.modulus);
 
         let underflow = b_u60.gte(a_u60 + U60Repr::one());
 
@@ -927,7 +942,7 @@ impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         let mut result_u60 : U60Repr<N, 2> = U60Repr { limbs: ArrayX::new() };
 
         if underflow {
-            addend_u60 = modulus_u60;
+            addend_u60 = self.modulus_u60;
         }
 
         let mut carry: u64 = 0;
@@ -968,7 +983,6 @@ impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
     unconstrained fn __negate_with_flags(self, val: BigNum<N, Params>) -> (BigNum<N, Params>, [bool; N]) {
         let f: [Field; N] = val.limbs;
         let x_u60 : U60Repr<N, 2> = U60Repr::from(f);
-        let modulus_u60 : U60Repr<N, 2> = U60Repr::from(self.modulus);
         let mut result_u60 : U60Repr<N, 2> = U60Repr { limbs: ArrayX::new() };
 
         let mut borrow: u64 = 0;
@@ -977,8 +991,8 @@ impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         let mut borrow_flags: [bool; N] = [false; N];
         for j in 0..2 {
             for i in 0..N {
-                borrow = ((x_u60.limbs.segments[j][i] + borrow_in) > modulus_u60.limbs.segments[j][i]) as u64;
-                let sub = (borrow << 60) + modulus_u60.limbs.segments[j][i]
+                borrow = ((x_u60.limbs.segments[j][i] + borrow_in) > self.modulus_u60.limbs.segments[j][i]) as u64;
+                let sub = (borrow << 60) + self.modulus_u60.limbs.segments[j][i]
                     - x_u60.limbs.segments[j][i]
                     - borrow_in;
                 result_u60.limbs.segments[j][i] = sub;
@@ -1002,10 +1016,9 @@ impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
     }
 
     unconstrained fn __invmod_impl(self, val: BigNum<N, Params>) -> BigNum<N, Params> {
-        let modulus_u60: U60Repr<N, 2> = U60Repr::from(self.modulus);
         let one: BigNum<N, Params> = BigNum::one();
         let one_u60: U60Repr<N, 2> = U60Repr::from(one.limbs);
-        let exponent = modulus_u60.sub(one_u60.add(one_u60));
+        let exponent = self.modulus_u60.sub(one_u60.add(one_u60));
         let mut result = BigNum::from_array(U60Repr::into(exponent));
         self.__powmod(val, result)
     }
@@ -1142,7 +1155,13 @@ impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         // TODO: ugly! Will fail if input slice is empty
         let k  = Params::k();
 
-        let (quotient, remainder) = __barrett_reduction(relation_result, self.redc_param, k, self.modulus);
+        let (quotient, remainder) = __barrett_reduction(
+            relation_result,
+            self.redc_param,
+            k,
+            self.modulus,
+            self.modulus_u60_x4
+        );
 
         let mut q = BigNum::from_array(quotient);
         let mut r = BigNum::from_array(remainder);
@@ -1197,7 +1216,13 @@ impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
 
         let relation_result: ArrayX<Field, N, 2> = mulout_p.__normalize_limbs(N + N);
         let modulus: [Field; N] = self.modulus;
-        let (quotient, remainder) = __barrett_reduction(relation_result, self.redc_param, Params::k(), modulus);
+        let (quotient, remainder) = __barrett_reduction(
+            relation_result,
+            self.redc_param,
+            Params::k(),
+            modulus,
+            self.modulus_u60_x4
+        );
         assert(remainder == [0; N]);
 
         for i in 0..N {
@@ -1257,7 +1282,8 @@ unconstrained fn __barrett_reduction<let N: u64>(
     x: ArrayX<Field, N, 2>,
     redc_param: [Field; N],
     k: u64,
-    modulus: [Field; N]
+    modulus: [Field; N],
+    modulus_u60: U60Repr<N, 4>
 ) -> ([Field; N], [Field; N]) {
     let mut mulout: ArrayX<Field, N, 3>  = ArrayX { segments: [[0; N]; 3] };
     for i in 0..(N + N) {
@@ -1293,7 +1319,6 @@ unconstrained fn __barrett_reduction<let N: u64>(
     }
     let quotient_mul_modulus_u60: U60Repr<N, 4> = U60Repr::new(quotient_mul_modulus_normalized);
 
-    let modulus_u60: U60Repr<N, 4> = U60Repr::from(modulus);
     let x_u60 : U60Repr<N, 4> = U60Repr::new(x);
     let mut remainder_u60 = x_u60 - quotient_mul_modulus_u60;
 

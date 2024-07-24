@@ -132,16 +132,15 @@ BigNumInstance parameters (`modulus`, `redc_param`) can be provided at runtime v
 Example usage:
 
 ```rust
-use crate::bignum::fields::bn254Fq::BNParams;
-use crate::bignum::fields::BN254Instance;
-use crate::bignum::BigNum;
+use crate::bignum::fields::bn254Fq{BNParams, BN254INSTANCE};
 use crate::bignum::runtime_bignum::BigNumInstance;
+use crate::bignum::BigNum;
 
 type Fq = BigNum<3, BNParams>;
 type FqInst = BigNumInstance<3, BNParams>;
 
 fn example(Fq a, Fq b) -> Fq {
-    let instance = BN254Instance();
+    let instance: FqInst = BN254INSTANCE;
     instance.mul(a, b)
 }
 ```
