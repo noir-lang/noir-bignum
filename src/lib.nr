@@ -126,7 +126,7 @@ impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
     }
 
     // n.b. needs to be declared unconstrained because we take in a mutable slice
-    unconstrained fn __batch_invert<let M: u64>(x: [Self; M]) -> [Self; M] {
+    fn __batch_invert<let M: u64>(x: [Self; M]) -> [Self; M] {
         Params::get_instance().__batch_invert(x)
     }
 
