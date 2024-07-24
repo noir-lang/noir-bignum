@@ -1,8 +1,41 @@
 use crate::BigNum;
 use crate::BigNumParamsTrait;
+use crate::runtime_bignum::BigNumInstance;
+use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
+
+// struct BNParamsInner {}
+// impl RuntimeBigNumParamsTrait<3> for BNParamsInner {
+//     fn k() -> u64 {
+//         255
+//     }
+//     fn modulus_bits() -> u64 {
+//         254
+//     }
+// }
 
 struct BNParams {}
+impl RuntimeBigNumParamsTrait<3> for BNParams {
+    fn k() -> u64 {
+        255
+    }
+    fn modulus_bits() -> u64 {
+        254
+    }
+}
 impl BigNumParamsTrait<3> for BNParams {
+    fn get_instance() -> BigNumInstance<3, Self> {
+        BigNumInstance {
+            redc_param: [
+                0x000000000000000000000000000000000059785d9f353021bcebb62866fe4394, 0x0000000000000000000000000000000000d18988e8129eac1d2961a01cc04eba, 0x0000000000000000000000000000000000000000000000000000000000015291
+            ],
+            modulus: [
+                0x0000000000000000000000000000000000816a916871ca8d3c208c16d87cfd47, 0x00000000000000000000000000000000004e72e131a029b85045b68181585d97, 0x0000000000000000000000000000000000000000000000000000000000003064
+            ],
+            double_modulus: [
+                0x000000000000000000000000000000000102d522d0e3951a7841182db0f9fa8e, 0x00000000000000000000000000000000019ce5c263405370a08b6d0302b0bb2e, 0x00000000000000000000000000000000000000000000000000000000000060c7
+            ]
+        }
+    }
     // fn redc_param() -> [Field; 3] {
     //     [
     //         0x000000000000000000000000000000000059785d9f353021bcebb62866fe4394, 0x0000000000000000000000000000000000d18988e8129eac1d2961a01cc04eba, 0x0000000000000000000000000000000000000000000000000000000000015291
@@ -18,10 +51,10 @@ impl BigNumParamsTrait<3> for BNParams {
     //         0x000000000000000000000000000000000102d522d0e3951a7841182db0f9fa8e, 0x00000000000000000000000000000000019ce5c263405370a08b6d0302b0bb2e, 0x00000000000000000000000000000000000000000000000000000000000060c7
     //     ]
     // }
-    fn k() -> u64 {
-        255
-    }
-    fn modulus_bits() -> u64 {
-        254
-    }
+    // fn k() -> u64  {
+    //     255
+    // }
+    // fn modulus_bits() -> u64 {
+    //     254
+    // }
 }

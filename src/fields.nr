@@ -2,7 +2,7 @@ mod bn254Fq;
 mod bls12381Fr;
 
 use crate::BigNum;
-use crate::BigNumInstance;
+use crate::runtime_bignum::BigNumInstance;
 use crate::fields::bn254Fq::BNParams;
 use crate::fields::bls12381Fr::Bls12_381_Fr_Params;
 
