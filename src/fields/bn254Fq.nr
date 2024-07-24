@@ -32,4 +32,18 @@ impl BigNumParamsTrait<3> for BNParams {
     fn get_instance() -> BigNumInstance<3, Self> {
         BN254INSTANCE
     }
+    fn k() -> u64 {
+        255
+    }
+    fn modulus_bits() -> u64 {
+        254
+    }
+}
+impl BNParams {
+    fn k() -> u64 {
+        255
+    }
+    fn modulus_bits() -> u64 {
+        254
+    }
 }

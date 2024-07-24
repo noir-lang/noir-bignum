@@ -30,11 +30,11 @@ trait BigNumParamsTrait<let N: u64> where Self: RuntimeBigNumParamsTrait<N> {
     /**
      * @brief k used for __barrett_reduction. Should be at least modulus_bits() + 1
      **/
-    fn k() -> u64 { Self::k() }
+    fn k() -> u64;
     /**
      * @brief modulus_bits = log2(modulus) rounded up
      **/
-    fn modulus_bits() -> u64 { Self::modulus_bits() }
+    fn modulus_bits() -> u64;
 }
 
 trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::Mul + std::ops::Div + std::ops::Eq + RuntimeBigNumTrait {
@@ -44,6 +44,8 @@ trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::M
     fn new() -> Self { RuntimeBigNumTrait::new() }
     fn one() -> Self { RuntimeBigNumTrait::one() }
     fn modulus() -> Self;
+    fn modulus_bits(self) -> u64;
+    fn num_limbs(self) -> u64;
     fn __derive_from_seed<let SeedBytes: u64>(seed: [u8; SeedBytes]) -> Self;
     fn __powmod(self, exponent: Self) -> Self;
     fn __negate(self) -> Self;
@@ -53,6 +55,7 @@ trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::M
     fn __divmod(self, other: Self) -> Self;
     fn __invmod(self) -> Self;
     fn __batch_invert<let M: u64>(to_invert: [Self; M]) -> [Self; M];
+    fn __batch_invert_slice(x: [Self]) -> [Self];
     fn __is_zero(self) -> bool { RuntimeBigNumTrait::__is_zero(self) }
     fn __eq(self, other: Self) -> bool { RuntimeBigNumTrait::__eq(self, other) }
     fn __compute_quadratic_expression<let LHS_N: u64, let RHS_N: u64, let NUM_PRODUCTS: u64, let ADD_N: u64>(lhs: [[Self; LHS_N]; NUM_PRODUCTS], lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS], rhs: [[Self; RHS_N]; NUM_PRODUCTS], rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS], add: [Self; ADD_N], add_flags: [bool; ADD_N]) -> (Self, Self);
@@ -76,6 +79,16 @@ trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::M
 impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N> {
 
     
+    // Weird compiler issue where if we do not pass `Self` as a parameter to these methods,
+    // then a generic struct that conforms to BigNumTrait cannot access these methods?
+    // the Params: BigNumParamsTrait<N> needs to be satisfied, but the BigNumTrait has no knowledge of BigNumParamsTrait?
+    // but...passing in a Self parameter seems to fix. really weird
+    fn modulus_bits(_: Self) -> u64 {
+        let r: u64 = Params::modulus_bits();
+        r
+    }
+    fn num_limbs(_: Self) -> u64 { N }
+
     fn modulus() -> Self {
         Params::get_instance().modulus()
     }
@@ -125,11 +138,14 @@ impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
         Params::get_instance().__divmod(self, rhs)
     }
 
-    // n.b. needs to be declared unconstrained because we take in a mutable slice
     fn __batch_invert<let M: u64>(x: [Self; M]) -> [Self; M] {
         Params::get_instance().__batch_invert(x)
     }
 
+    // n.b. needs to be declared unconstrained because we return a slice from an unconstrained runtime
+    unconstrained fn __batch_invert_slice(x: [Self]) -> [Self] {
+        Params::get_instance().__batch_invert_slice(x)
+    }
     fn __invmod(self) -> Self {
         Params::get_instance().__invmod(self)
     }

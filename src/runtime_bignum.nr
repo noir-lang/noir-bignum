@@ -21,8 +21,6 @@ trait BigNumTrait {
     fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self;
     fn validate_in_range(self);
     fn validate_quotient_in_range(self);
-    fn get_modulus_bits() -> u64;
-    fn num_limbs() -> u64;
     fn __is_zero(self) -> bool;
     fn __eq(self, rhs: Self) -> bool;
 }
@@ -42,6 +40,8 @@ trait BigNumInstanceTrait<BN> where BN: BigNumTrait {
     fn __mulmod(self, lhs: BN, rhs: BN) -> BN;
     fn __divmod(self, lhs: BN, rhs: BN) -> BN;
     fn __batch_invert<let M: u64>(self, x: [BN; M]) -> [BN; M];
+    fn __batch_invert_slice(self, x: [BN]) -> [BN];
+
     fn __invmod(self, val: BN) -> BN;
     fn __powmod(self, val: BN, exponent: BN) -> BN;
     fn __compute_quadratic_expression<let LHS_N: u64, let RHS_N: u64, let NUM_PRODUCTS: u64, let ADD_N: u64>(
@@ -255,13 +255,6 @@ impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
         self.limbs[N - 1].assert_max_bit_size(final_limb_bits as u32);
     }
 
-    fn get_modulus_bits() -> u64 {
-        Params::modulus_bits()
-    }
-    fn num_limbs() -> u64 {
-        N
-    }
-
     fn __is_zero(self) -> bool {
         self.__is_zero_impl()
     }
@@ -323,9 +316,13 @@ impl<let N: u64, Params,> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInsta
         self.__divmod_impl(lhs, rhs)
     }
 
-    // n.b. needs to be declared unconstrained because we take in a mutable slice
     fn __batch_invert<let M: u64>(self, x: [BigNum<N, Params>; M]) -> [BigNum<N, Params>; M] {
         self.batch_invert_impl(x)
+    }
+
+    // n.b. needs to be declared unconstrained because we return a slice from an unconstrained runtime
+    unconstrained fn __batch_invert_slice(self, x: [BigNum<N, Params>]) -> [BigNum<N, Params>] {
+        self.batch_invert_slice_impl(x)
     }
 
     fn __invmod(self, val: BigNum<N, Params>) -> BigNum<N, Params> {
@@ -1033,6 +1030,33 @@ impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
             if (x[i].__is_zero() == false) {
                 accumulator = self.__mulmod(accumulator, x[i]);
             }
+        }
+
+        accumulator = self.__invmod(accumulator);
+        let mut T0: BigNum<N, Params> = BigNum::new();
+        T0.limbs = [0; N];
+        for i in 0..x.len() {
+            let idx = x.len() - 1 - i;
+            if (x[idx].__is_zero() == false) {
+                T0 = self.__mulmod(accumulator, temporaries[idx]);
+                accumulator = self.__mulmod(accumulator, x[idx]);
+                result[idx] = T0;
+            }
+        }
+        result
+    }
+
+    unconstrained fn batch_invert_slice_impl(self, x: [BigNum<N, Params>]) -> [BigNum<N, Params>] {
+        // TODO: ugly! Will fail if input slice is empty
+        let mut accumulator: BigNum<N, Params> = BigNum::one();
+        let mut result: [BigNum<N, Params>] = [BigNum::new()];
+        let mut temporaries: [BigNum<N, Params>] = &[];
+        for i in 0..x.len() {
+            temporaries = temporaries.push_back(accumulator);
+            if (x[i].__is_zero() == false) {
+                accumulator = self.__mulmod(accumulator, x[i]);
+            }
+            result = result.push_back(BigNum::new());
         }
 
         accumulator = self.__invmod(accumulator);

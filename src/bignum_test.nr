@@ -81,6 +81,12 @@ impl BigNumParamsTrait<18> for Test2048Params {
     ];
     BigNumInstance::new(modulus, redc_param)
     }
+    fn k() -> u64 {
+        2048
+    }
+    fn modulus_bits() -> u64 {
+        2048
+    }
 }
 
 type Fq = BigNum<3, BNParams>;
