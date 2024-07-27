@@ -10,9 +10,6 @@ use crate::BigNumTrait;
 
 struct Test2048Params{}
 impl RuntimeBigNumParamsTrait<18> for Test2048Params {
-    fn k() -> u64 {
-        2048
-    }
     fn modulus_bits() -> u64 {
         2048
     }
@@ -80,9 +77,6 @@ impl BigNumParamsTrait<18> for Test2048Params {
         0x0000000000000000000000000000000000000000000000000000000000000162
     ];
     BigNumInstance::new(modulus, redc_param)
-    }
-    fn k() -> u64 {
-        2048
     }
     fn modulus_bits() -> u64 {
         2048

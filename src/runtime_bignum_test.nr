@@ -7,9 +7,6 @@ use crate::fields::bn254Fq::BNParams as BNParams;
 use crate::fields::bn254Fq::BN254INSTANCE;
 struct Test2048Params {}
 impl BigNumParamsTrait<18> for Test2048Params {
-    fn k() -> u64 {
-        2048
-    }
     fn modulus_bits() -> u64 {
         2048
     }

@@ -80,10 +80,6 @@ trait BigNumInstanceTrait<BN> where BN: BigNumTrait {
 **/
 trait BigNumParamsTrait<let N: u64> {
     /**
-     * @brief k used for __barrett_reduction. Should be at least modulus_bits() + 1
-     **/
-    fn k() -> u64;
-    /**
      * @brief modulus_bits = log2(modulus) rounded up
      **/
     fn modulus_bits() -> u64;
@@ -771,7 +767,7 @@ impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         let (_, remainder) = __barrett_reduction(
             to_reduce,
             self.redc_param,
-            Params::k(),
+            Params::modulus_bits(),
             self.modulus,
             self.modulus_u60_x4
         );
@@ -826,7 +822,7 @@ impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         let (q, r) = __barrett_reduction(
             mul.__normalize_limbs(N + N),
             self.redc_param,
-            Params::k(),
+            Params::modulus_bits(),
             self.modulus,
             self.modulus_u60_x4
         );
@@ -1177,7 +1173,7 @@ impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         let relation_result: ArrayX<Field, N, 2> = mulout.__normalize_limbs(N + N);
 
         // TODO: ugly! Will fail if input slice is empty
-        let k  = Params::k();
+        let k  = Params::modulus_bits();
 
         let (quotient, remainder) = __barrett_reduction(
             relation_result,
@@ -1243,7 +1239,7 @@ impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         let (quotient, remainder) = __barrett_reduction(
             relation_result,
             self.redc_param,
-            Params::k(),
+            Params::modulus_bits(),
             modulus,
             self.modulus_u60_x4
         );

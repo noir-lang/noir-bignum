@@ -28,10 +28,6 @@ trait BigNumParamsTrait<let N: u64> where Self: RuntimeBigNumParamsTrait<N> {
     fn get_instance() -> RuntimeBigNumInstance<N, Self> where Self: RuntimeBigNumParamsTrait<N>;// <N, Params>;
 
     /**
-     * @brief k used for __barrett_reduction. Should be at least modulus_bits() + 1
-     **/
-    fn k() -> u64;
-    /**
      * @brief modulus_bits = log2(modulus) rounded up
      **/
     fn modulus_bits() -> u64;
