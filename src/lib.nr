@@ -12,7 +12,6 @@ use crate::runtime_bignum::BigNumInstance as RuntimeBigNumInstance;
 use crate::runtime_bignum::BigNumInstanceTrait as RuntimeBigNumInstanceTrait;
 use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::runtime_bignum::BigNumTrait as RuntimeBigNumTrait;
-
 struct BigNum<let N: u64, Params> {
     limbs: [Field; N]
 }
@@ -31,6 +30,8 @@ trait BigNumParamsTrait<let N: u64> where Self: RuntimeBigNumParamsTrait<N> {
      * @brief modulus_bits = log2(modulus) rounded up
      **/
     fn modulus_bits() -> u64;
+
+    fn has_multiplicative_inverse() -> bool { true }
 }
 
 trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::Mul + std::ops::Div + std::ops::Eq + RuntimeBigNumTrait {
@@ -43,12 +44,13 @@ trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::M
     fn modulus_bits(self) -> u64;
     fn num_limbs(self) -> u64;
     fn __derive_from_seed<let SeedBytes: u64>(seed: [u8; SeedBytes]) -> Self;
-    fn __powmod(self, exponent: Self) -> Self;
-    fn __negate(self) -> Self;
-    fn __addmod(self, other: Self) -> Self;
-    fn __submod(self, other: Self) -> Self;
-    fn __mulmod(self, other: Self) -> Self;
-    fn __divmod(self, other: Self) -> Self;
+    fn __pow(self, exponent: Self) -> Self;
+    fn __neg(self) -> Self;
+    fn __add(self, other: Self) -> Self;
+    fn __sub(self, other: Self) -> Self;
+    fn __mul(self, other: Self) -> Self;
+    fn __div(self, other: Self) -> Self;
+    fn __udiv_mod(self, divisor: Self) -> (Self, Self);
     fn __invmod(self) -> Self;
     fn __batch_invert<let M: u64>(to_invert: [Self; M]) -> [Self; M];
     fn __batch_invert_slice(x: [Self]) -> [Self];
@@ -64,6 +66,9 @@ trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::M
     fn sub(self, other: Self) -> Self { self - other }
     fn mul(self, other: Self) -> Self { self * other }
     fn div(self, other: Self) -> Self { self / other }
+    fn udiv_mod(self, divisor: Self) -> (Self, Self);
+    fn udiv(self, divisor: Self) -> Self;
+    fn umod(self, divisor: Self) -> Self;
     fn eq(self, other: Self) -> bool { self == other }
     fn get(self) -> [Field] { RuntimeBigNumTrait::get(self) }
     fn get_limb(self, idx: u64) -> Field  { RuntimeBigNumTrait::get_limb(self, idx) }
@@ -114,40 +119,43 @@ impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
         Params::get_instance().__derive_from_seed(seed)
     }
 
-    fn __negate(self) -> Self {
-        Params::get_instance().__negate(self)
+    fn __neg(self) -> Self {
+        Params::get_instance().__neg(self)
     }
 
-    fn __addmod(self, rhs: Self) -> Self {
-        Params::get_instance().__addmod(self, rhs)
+    fn __add(self, rhs: Self) -> Self {
+        Params::get_instance().__add(self, rhs)
     }
 
-    fn __submod(self, rhs: Self) -> Self {
-        Params::get_instance().__submod(self, rhs)
+    fn __sub(self, rhs: Self) -> Self {
+        Params::get_instance().__sub(self, rhs)
     }
 
-    fn __mulmod(self, rhs: Self) -> Self {
-        Params::get_instance().__mulmod(self, rhs)
+    fn __mul(self, rhs: Self) -> Self {
+        Params::get_instance().__mul(self, rhs)
     }
 
-    fn __divmod(self, rhs: Self) -> Self {
-        Params::get_instance().__divmod(self, rhs)
+    fn __div(self, rhs: Self) -> Self {
+        Params::get_instance().__div(self, rhs)
     }
 
     fn __batch_invert<let M: u64>(x: [Self; M]) -> [Self; M] {
+        assert(Params::has_multiplicative_inverse());
         Params::get_instance().__batch_invert(x)
     }
 
     // n.b. needs to be declared unconstrained because we return a slice from an unconstrained runtime
     unconstrained fn __batch_invert_slice(x: [Self]) -> [Self] {
+        assert(Params::has_multiplicative_inverse());
         Params::get_instance().__batch_invert_slice(x)
     }
     fn __invmod(self) -> Self {
+        assert(Params::has_multiplicative_inverse());
         Params::get_instance().__invmod(self)
     }
 
-    fn __powmod(self, exponent: Self) -> Self {
-        Params::get_instance().__powmod(self, exponent)
+    fn __pow(self, exponent: Self) -> Self {
+        Params::get_instance().__pow(self, exponent)
     }
 
     fn __compute_quadratic_expression<let LHS_N: u64, let RHS_N: u64, let NUM_PRODUCTS: u64, let ADD_N: u64>(
@@ -248,6 +256,25 @@ impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
     fn neg(self) -> Self {
         Params::get_instance().neg(self)
     }
+
+    fn __udiv_mod(self, divisor: Self) -> (Self, Self) {
+        Params::get_instance().__udiv_mod(self, divisor)
+    }
+
+    fn udiv_mod(self, divisor: Self) -> (Self, Self) {
+        Params::get_instance().udiv_mod(self, divisor)
+    }
+
+    fn udiv(self, divisor: Self) -> Self {
+        Params::get_instance().udiv(self, divisor)
+    }
+
+    fn umod(self, divisor: Self) -> Self {
+        Params::get_instance().umod(self, divisor)
+    }
+}
+
+impl<let N: u64, Params> BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N>  {
 }
 
 impl<let N: u64, Params> std::ops::Add for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N>  {

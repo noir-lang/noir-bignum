@@ -19,6 +19,14 @@ mod secp384r1Fq;
 mod secp384r1Fr;
 mod vestaFq;
 mod vestaFr;
+mod U256;
+mod U384;
+mod U512;
+mod U768;
+mod U1024;
+mod U2048;
+mod U4096;
+mod U8192;
 
 use crate::BigNum;
 use crate::runtime_bignum::BigNumInstance;

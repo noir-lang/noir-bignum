@@ -30,14 +30,14 @@ fn example_mul(Fq a, Fq b) -> Fq {
 fn example_ecc_double(Fq x, Fq y) -> (Fq, Fq) {
     // Step 1: construct witnesses
     // lambda = 3*x*x / 2y
-    let mut lambda_numerator = x.__mulmod(x);
-    lambda_numerator = lambda_numerator.__addmod(lambda_numerator.__addmod(lambda_numerator));
-    let lambda_denominator = y.__addmod(y);
+    let mut lambda_numerator = x.__mul(x);
+    lambda_numerator = lambda_numerator.__add(lambda_numerator.__add(lambda_numerator));
+    let lambda_denominator = y.__add(y);
     let lambda = lambda_numerator / lambda_denominator;
     // x3 = lambda * lambda - x - x
-    let x3 = lambda.__mulmod(lambda).__submod(x.__addmod(x));
+    let x3 = lambda.__mul(lambda).__sub(x.__add(x));
     // y3 = lambda * (x - x3) - y
-    let y3 = lambda.__mulmod(x.__submod(x3)).__submod(y);
+    let y3 = lambda.__mul(x.__sub(x3)).__sub(y);
 
     // Step 2: constrain witnesses to be correct using minimal number of modular reductions (3)
     // 2y * lambda - 3*x*x = 0
@@ -105,6 +105,25 @@ let add_flags = [true];
 BigNum::evaluate_quadratic_expresson(lhs_terms, lhs_flags, rhs_terms, rhs_flags, linear_terms, linear_flags);
 ```
 
+# Unsigned Big Integers
+
+BigNum supports operations over unsigned integers, with predefined types for 256, 384, 512, 768, 1024, 2048, 4096 and 8192 bit integers.
+
+All arithmetic operations are supported including integer div and mod functions (`udiv`, `umod`). Bit shifts and comparison operators are not yet implemented.
+
+e.g.
+
+```rust
+use dep::bignum::fields::U256::U256Params;
+use dep::bignum::BigNum;
+
+type U256 = BigNum<3, U256Params>;
+
+fn foo(x: U256, y: U256) -> U256 {
+    x.udiv(y)
+}
+```
+
 # BigNum and runtime_bignum::BigNum
 
 BigNum members are represented as arrays of 120-bit limbs. The number of 120-bit limbs required to represent a given BigNum object must be defined at compile-time.
@@ -147,23 +166,23 @@ fn example(Fq a, Fq b) -> Fq {
 
 Basic expressions can be evaluated using `BigNumInstance::add, BigNumInstance::sub, BigNumInstance::mul`. However, when evaluating relations (up to degree 2) that are more complex than single operations, the function `BigNumInstance::evaluate_quadratic_expression` is more efficient (due to needing only a single modular reduction).
 
-Unconstrained functions `__mulmod, __addmod, __submod, __divmod, __powmod` can be used to compute witnesses that can then be fed into `BigNumInstance::evaluate_quadratic_expression`.
+Unconstrained functions `__mul, __add, __sub, __div, __pow` can be used to compute witnesses that can then be fed into `BigNumInstance::evaluate_quadratic_expression`.
 
 See `bignum_test.nr` for examples.
 
-Note: `__divmod`, `__powmod` and `div` are expensive due to requiring modular exponentiations during witness computation. It is worth modifying witness generation algorithms to minimize the number of modular exponentiations required. (for example, using batch inverses)
+Note: `__div`, `__pow` and `div` are expensive due to requiring modular exponentiations during witness computation. It is worth modifying witness generation algorithms to minimize the number of modular exponentiations required. (for example, using batch inverses)
 
 ### Computing witness values
 
-When computing inputs to `evaluate_quadratic_expresson` , unconstrained functions `__addmod`, `__submod`, `__mulmod`, `__divmod` can be used to compute witness values.
+When computing inputs to `evaluate_quadratic_expresson` , unconstrained functions `__add`, `__sub`, `__mul`, `__div` can be used to compute witness values.
 
 e.g. if we wanted to compute `(a + b) * c + (d - e) * f = g` by evaluating the above example, `g` can be derived via:
 
 ```
 let bn: BigNumInstance<3, BNParams> = BNInstance();
-let t0 = bn.__mulmod(bn.__addmod(a, b), c);
-let t1 = bn.__mulmod(bn.__addmod(d, bn.__neg(e)), f);
-let g = bn.__addmod(t0, t1);
+let t0 = bn.__mul(bn.__add(a, b), c);
+let t1 = bn.__mul(bn.__add(d, bn.__neg(e)), f);
+let g = bn.__add(t0, t1);
 ```
 
 # Deriving BNInstance parameters: `modulus`, `redc_param`

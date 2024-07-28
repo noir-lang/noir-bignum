@@ -128,7 +128,7 @@ fn test_invmod<let N: u64, Params>(bn: BigNumInstance<N, Params>) where Params: 
     let u: BigNum<N, Params> = bn.__derive_from_seed([1, 2, 3, 4]);
     for _ in 0..1 {
         let v = bn.__invmod(u);
-        let result = bn.__mulmod(u, v);
+        let result = bn.__mul(u, v);
         let expected: BigNum<N, Params> = BigNum::one();
         assert(result.limbs == expected.limbs);
     }
@@ -204,7 +204,6 @@ fn test_add_BN() {
     expected.limbs[0] -= 2;
 
     let result = instance.add(a, b);
-    println(f"result = {result}");
     assert(instance.eq(result, expected));
 }
 
@@ -460,7 +459,7 @@ fn test_2048_bit_quadratic_expression() {
 
     let a_bn: BigNum<18, Test2048Params> = BigNum { limbs: a };
     let b_bn: BigNum<18, Test2048Params> = BigNum { limbs: b };
-    let c_bn = instance.__mulmod(a_bn, b_bn);
+    let c_bn = instance.__mul(a_bn, b_bn);
     assert(c_bn.limbs == c_expected);
 
     a_bn.validate_in_range();
@@ -490,7 +489,7 @@ fn test_expressions() {
             0x0
         ]
     };
-    let yy = instance.__addmod(y, y);
+    let yy = instance.__add(y, y);
 
     assert(yy.limbs == z.limbs);
 
@@ -522,10 +521,10 @@ fn test_expressions() {
             0x0000000000000000000000000000000000000000000000000000000000000f93
         ]
     };
-    let wx = instance.__mulmod(w, x);
-    let uv = instance.__mulmod(uu, vv);
-    let y = instance.__negate(instance.__addmod(uv, wx));
-    let z = instance.__addmod(uv, wx);
+    let wx = instance.__mul(w, x);
+    let uv = instance.__mul(uu, vv);
+    let y = instance.__neg(instance.__add(uv, wx));
+    let z = instance.__add(uv, wx);
 
     instance.evaluate_quadratic_expression(
         [[uu], [w]],

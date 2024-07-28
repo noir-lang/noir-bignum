@@ -1,0 +1,39 @@
+use crate::BigNum;
+use crate::BigNumParamsTrait;
+use crate::runtime_bignum::BigNumInstance;
+use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
+use crate::utils::u60_representation::U60Repr;
+use crate::utils::arrayX::ArrayX;
+
+struct U384_Params {}
+impl RuntimeBigNumParamsTrait<4> for U384_Params {
+    fn modulus_bits() -> u64 {
+        385
+    }
+    fn has_multiplicative_inverse() -> bool { false }
+}
+impl BigNumParamsTrait<4> for U384_Params {
+    fn get_instance() -> BigNumInstance<4, Self> {
+        U384_Instance
+    }
+    fn modulus_bits() -> u64 {
+        385
+    }
+    fn has_multiplicative_inverse() -> bool { false }
+}
+global U384_Instance: BigNumInstance<4, U384_Params> = BigNumInstance {
+        modulus: [
+            0x00, 0x00, 0x00, 0x01000000
+        ],
+        double_modulus: [
+            0x01000000000000000000000000000000, 0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x01ffffff
+        ],
+        modulus_u60: U60Repr { limbs: ArrayX { segments: [[
+            0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x01000000, 0x00]] } },
+        modulus_u60_x4: U60Repr { limbs: ArrayX { segments: [[
+            0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x01000000, 0x00], [0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00]] } },
+        redc_param: [
+            0x00, 0x00, 0x00, 0x04000000
+        ]
+};
+

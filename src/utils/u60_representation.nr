@@ -2,7 +2,7 @@ use dep::std;
 
 use crate::utils::arrayX::ArrayX;
 use crate::utils::split_bits;
-
+use crate::utils::msb::get_msb64;
 /**
  * @brief U60Repr represents a BigNum element as a sequence of 60-bit unsigned integers.
  *
@@ -154,12 +154,58 @@ impl<let N: u64, let NumSegments: u64> U60Repr<N, NumSegments> {
         );
 
         for i in 1..((N * NumSegments) - num_shifted_limbs) as u64 {
-            result.limbs.set(
-                i,
-                (self.limbs.get(i + num_shifted_limbs as u64) >> limb_shift as u8)
-            );
-            let remainder: u64 = (self.limbs.get(i + num_shifted_limbs as u64) << remainder_shift as u8) & mask;
+            let value = self.limbs.get(i + num_shifted_limbs as u64);
+            result.limbs.set(i, (value >> limb_shift as u8));
+            let remainder: u64 = (value << remainder_shift as u8) & mask;
             result.limbs.set(i - 1, result.limbs.get(i - 1) + remainder);
+        }
+        result
+    }
+
+    // note: shr cannot satisfy `Shr` Trait due to `shift` parameter being u64 and not u8 (shift value might be greater than 255)
+    fn shr1(&mut self) {
+        let value = self.limbs.segments[NumSegments - 1][N - 1];
+        self.limbs.segments[NumSegments - 1][N - 1] = value >> 1;
+
+        let mut remainder = (value & 1) << 59;
+
+        for j in 0..NumSegments {
+            for i in 0..N {
+                let value = self.limbs.segments[NumSegments - 1 - j][N - 1 - i];
+                self.limbs.segments[NumSegments - 1 - j][N - 1 - i] = (value >> 1) + remainder;
+                remainder = (value << 59) & 0x800000000000000;
+            }
+        }
+    }
+
+    // note: shr cannot satisfy `Shr` Trait due to `shift` parameter being u64 and not u8 (shift value might be greater than 255)
+    fn shl(self, shift: u64) -> Self {
+        let mut result: Self = U60Repr { limbs: ArrayX { segments: [[0; N]; NumSegments] } };
+
+        let num_shifted_limbs: u64 = shift / 60;
+        let limb_shift = (shift % 60) as u8;
+        let remainder_shift: u8 = 60 - limb_shift as u8;
+
+        // 83
+        // limb shift = 1
+        // inside shift = 19 bits to the left
+        // meaning we have 19 carry bits and 41 remainder bits
+        let mask: u64 = (1 as u64 << 60) - 1;
+        //   let mask: u64 = (((1 as u64) << limb_shift as u8) - 1) << remainder_shift as u8;
+        let value = self.limbs.get(0);
+
+        let mut remainder = (value >> remainder_shift);
+        result.limbs.set(num_shifted_limbs, (value << limb_shift) & mask);
+
+        // shift 84. num shifted = 1
+
+        for i in 1..((N * NumSegments) - num_shifted_limbs) as u64 {
+            let value = self.limbs.get(i);
+            let upshift = ((value << limb_shift) + remainder) & mask;
+            result.limbs.set(i + num_shifted_limbs as u64, upshift);
+            remainder = (value >> remainder_shift);
+            // let remainder: u64 = (self.limbs.get(i + num_shifted_limbs as u64) << remainder_shift as u8) & mask;
+            // result.limbs.set(i - 1, result.limbs.get(i - 1) + remainder);
         }
         result
     }
@@ -185,5 +231,17 @@ impl<let N: u64, let NumSegments: u64> U60Repr<N, NumSegments> {
                 self.limbs.segments[j][i] = add;
             }
         }
+    }
+
+    unconstrained  fn get_msb(val: Self) -> u64 {
+        let mut count: u64 = 0;
+        for i in 0..N * NumSegments {
+            let v = val.limbs.get((N * NumSegments) - 1 - i);
+            if (v > 0) {
+                count = 60 * ((N * NumSegments) - 1 - i) + get_msb64(v);
+                break;
+            }
+        }
+        count
     }
 }

@@ -32,6 +32,23 @@ fn test_shr() {
 }
 
 #[test]
+fn test_shl() {
+    // 120 bits of 10101010 (repeating)
+    let X = 0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;
+    // 120 bits of 01010101 (repeating)
+    let Y = 0x555555555555555555555555555555;
+    let input: ArrayX<Field, 3, 2> = ArrayX { segments: [[Y, Y, Y], [Y, Y, Y]] };
+    let u60repr: U60Repr<3, 6> = U60Repr::new(input);
+
+    let result = u60repr.shl(121);
+    let expected: U60Repr<3, 6> = U60Repr::new(ArrayX { segments: [[0, X, X], [X, X, X], [X, 0, 0]] });
+    assert(result == expected);
+
+    let noshift = u60repr.shr(0);
+    assert(noshift == u60repr);
+}
+
+#[test]
 fn test_get_bit() {
     // 0x8000 = b1000000000000000 (16th bit is high)
     // 256th bit of input should be high

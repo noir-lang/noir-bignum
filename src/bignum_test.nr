@@ -4,7 +4,9 @@ use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::BigNumParamsTrait as BigNumParamsTrait;
 
 use crate::utils::u60_representation::U60Repr;
-use crate::fields::bn254Fq::BNParams as BNParams;
+use crate::fields::bn254Fq::BNParams;
+use crate::fields::U256::U256Params;
+
 use crate::runtime_bignum::BigNumInstance;
 use crate::BigNumTrait;
 
@@ -166,7 +168,7 @@ fn test_invmod<BigNum>(_: BigNum) where BigNum: BigNumTrait + std::cmp::Eq {
     let u = BigNum::__derive_from_seed([1, 2, 3, 4]);
     for _ in 0..1 {
         let v = u.__invmod();
-        let result = u.__mulmod(v);
+        let result = u.__mul(v);
         let expected = BigNum::one();
         assert(result == expected);
     }
@@ -240,7 +242,6 @@ fn test_add_BN() {
     expected.limbs[0] -= 2;
 
     let result = a.add(b);
-    println(f"result = {result}");
     assert(result.eq(expected));
 }
 
@@ -309,7 +310,6 @@ fn test_add_modulus_overflow() {
 
 #[test]
 fn test_mul_BN() {
-    let foo = BNParams::get_instance().modulus_u60_x4;
     let stub: BigNum<3, BNParams> = BigNum::new();
     test_mul(stub);
 }
@@ -410,6 +410,67 @@ fn test_assert_is_not_equal_overloaded_fail_2048() {
     assert_is_not_equal_overloaded_fail(stub, [0; 18]);
 }
 
+#[test]
+fn test_eq_U256() {
+    let stub: BigNum<3, U256Params> = BigNum::new();
+    test_eq(stub, [0; 3]);
+}
+
+#[test]
+fn test_mul_U256() {
+    let stub: BigNum<3, U256Params> = BigNum::new();
+    test_mul(stub);
+}
+
+#[test]
+fn test_add_U256() {
+    let stub: BigNum<3, U256Params> = BigNum::new();
+    test_add(stub);
+}
+
+#[test]
+fn test_assert_is_not_equal_U256() {
+    let stub: BigNum<3, U256Params> = BigNum::new();
+    assert_is_not_equal(stub);
+}
+
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn test_assert_is_not_equal_fail_U256() {
+    let stub: BigNum<3, U256Params> = BigNum::new();
+    assert_is_not_equal_fail(stub);
+}
+
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn test_assert_is_not_equal_overloaded_lhs_fail_U256() {
+    let stub: BigNum<3, U256Params> = BigNum::new();
+    assert_is_not_equal_overloaded_lhs_fail(stub, [0; 3]);
+}
+
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn test_assert_is_not_equal_overloaded_rhs_fail_U256() {
+    let stub: BigNum<3, U256Params> = BigNum::new();
+    assert_is_not_equal_overloaded_rhs_fail(stub, [0; 3]);
+}
+
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn test_assert_is_not_equal_overloaded_fail_U256() {
+    let stub: BigNum<18, Test2048Params> = BigNum::new();
+    assert_is_not_equal_overloaded_fail(stub, [0; 18]);
+}
+
+type U256 = BigNum<3, U256Params>;
+#[test]
+fn test_udiv_mod_U256() {
+    let a: U256 = BigNum::__derive_from_seed([1, 2, 3, 4]);
+    let b: U256 = BigNum::from_array([12, 0, 0]);
+
+    let (q, r) = a.udiv_mod(b);
+
+    // let qb = q.__mul(b);
+    let product = q.__mul(b).__add(r);
+    assert(product.eq(a));
+}
+
 // // N.B. witness generation times make these tests take ~15 minutes each! Uncomment at your peril
 // #[test]
 // fn test_div_2048() {
@@ -489,7 +550,7 @@ fn test_2048_bit_quadratic_expression() {
 
     let a_bn: BigNum<18, Test2048Params> = BigNum { limbs: a };
     let b_bn: BigNum<18, Test2048Params> = BigNum { limbs: b };
-    let c_bn = a_bn.__mulmod(b_bn);
+    let c_bn = a_bn.__mul(b_bn);
     assert(c_bn.limbs == c_expected);
 
     a_bn.validate_in_range();
@@ -518,7 +579,7 @@ fn test_expressions() {
             0x0
         ]
     };
-    let yy = y.__addmod(y);
+    let yy = y.__add(y);
 
     assert(yy.limbs == z.limbs);
 
@@ -550,10 +611,10 @@ fn test_expressions() {
             0x0000000000000000000000000000000000000000000000000000000000000f93
         ]
     };
-    let wx = w.__mulmod(x);
-    let uv = uu.__mulmod(vv);
-    let y = (uv.__addmod(wx)).__negate();
-    let z = uv.__addmod(wx);
+    let wx = w.__mul(x);
+    let uv = uu.__mul(vv);
+    let y = (uv.__add(wx)).__neg();
+    let z = uv.__add(wx);
 
     BigNum::evaluate_quadratic_expression(
         [[uu], [w]],
