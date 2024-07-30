@@ -59,7 +59,21 @@ struct BigNum<let N: u64, Params> {
 
 #### Example
 
-TODO: Add a simple sum example
+A simple 1 + 2 = 3 check in 256-bit unsigned integers:
+
+```rust
+use dep::bignum::fields::U256::U256Params;
+use dep::bignum::BigNum;
+
+type U256 = BigNum<3, U256Params>;
+
+fn main() {
+    let one: U256 = BigNum::from_array([1, 0, 0]);
+    let two: U256 = BigNum::from_array([2, 0, 0]);
+    let three: U256 = BigNum::from_array([3, 0, 0]);
+    assert((one + two) == three);
+}
+```
 
 #### Methods
 
