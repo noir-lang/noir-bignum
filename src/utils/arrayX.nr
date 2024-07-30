@@ -8,11 +8,11 @@ use crate::utils::split_bits;
  *       e.g. [Field; N * 2] is not currently possible
  *       This abstraction can be removed once Noir supports arithmetic on generics.
 **/
-struct ArrayX<T, let N: u64, let SizeMultiplier: u64> {
+struct ArrayX<T, let N: u32, let SizeMultiplier: u32> {
     segments: [[T; N]; SizeMultiplier]
 }
 
-impl<T, let N: u64, let SizeMultiplier: u64> std::convert::From<[T; N]> for ArrayX<T, N, SizeMultiplier> where T: std::default::Default { 
+impl<T, let N: u32, let SizeMultiplier: u32> std::convert::From<[T; N]> for ArrayX<T, N, SizeMultiplier> where T: std::default::Default { 
     fn from(input: [T; N]) -> Self {
         assert(N == 1);
         let mut result = ArrayX::new();
@@ -21,13 +21,13 @@ impl<T, let N: u64, let SizeMultiplier: u64> std::convert::From<[T; N]> for Arra
     }
 }
 
-impl<T, let N: u64, let SizeMultiplier: u64> std::convert::From<[[T; N]; SizeMultiplier]> for ArrayX<T, N, SizeMultiplier> where T: std::default::Default { 
+impl<T, let N: u32, let SizeMultiplier: u32> std::convert::From<[[T; N]; SizeMultiplier]> for ArrayX<T, N, SizeMultiplier> where T: std::default::Default { 
     fn from(input: [[T; N]; SizeMultiplier]) -> Self {
         ArrayX{ segments: input }
     }
 }
 
-impl<T, let N: u64, let SizeMultiplier: u64> std::cmp::Eq for ArrayX<T, N, SizeMultiplier> where T: std::cmp::Eq { 
+impl<T, let N: u32, let SizeMultiplier: u32> std::cmp::Eq for ArrayX<T, N, SizeMultiplier> where T: std::cmp::Eq { 
     fn eq(self, other: Self) -> bool {
         let mut result: bool = true;
         for i in 0..SizeMultiplier {
@@ -39,43 +39,43 @@ impl<T, let N: u64, let SizeMultiplier: u64> std::cmp::Eq for ArrayX<T, N, SizeM
     }
 }
 
-impl<T, let N: u64, let SizeMultiplier: u64> ArrayX<T, N, SizeMultiplier> {
+impl<T, let N: u32, let SizeMultiplier: u32> ArrayX<T, N, SizeMultiplier> {
 
     fn new() -> Self where T: std::default::Default {
         ArrayX { segments: [[T::default(); N]; SizeMultiplier] }
     }
 
-    fn mul_assign(&mut self, i: u64, rhs: T) where T: std::ops::Mul {
+    fn mul_assign(&mut self, i: u32, rhs: T) where T: std::ops::Mul {
         let segment = i / N;
         let index = i % N;
         self.segments[segment][index] *= rhs;
     }
 
-    fn add_assign(&mut self, i: u64, rhs: T) where T: std::ops::Add {
+    fn add_assign(&mut self, i: u32, rhs: T) where T: std::ops::Add {
         let segment = i / N;
         let index = i % N;
         self.segments[segment][index] += rhs;
     }
 
-    fn sub_assign(&mut self, i: u64, rhs: T) where T: std::ops::Sub {
+    fn sub_assign(&mut self, i: u32, rhs: T) where T: std::ops::Sub {
         let segment = i / N;
         let index = i % N;
         self.segments[segment][index] -= rhs;
     }
 
-    fn set(&mut self, i: u64, x: T) {
+    fn set(&mut self, i: u32, x: T) {
         let segment = i / N;
         let index = i % N;
         self.segments[segment][index] = x;
     }
 
-    fn get(self, i: u64) -> T {
+    fn get(self, i: u32) -> T {
         let segment = i / N;
         let index = i % N;
         self.segments[segment][index]
     }
 
-    unconstrained fn __normalize_limbs<let NumSegments: u64>(x: ArrayX<Field, N, NumSegments>, range: u64) -> ArrayX<Field, N, NumSegments> {
+    unconstrained fn __normalize_limbs<let NumSegments: u32>(x: ArrayX<Field, N, NumSegments>, range: u32) -> ArrayX<Field, N, NumSegments> {
         let mut normalized: ArrayX<Field, N, NumSegments> = ArrayX::new();
         let mut inp = x;
         // (9 limb mul = 17 product terms)

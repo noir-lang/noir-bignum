@@ -1,8 +1,10 @@
 use crate::utils::u60_representation::U60Repr;
 
-global n1: u64 = 0xffffffffffffffff;
+/// Multiple entires in the `MUL_DE_BRUIJN_BIT` list do not map to a valid output of `v * 0x6c04f118e9966f6b`.
+/// This is a dummy value to fill the gaps in the map.
+global n1: u32 = 0xffffffff;
 
-global MUL_DE_BRUIJN_BIT: [u64; 128] = [
+global MUL_DE_BRUIJN_BIT: [u32; 128] = [
         0,// change to 1 if you want bitSize(0) = 1
         48, n1, n1, 31, n1, 15, 51, n1, 63, 5, n1, n1, n1, 19, n1,
         23, 28, n1, n1, n1, 40, 36, 46, n1, 13, n1, n1, n1, 34, n1, 58,
@@ -13,7 +15,8 @@ global MUL_DE_BRUIJN_BIT: [u64; 128] = [
         41, n1, 25, 37, n1, 47, n1, 30, 14, n1, n1, n1, n1, 22, n1, n1,
         35, 12, n1, n1, n1, 59, 42, n1, n1, 61, 3, 26, 38, 44, n1, 56
     ];
-unconstrained pub fn get_msb64(x: u64) -> u64 {
+    
+unconstrained pub fn get_msb64(x: u64) -> u32 {
     let mut v = x;
     v |= v >> 1;
     v |= v >> 2;
@@ -23,7 +26,5 @@ unconstrained pub fn get_msb64(x: u64) -> u64 {
     v |= v >> 32;
     MUL_DE_BRUIJN_BIT[(std::wrapping_mul(v, 0x6c04f118e9966f6b)) >> 57]
 }
-
-
 
 // 1100

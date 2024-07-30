@@ -10,7 +10,7 @@ use crate::utils::arrayX::ArrayX;
 // b * c + (rem < modulus) = a
 struct U512Params {}
 impl RuntimeBigNumParamsTrait<5> for U512Params {
-    fn modulus_bits() -> u64 {
+    fn modulus_bits() -> u32 {
         513
     }
     fn has_multiplicative_inverse() -> bool { false }
@@ -19,7 +19,7 @@ impl BigNumParamsTrait<5> for U512Params {
     fn get_instance() -> BigNumInstance<5, Self> {
         U512_Instance
     }
-    fn modulus_bits() -> u64 {
+    fn modulus_bits() -> u32 {
         513
     }
     fn has_multiplicative_inverse() -> bool { false }

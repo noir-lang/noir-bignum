@@ -7,7 +7,7 @@ use crate::utils::arrayX::ArrayX;
 
 struct Secp384r1_Fq_Params {}
 impl RuntimeBigNumParamsTrait<4> for Secp384r1_Fq_Params {
-    fn modulus_bits() -> u64 {
+    fn modulus_bits() -> u32 {
         384
     }
 }
@@ -15,7 +15,7 @@ impl BigNumParamsTrait<4> for Secp384r1_Fq_Params {
     fn get_instance() -> BigNumInstance<4, Self> {
         Secp384r1_Fq_Instance
     }
-    fn modulus_bits() -> u64 {
+    fn modulus_bits() -> u32 {
         384
     }
 }

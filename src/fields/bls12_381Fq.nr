@@ -23,7 +23,7 @@ use crate::utils::arrayX::ArrayX;
 
 struct BLS12_381_Fq_Params {}
 impl RuntimeBigNumParamsTrait<4> for BLS12_381_Fq_Params {
-    fn modulus_bits() -> u64 {
+    fn modulus_bits() -> u32 {
         381
     }
 }
@@ -31,7 +31,7 @@ impl BigNumParamsTrait<4> for BLS12_381_Fq_Params {
     fn get_instance() -> BigNumInstance<4, Self> {
         BLS12_381_Fq_Instance
     }
-    fn modulus_bits() -> u64 {
+    fn modulus_bits() -> u32 {
         381
     }
 }

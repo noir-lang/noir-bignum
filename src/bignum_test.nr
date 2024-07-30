@@ -12,7 +12,7 @@ use crate::BigNumTrait;
 
 struct Test2048Params{}
 impl RuntimeBigNumParamsTrait<18> for Test2048Params {
-    fn modulus_bits() -> u64 {
+    fn modulus_bits() -> u32 {
         2048
     }
 }
@@ -80,7 +80,7 @@ impl BigNumParamsTrait<18> for Test2048Params {
     ];
     BigNumInstance::new(modulus, redc_param)
     }
-    fn modulus_bits() -> u64 {
+    fn modulus_bits() -> u32 {
         2048
     }
 }
@@ -88,7 +88,7 @@ impl BigNumParamsTrait<18> for Test2048Params {
 type Fq = BigNum<3, BNParams>;
 type Fqq = BigNum<18, Test2048Params>;
 
-fn test_eq<BigNum, let N: u64>(_: BigNum, __: [Field; N]) where BigNum: BigNumTrait {
+fn test_eq<BigNum, let N: u32>(_: BigNum, __: [Field; N]) where BigNum: BigNumTrait {
     let a = BigNum::__derive_from_seed([1, 2, 3, 4]);
     let b = BigNum::__derive_from_seed([1, 2, 3, 4]);
     let c = BigNum::__derive_from_seed([2, 2, 3, 4]);
@@ -103,7 +103,7 @@ fn test_eq<BigNum, let N: u64>(_: BigNum, __: [Field; N]) where BigNum: BigNumTr
     assert(c.eq(a) == false);
 }
 
-// fn test_eq<let N: u64, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N> {
+// fn test_eq<let N: u32, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N> {
 //     let a = BigNum::__derive_from_seed([1, 2, 3, 4]);
 //     let b = BigNum::__derive_from_seed([1, 2, 3, 4]);
 //     let c = BigNum::__derive_from_seed([2, 2, 3, 4]);
@@ -188,7 +188,7 @@ fn assert_is_not_equal_fail<BigNum>(_: BigNum) where BigNum: BigNumTrait {
     a.assert_is_not_equal(b);
 }
 
-fn assert_is_not_equal_overloaded_lhs_fail<BigNum, let N: u64>(_: BigNum, __: [Field; N]) where BigNum: BigNumTrait {
+fn assert_is_not_equal_overloaded_lhs_fail<BigNum, let N: u32>(_: BigNum, __: [Field; N]) where BigNum: BigNumTrait {
     let a = BigNum::__derive_from_seed([1, 2, 3, 4]);
     let b = BigNum::__derive_from_seed([1, 2, 3, 4]);
 
@@ -200,7 +200,7 @@ fn assert_is_not_equal_overloaded_lhs_fail<BigNum, let N: u64>(_: BigNum, __: [F
     a_plus_modulus.assert_is_not_equal(b);
 }
 
-fn assert_is_not_equal_overloaded_rhs_fail<BigNum, let N: u64>(_: BigNum, __: [Field; N]) where BigNum: BigNumTrait {
+fn assert_is_not_equal_overloaded_rhs_fail<BigNum, let N: u32>(_: BigNum, __: [Field; N]) where BigNum: BigNumTrait {
     let a = BigNum::__derive_from_seed([1, 2, 3, 4]);
     let b = BigNum::__derive_from_seed([1, 2, 3, 4]);
 
@@ -212,7 +212,7 @@ fn assert_is_not_equal_overloaded_rhs_fail<BigNum, let N: u64>(_: BigNum, __: [F
     a.assert_is_not_equal(b_plus_modulus);
 }
 
-fn assert_is_not_equal_overloaded_fail<BigNum, let N: u64>(_: BigNum, __: [Field; N]) where BigNum: BigNumTrait {
+fn assert_is_not_equal_overloaded_fail<BigNum, let N: u32>(_: BigNum, __: [Field; N]) where BigNum: BigNumTrait {
     let a = BigNum::__derive_from_seed([1, 2, 3, 4]);
     let b = BigNum::__derive_from_seed([1, 2, 3, 4]);
 

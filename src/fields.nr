@@ -41,31 +41,31 @@ use crate::fields::bn254Fq::BNParams;
  **/
 struct Params512 {}
 impl RuntimeBigNumParamsTrait<5> for Params512 {
-    fn modulus_bits() -> u64 {
+    fn modulus_bits() -> u32 {
         512
     }
 }
 struct Params768 {}
 impl RuntimeBigNumParamsTrait<7> for Params768 {
-    fn modulus_bits() -> u64 {
+    fn modulus_bits() -> u32 {
         768
     }
 }
 struct Params1024 {}
 impl RuntimeBigNumParamsTrait<9> for Params1024 {
-    fn modulus_bits() -> u64 {
+    fn modulus_bits() -> u32 {
         1024
     }
 }
 struct Params2048 {}
 impl RuntimeBigNumParamsTrait<18> for Params2048 {
-    fn modulus_bits() -> u64 {
+    fn modulus_bits() -> u32 {
         2048
     }
 }
 struct Params4096 {}
 impl RuntimeBigNumParamsTrait<35> for Params4096 {
-    fn modulus_bits() -> u64 {
+    fn modulus_bits() -> u32 {
         4096
     }
 }
