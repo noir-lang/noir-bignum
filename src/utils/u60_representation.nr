@@ -239,7 +239,6 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
             let v = val.limbs.get((N * NumSegments) - 1 - i);
             if (v > 0) {
                 count = 60 * ((N * NumSegments) - 1 - i) + get_msb64(v);
-                // count = 60 * ((N as u64 * NumSegments as u64) - 1 - i as u64) + get_msb64(v);
                 break;
             }
         }
