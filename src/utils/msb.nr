@@ -15,7 +15,7 @@ global MUL_DE_BRUIJN_BIT: [u32; 128] = [
         41, n1, 25, 37, n1, 47, n1, 30, 14, n1, n1, n1, n1, 22, n1, n1,
         35, 12, n1, n1, n1, 59, 42, n1, n1, 61, 3, 26, 38, 44, n1, 56
     ];
-    
+
 unconstrained pub fn get_msb64(x: u64) -> u32 {
     let mut v = x;
     v |= v >> 1;
