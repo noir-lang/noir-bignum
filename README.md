@@ -21,9 +21,23 @@ TODO
 
 Refer to [Noir's docs](https://noir-lang.org/docs/getting_started/installation/) and [Barretenberg's docs](https://github.com/AztecProtocol/aztec-packages/blob/master/barretenberg/cpp/src/barretenberg/bb/readme.md#installation) for installation steps.
 
-## Import
+## Installation
 
-TODO: Document how to import the library
+In your _Nargo.toml_ file, add the version of this library you would like to install under dependency:
+
+```
+[dependencies]
+bignum = { tag = "v0.2.2", git = "https://github.com/noir-lang/noir-bignum" }
+```
+
+### Import
+
+Add imports at the top of your Noir code, for example:
+
+```rust
+use dep::bignum::fields::U256::U256Params;
+use dep::bignum::BigNum;
+```
 
 ## `bignum`
 
