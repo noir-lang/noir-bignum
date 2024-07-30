@@ -12,7 +12,7 @@ use crate::runtime_bignum::BigNumInstance as RuntimeBigNumInstance;
 use crate::runtime_bignum::BigNumInstanceTrait as RuntimeBigNumInstanceTrait;
 use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::runtime_bignum::BigNumTrait as RuntimeBigNumTrait;
-struct BigNum<let N: u64, Params> {
+struct BigNum<let N: u32, Params> {
     limbs: [Field; N]
 }
 
@@ -21,15 +21,15 @@ struct BigNum<let N: u64, Params> {
  * @description The "field" does not need to be prime, any value *should* work (TODO: test!)
 **/
 // 
-// trait BigNumParamsTrait<let N: u64, Params> where Params: RuntimeBigNumParamsTrait<N>, RuntimeBigNumInstance<N, Params>: RuntimeBigNumInstanceTrait<BigNum<N, Params>> {
-trait BigNumParamsTrait<let N: u64> where Self: RuntimeBigNumParamsTrait<N> {
+// trait BigNumParamsTrait<let N: u32, Params> where Params: RuntimeBigNumParamsTrait<N>, RuntimeBigNumInstance<N, Params>: RuntimeBigNumInstanceTrait<BigNum<N, Params>> {
+trait BigNumParamsTrait<let N: u32> where Self: RuntimeBigNumParamsTrait<N> {
 
     fn get_instance() -> RuntimeBigNumInstance<N, Self> where Self: RuntimeBigNumParamsTrait<N>;// <N, Params>;
 
     /**
      * @brief modulus_bits = log2(modulus) rounded up
      **/
-    fn modulus_bits() -> u64;
+    fn modulus_bits() -> u32;
 
     fn has_multiplicative_inverse() -> bool { true }
 }
@@ -41,9 +41,9 @@ trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::M
     fn new() -> Self { RuntimeBigNumTrait::new() }
     fn one() -> Self { RuntimeBigNumTrait::one() }
     fn modulus() -> Self;
-    fn modulus_bits(self) -> u64;
-    fn num_limbs(self) -> u64;
-    fn __derive_from_seed<let SeedBytes: u64>(seed: [u8; SeedBytes]) -> Self;
+    fn modulus_bits(self) -> u32;
+    fn num_limbs(self) -> u32;
+    fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
     fn __pow(self, exponent: Self) -> Self;
     fn __neg(self) -> Self;
     fn __add(self, other: Self) -> Self;
@@ -52,12 +52,12 @@ trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::M
     fn __div(self, other: Self) -> Self;
     fn __udiv_mod(self, divisor: Self) -> (Self, Self);
     fn __invmod(self) -> Self;
-    fn __batch_invert<let M: u64>(to_invert: [Self; M]) -> [Self; M];
+    fn __batch_invert<let M: u32>(to_invert: [Self; M]) -> [Self; M];
     fn __batch_invert_slice(x: [Self]) -> [Self];
     fn __is_zero(self) -> bool { RuntimeBigNumTrait::__is_zero(self) }
     fn __eq(self, other: Self) -> bool { RuntimeBigNumTrait::__eq(self, other) }
-    fn __compute_quadratic_expression<let LHS_N: u64, let RHS_N: u64, let NUM_PRODUCTS: u64, let ADD_N: u64>(lhs: [[Self; LHS_N]; NUM_PRODUCTS], lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS], rhs: [[Self; RHS_N]; NUM_PRODUCTS], rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS], add: [Self; ADD_N], add_flags: [bool; ADD_N]) -> (Self, Self);
-    fn evaluate_quadratic_expression<let LHS_N: u64, let RHS_N: u64, let NUM_PRODUCTS: u64, let ADD_N: u64>(lhs: [[Self; LHS_N]; NUM_PRODUCTS], lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS], rhs: [[Self; RHS_N]; NUM_PRODUCTS], rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS], add: [Self; ADD_N], add_flags: [bool; ADD_N]);
+    fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(lhs: [[Self; LHS_N]; NUM_PRODUCTS], lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS], rhs: [[Self; RHS_N]; NUM_PRODUCTS], rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS], add: [Self; ADD_N], add_flags: [bool; ADD_N]) -> (Self, Self);
+    fn evaluate_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(lhs: [[Self; LHS_N]; NUM_PRODUCTS], lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS], rhs: [[Self; RHS_N]; NUM_PRODUCTS], rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS], add: [Self; ADD_N], add_flags: [bool; ADD_N]);
     fn validate_in_range(self){ RuntimeBigNumTrait::validate_in_range(self) }
     fn validate_in_field(self);
     fn assert_is_not_equal(self, other: Self);
@@ -72,23 +72,23 @@ trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::M
     fn eq(self, other: Self) -> bool { self == other }
     fn get(self) -> [Field] { RuntimeBigNumTrait::get(self) }
     fn get_limb(self, idx: u64) -> Field  { RuntimeBigNumTrait::get_limb(self, idx) }
-    fn set_limb(&mut self, idx: u64, value: Field)  { RuntimeBigNumTrait::set_limb(self, idx, value) }
+    fn set_limb(&mut self, idx: u32, value: Field)  { RuntimeBigNumTrait::set_limb(self, idx, value) }
     fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self { RuntimeBigNumTrait::conditional_select(lhs, rhs, predicate) }
-    fn to_le_bytes<let X: u64>(self) -> [u8; X] { RuntimeBigNumTrait::to_le_bytes(self) }
+    fn to_le_bytes<let X: u32>(self) -> [u8; X] { RuntimeBigNumTrait::to_le_bytes(self) }
 }
 
-impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N> {
+impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N> {
 
     
     // Weird compiler issue where if we do not pass `Self` as a parameter to these methods,
     // then a generic struct that conforms to BigNumTrait cannot access these methods?
     // the Params: BigNumParamsTrait<N> needs to be satisfied, but the BigNumTrait has no knowledge of BigNumParamsTrait?
     // but...passing in a Self parameter seems to fix. really weird
-    fn modulus_bits(_: Self) -> u64 {
-        let r: u64 = Params::modulus_bits();
+    fn modulus_bits(_: Self) -> u32 {
+        let r: u32 = Params::modulus_bits();
         r
     }
-    fn num_limbs(_: Self) -> u64 { N }
+    fn num_limbs(_: Self) -> u32 { N }
 
     fn modulus() -> Self {
         Params::get_instance().modulus()
@@ -115,7 +115,7 @@ impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
     // ### NOTE: these functions call unconstrained internal implementations because trait impl modifiers are not supported 
     // ####################################################################################################################
     // ####################################################################################################################
-    fn __derive_from_seed<let SeedBytes: u64>(seed: [u8; SeedBytes]) -> Self {
+    fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self {
         Params::get_instance().__derive_from_seed(seed)
     }
 
@@ -139,7 +139,7 @@ impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
         Params::get_instance().__div(self, rhs)
     }
 
-    fn __batch_invert<let M: u64>(x: [Self; M]) -> [Self; M] {
+    fn __batch_invert<let M: u32>(x: [Self; M]) -> [Self; M] {
         assert(Params::has_multiplicative_inverse());
         Params::get_instance().__batch_invert(x)
     }
@@ -158,7 +158,7 @@ impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
         Params::get_instance().__pow(self, exponent)
     }
 
-    fn __compute_quadratic_expression<let LHS_N: u64, let RHS_N: u64, let NUM_PRODUCTS: u64, let ADD_N: u64>(
+    fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
         lhs_terms: [[Self; LHS_N]; NUM_PRODUCTS],
         lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
         rhs_terms: [[Self; RHS_N]; NUM_PRODUCTS],
@@ -219,7 +219,7 @@ impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
      * @param linear_terms an array of BigNum
      * @param linear_flags an array of sign flags
      **/
-    fn evaluate_quadratic_expression<let LHS_N: u64, let RHS_N: u64, let NUM_PRODUCTS: u64, let ADD_N: u64>(
+    fn evaluate_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
         lhs_terms: [[Self; LHS_N]; NUM_PRODUCTS],
         lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
         rhs_terms: [[Self; RHS_N]; NUM_PRODUCTS],
@@ -274,10 +274,10 @@ impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
     }
 }
 
-impl<let N: u64, Params> BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N>  {
+impl<let N: u32, Params> BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N>  {
 }
 
-impl<let N: u64, Params> std::ops::Add for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N>  {
+impl<let N: u32, Params> std::ops::Add for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N>  {
     // Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
     //       via evaluate_quadratic_expression
     fn add(self, other: Self) -> Self {
@@ -285,7 +285,7 @@ impl<let N: u64, Params> std::ops::Add for BigNum<N, Params> where Params: BigNu
     }
 }
 
-impl<let N: u64, Params> std::ops::Sub for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N>  {
+impl<let N: u32, Params> std::ops::Sub for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N>  {
     // Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
     //       via evaluate_quadratic_expression
     fn sub(self, other: Self) -> Self {
@@ -293,7 +293,7 @@ impl<let N: u64, Params> std::ops::Sub for BigNum<N, Params> where Params: BigNu
     }
 }
 
-impl<let N: u64, Params> std::ops::Mul for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N>  {
+impl<let N: u32, Params> std::ops::Mul for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N>  {
     // Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
     //       via evaluate_quadratic_expression
     // e.g. performing a sum of multiple multiplications and additions via `evaluate_quadratic_expression`
@@ -303,14 +303,14 @@ impl<let N: u64, Params> std::ops::Mul for BigNum<N, Params> where Params: BigNu
     }
 }
 
-impl<let N: u64, Params> std::ops::Div for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N>  {
+impl<let N: u32, Params> std::ops::Div for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N>  {
     // Note: this method is expensive! Witness computation is extremely expensive as it requires modular exponentiation
     fn div(self, other: Self) -> Self {
         Params::get_instance().div(self, other)
     }
 }
 
-impl<let N: u64, Params> std::cmp::Eq for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N>  {
+impl<let N: u32, Params> std::cmp::Eq for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N>  {
 
     fn eq(self, other: Self) -> bool {
         let bn: RuntimeBigNumInstance<N, Params> = Params::get_instance();

@@ -25,7 +25,7 @@ use crate::utils::arrayX::ArrayX;
 
 struct BLS12_377_Fr_Params {}
 impl RuntimeBigNumParamsTrait<3> for BLS12_377_Fr_Params {
-    fn modulus_bits() -> u64 {
+    fn modulus_bits() -> u32 {
         253
     }
 }
@@ -33,7 +33,7 @@ impl BigNumParamsTrait<3> for BLS12_377_Fr_Params {
     fn get_instance() -> BigNumInstance<3, Self> {
         BLS12_377_Fr_Instance
     }
-    fn modulus_bits() -> u64 {
+    fn modulus_bits() -> u32 {
         253
     }
 }

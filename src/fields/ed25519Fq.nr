@@ -7,7 +7,7 @@ use crate::utils::arrayX::ArrayX;
 
 struct ED25519_Fq_Params {}
 impl RuntimeBigNumParamsTrait<3> for ED25519_Fq_Params {
-    fn modulus_bits() -> u64 {
+    fn modulus_bits() -> u32 {
         255
     }
 }
@@ -15,7 +15,7 @@ impl BigNumParamsTrait<3> for ED25519_Fq_Params {
     fn get_instance() -> BigNumInstance<3, Self> {
         ED25519_Fq_Instance
     }
-    fn modulus_bits() -> u64 {
+    fn modulus_bits() -> u32 {
         255
     }
 }

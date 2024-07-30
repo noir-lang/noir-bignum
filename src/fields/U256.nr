@@ -7,7 +7,7 @@ use crate::utils::arrayX::ArrayX;
 
 struct U256Params {}
 impl RuntimeBigNumParamsTrait<3> for U256Params {
-    fn modulus_bits() -> u64 {
+    fn modulus_bits() -> u32 {
         257
     }
     fn has_multiplicative_inverse() -> bool { false }
@@ -16,7 +16,7 @@ impl BigNumParamsTrait<3> for U256Params {
     fn get_instance() -> BigNumInstance<3, Self> {
         U256_Instance
     }
-    fn modulus_bits() -> u64 {
+    fn modulus_bits() -> u32 {
         257
     }
     fn has_multiplicative_inverse() -> bool { false }

@@ -7,7 +7,7 @@ use crate::utils::arrayX::ArrayX;
 
 struct U384_Params {}
 impl RuntimeBigNumParamsTrait<4> for U384_Params {
-    fn modulus_bits() -> u64 {
+    fn modulus_bits() -> u32 {
         385
     }
     fn has_multiplicative_inverse() -> bool { false }
@@ -16,7 +16,7 @@ impl BigNumParamsTrait<4> for U384_Params {
     fn get_instance() -> BigNumInstance<4, Self> {
         U384_Instance
     }
-    fn modulus_bits() -> u64 {
+    fn modulus_bits() -> u32 {
         385
     }
     fn has_multiplicative_inverse() -> bool { false }

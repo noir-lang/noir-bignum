@@ -28,7 +28,7 @@ use crate::utils::arrayX::ArrayX;
 
 struct MNT4_753_Fr_Params {}
 impl RuntimeBigNumParamsTrait<7> for MNT4_753_Fr_Params {
-    fn modulus_bits() -> u64 {
+    fn modulus_bits() -> u32 {
         753
     }
 }
@@ -36,7 +36,7 @@ impl BigNumParamsTrait<7> for MNT4_753_Fr_Params {
     fn get_instance() -> BigNumInstance<7, Self> {
         MNT4_753_Fr_Instance
     }
-    fn modulus_bits() -> u64 {
+    fn modulus_bits() -> u32 {
         753
     }
 }

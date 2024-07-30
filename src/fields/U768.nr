@@ -7,7 +7,7 @@ use crate::utils::arrayX::ArrayX;
 
 struct U768Params {}
 impl RuntimeBigNumParamsTrait<13> for U768Params {
-    fn modulus_bits() -> u64 {
+    fn modulus_bits() -> u32 {
         1537
     }
     fn has_multiplicative_inverse() -> bool { false }
@@ -16,7 +16,7 @@ impl BigNumParamsTrait<13> for U768Params {
     fn get_instance() -> BigNumInstance<13, Self> {
         U768_Instance
     }
-    fn modulus_bits() -> u64 {
+    fn modulus_bits() -> u32 {
         1537
     }
     fn has_multiplicative_inverse() -> bool { false }

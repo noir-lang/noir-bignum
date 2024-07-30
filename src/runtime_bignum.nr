@@ -13,11 +13,11 @@ trait BigNumTrait {
     fn new() -> Self;
     fn one() -> Self;
     fn from(limbs: [Field]) -> Self;
-    fn from_byte_be<let NBytes: u64>(x: [u8; NBytes]) -> Self;
-    fn to_le_bytes<let NBytes: u64>(val: Self) -> [u8; NBytes];
+    fn from_byte_be<let NBytes: u32>(x: [u8; NBytes]) -> Self;
+    fn to_le_bytes<let NBytes: u32>(val: Self) -> [u8; NBytes];
     fn get(self) -> [Field];
     fn get_limb(self, idx: u64) -> Field;
-    fn set_limb(&mut self, idx: u64, value: Field);
+    fn set_limb(&mut self, idx: u32, value: Field);
     fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self;
     fn validate_in_range(self);
     fn validate_quotient_in_range(self);
@@ -32,19 +32,19 @@ trait BigNumTrait {
  **/
 trait BigNumInstanceTrait<BN> where BN: BigNumTrait {
     fn modulus(self) -> BN;
-    fn __derive_from_seed<let SeedBytes: u64>(self, seed: [u8; SeedBytes]) -> BN;
+    fn __derive_from_seed<let SeedBytes: u32>(self, seed: [u8; SeedBytes]) -> BN;
     fn eq(self, lhs: BN, rhs: BN) -> bool;
     fn __neg(self, val: BN) -> BN;
     fn __add(self, lhs: BN, rhs: BN) -> BN;
     fn __sub(self, lhs: BN, rhs: BN) -> BN;
     fn __mul(self, lhs: BN, rhs: BN) -> BN;
     fn __div(self, lhs: BN, rhs: BN) -> BN;
-    fn __batch_invert<let M: u64>(self, x: [BN; M]) -> [BN; M];
+    fn __batch_invert<let M: u32>(self, x: [BN; M]) -> [BN; M];
     fn __batch_invert_slice(self, x: [BN]) -> [BN];
     fn __udiv_mod(self, numerator: BN, divisor: BN) -> (BN, BN);
     fn __invmod(self, val: BN) -> BN;
     fn __pow(self, val: BN, exponent: BN) -> BN;
-    fn __compute_quadratic_expression<let LHS_N: u64, let RHS_N: u64, let NUM_PRODUCTS: u64, let ADD_N: u64>(
+    fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
         self,
         lhs_terms: [[BN; LHS_N]; NUM_PRODUCTS],
         lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
@@ -54,7 +54,7 @@ trait BigNumInstanceTrait<BN> where BN: BigNumTrait {
         linear_flags: [bool; ADD_N]
     ) -> (BN, BN);
 
-    fn evaluate_quadratic_expression<let LHS_N: u64, let RHS_N: u64, let NUM_PRODUCTS: u64, let ADD_N: u64>(
+    fn evaluate_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
         self,
         lhs_terms: [[BN; LHS_N]; NUM_PRODUCTS],
         lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
@@ -82,16 +82,16 @@ trait BigNumInstanceTrait<BN> where BN: BigNumTrait {
  * @brief BigNumParamsTrait defines a "field" with which to parametrise BigNum.
  * @description The "field" does not need to be prime, any value *should* work (TODO: test!)
 **/
-trait BigNumParamsTrait<let N: u64> {
+trait BigNumParamsTrait<let N: u32> {
     /**
      * @brief modulus_bits = log2(modulus) rounded up
      **/
-    fn modulus_bits() -> u64;
+    fn modulus_bits() -> u32;
 
     fn has_multiplicative_inverse() -> bool { true }
 }
 
-struct BigNumInstance<let N: u64, Params> {
+struct BigNumInstance<let N: u32, Params> {
     
     /**
      * @brief modulus: all BigNum operations are evaluated modulo this value
@@ -114,7 +114,7 @@ struct BigNumInstance<let N: u64, Params> {
     redc_param: [Field; N],
 }
 
-impl<let N: u64, Params> BigNum<N, Params> {
+impl<let N: u32, Params> BigNum<N, Params> {
     // some strange circular dependency problem means we need to define `new` as a member of BigNumTrait as well as a definition outside of the trait
     // (delete this method to see. BigNumInstance methods that use BigNum::new() error out, and I can't find a way of declaring BigNum to satisfy BigNumTrait as part of the BigNumInstance definition because BigNumInstance has no contextual knowledge of the BigNum type...)
     fn new() -> Self {
@@ -127,7 +127,7 @@ impl<let N: u64, Params> BigNum<N, Params> {
     }
 }
 
-impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
 
     fn new() -> Self {
         BigNum::new()
@@ -144,9 +144,9 @@ impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
      *               is precisely large enough to cover Params::modulus_bits()
      * @param x: input byte array
      **/
-    fn from_byte_be<let NBytes: u64>(x: [u8; NBytes]) -> BigNum<N, Params> {
-        let num_bits: u64 = NBytes * 8;
-        let modulus_bits: u64 = Params::modulus_bits();
+    fn from_byte_be<let NBytes: u32>(x: [u8; NBytes]) -> BigNum<N, Params> {
+        let num_bits = NBytes * 8;
+        let modulus_bits = Params::modulus_bits();
         assert(num_bits > modulus_bits);
         assert(num_bits - modulus_bits < 8);
         let mut result = BigNum::new();
@@ -183,8 +183,8 @@ impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
         result
     }
 
-    fn to_le_bytes<let NBytes: u64>(val: BigNum<N, Params>) -> [u8; NBytes] {
-        let nbytes = (Params::modulus_bits() / 8) + (Params::modulus_bits() % 8 != 0) as u64;
+    fn to_le_bytes<let NBytes: u32>(val: BigNum<N, Params>) -> [u8; NBytes] {
+        let nbytes = (Params::modulus_bits() / 8) + (Params::modulus_bits() % 8 != 0) as u32;
         assert(nbytes <= NBytes);
 
         let mut result: [u8; NBytes] = [0; NBytes];
@@ -208,7 +208,7 @@ impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
     fn get_limb(self, idx: u64) -> Field {
         self.limbs[idx]
     }
-    fn set_limb(&mut self, idx: u64, value: Field) {
+    fn set_limb(&mut self, idx: u32, value: Field) {
         self.limbs[idx] = value;
     }
 
@@ -266,7 +266,7 @@ impl<let N: u64, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
     }
 }
 
-impl<let N: u64, Params> BigNum<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u32, Params> BigNum<N, Params> where Params: BigNumParamsTrait<N> {
 
     fn from_array(limbs: [Field; N]) -> BigNum<N, Params> {
         BigNum { limbs }
@@ -285,10 +285,10 @@ impl<let N: u64, Params> BigNum<N, Params> where Params: BigNumParamsTrait<N> {
     }
 }
 
-impl<let N: u64, Params,> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstance<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u32, Params,> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstance<N, Params> where Params: BigNumParamsTrait<N> {
 
     fn modulus(self) -> BigNum<N, Params> { BigNum{ limbs: self.modulus } }
-    fn __derive_from_seed<let SeedBytes: u64>(self, seed: [u8; SeedBytes]) -> BigNum<N, Params> {
+    fn __derive_from_seed<let SeedBytes: u32>(self, seed: [u8; SeedBytes]) -> BigNum<N, Params> {
         self.__derive_from_seed_impl(seed)
     }
     // ####################################################################################################################
@@ -318,7 +318,7 @@ impl<let N: u64, Params,> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInsta
         self.__div_impl(lhs, rhs)
     }
 
-    fn __batch_invert<let M: u64>(self, x: [BigNum<N, Params>; M]) -> [BigNum<N, Params>; M] {
+    fn __batch_invert<let M: u32>(self, x: [BigNum<N, Params>; M]) -> [BigNum<N, Params>; M] {
         self.batch_invert_impl(x)
     }
 
@@ -335,7 +335,7 @@ impl<let N: u64, Params,> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInsta
         self.__pow_impl(val, exponent)
     }
 
-    fn __compute_quadratic_expression<let LHS_N: u64, let RHS_N: u64, let NUM_PRODUCTS: u64, let ADD_N: u64>(
+    fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
             self,
             lhs_terms: [[BigNum<N, Params>; LHS_N]; NUM_PRODUCTS],
             lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
@@ -399,7 +399,7 @@ impl<let N: u64, Params,> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInsta
      * @param linear_terms an array of BigNum
      * @param linear_flags an array of sign flags
      **/
-    fn evaluate_quadratic_expression<let LHS_N: u64, let RHS_N: u64, let NUM_PRODUCTS: u64, let ADD_N: u64>(
+    fn evaluate_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
         self,
         lhs_terms: [[BigNum<N, Params>; LHS_N]; NUM_PRODUCTS],
         lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
@@ -789,7 +789,7 @@ impl<let N: u64, Params,> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInsta
 
 }
 
-impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTrait<N> {
 
     // ####################################################################################################################
     // ####################################################################################################################
@@ -807,13 +807,13 @@ impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         }
     }
 
-    unconstrained fn __derive_from_seed_impl<let SeedBytes: u64>(self, seed: [u8; SeedBytes]) -> BigNum<N, Params> {
+    unconstrained fn __derive_from_seed_impl<let SeedBytes: u32>(self, seed: [u8; SeedBytes]) -> BigNum<N, Params> {
         let mut rolling_seed = seed;
 
         let mut to_reduce: ArrayX<Field, N, 2> = ArrayX { segments: [[0; N], [0; N]] };
 
         let mut double_modulus_bits = Params::modulus_bits() * 2;
-        let mut double_modulus_bytes = (double_modulus_bits) / 8 + (double_modulus_bits % 8 != 0) as u64;
+        let mut double_modulus_bytes = (double_modulus_bits) / 8 + (double_modulus_bits % 8 != 0) as u32;
 
         let mut last_limb_bytes = double_modulus_bytes % 15;
         if (last_limb_bytes == 0) {
@@ -1159,7 +1159,7 @@ impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         self.__pow(val, result)
     }
 
-    unconstrained fn batch_invert_impl<let M: u64>(self, x: [BigNum<N, Params>; M]) -> [BigNum<N, Params>; M] {
+    unconstrained fn batch_invert_impl<let M: u32>(self, x: [BigNum<N, Params>; M]) -> [BigNum<N, Params>; M] {
         // TODO: ugly! Will fail if input slice is empty
         let mut accumulator: BigNum<N, Params> = BigNum::one();
         let mut result: [BigNum<N, Params>; M] = [BigNum::new(); M];
@@ -1225,7 +1225,7 @@ impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
     // We know that, for a valid bignum element, the limbs in `x` will be <2^{120}
     // Therefore each of the limbs in `p` (except the most significant) will borrow 2^{120} from the more significant limb.
     // Finally, to ensure we do not underflow in the most significant limb, we use `2p` instead of `p`
-    unconstrained fn __add_linear_expression<let M: u64>(
+    unconstrained fn __add_linear_expression<let M: u32>(
         self,
         x: [BigNum<N, Params>; M],
         flags: [bool; M]
@@ -1257,7 +1257,7 @@ impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
      * @brief computes the limb products of a quadratic expression
      * @details see __compute_quadratic_expression_with_borrow_flags for full description
      **/
-    unconstrained fn __compute_quadratic_expression_product<let LHS_N: u64, let RHS_N: u64, let NUM_PRODUCTS: u64, let ADD_N: u64>(
+    unconstrained fn __compute_quadratic_expression_product<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
         self,
         lhs_terms: [[BigNum<N, Params>; LHS_N]; NUM_PRODUCTS],
         lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
@@ -1295,7 +1295,7 @@ impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
      * @brief computes the quotient/remainder of a quadratic expression
      * @details see __compute_quadratic_expression_with_borrow_flags for full description
      **/
-    unconstrained fn __compute_quadratic_expression_impl<let LHS_N: u64, let RHS_N: u64, let NUM_PRODUCTS: u64, let ADD_N: u64>(
+    unconstrained fn __compute_quadratic_expression_impl<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
         self,
         lhs_terms: [[BigNum<N, Params>; LHS_N]; NUM_PRODUCTS],
         lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
@@ -1356,7 +1356,7 @@ impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
      * @param linear_terms an array of BigNum
      * @param linear_flags an array of sign flags
      **/
-    unconstrained fn __compute_quadratic_expression_with_borrow_flags<let LHS_N: u64, let RHS_N: u64, let NUM_PRODUCTS: u64, let ADD_N: u64>(
+    unconstrained fn __compute_quadratic_expression_with_borrow_flags<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
         self,
         lhs_terms: [[BigNum<N, Params>; LHS_N]; NUM_PRODUCTS],
         lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
@@ -1469,7 +1469,7 @@ impl<let N: u64, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
     }
 }
 
-fn get_double_modulus<let N: u64>(modulus: [Field; N]) -> [Field; N] {
+fn get_double_modulus<let N: u32>(modulus: [Field; N]) -> [Field; N] {
     let TWO_POW_120: Field = 0x1000000000000000000000000000000;
     let m: U60Repr<N, 2> = U60Repr::from(modulus);
     let mut result: [Field; N] = U60Repr::into(m + m);
@@ -1482,10 +1482,10 @@ fn get_double_modulus<let N: u64>(modulus: [Field; N]) -> [Field; N] {
     result
 }
 
-unconstrained fn __barrett_reduction<let N: u64>(
+unconstrained fn __barrett_reduction<let N: u32>(
     x: ArrayX<Field, N, 2>,
     redc_param: [Field; N],
-    k: u64,
+    k: u32,
     modulus: [Field; N],
     modulus_u60: U60Repr<N, 4>
 ) -> ([Field; N], [Field; N]) {
