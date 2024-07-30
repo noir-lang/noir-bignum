@@ -45,6 +45,16 @@ BigNum members are represented as arrays of 120-bit limbs. The number of 120-bit
 
 If your field moduli is _also_ known at compile-time, use the `BigNumTrait` definition in `lib.nr`
 
+### BigNum struct
+
+TODO: Explain the struct
+
+```rust
+struct BigNum<let N: u64, Params> {
+    limbs: [Field; N]
+}
+```
+
 ### Usage
 
 #### Example
