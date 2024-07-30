@@ -47,13 +47,16 @@ If your field moduli is _also_ known at compile-time, use the `BigNumTrait` defi
 
 ### BigNum struct
 
-TODO: Explain the struct
+Big numbers are instantiated with the BigNum struct:
 
 ```rust
 struct BigNum<let N: u64, Params> {
     limbs: [Field; N]
 }
 ```
+
+- `N` is the number of `Field` limbs together holding the value of the big number
+- `Params` is the parameters associated with the big number; refer to sections below for presets and customizations
 
 ### Usage
 
