@@ -5,14 +5,14 @@ use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
 use crate::utils::arrayX::ArrayX;
 
-struct U1024_Params {}
-impl RuntimeBigNumParamsTrait<9> for U1024_Params {
+struct U1024Params {}
+impl RuntimeBigNumParamsTrait<9> for U1024Params {
     fn modulus_bits() -> u32 {
         1025
     }
     fn has_multiplicative_inverse() -> bool { false }
 }
-impl BigNumParamsTrait<9> for U1024_Params {
+impl BigNumParamsTrait<9> for U1024Params {
     fn get_instance() -> BigNumInstance<9, Self> {
         U1024_Instance
     }
@@ -21,7 +21,7 @@ impl BigNumParamsTrait<9> for U1024_Params {
     }
     fn has_multiplicative_inverse() -> bool { false }
 }
-global U1024_Instance: BigNumInstance<9, U1024_Params> = BigNumInstance {
+global U1024_Instance: BigNumInstance<9, U1024Params> = BigNumInstance {
         modulus: [
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x010000000000000000
         ],
