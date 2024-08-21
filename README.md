@@ -64,7 +64,7 @@ struct BigNum<let N: u64, Params> {
 
 This library includes predefined parameter sets. Refer to below for preset info and how to customize the `Params` correctly. 
 
-The actual value of a BigNum can be calculated by multiplying each limb by an increasing power of $2^{120}$. For example `[1,20,300]` represents $1 \cdot 2^{120\cdot0} + 20 \cdot 2^{120 \cdot 1} + 300 \cdot 2^{120 \cdot 2}$. We say that the BigNum is represented in radix-$2^{120}$. 
+The actual value of a BigNum can be calculated by multiplying each limb by an increasing power of $2^{120}$. For example `[1,20,300]` represents $1 \cdot 2^{120\cdot0} + 20 \cdot 2^{120 \cdot 1} + 300 \cdot 2^{120 \cdot 2}$. We say that the BigNum is represented in radix- $2^{120}$. 
 
 NOTE: `N` must be defined at compile-time. The `modulus` can be defined at compile-time or runtime. See further explanation below. 
 
