@@ -249,13 +249,19 @@ A `runtime_bignum::BigNumInstance` wraps the bignum modulus (as well as a derive
 
 ### `modulus`
 
-The modulus can be either known at compile-time or run-time. 
+The modulus can be either known at compile-time or run-time. The following parameters are important to know to be able to work with modular arithmetic:
+
+- `modulus` represents the BigNum modulus, encoded as an array of `Field` elements that each encode 120 bits of the modulus. The first array element represents the least significant 120 bits
+
+- `redc_param` is equal to `(1 << (2 * Params::modulus_bits())) / modulus` . This must be computed outside of the circuit and provided either as a private witness or hardcoded constant. (computing it via an unconstrained function would be very expensive until noir witness computation times improve)
+
+- `double_modulus` is derived via the method `compute_double_modulus` in `runtime_bignum.nr`. If you want to provide this value as a compile-time constant (see `fields/bn254Fq.nr` for an example), follow the algorithm `compute_double_modulus` as this parameter is _not_ structly 2 \* modulus. Each limb except the most significant limb borrows 2^120 from the next most significant limb. This ensure that when performing limb subtractions `double_modulus.limbs[i] - x.limbs[i]`, we know that the result will not underflow
 
 #### Compile-time known modulus
 
 For a modulus that is known at compile-time there are 2 options: 
 - use a predefined set of parameters, which are defined in `bignum/fields`. These are commonly used fields and unsigned integers
-- create a new parameterset. For this you need to implement the `RuntimeBigNumParamsTrait` and `BigNumParamsTrait`, and create a `BigNumInstance`. [This tool](https://github.com/noir-lang/noir-bignum-paramgen) can be used, and see the predefined parameter sets mentioned in previous point to see examples
+- create a new parameterset. For this you need to implement the `RuntimeBigNumParamsTrait` and `BigNumParamsTrait`, and create a `BigNumInstance`. [This tool](https://github.com/noir-lang/noir-bignum-paramgen) can be used, and see an example of that below
 
 In the case of a compile-time known modulus, the arithmetic can be executed directly on the BigNums themselves:
 
@@ -306,40 +312,19 @@ This library includes the follow field presets:
 
 Feature requests and/or pull requests welcome for missing fields you need.
 
-#### Run-time known modulus
 
-To define the custom modulus (e.g. those used in RSA verification) at run-time it is necessary to create a parameterset and a `BigNumInstance` with the following data:
-(Tip: use the  paramgen tool linked at the end of this section)
+##### Create a new parameterset for custom modulus
 
-- `modulus` represents the BigNum modulus, encoded as an array of `Field` elements that each encode 120 bits of the modulus. The first array element represents the least significant 120 bits
+The easiest way to generate everything you need for a parameterset is to use [this tool](https://github.com/noir-lang/noir-bignum-paramgen). 
 
-- `redc_param` is equal to `(1 << (2 * Params::modulus_bits())) / modulus` . This must be computed outside of the circuit and provided either as a private witness or hardcoded constant. (computing it via an unconstrained function would be very expensive until noir witness computation times improve)
-
-- `double_modulus` is derived via the method `compute_double_modulus` in `runtime_bignum.nr`. If you want to provide this value as a compile-time constant (see `fields/bn254Fq.nr` for an example), follow the algorithm `compute_double_modulus` as this parameter is _not_ structly 2 \* modulus. Each limb except the most significant limb borrows 2^120 from the next most significant limb. This ensure that when performing limb subtractions `double_modulus.limbs[i] - x.limbs[i]`, we know that the result will not underflow
-
-BigNumInstance parameters can be derived from a known modulus using the rust crate `noir-bignum-paramgen` (https://crates.io/crates/noir-bignum-paramgen).
-
-##### Example defining custom modulus parameterset & bignum instance
-For example, to work with RSA and a run-time defined modulus of 1024 bits, your Noir program will need to receive a `BigNumInstance` as an argument. This object will be used to perform the arithmetic operations on the given BigNums. 
-
+For example, after cloning and building the tool, for a `modulus` of 1024 bits for RSA run `./target/release/paramgen instance <modulus> RSA1024_example > out.txt`. This prints the parameterset to `out.txt`. Since this is not a field, also add: 
 ```rust
-pub fn verify_add<BNInstance, BN>(
-    instance: BNInstance,
-    a: BN,
-    b: BN,
-    expected: BN
-) where BN: BigNumTrait, BNInstance: BigNumInstanceTrait<BN> {
-    let c = instance.add(a, b);
-    assert(instance.eq(expected, c));
-}
+fn has_multiplicative_inverse() -> bool { false }
 ```
+to the traits implementations for the parameterset. 
 
-Note that in this case, performing `a*b` or `expected == c` is not possible directly; rather, the arithmetic operations must be executed using the `BigNumInstance`. 
 
-At run-time, the modulus is determined and the parameterset has to be defined as follows:
-- modulus has 1024 bits
-- N = 9 (ceil(1024/120) = 9)
-- using your custom `modulus`, generate the actual values needed for `BigNumInstance` (`double_modulus`, `redc_param` etc) using the [paramgen tool](https://github.com/noir-lang/noir-bignum-paramgen)
+This should give a result like this:
 
 ```rust
 struct RSA1024Params {}
@@ -361,9 +346,8 @@ impl BigNumParamsTrait<9> for RSA1024Params {
     fn has_multiplicative_inverse() -> bool { false }
 }
 
-// insert real values here
 let MyMod_Instance: BigNumInstance<9, RSA1024Params> = BigNumInstance::new {
-        modulus: [..],
+        modulus: [..], // here the actual calculated values will be displayed
         double_modulus: [..],
         modulus_u60: ..,
         modulus_u60_x4: ..,
@@ -371,24 +355,48 @@ let MyMod_Instance: BigNumInstance<9, RSA1024Params> = BigNumInstance::new {
 };
 ```
 
-Now the initial function can be called using the `RSA1024Params` and `MyMod_Instance`. Here we show this in a Noir test. 
+#### Run-time known modulus
+
+When the modulus is known at run-time a `BigNumInstance` object will be used to perform the arithmetic operations on the given BigNums. The `BigNumInstance` can only be created from the actual parameters (that depend on the `modulus`). 
+
+At compile-time the bitsize of the modulus has to be known. From that it can be deduced how many limbs are needed to represent the modulus in a `BigNum` object. Then the following types can be defined and used throughout the program:
 
 ```rust
+struct RSA1024Params {}
+impl RuntimeBigNumParamsTrait<9> for RSA1024Params {
+    fn modulus_bits() -> u32 {
+        1024
+    }
+    fn has_multiplicative_inverse() -> bool { false }
+}
+
 type RSA1024 = BigNum<9, RSA1024Params>;
+type RSA1024Instance = BigNumInstance<9, RSA1024Params>;
+```
 
-#[test]
-fn test_add() {
-    let mut a: RSA1024 = BigNum::new();
-    a.limbs[0] = 10;
-    let mut b: RSA1024 = BigNum::new();
-    b.limbs[0] = 20;
+Next, either pass a `BigNumInstance` to your program or create the instance on the fly with given `modulus` and `redc_param`. 
 
-    let mut expected: RSA1024 = BigNum::new();
-    expected.limbs[0] = 30;
-
-    verify_add(MyMod_Instance, a, b, expected);
+For example, passing on the `BigNumInstance`: 
+```rust
+fn main(BNInstance: RSA1024Instance, a: RSA1024, b: RSA1024, expected: RSA1024) {
+    let c = BNInstance.add(a, b);
+    assert(BNInstance.eq(expected, c));
 }
 ```
+
+Or pass on the 2 parameters and determine the `BigNumInstance` from those:
+```rust
+fn main(modulus: [Field; 9], redc_param: [Field; 9], a: RSA1024, b: RSA1024, expected: RSA1024) {
+    let BNInstance: RSA1024Instance = BigNumInstance::new(modulus, redc_param);
+
+    let c = BNInstance.add(a, b);
+    assert(BNInstance.eq(expected, c));
+}
+```
+
+Note that in this case, performing `a*b` or `expected == c` is not possible directly; rather, the arithmetic operations must be executed using the `BigNumInstance`. 
+
+Using your custom `modulus`, generate the actual values needed for `BigNumInstance` (`double_modulus`, `redc_param` etc) using the [paramgen tool](https://github.com/noir-lang/noir-bignum-paramgen). 
 
 TODO: should modulus and redc_param be passed in as witnesses? Because of this comment:
 > BigNumInstance parameters (`modulus`, `redc_param`) can be provided at runtime via witnesses (e.g. RSA verification). The `redc_param` is only used in unconstrained functions and does not need to be derived from `modulus` in-circuit.
