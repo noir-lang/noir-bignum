@@ -13,7 +13,7 @@ trait BigNumTrait {
     fn new() -> Self;
     fn one() -> Self;
     fn from(limbs: [Field]) -> Self;
-    fn from_byte_be<let NBytes: u32>(x: [u8; NBytes]) -> Self;
+    fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> Self;
     fn to_le_bytes<let NBytes: u32>(val: Self) -> [u8; NBytes];
     fn get(self) -> [Field];
     fn get_limb(self, idx: u64) -> Field;
@@ -144,7 +144,7 @@ impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
      *               is precisely large enough to cover Params::modulus_bits()
      * @param x: input byte array
      **/
-    fn from_byte_be<let NBytes: u32>(x: [u8; NBytes]) -> BigNum<N, Params> {
+    fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> BigNum<N, Params> {
         let num_bits = NBytes * 8;
         let modulus_bits = Params::modulus_bits();
         assert(num_bits > modulus_bits);
@@ -173,12 +173,10 @@ impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
         }
 
         // max_bits_in_most_significant_byte should be known at comptime. if not...messy!
-        let mut max_bits_in_most_significant_byte = num_bits - modulus_bits;
-        if num_bits == modulus_bits {
-            max_bits_in_most_significant_byte = 8;
-        }
+        let mut max_bits_in_most_significant_byte = 8 - (num_bits - modulus_bits);
 
-        let most_significant_byte: Field = x[NBytes - 1] as Field;
+        let most_significant_byte: Field = x[0] as Field;
+
         most_significant_byte.assert_max_bit_size(max_bits_in_most_significant_byte as u32);
         result
     }
