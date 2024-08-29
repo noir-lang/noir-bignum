@@ -283,7 +283,7 @@ impl<let N: u32, Params> BigNum<N, Params> where Params: BigNumParamsTrait<N> {
     }
 }
 
-impl<let N: u32, Params,> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstance<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstance<N, Params> where Params: BigNumParamsTrait<N> {
 
     fn modulus(self) -> BigNum<N, Params> { BigNum{ limbs: self.modulus } }
     fn __derive_from_seed<let SeedBytes: u32>(self, seed: [u8; SeedBytes]) -> BigNum<N, Params> {
@@ -1271,7 +1271,7 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
 
         for i in 0..NUM_PRODUCTS {
             lhs[i] = self.__add_linear_expression(lhs_terms[i], lhs_flags[i]);
-            rhs[i]= self.__add_linear_expression(rhs_terms[i], rhs_flags[i]);
+            rhs[i] = self.__add_linear_expression(rhs_terms[i], rhs_flags[i]);
         }
 
         let add: [Field; N] = self.__add_linear_expression(linear_terms, linear_flags);
@@ -1373,7 +1373,7 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
             linear_terms,
             linear_flags
         );
-        let mut mulout_n: ArrayX<Field, N,2> = ArrayX::new();
+        let mut mulout_n: ArrayX<Field, N, 2> = ArrayX::new();
 
         let relation_result: ArrayX<Field, N, 2> = mulout_p.__normalize_limbs(N + N);
         let modulus: [Field; N] = self.modulus;
