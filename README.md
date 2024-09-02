@@ -261,7 +261,7 @@ The modulus can be either known at compile-time or run-time. The following param
 
 For a modulus that is known at compile-time there are 2 options: 
 - use a predefined set of parameters, which are defined in `bignum/fields`. These are commonly used fields and unsigned integers
-- create a new parameterset. For this you need to implement the `RuntimeBigNumParamsTrait` and `BigNumParamsTrait`, and create a `BigNumInstance`. [This tool](https://github.com/noir-lang/noir-bignum-paramgen) can be used, and see an example of that below
+- create a new parameter set. For this you need to implement the `RuntimeBigNumParamsTrait` and `BigNumParamsTrait`, and create a `BigNumInstance`. [This tool](https://github.com/noir-lang/noir-bignum-paramgen) can be used, and see an example of that below
 
 In the case of a compile-time known modulus, the arithmetic can be executed directly on the BigNums themselves:
 
@@ -313,15 +313,15 @@ This library includes the follow field presets:
 Feature requests and/or pull requests welcome for missing fields you need.
 
 
-##### Create a new parameterset for custom modulus
+##### Create a new parameter set for custom modulus
 
-The easiest way to generate everything you need for a parameterset is to use [this tool](https://github.com/noir-lang/noir-bignum-paramgen). 
+The easiest way to generate everything you need for a parameter set is to use [this tool](https://github.com/noir-lang/noir-bignum-paramgen). 
 
-For example, after cloning and building the tool, for a `modulus` of 1024 bits for RSA run `./target/release/paramgen instance <modulus> RSA1024_example > out.txt`. This prints the parameterset to `out.txt`. Since this is not a field, also add: 
+For example, after cloning and building the tool, for a `modulus` of 1024 bits for RSA run `./target/release/paramgen instance <modulus> RSA1024_example > out.txt`. This prints the parameter set to `out.txt`. Since this is not a field, also add: 
 ```rust
 fn has_multiplicative_inverse() -> bool { false }
 ```
-to the traits implementations for the parameterset. 
+to the traits implementations for the parameter set. 
 
 
 This should give a result like this:
