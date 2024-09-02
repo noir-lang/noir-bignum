@@ -187,12 +187,12 @@ impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
 
         let mut result: [u8; NBytes] = [0; NBytes];
         for i in 0..N - 1 {
-            let limb_bytes = val.limbs[i].to_le_bytes(15);
+            let limb_bytes: [u8; 15] = val.limbs[i].to_le_bytes();
             for j in 0..15 {
                 result[i * 15 + j] = limb_bytes[j];
             }
         }
-        let last_limb_bytes = val.limbs[N - 1].to_le_bytes(15);
+        let last_limb_bytes: [u8; 15] = val.limbs[N - 1].to_le_bytes();
         let num_last_bytes = (NBytes - (N - 1) * 15);
         for i in 0..num_last_bytes {
             result[(N-1) * 15 + i] = last_limb_bytes[i];
