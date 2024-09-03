@@ -195,13 +195,13 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
         let value = self.limbs.get(0);
 
         let mut remainder = (value >> remainder_shift);
-        result.limbs.set(num_shifted_limbs, (value << limb_shift) & mask);
+        result.limbs.set(num_shifted_limbs, (value << (limb_shift as u8)) & mask);
 
         // shift 84. num shifted = 1
 
         for i in 1..((N * NumSegments) - num_shifted_limbs) {
             let value = self.limbs.get(i);
-            let upshift = ((value << limb_shift) + remainder) & mask;
+            let upshift = ((value << (limb_shift as u8)) + remainder) & mask;
             result.limbs.set(i + num_shifted_limbs, upshift);
             remainder = (value >> remainder_shift);
             // let remainder: u64 = (self.limbs.get(i + num_shifted_limbs as u64) << remainder_shift as u8) & mask;

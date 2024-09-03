@@ -74,10 +74,13 @@ impl<T, let N: u32, let SizeMultiplier: u32> ArrayX<T, N, SizeMultiplier> {
         let index = i % N;
         self.segments[segment][index]
     }
+}
 
-    unconstrained fn __normalize_limbs<let NumSegments: u32>(x: ArrayX<Field, N, NumSegments>, range: u32) -> ArrayX<Field, N, NumSegments> {
-        let mut normalized: ArrayX<Field, N, NumSegments> = ArrayX::new();
-        let mut inp = x;
+impl<let N: u32, let SizeMultiplier: u32> ArrayX<Field, N, SizeMultiplier> {
+
+    unconstrained fn __normalize_limbs(self, range: u32) -> Self {
+        let mut normalized: Self = ArrayX::new();
+        let mut inp = self;
         // (9 limb mul = 17 product terms)
 
         // a2 a1 a0
