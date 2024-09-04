@@ -147,7 +147,7 @@ impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
     fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> BigNum<N, Params> {
         let num_bits = NBytes * 8;
         let modulus_bits = Params::modulus_bits();
-        assert(num_bits > modulus_bits);
+        assert(num_bits >= modulus_bits);
         assert(num_bits - modulus_bits < 8);
         let mut result = BigNum::new();
 
