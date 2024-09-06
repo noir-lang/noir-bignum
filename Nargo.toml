@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "lib",
+    "examples/custom_modulus_example",
+    "examples/ed25519_example",
+    "examples/runtime_modulus_example",
+]
