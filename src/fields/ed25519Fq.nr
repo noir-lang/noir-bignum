@@ -1,9 +1,7 @@
-use crate::BigNum;
 use crate::runtime_bignum::BigNumInstance;
 use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::BigNumParamsTrait as BigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
-use crate::utils::arrayX::ArrayX;
 
 struct ED25519_Fq_Params {}
 impl RuntimeBigNumParamsTrait<3> for ED25519_Fq_Params {
@@ -26,10 +24,10 @@ global ED25519_Fq_Instance: BigNumInstance<3, ED25519_Fq_Params> = BigNumInstanc
         double_modulus: [
             0x01ffffffffffffffffffffffffffffda, 0x01fffffffffffffffffffffffffffffe, 0xfffe
         ],
-        modulus_u60: U60Repr { limbs: ArrayX { segments: [[
-            0x0fffffffffffffed, 0x0fffffffffffffff, 0x0fffffffffffffff], [0x0fffffffffffffff, 0x7fff, 0x00]] } },
-        modulus_u60_x4: U60Repr { limbs: ArrayX { segments: [[
-            0x0fffffffffffffed, 0x0fffffffffffffff, 0x0fffffffffffffff], [0x0fffffffffffffff, 0x7fff, 0x00], [0x00, 0x00, 0x00], [0x00, 0x00, 0x00]] } },
+        modulus_u60: U60Repr { limbs: [
+            0x0fffffffffffffed, 0x0fffffffffffffff, 0x0fffffffffffffff, 0x0fffffffffffffff, 0x7fff, 0x00]},
+        modulus_u60_x4: U60Repr { limbs: [
+            0x0fffffffffffffed, 0x0fffffffffffffff, 0x0fffffffffffffff, 0x0fffffffffffffff, 0x7fff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
         redc_param: [
             0x13, 0x00, 0x8000
         ]

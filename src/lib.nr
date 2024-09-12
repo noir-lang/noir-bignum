@@ -6,7 +6,6 @@ mod runtime_bignum_test;
 
 use dep::std;
 use crate::utils::u60_representation::U60Repr;
-use crate::utils::arrayX::ArrayX;
 use crate::utils::split_bits;
 use crate::runtime_bignum::BigNumInstance as RuntimeBigNumInstance;
 use crate::runtime_bignum::BigNumInstanceTrait as RuntimeBigNumInstanceTrait;
@@ -316,4 +315,68 @@ impl<let N: u32, Params> std::cmp::Eq for BigNum<N, Params> where Params: BigNum
         let bn: RuntimeBigNumInstance<N, Params> = Params::get_instance();
         bn.eq(self, other)
     }
+}
+
+
+// trait Foo<let N: u32>
+// {
+//     fn test() -> [u8; N];
+// }
+
+// impl<T, let N: u32> Foo<N + N> for [T; N]
+//     where T: Foo<N> + std::ops::Add { 
+
+// fn test(self) -> [T; N + N] {
+//     let mut result: [T; N + N] = [0; N + N];
+//     for i in 0..(N)
+//     {
+//         result[i] = self[i] + 1;
+//         result[i + i] = self[i] + 1;
+//     }
+//     result
+// }
+// }
+
+
+// trait Serialize<let N: u32> {
+//     fn serialize(self) -> [Field; N];
+// }
+
+// impl Serialize<1> for Field {
+//     fn serialize(self) -> [Field; 1] {
+//         [self]
+//     }
+// }
+
+// impl<T, let N: u32, let M: u32> Serialize<N * M> for [T; N]
+//     where T: Serialize<M> { 
+//         fn serialize(self) -> [Field; N]
+//     }
+
+// impl<T, U, let N: u32, let M: u32> Serialize<N + M> for (T, U)
+//     where T: Serialize<N>, U: Serialize<M> { .. }
+
+struct ArrData<let N: u32> {
+    a: [Field; N],
+    b: [Field; N - 1 + N]
+}
+
+fn test() {
+    // error: Could not determine array length `(0 - 1)`
+    let f: ArrData<5> = ArrData{
+        a: [0; 5],
+        b: [0; 9]
+    };
+    assert(f.b[8] == 0);
+}
+
+#[test]
+fn testfoo()
+{
+    test();
+    // let a: [Field; 5] = [0; 5];
+    // let k: [Field; 10] = a.serialize();
+    // for i in 0..10 {
+    //     assert(k[i] == 0);
+    // }
 }

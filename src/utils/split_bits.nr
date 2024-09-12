@@ -1,7 +1,7 @@
 
 // Decomposes a single field into two 120 bit fields and a carry
 unconstrained pub fn split_120_bits(x: Field) -> (Field, Field) {
-    let x_bytes: [u8] = x.to_le_bytes(32);
+    let x_bytes: [u8] = x.to_le_bytes::<32>();
 
     let mut low: Field = 0;
     let mut high: Field = 0;
@@ -27,7 +27,7 @@ unconstrained pub fn split_120_bits(x: Field) -> (Field, Field) {
  * @description Expects the input limb to be in the range [0, ..., 2^{120 - 1}]
  **/
 unconstrained pub fn split_60_bits(x: Field) -> (u64, u64) {
-    let x_bytes = x.to_le_bytes(32);
+    let x_bytes = x.to_le_bytes::<32>();
 
     let mut low: u64 = 0;
     let mut high: u64 = 0;
@@ -42,4 +42,21 @@ unconstrained pub fn split_60_bits(x: Field) -> (u64, u64) {
     low = low & mask;
     high = (high << 4) | t1;
     (low, high)
+}
+
+unconstrained pub fn __normalize_limbs<let N: u32>(input: [Field; N], range: u32) -> [Field; N] {
+    let mut normalized: [Field; N] = [0; N];
+    let mut inp: _ = input;
+    for i in 0..(range - 1) {
+        let (lo, hi) = split_120_bits(inp[i]);
+
+        normalized[i]= lo;
+        inp[i + 1] +=  hi;
+    }
+    {
+        let (lo, hi) = split_120_bits(inp[range - 1]);
+        normalized[range - 1]= lo;
+        assert(hi == 0);
+    }
+    normalized
 }

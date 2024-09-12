@@ -14,12 +14,10 @@
 //! * valuation(r - 1, 2) = 32
 //! * G1 curve equation: y^2 = x^3 + 4
 //! * G2 curve equation: y^2 = x^3 + Fq2(4, 4)
-use crate::BigNum;
 use crate::BigNumParamsTrait;
 use crate::runtime_bignum::BigNumInstance;
 use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
-use crate::utils::arrayX::ArrayX;
 
 struct BLS12_381_Fr_Params {}
 impl RuntimeBigNumParamsTrait<3> for BLS12_381_Fr_Params {
@@ -42,10 +40,10 @@ global BLS12_381_Fr_Instance: BigNumInstance<3, BLS12_381_Fr_Params> = BigNumIns
         double_modulus: [
             0x017b4805fffcb7fdfffffffe00000002, 0x014ea6533afa906673b0101343b00aa6, 0xe7da
         ],
-        modulus_u60: U60Repr { limbs: ArrayX { segments: [[
-            0x0fffffff00000001, 0x0bda402fffe5bfef, 0x09d80809a1d80553], [0x0a753299d7d48333, 0x73ed, 0x00]] } },
-        modulus_u60_x4: U60Repr { limbs: ArrayX { segments: [[
-            0x0fffffff00000001, 0x0bda402fffe5bfef, 0x09d80809a1d80553], [0x0a753299d7d48333, 0x73ed, 0x00], [0x00, 0x00, 0x00], [0x00, 0x00, 0x00]] } },
+        modulus_u60: U60Repr { limbs: [
+            0x0fffffff00000001, 0x0bda402fffe5bfef, 0x09d80809a1d80553, 0x0a753299d7d48333, 0x73ed, 0x00]},
+        modulus_u60_x4: U60Repr { limbs: [
+            0x0fffffff00000001, 0x0bda402fffe5bfef, 0x09d80809a1d80553, 0x0a753299d7d48333, 0x73ed, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
         redc_param: [
             0x410fad2f92eb5c509cde80830358e4, 0x253b7fb78ddf0e2d772dc1f823b4d9, 0x8d54
         ]

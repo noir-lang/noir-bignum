@@ -16,12 +16,10 @@
 //! * G1 curve equation: y^2 = x^3 + 1
 //! * G2 curve equation: y^2 = x^3 + B, where
 //!    * B = Fq2(0, 155198655607781456406391640216936120121836107652948796323930557600032281009004493664981332883744016074664192874906)
-use crate::BigNum;
 use crate::BigNumParamsTrait;
 use crate::runtime_bignum::BigNumInstance;
 use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
-use crate::utils::arrayX::ArrayX;
 
 struct BLS12_377_Fq_Params {}
 impl RuntimeBigNumParamsTrait<4> for BLS12_377_Fq_Params {
@@ -44,10 +42,10 @@ global BLS12_377_Fq_Instance: BigNumInstance<4, BLS12_377_Fq_Params> = BigNumIns
         double_modulus: [
             0x0116ba88600000010a11800000000002, 0x01b3e601ea271e3de6c45f741290002d, 0x018c2f8a21d58c760b80d94292763444, 0x035c73
         ],
-        modulus_u60: U60Repr { limbs: ArrayX { segments: [[
-            0x0508c00000000001, 0xb5d44300000008, 0x03622fba09480017, 0x0d9f300f5138f1ef], [0x05c06ca1493b1a22, 0x04617c510eac63b0, 0x01ae3a, 0x00]] } },
-        modulus_u60_x4: U60Repr { limbs: ArrayX { segments: [[
-            0x0508c00000000001, 0xb5d44300000008, 0x03622fba09480017, 0x0d9f300f5138f1ef], [0x05c06ca1493b1a22, 0x04617c510eac63b0, 0x01ae3a, 0x00], [0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00]] } },
+        modulus_u60: U60Repr { limbs: [
+            0x0508c00000000001, 0xb5d44300000008, 0x03622fba09480017, 0x0d9f300f5138f1ef, 0x05c06ca1493b1a22, 0x04617c510eac63b0, 0x01ae3a, 0x00]},
+        modulus_u60_x4: U60Repr { limbs: [
+            0x0508c00000000001, 0xb5d44300000008, 0x03622fba09480017, 0x0d9f300f5138f1ef, 0x05c06ca1493b1a22, 0x04617c510eac63b0, 0x01ae3a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
         redc_param: [
             0xed687789c42a591f9fd58c5e4daffc, 0xd0de6776b1a06af2d488d85a6d02d0, 0x8d0cc4060e976c3ca0582ef4f73bba, 0x026150
         ]

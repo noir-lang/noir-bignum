@@ -13,12 +13,10 @@
 //! * Curve equation: y^2 = x^3 + 5
 //! * Valuation(q - 1, 2) = 32
 //! * Valuation(r - 1, 2) = 32
-use crate::BigNum;
 use crate::BigNumParamsTrait;
 use crate::runtime_bignum::BigNumInstance;
 use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
-use crate::utils::arrayX::ArrayX;
 
 struct Pallas_Fq_Params {}
 impl RuntimeBigNumParamsTrait<3> for Pallas_Fq_Params {
@@ -41,10 +39,10 @@ global Pallas_Fq_Instance: BigNumInstance<3, Pallas_Fq_Params> = BigNumInstance 
         double_modulus: [
             0x018d31f81299f237325a61da00000002, 0x01000000000000000000000000000043, 0x7fff
         ],
-        modulus_u60: U60Repr { limbs: ArrayX { segments: [[
-            0x092d30ed00000001, 0x04698fc094cf91b9, 0x22], [0x00, 0x4000, 0x00]] } },
-        modulus_u60_x4: U60Repr { limbs: ArrayX { segments: [[
-            0x092d30ed00000001, 0x04698fc094cf91b9, 0x22], [0x00, 0x4000, 0x00], [0x00, 0x00, 0x00], [0x00, 0x00, 0x00]] } },
+        modulus_u60: U60Repr { limbs: [
+            0x092d30ed00000001, 0x04698fc094cf91b9, 0x22, 0x00, 0x4000, 0x00]},
+        modulus_u60_x4: U60Repr { limbs: [
+            0x092d30ed00000001, 0x04698fc094cf91b9, 0x22, 0x00, 0x4000, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
         redc_param: [
             0xe59c0fdacc1b919b4b3c4bfffffffc, 0xffffffffffffffffffffffffffff76, 0xffff
         ]
