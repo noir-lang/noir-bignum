@@ -4,14 +4,12 @@ mod fields;
 mod runtime_bignum;
 mod runtime_bignum_test;
 
-use dep::std;
-use crate::utils::u60_representation::U60Repr;
-use crate::utils::arrayX::ArrayX;
-use crate::utils::split_bits;
-use crate::runtime_bignum::BigNumInstance as RuntimeBigNumInstance;
-use crate::runtime_bignum::BigNumInstanceTrait as RuntimeBigNumInstanceTrait;
-use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
-use crate::runtime_bignum::BigNumTrait as RuntimeBigNumTrait;
+pub use crate::utils::u60_representation::U60Repr;
+pub use crate::utils::arrayX::ArrayX;
+pub use crate::runtime_bignum::BigNumInstance as RuntimeBigNumInstance;
+pub use crate::runtime_bignum::BigNumInstanceTrait as RuntimeBigNumInstanceTrait;
+pub use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
+pub use crate::runtime_bignum::BigNumTrait as RuntimeBigNumTrait;
 struct BigNum<let N: u32, Params> {
     limbs: [Field; N]
 }
