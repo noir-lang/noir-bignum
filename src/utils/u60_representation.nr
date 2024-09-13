@@ -52,7 +52,7 @@ impl<let N: u32, let NumSegments: u32> std::ops::Sub for U60Repr<N, NumSegments>
     }
 }
 
-impl<let N: u32, let NumSegments: u32> std::convert::From<[Field; N]> for U60Repr<N, NumSegments> { 
+impl<let N: u32, let NumSegments: u32> std::convert::From<[Field; N]> for U60Repr<N, NumSegments> {
     fn from(input: [Field; N]) -> Self {
         let mut result: Self = U60Repr { limbs: ArrayX { segments: [[0; N]; NumSegments] } };
         for i in 0..(N) {
@@ -75,7 +75,7 @@ impl<let N: u32, let NumSegments: u32> std::convert::Into<[Field; N]> for U60Rep
     }
 }
 
-impl<let N: u32, let NumSegments: u32> std::cmp::Eq for U60Repr<N, NumSegments> { 
+impl<let N: u32, let NumSegments: u32> std::cmp::Eq for U60Repr<N, NumSegments> {
     fn eq(self, other: Self) -> bool {
         self.limbs == other.limbs
     }
