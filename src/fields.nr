@@ -29,7 +29,7 @@ mod U4096;
 mod U8192;
 
 use crate::BigNum;
-use crate::runtime_bignum::BigNumInstance;
+pub use crate::runtime_bignum::BigNumInstance;
 use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::fields::bn254Fq::BNParams;
 

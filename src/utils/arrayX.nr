@@ -12,7 +12,7 @@ struct ArrayX<T, let N: u32, let SizeMultiplier: u32> {
     segments: [[T; N]; SizeMultiplier]
 }
 
-impl<T, let N: u32, let SizeMultiplier: u32> std::convert::From<[T; N]> for ArrayX<T, N, SizeMultiplier> where T: std::default::Default { 
+impl<T, let N: u32, let SizeMultiplier: u32> std::convert::From<[T; N]> for ArrayX<T, N, SizeMultiplier> where T: std::default::Default {
     fn from(input: [T; N]) -> Self {
         assert(N == 1);
         let mut result = ArrayX::new();
@@ -21,13 +21,13 @@ impl<T, let N: u32, let SizeMultiplier: u32> std::convert::From<[T; N]> for Arra
     }
 }
 
-impl<T, let N: u32, let SizeMultiplier: u32> std::convert::From<[[T; N]; SizeMultiplier]> for ArrayX<T, N, SizeMultiplier> where T: std::default::Default { 
+impl<T, let N: u32, let SizeMultiplier: u32> std::convert::From<[[T; N]; SizeMultiplier]> for ArrayX<T, N, SizeMultiplier> where T: std::default::Default {
     fn from(input: [[T; N]; SizeMultiplier]) -> Self {
-        ArrayX{ segments: input }
+        ArrayX { segments: input }
     }
 }
 
-impl<T, let N: u32, let SizeMultiplier: u32> std::cmp::Eq for ArrayX<T, N, SizeMultiplier> where T: std::cmp::Eq { 
+impl<T, let N: u32, let SizeMultiplier: u32> std::cmp::Eq for ArrayX<T, N, SizeMultiplier> where T: std::cmp::Eq {
     fn eq(self, other: Self) -> bool {
         let mut result: bool = true;
         for i in 0..SizeMultiplier {
