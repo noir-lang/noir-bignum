@@ -1,4 +1,3 @@
-use crate::BigNum;
 use crate::BigNumParamsTrait;
 use crate::runtime_bignum::BigNumInstance;
 use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
@@ -13,7 +12,9 @@ impl RuntimeBigNumParamsTrait<5> for U512Params {
     fn modulus_bits() -> u32 {
         513
     }
-    fn has_multiplicative_inverse() -> bool { false }
+    fn has_multiplicative_inverse() -> bool {
+        false
+    }
 }
 impl BigNumParamsTrait<5> for U512Params {
     fn get_instance() -> BigNumInstance<5, Self> {
@@ -22,7 +23,9 @@ impl BigNumParamsTrait<5> for U512Params {
     fn modulus_bits() -> u32 {
         513
     }
-    fn has_multiplicative_inverse() -> bool { false }
+    fn has_multiplicative_inverse() -> bool {
+        false
+    }
 }
 global U512_Instance: BigNumInstance<5, U512Params> = BigNumInstance {
         modulus: [

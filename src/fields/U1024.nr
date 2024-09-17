@@ -1,4 +1,3 @@
-use crate::BigNum;
 use crate::BigNumParamsTrait;
 use crate::runtime_bignum::BigNumInstance;
 use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
@@ -10,7 +9,9 @@ impl RuntimeBigNumParamsTrait<9> for U1024Params {
     fn modulus_bits() -> u32 {
         1025
     }
-    fn has_multiplicative_inverse() -> bool { false }
+    fn has_multiplicative_inverse() -> bool {
+        false
+    }
 }
 impl BigNumParamsTrait<9> for U1024Params {
     fn get_instance() -> BigNumInstance<9, Self> {
@@ -19,7 +20,9 @@ impl BigNumParamsTrait<9> for U1024Params {
     fn modulus_bits() -> u32 {
         1025
     }
-    fn has_multiplicative_inverse() -> bool { false }
+    fn has_multiplicative_inverse() -> bool {
+        false
+    }
 }
 global U1024_Instance: BigNumInstance<9, U1024Params> = BigNumInstance {
         modulus: [

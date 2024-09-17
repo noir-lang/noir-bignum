@@ -1,4 +1,3 @@
-use crate::utils::arrayX::ArrayX;
 use crate::BigNum;
 use crate::runtime_bignum::BigNumInstance;
 use crate::runtime_bignum::BigNumParamsTrait;
