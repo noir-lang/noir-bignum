@@ -1,7 +1,7 @@
-[workspace]
-members = [
-    "lib",
-    "examples/custom_modulus_example",
-    "examples/ed25519_example",
-    "examples/runtime_modulus_example",
-]
+[package]
+name = "bignum"
+type = "lib"
+authors = [""]
+compiler_version = ">=0.34.0"
+
+[dependencies]
