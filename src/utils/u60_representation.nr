@@ -3,6 +3,7 @@ use dep::std;
 use crate::utils::arrayX::ArrayX;
 use crate::utils::split_bits;
 use crate::utils::msb::get_msb64;
+
 /**
  * @brief U60Repr represents a BigNum element as a sequence of 60-bit unsigned integers.
  *
@@ -10,7 +11,7 @@ use crate::utils::msb::get_msb64;
  * It is helpful to use u60 types when evaluating addition operations that can overflow the field modulus,
  * as well as when performing bit shifts.
  */
-struct U60Repr<let N: u32, let NumSegments: u32>
+struct  U60Repr<let N: u32, let NumSegments: u32>
 {
     limbs: ArrayX<u64, N, NumSegments>
 }

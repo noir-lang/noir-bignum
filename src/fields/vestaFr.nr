@@ -21,7 +21,7 @@ use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
 use crate::utils::arrayX::ArrayX;
 
-struct Vesta_Fr_Params {}
+struct  Vesta_Fr_Params {}
 impl RuntimeBigNumParamsTrait<3> for Vesta_Fr_Params {
     fn modulus_bits() -> u32 {
         255
