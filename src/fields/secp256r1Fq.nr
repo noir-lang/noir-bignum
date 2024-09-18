@@ -4,7 +4,7 @@ use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
 use crate::utils::arrayX::ArrayX;
 
-struct Secp256r1_Fq_Params {}
+pub struct Secp256r1_Fq_Params {}
 impl RuntimeBigNumParamsTrait<3> for Secp256r1_Fq_Params {
     fn modulus_bits() -> u32 {
         256

@@ -8,7 +8,7 @@ use crate::utils::split_bits;
  *       e.g. [Field; N * 2] is not currently possible
  *       This abstraction can be removed once Noir supports arithmetic on generics.
 **/
-struct ArrayX<T, let N: u32, let SizeMultiplier: u32> {
+pub struct ArrayX<T, let N: u32, let SizeMultiplier: u32> {
     segments: [[T; N]; SizeMultiplier]
 }
 

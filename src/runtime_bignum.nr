@@ -9,7 +9,7 @@ use crate::BigNum;
  *        e.g. RSA where the modulus is a witness value as it changes for every RSA signature
  *        tee `lib.nr` for a trait definition where the modulus is known at compile time
  **/
-trait BigNumTrait {
+pub trait BigNumTrait {
     fn new() -> Self;
     fn one() -> Self;
     fn from(limbs: [Field]) -> Self;
@@ -30,7 +30,7 @@ trait BigNumTrait {
  *        BigNumInstance wraps the modulus parameter (as well as a Barret reduction parameter),
  *        which is required for the majority of BigNum operations
  **/
-trait BigNumInstanceTrait<BN> where BN: BigNumTrait {
+pub trait BigNumInstanceTrait<BN> where BN: BigNumTrait {
     fn modulus(self) -> BN;
     fn __derive_from_seed<let SeedBytes: u32>(self, seed: [u8; SeedBytes]) -> BN;
     fn eq(self, lhs: BN, rhs: BN) -> bool;
@@ -40,7 +40,6 @@ trait BigNumInstanceTrait<BN> where BN: BigNumTrait {
     fn __mul(self, lhs: BN, rhs: BN) -> BN;
     fn __div(self, lhs: BN, rhs: BN) -> BN;
     fn __batch_invert<let M: u32>(self, x: [BN; M]) -> [BN; M];
-    fn __batch_invert_slice(self, x: [BN]) -> [BN];
     fn __udiv_mod(self, numerator: BN, divisor: BN) -> (BN, BN);
     fn __invmod(self, val: BN) -> BN;
     fn __pow(self, val: BN, exponent: BN) -> BN;
@@ -82,7 +81,7 @@ trait BigNumInstanceTrait<BN> where BN: BigNumTrait {
  * @brief BigNumParamsTrait defines a "field" with which to parametrise BigNum.
  * @description The "field" does not need to be prime, any value *should* work (TODO: test!)
 **/
-trait BigNumParamsTrait<let N: u32> {
+pub trait BigNumParamsTrait<let N: u32> {
     /**
      * @brief modulus_bits = log2(modulus) rounded up
      **/
@@ -91,7 +90,7 @@ trait BigNumParamsTrait<let N: u32> {
     fn has_multiplicative_inverse() -> bool { true }
 }
 
-struct BigNumInstance<let N: u32, Params> {
+pub struct BigNumInstance<let N: u32, Params> {
     
     /**
      * @brief modulus: all BigNum operations are evaluated modulo this value
@@ -318,11 +317,6 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
 
     fn __batch_invert<let M: u32>(self, x: [BigNum<N, Params>; M]) -> [BigNum<N, Params>; M] {
         self.batch_invert_impl(x)
-    }
-
-    // n.b. needs to be declared unconstrained because we return a slice from an unconstrained runtime
-    unconstrained fn __batch_invert_slice(self, x: [BigNum<N, Params>]) -> [BigNum<N, Params>] {
-        self.batch_invert_slice_impl(x)
     }
 
     fn __invmod(self, val: BigNum<N, Params>) -> BigNum<N, Params> {

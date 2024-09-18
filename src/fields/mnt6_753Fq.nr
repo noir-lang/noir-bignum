@@ -17,7 +17,7 @@
 //! * G2 curve equation: y^2 = x^3 + Ax + B, where
 //!    * A = Fq3(0, 0, a)
 //!    * B = Fq3(b * NON_RESIDUE, 0, 0)
-//!    * NON_RESIDUE = 11 is the cubic non-residue used to construct the
+//!    * NON_RESIDUE = 11 is the cubic non-residue used to conpub struct the
 //!      extension field Fq3
 
 use crate::BigNumParamsTrait;
@@ -26,7 +26,7 @@ use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
 use crate::utils::arrayX::ArrayX;
 
-struct MNT6_753_Fq_Params {}
+pub struct MNT6_753_Fq_Params {}
 impl RuntimeBigNumParamsTrait<7> for MNT6_753_Fq_Params {
     fn modulus_bits() -> u32 {
         753
