@@ -90,7 +90,7 @@ pub trait BigNumParamsTrait<let N: u32> {
     fn has_multiplicative_inverse() -> bool { true }
 }
 
-pub struct BigNumInstance<let N: u32, Params> {
+struct  BigNumInstance<let N: u32, Params> {
     
     /**
      * @brief modulus: all BigNum operations are evaluated modulo this value

@@ -4,7 +4,7 @@ use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
 use crate::utils::arrayX::ArrayX;
 
-pub struct U8192Params {}
+struct  U8192Params {}
 impl RuntimeBigNumParamsTrait<69> for U8192Params {
     fn modulus_bits() -> u32 {
         8193

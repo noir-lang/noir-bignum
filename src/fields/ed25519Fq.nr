@@ -4,7 +4,7 @@ use crate::BigNumParamsTrait as BigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
 use crate::utils::arrayX::ArrayX;
 
-pub struct ED25519_Fq_Params {}
+struct  ED25519_Fq_Params {}
 impl RuntimeBigNumParamsTrait<3> for ED25519_Fq_Params {
     fn modulus_bits() -> u32 {
         255

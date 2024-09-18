@@ -7,7 +7,7 @@ use crate::utils::arrayX::ArrayX;
 // a / b = c
 
 // b * c + (rem < modulus) = a
-pub struct U512Params {}
+struct  U512Params {}
 impl RuntimeBigNumParamsTrait<5> for U512Params {
     fn modulus_bits() -> u32 {
         513

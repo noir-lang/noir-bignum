@@ -11,7 +11,7 @@ pub use crate::runtime_bignum::BigNumInstanceTrait as RuntimeBigNumInstanceTrait
 pub use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 pub use crate::runtime_bignum::BigNumTrait as RuntimeBigNumTrait;
 
-pub struct BigNum<let N: u32, Params> {
+struct  BigNum<let N: u32, Params> {
     limbs: [Field; N]
 }
 
