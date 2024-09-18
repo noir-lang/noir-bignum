@@ -2,7 +2,7 @@
 name = "custom_modulus_example"
 type = "bin"
 authors = [""]
-compiler_version = ">=0.32.0"
+compiler_version = ">=0.34.0"
 
 [dependencies]
 bignum = { path = "../../lib" }
