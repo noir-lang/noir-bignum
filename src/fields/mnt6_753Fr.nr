@@ -17,7 +17,7 @@
 //! * G2 curve equation: y^2 = x^3 + Ax + B, where
 //!    * A = Fq3(0, 0, a)
 //!    * B = Fq3(b * NON_RESIDUE, 0, 0)
-//!    * NON_RESIDUE = 11 is the cubic non-residue used to conpub struct the
+//!    * NON_RESIDUE = 11 is the cubic non-residue used to construct  the
 //!      extension field Fq3
 
 use crate::BigNumParamsTrait;
