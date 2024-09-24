@@ -6,12 +6,14 @@ use crate::utils::u60_representation::U60Repr;
 // a / b = c
 
 // b * c + (rem < modulus) = a
-struct U512Params {}
+struct  U512Params {}
 impl RuntimeBigNumParamsTrait<5> for U512Params {
     fn modulus_bits() -> u32 {
         513
     }
-    fn has_multiplicative_inverse() -> bool { false }
+    fn has_multiplicative_inverse() -> bool {
+        false
+    }
 }
 impl BigNumParamsTrait<5> for U512Params {
     fn get_instance() -> BigNumInstance<5, Self> {
@@ -20,7 +22,9 @@ impl BigNumParamsTrait<5> for U512Params {
     fn modulus_bits() -> u32 {
         513
     }
-    fn has_multiplicative_inverse() -> bool { false }
+    fn has_multiplicative_inverse() -> bool {
+        false
+    }
 }
 global U512_Instance: BigNumInstance<5, U512Params> = BigNumInstance {
         modulus: [
