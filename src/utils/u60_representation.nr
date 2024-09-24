@@ -20,7 +20,7 @@ impl<let N: u32, let NumSegments: u32> std::ops::Add for U60Repr<N, NumSegments>
         let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
 
         let mut carry: u64 = 0;
-        for i in 0.. N * NumSegments {
+        for i in 0..N * NumSegments {
             let mut add: u64 = self.limbs[i] + b.limbs[i] + carry;
             carry = add >> 60;
             add = add - (carry << 60);
@@ -37,11 +37,11 @@ impl<let N: u32, let NumSegments: u32> std::ops::Sub for U60Repr<N, NumSegments>
         let mut borrow: u64 = 0;
         let mut borrow_in: u64 = 0;
 
-        for i in 0.. N * NumSegments {
-                borrow = ((b.limbs[i] + borrow_in) > self.limbs[i]) as u64;
-                let sub = (borrow << 60) + self.limbs[i] - b.limbs[i] - borrow_in;
-                result.limbs[i] = sub;
-                borrow_in = borrow;
+        for i in 0..N * NumSegments {
+            borrow = ((b.limbs[i] + borrow_in) > self.limbs[i]) as u64;
+            let sub = (borrow << 60) + self.limbs[i] - b.limbs[i] - borrow_in;
+            result.limbs[i] = sub;
+            borrow_in = borrow;
         }
 
         result
@@ -52,7 +52,9 @@ impl<let N: u32, let NumSegments: u32> std::convert::From<[Field; N]> for U60Rep
     fn from(input: [Field; N]) -> Self {
         let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
         for i in 0..(N) {
-            let (lo, hi) = unsafe{ split_bits::split_60_bits(input[i]) };
+            let (lo, hi) = unsafe {
+                split_bits::split_60_bits(input[i])
+            };
             result.limbs[2 * i] = lo;
             result.limbs[2 * i + 1] = hi;
         }
