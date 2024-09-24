@@ -81,6 +81,6 @@ fn test_gte() {
         // make rhs greater by 1
         let mut rhs = lhs;
         rhs.limbs[0] += 1;
-        assert(lhs.gte(rhs));
+        assert(!lhs.gte(rhs));
     }
 }
