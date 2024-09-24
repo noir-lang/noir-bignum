@@ -1,7 +1,6 @@
 use dep::std;
 use crate::utils::u60_representation::U60Repr;
 use crate::utils::split_bits;
-use crate::utils::split_bits::__normalize_limbs;
 use crate::BigNum;
 /**
  * @brief runtime_bignum::BigNumTrait defines methods available to BigNum *if* the modulus is not known at compile time.
@@ -923,7 +922,7 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
             }
         }
         let (q, r) = __barrett_reduction(
-            __normalize_limbs(mul, 2 * N),
+            split_bits::__normalize_limbs(mul, 2 * N),
             self.redc_param,
             Params::modulus_bits(),
             self.modulus,
@@ -1301,7 +1300,7 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
             linear_terms,
             linear_flags
         );
-        let mut relation_result: [Field; 2 * N] = __normalize_limbs(mulout, 2 * N);
+        let mut relation_result: [Field; 2 * N] = split_bits::__normalize_limbs(mulout, 2 * N);
 
         // TODO: ugly! Will fail if input slice is empty
         let k  = Params::modulus_bits();
@@ -1364,7 +1363,7 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
             linear_flags
         );
         let mut mulout_n: [Field; 2 * N] = [0; 2 * N];
-        let mut relation_result: [Field; 2 * N] = __normalize_limbs(mulout_p, 2 * N);
+        let mut relation_result: [Field; 2 * N] = split_bits::__normalize_limbs(mulout_p, 2 * N);
 
         let modulus: [Field; N] = self.modulus;
         let (quotient, remainder) = __barrett_reduction(
@@ -1485,7 +1484,7 @@ unconstrained fn __barrett_reduction<let N: u32>(
             mulout[i + j] += x[i] * redc_param[j];
         }
     }
-    mulout = __normalize_limbs(mulout, 3 * N - 1);
+    mulout = split_bits::__normalize_limbs(mulout, 3 * N - 1);
     let mulout_u60: U60Repr<N, 6> = U60Repr::new(mulout);
     let mut quotient_u60 = mulout_u60.shr((k + k));
 

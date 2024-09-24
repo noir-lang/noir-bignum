@@ -44,7 +44,10 @@ unconstrained pub fn split_60_bits(x: Field) -> (u64, u64) {
     (low, high)
 }
 
-unconstrained pub fn __normalize_limbs<let N: u32>(input: [Field; N], range: u32) -> [Field; N] {
+unconstrained pub(crate) fn __normalize_limbs<let N: u32>(
+    input: [Field; N],
+    range: u32
+) -> [Field; N] {
     let mut normalized: [Field; N] = [0; N];
     let mut inp: _ = input;
     for i in 0..(range - 1) {
