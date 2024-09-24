@@ -97,7 +97,7 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
         result
     }
 
-    unconstrained fn into_FieldArray(x: U60Repr<N, NumSegments>) -> [Field; N * NumSegments / 2] {
+    unconstrained fn into_field_array(x: U60Repr<N, NumSegments>) -> [Field; N * NumSegments / 2] {
         let mut result: [Field; N * NumSegments / 2] = [0; N * NumSegments / 2];
         let two_pow_60: Field = 0x1000000000000000;
         for i in 0..(N * NumSegments / 2) {

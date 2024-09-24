@@ -1490,7 +1490,7 @@ unconstrained fn __barrett_reduction<let N: u32>(
 
     // N.B. we assume that the shifted quotient cannot exceed 2 times original bit size.
     //      (partial_quotient should be just slightly larger than the modulus, we could probably represent with a size N+1 array)
-    let partial_quotient_full: [Field; 3 * N] = quotient_u60.into_FieldArray();
+    let partial_quotient_full: [Field; 3 * N] = quotient_u60.into_field_array();
     let mut partial_quotient: [Field; 2 * N] = [0; 2 * N];
     for i in 0..2 * N {
         partial_quotient[i] = partial_quotient_full[i];

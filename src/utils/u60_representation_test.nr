@@ -5,7 +5,7 @@ fn test_conversion() {
     let p = 0xffffffffffffffffffffffffffffff; // 2^120 - 1
     let expected: [Field; 3 * 2] = [p, p - 1, p - 2, p - 3, p - 4, p - 5];
     let u60repr: U60Repr<3, 4> = U60Repr::new(expected);
-    let result = u60repr.into_FieldArray();
+    let result = u60repr.into_field_array();
     assert(result == expected);
 }
 
