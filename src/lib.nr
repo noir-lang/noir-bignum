@@ -5,13 +5,12 @@ mod runtime_bignum;
 mod runtime_bignum_test;
 
 pub use crate::utils::u60_representation::U60Repr;
-pub use crate::utils::arrayX::ArrayX;
 pub use crate::runtime_bignum::BigNumInstance as RuntimeBigNumInstance;
 pub use crate::runtime_bignum::BigNumInstanceTrait as RuntimeBigNumInstanceTrait;
 pub use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 pub use crate::runtime_bignum::BigNumTrait as RuntimeBigNumTrait;
 
-struct  BigNum<let N: u32, Params> {
+struct BigNum<let N: u32, Params> {
     limbs: [Field; N]
 }
 

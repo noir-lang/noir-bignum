@@ -1,9 +1,7 @@
 use dep::std;
 use crate::utils::u60_representation::U60Repr;
-use crate::utils::arrayX::ArrayX;
 use crate::utils::split_bits;
 use crate::BigNum;
-
 /**
  * @brief runtime_bignum::BigNumTrait defines methods available to BigNum *if* the modulus is not known at compile time.
  *        e.g. RSA where the modulus is a witness value as it changes for every RSA signature
@@ -403,14 +401,16 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
         linear_flags: [bool; ADD_N]
     ) {
         // use an unconstrained function to compute the value of the quotient
-        let (quotient, _, borrow_flags): (BigNum<N, Params>, BigNum<N, Params>, ArrayX<Field, N, 2>) = self.__compute_quadratic_expression_with_borrow_flags(
-            lhs_terms,
-            lhs_flags,
-            rhs_terms,
-            rhs_flags,
-            linear_terms,
-            linear_flags
-        );
+        let (quotient, _, borrow_flags): (BigNum<N, Params>, BigNum<N, Params>, [Field; 2 * N]) = unsafe {
+            self.__compute_quadratic_expression_with_borrow_flags(
+                lhs_terms,
+                lhs_flags,
+                rhs_terms,
+                rhs_flags,
+                linear_terms,
+                linear_flags
+            )
+        };
         // constrain the quotient to be in the range [0, ..., 2^{m} - 1], where `m` is log2(modulus) rounded up.
         // Additionally, validate quotient limbs are also in the range [0, ..., 2^{120} - 1]
         quotient.validate_quotient_in_range();
@@ -459,9 +459,7 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
         // We want to evaluate that t0 * t1 + t2 * t3 + t4 - Quotient * Modulus = 0, evaluated over the integers
         // For this we need to be able to borrow values from more-significant limbs into less-significant limbs,
         // so that we can ensure that no limbs will underflow for an honest Prover
-        let mut product_limbs: ArrayX<Field, N,2> = ArrayX::new();
-        //       let fff: [Field; N] = quotient.limbs;
-        //      let mut borrow_flags: ArrayX<Field, N,2> = BigNum::get_borrow_flags3(t0, t1, t2, t3, t4, fff, self.modulus);
+        let mut product_limbs: [Field; 2 * N] = [0; 2 * N];
 
         // Compute the product t0 * t1 + t2 * t3 + t4 - Quotient * Modulus
         // TODO: this is super nasty as it requires a multiplication
@@ -471,16 +469,16 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
                     if k == 0 {
                         let new_term = t0[k][i] * t1[k][j] - quotient.limbs[i] * self.modulus[j];
                         std::as_witness(new_term); // width-4 optimization (n.b. might not be optimal if t2, t3 input arrays are nonzero)
-                        product_limbs.add_assign(i + j, new_term);
+                        product_limbs[i + j] += new_term;
                     } else {
-                        product_limbs.add_assign(i + j, t0[k][i] * t1[k][j]);
+                        product_limbs[i + j] += t0[k][i] * t1[k][j];
                     }
                 }
                 if (NUM_PRODUCTS == 0) {
-                    product_limbs.sub_assign(i + j, quotient.limbs[i] * self.modulus[j]);
+                    product_limbs[i + j] -= quotient.limbs[i] * self.modulus[j];
                 }
             }
-            product_limbs.add_assign(i, t4[i]);
+            product_limbs[i] += t4[i];
         }
 
         // each limb product represents the sum of 120-bit products.
@@ -497,16 +495,14 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
         // N.B. borrow_flags is `Field` type because making it `bool` would apply boolean constraints to all `N2` array entries.
         //      We only use `N2 - 2` borrow flags so applying 1-bit range checks on the array elements we use is more efficient.
         // TODO: Once it is possible to perform arithmetic on generics we can use `borrow_flags: [bool;N+N-2]` to avoid this issue
-        borrow_flags.get(0).assert_max_bit_size(1);
-        product_limbs.add_assign(0, borrow_flags.get(0) * borrow_shift);
+        borrow_flags[0].assert_max_bit_size(1);
+        product_limbs[0] += borrow_flags[0] * borrow_shift;
         for i in 1..(N + N - 2) {
-            borrow_flags.get(i).assert_max_bit_size(1);
-            product_limbs.add_assign(
-                i,
-                (borrow_flags.get(i) * borrow_shift - borrow_flags.get(i - 1) * borrow_carry)
-            );
+            borrow_flags[i].assert_max_bit_size(1);
+            product_limbs[i] += 
+                (borrow_flags[i] * borrow_shift - borrow_flags[i - 1] * borrow_carry);
         }
-        product_limbs.sub_assign(N + N - 2, borrow_flags.get(N + N - 3) * borrow_carry);
+        product_limbs[N + N - 2] -= borrow_flags[N + N - 3] * borrow_carry;
 
         // Final step: Validate `product_limbs` represents the integer value `0`
         // Each element `i` in `product_limbs` overlaps in bitrange with element `i+1`, EXCEPT for the low 120 bits
@@ -522,13 +518,13 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
         let hi_shift: Field = 0x1000000000000000000000000000000;
         let hi_downshift: Field = 1 / hi_shift;
         for i in 0..N + N - 2 {
-            product_limbs.mul_assign(i, hi_downshift);
-            std::as_witness(product_limbs.get(i));
-            product_limbs.get(i).assert_max_bit_size(126); // N.B. is this sufficient? going beyond 126 costs us 1 gate per limb
-            product_limbs.add_assign(i + 1, product_limbs.get(i));
+            product_limbs[i] *= hi_downshift;
+            std::as_witness(product_limbs[i]);
+            product_limbs[i].assert_max_bit_size(126); // N.B. is this sufficient? going beyond 126 costs us 1 gate per limb
+            product_limbs[i + 1] += product_limbs[i];
         }
         // the most significant limb has no limb to "carry" values into - the entire limb must equal zero
-        assert(product_limbs.get(N + N - 2) == 0);
+        assert(product_limbs[N + N - 2] == 0);
     }
 
     fn validate_in_field(self, val: BigNum<N, Params>) {
@@ -538,7 +534,9 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
         for i in 0..N {
             p_minus_self[i] = modulus[i] - val.limbs[i];
         }
-        let borrow_flags = self.__validate_in_field_compute_borrow_flags(val);
+        let borrow_flags = unsafe {
+            self.__validate_in_field_compute_borrow_flags(val)
+        };
         let two_pow_120: Field = 0x1000000000000000000000000000000;
         p_minus_self[0] += borrow_flags[0] as Field * two_pow_120;
         for i in 1..N - 1 {
@@ -597,7 +595,9 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
 
     fn neg(self, val: BigNum<N, Params>) -> BigNum<N, Params> {
         // so we do... p - x - r = 0 and there might be borrow flags
-        let (result, borrow_flags) = self.__neg_with_flags(val);
+        let (result, borrow_flags) = unsafe {
+            self.__neg_with_flags(val)
+        };
         result.validate_in_range();
         let modulus = self.modulus;
         let borrow_shift = 0x1000000000000000000000000000000;
@@ -615,7 +615,9 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
 
     fn add(self, lhs: BigNum<N, Params>, rhs: BigNum<N, Params>) -> BigNum<N, Params> {
         // so we do... p - x - r = 0 and there might be borrow flags
-        let (result, carry_flags, borrow_flags, overflow_modulus) = self.__add_with_flags(lhs, rhs);
+        let (result, carry_flags, borrow_flags, overflow_modulus) = unsafe {
+            self.__add_with_flags(lhs, rhs)
+        };
         result.validate_in_range();
         let modulus = self.modulus;
         let borrow_shift = 0x1000000000000000000000000000000;
@@ -653,7 +655,9 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
 
         // a - b = r
         // p + a - b - r = 0
-        let (result, carry_flags, borrow_flags) = self.__validate_gt_remainder(lhs, rhs);
+        let (result, carry_flags, borrow_flags) = unsafe {
+            self.__validate_gt_remainder(lhs, rhs)
+        };
 
         result.validate_in_range();
 
@@ -683,7 +687,9 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
 
         // a - b = r
         // p + a - b - r = 0
-        let (result, carry_flags, borrow_flags, underflow) = self.__sub_with_flags(lhs, rhs);
+        let (result, carry_flags, borrow_flags, underflow) = unsafe {
+            self.__sub_with_flags(lhs, rhs)
+        };
         result.validate_in_range();
         let modulus = self.modulus;
         let borrow_shift = 0x1000000000000000000000000000000;
@@ -813,7 +819,7 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
     unconstrained fn __derive_from_seed_impl<let SeedBytes: u32>(self, seed: [u8; SeedBytes]) -> BigNum<N, Params> {
         let mut rolling_seed = seed;
 
-        let mut to_reduce: ArrayX<Field, N, 2> = ArrayX { segments: [[0; N], [0; N]] };
+        let mut to_reduce: [Field; 2 * N] = [0; 2 * N];
 
         let mut double_modulus_bits = Params::modulus_bits() * 2;
         let mut double_modulus_bytes = (double_modulus_bits) / 8 + (double_modulus_bits % 8 != 0) as u32;
@@ -840,8 +846,8 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
                     hi += hash[j] as Field;
                 }
             }
-            to_reduce.set(2 * i, lo);
-            to_reduce.set(2 * i + 1, hi);
+            to_reduce[2 * i] = lo;
+            to_reduce[2 * i + 1] = hi;
             rolling_seed[0] += 1;
         }
 
@@ -857,7 +863,7 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
             let mask = (1 as u64 << (last_limb_bits) as u8) - 1;
             let last_bits = last_byte as u64 & mask;
             hi += last_bits as Field;
-            to_reduce.set(2 * N - 2, hi);
+            to_reduce[2 * N - 2] = hi;
         }
 
         let (_, remainder) = __barrett_reduction(
@@ -909,14 +915,14 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         lhs: BigNum<N, Params>,
         rhs: BigNum<N, Params>
     ) -> (BigNum<N, Params>, BigNum<N, Params>) {
-        let mut mul: ArrayX<Field, N, 2> = ArrayX::new();
+        let mut mul: [Field; 2 * N] = [0; 2 * N];
         for i in 0..N {
             for j in 0..N {
-                mul.add_assign(i + j, lhs.limbs[i] * rhs.limbs[j]);
+                mul[i + j] += lhs.limbs[i] * rhs.limbs[j];
             }
         }
         let (q, r) = __barrett_reduction(
-            mul.__normalize_limbs(N + N),
+            split_bits::__normalize_limbs(mul, 2 * N),
             self.redc_param,
             Params::modulus_bits(),
             self.modulus,
@@ -974,8 +980,8 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
 
         let overflow = add_u60.gte(self.modulus_u60);
 
-        let mut subtrahend_u60 : U60Repr<N, 2> = U60Repr { limbs: ArrayX::new() };
-        let mut result_u60 : U60Repr<N, 2> = U60Repr { limbs: ArrayX::new() };
+        let mut subtrahend_u60 : U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
+        let mut result_u60 : U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
 
         if overflow {
             subtrahend_u60 = self.modulus_u60;
@@ -987,29 +993,25 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         let mut borrow_in: u64 = 0;
         let mut borrow_flags: [bool; N] = [false; N];
         let mut carry_flags: [bool; N] = [false; N];
-        for j in 0..2 {
-            for i in 0..N {
-                let mut add_term: u64 = a_u60.limbs.segments[j][i] + b_u60.limbs.segments[j][i] + carry_in;
-                carry = (add_term >= 0x1000000000000000) as u64;
-                add_term -= (carry as u64 * 0x1000000000000000);
-                result_u60.limbs.segments[j][i] = add_term;
-                carry_in = carry as u64;
-                borrow = ((subtrahend_u60.limbs.segments[j][i] + borrow_in) > result_u60.limbs.segments[j][i]) as u64;
-                let sub = (borrow << 60) + result_u60.limbs.segments[j][i]
-                    - subtrahend_u60.limbs.segments[j][i]
-                    - borrow_in;
-                result_u60.limbs.segments[j][i] = sub;
-                borrow_in = borrow;
+        for i in 0..2 * N {
+            let mut add_term: u64 = a_u60.limbs[i] + b_u60.limbs[i] + carry_in;
+            carry = (add_term >= 0x1000000000000000) as u64;
+            add_term -= (carry as u64 * 0x1000000000000000);
+            result_u60.limbs[i] = add_term;
+            carry_in = carry as u64;
+            borrow = ((subtrahend_u60.limbs[i] + borrow_in) > result_u60.limbs[i]) as u64;
+            let sub = (borrow << 60) + result_u60.limbs[i] - subtrahend_u60.limbs[i] - borrow_in;
+            result_u60.limbs[i] = sub;
+            borrow_in = borrow;
 
-                if ((j * N + i) & 1 == 1) {
-                    let idx = (j * N + i - 1) / 2;
-                    if (carry & borrow == 1) {
-                        carry = 0;
-                        borrow = 0;
-                    }
-                    carry_flags[idx] = carry as bool;
-                    borrow_flags[idx] = borrow as bool;
+            if ((i & 1) == 1) {
+                let idx = (i - 1) / 2;
+                if (carry & borrow == 1) {
+                    carry = 0;
+                    borrow = 0;
                 }
+                carry_flags[idx] = carry as bool;
+                borrow_flags[idx] = borrow as bool;
             }
         }
         let mut result = BigNum::from_array(U60Repr::into(result_u60));
@@ -1028,8 +1030,8 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         let underflow = b_u60.gte(a_u60);
         b_u60 += U60Repr::one();
         assert(underflow == false, "BigNum::validate_gt check fails");
-        let mut addend_u60 : U60Repr<N, 2> = U60Repr { limbs: ArrayX::new() };
-        let mut result_u60 : U60Repr<N, 2> = U60Repr { limbs: ArrayX::new() };
+        let mut addend_u60 : U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
+        let mut result_u60 : U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
 
         let mut carry: u64 = 0;
         let mut carry_in: u64 = 0;
@@ -1037,31 +1039,27 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         let mut borrow_in: u64 = 0;
         let mut borrow_flags: [bool; N] = [false; N];
         let mut carry_flags: [bool; N] = [false; N];
-        for j in 0..2 {
-            for i in 0..N {
-                let mut add_term: u64 = a_u60.limbs.segments[j][i] + addend_u60.limbs.segments[j][i] + carry_in;
-                carry = (add_term >= 0x1000000000000000) as u64;
-                add_term -= (carry as u64 * 0x1000000000000000);
-                result_u60.limbs.segments[j][i] = add_term;
-                carry_in = carry as u64;
-                borrow = ((b_u60.limbs.segments[j][i] + borrow_in) > result_u60.limbs.segments[j][i]) as u64;
-                let sub = (borrow << 60) + result_u60.limbs.segments[j][i]
-                    - b_u60.limbs.segments[j][i]
-                    - borrow_in;
-                result_u60.limbs.segments[j][i] = sub;
-                borrow_in = borrow;
+        for i in 0..2 * N {
+            let mut add_term: u64 = a_u60.limbs[i] + addend_u60.limbs[i] + carry_in;
+            carry = (add_term >= 0x1000000000000000) as u64;
+            add_term -= (carry as u64 * 0x1000000000000000);
+            result_u60.limbs[i] = add_term;
+            carry_in = carry as u64;
+            borrow = ((b_u60.limbs[i] + borrow_in) > result_u60.limbs[i]) as u64;
+            let sub = (borrow << 60) + result_u60.limbs[i] - b_u60.limbs[i] - borrow_in;
+            result_u60.limbs[i] = sub;
+            borrow_in = borrow;
 
-                if ((j * N + i) & 1 == 1) {
-                    let idx = (j * N + i - 1) / 2;
-                    if (carry & borrow == 1) {
-                        carry = 0;
-                        borrow = 0;
-                    }
-                    carry_flags[idx] = carry as bool;
-                    borrow_flags[idx] = borrow as bool;
+            if ((i & 1) == 1) {
+                if (carry & borrow == 1) {
+                    carry = 0;
+                    borrow = 0;
                 }
+                carry_flags[i/2] = carry as bool;
+                borrow_flags[i/2] = borrow as bool;
             }
         }
+
         let mut result = BigNum::from_array(U60Repr::into(result_u60));
         (result, carry_flags, borrow_flags)
     }
@@ -1076,8 +1074,8 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
 
         let underflow = b_u60.gte(a_u60 + U60Repr::one());
 
-        let mut addend_u60 : U60Repr<N, 2> = U60Repr { limbs: ArrayX::new() };
-        let mut result_u60 : U60Repr<N, 2> = U60Repr { limbs: ArrayX::new() };
+        let mut addend_u60 : U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
+        let mut result_u60 : U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
 
         if underflow {
             addend_u60 = self.modulus_u60;
@@ -1089,29 +1087,24 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         let mut borrow_in: u64 = 0;
         let mut borrow_flags: [bool; N] = [false; N];
         let mut carry_flags: [bool; N] = [false; N];
-        for j in 0..2 {
-            for i in 0..N {
-                let mut add_term: u64 = a_u60.limbs.segments[j][i] + addend_u60.limbs.segments[j][i] + carry_in;
-                carry = (add_term >= 0x1000000000000000) as u64;
-                add_term -= (carry as u64 * 0x1000000000000000);
-                result_u60.limbs.segments[j][i] = add_term;
-                carry_in = carry as u64;
-                borrow = ((b_u60.limbs.segments[j][i] + borrow_in) > result_u60.limbs.segments[j][i]) as u64;
-                let sub = (borrow << 60) + result_u60.limbs.segments[j][i]
-                    - b_u60.limbs.segments[j][i]
-                    - borrow_in;
-                result_u60.limbs.segments[j][i] = sub;
-                borrow_in = borrow;
+        for i in 0..2 * N {
+            let mut add_term: u64 = a_u60.limbs[i] + addend_u60.limbs[i] + carry_in;
+            carry = (add_term >= 0x1000000000000000) as u64;
+            add_term -= (carry as u64 * 0x1000000000000000);
+            result_u60.limbs[i] = add_term;
+            carry_in = carry as u64;
+            borrow = ((b_u60.limbs[i] + borrow_in) > result_u60.limbs[i]) as u64;
+            let sub = (borrow << 60) + result_u60.limbs[i] - b_u60.limbs[i] - borrow_in;
+            result_u60.limbs[i] = sub;
+            borrow_in = borrow;
 
-                if ((j * N + i) & 1 == 1) {
-                    let idx = (j * N + i - 1) / 2;
-                    if (carry & borrow == 1) {
-                        carry = 0;
-                        borrow = 0;
-                    }
-                    carry_flags[idx] = carry as bool;
-                    borrow_flags[idx] = borrow as bool;
+            if ((i & 1) == 1) {
+                if (carry & borrow == 1) {
+                    carry = 0;
+                    borrow = 0;
                 }
+                carry_flags[i/2] = carry as bool;
+                borrow_flags[i/2] = borrow as bool;
             }
         }
         let mut result = BigNum::from_array(U60Repr::into(result_u60));
@@ -1121,24 +1114,19 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
     unconstrained fn __neg_with_flags(self, val: BigNum<N, Params>) -> (BigNum<N, Params>, [bool; N]) {
         let f: [Field; N] = val.limbs;
         let x_u60 : U60Repr<N, 2> = U60Repr::from(f);
-        let mut result_u60 : U60Repr<N, 2> = U60Repr { limbs: ArrayX::new() };
+        let mut result_u60 : U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
 
         let mut borrow: u64 = 0;
         let mut borrow_in: u64 = 0;
 
         let mut borrow_flags: [bool; N] = [false; N];
-        for j in 0..2 {
-            for i in 0..N {
-                borrow = ((x_u60.limbs.segments[j][i] + borrow_in) > self.modulus_u60.limbs.segments[j][i]) as u64;
-                let sub = (borrow << 60) + self.modulus_u60.limbs.segments[j][i]
-                    - x_u60.limbs.segments[j][i]
-                    - borrow_in;
-                result_u60.limbs.segments[j][i] = sub;
-                borrow_in = borrow;
-                if ((j * N + i) & 1 == 1) {
-                    let idx = (j * N + i - 1) / 2;
-                    borrow_flags[idx] = borrow as bool;
-                }
+        for i in 0..2 * N {
+            borrow = ((x_u60.limbs[i] + borrow_in) > self.modulus_u60.limbs[i]) as u64;
+            let sub = (borrow << 60) + self.modulus_u60.limbs[i] - x_u60.limbs[i] - borrow_in;
+            result_u60.limbs[i] = sub;
+            borrow_in = borrow;
+            if ((i & 1) == 1) {
+                borrow_flags[i / 2] = borrow as bool;
             }
         }
         let mut result = BigNum::from_array(U60Repr::into(result_u60));
@@ -1250,9 +1238,6 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         }
         // problem if we normalize when used in computing quotient
         sum
-        //   let result_p: ArrayX<Field, N, 1> = BigNum::__normalize_limbs(ArrayX::from_array(lhs_sum_p), N);
-        //  let result_n: ArrayX<Field, N, 1> = BigNum::__normalize_limbs(ArrayX::from_array(lhs_sum_n), N);
-        //  (result_p.segments[0], result_n.segments[0])
     }
 
     /**
@@ -1267,7 +1252,7 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
         linear_terms: [BigNum<N, Params>; ADD_N],
         linear_flags: [bool; ADD_N]
-    ) -> ArrayX<Field, N, 2> {
+    ) -> [Field; 2 * N] {
         // TODO, validate we do not overflow N2 when multiplying and N when adding
         let mut lhs: [[Field; N]; NUM_PRODUCTS] = [[0; N]; NUM_PRODUCTS];
         let mut rhs: [[Field; N]; NUM_PRODUCTS] = [[0; N]; NUM_PRODUCTS];
@@ -1280,15 +1265,15 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
 
         let add: [Field; N] = self.__add_linear_expression(linear_terms, linear_flags);
 
-        let mut mulout: ArrayX<Field, N,2> = ArrayX::new();
+        let mut mulout: [Field; 2 * N] = [0; 2 * N];
 
         for i in 0..N {
             for j in 0..N {
                 for k in 0..NUM_PRODUCTS {
-                    mulout.add_assign(i + j, (lhs[k][i] * rhs[k][j]));
+                    mulout[i + j] += (lhs[k][i] * rhs[k][j]);
                 }
             }
-            mulout.add_assign(i, add[i]);
+            mulout[i] += add[i];
         }
         mulout
     }
@@ -1315,7 +1300,7 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
             linear_terms,
             linear_flags
         );
-        let relation_result: ArrayX<Field, N, 2> = mulout.__normalize_limbs(N + N);
+        let mut relation_result: [Field; 2 * N] = split_bits::__normalize_limbs(mulout, 2 * N);
 
         // TODO: ugly! Will fail if input slice is empty
         let k  = Params::modulus_bits();
@@ -1366,7 +1351,7 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
         linear_terms: [BigNum<N, Params>; ADD_N],
         linear_flags: [bool; ADD_N]
-    ) -> (BigNum<N, Params>, BigNum<N, Params>, ArrayX<Field, N, 2>) {
+    ) -> (BigNum<N, Params>, BigNum<N, Params>, [Field; 2 * N]) {
         // TODO, validate we do not overflow N2 when multiplying and N when adding
 
         let mut mulout_p = self.__compute_quadratic_expression_product(
@@ -1377,9 +1362,9 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
             linear_terms,
             linear_flags
         );
-        let mut mulout_n: ArrayX<Field, N, 2> = ArrayX::new();
+        let mut mulout_n: [Field; 2 * N] = [0; 2 * N];
+        let mut relation_result: [Field; 2 * N] = split_bits::__normalize_limbs(mulout_p, 2 * N);
 
-        let relation_result: ArrayX<Field, N, 2> = mulout_p.__normalize_limbs(N + N);
         let modulus: [Field; N] = self.modulus;
         let (quotient, remainder) = __barrett_reduction(
             relation_result,
@@ -1392,12 +1377,12 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
 
         for i in 0..N {
             for j in 0..N {
-                mulout_n.add_assign(i + j, quotient[i] * modulus[j]);
+                mulout_n[i + j] += quotient[i] * modulus[j];
             }
         }
 
         // compute borrow flags from mulout_p and mulout_n
-        let mut borrow_flags: ArrayX<Field, N, 2> = ArrayX::new();
+        let mut borrow_flags: [Field; 2 * N] = [0; 2 * N];
         let borrow_shift: Field = 0x40000000000000000000000000000000000000000000000000000000000000; // 2^{246}
         let borrow_carry: Field = 0x40000000000000000000000000000000; // 2^{246 - 120} = 2^{126}
         let two_pow_120: Field = 0x1000000000000000000000000000000;
@@ -1406,22 +1391,22 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         // determine whether we need to borrow from more significant limbs.
         // initial limb is "simple" comparison operation
         // TODO: check how expensive `lt` operator is w.r.t. witness generation
-        borrow_flags.set(0, mulout_p.get(0).lt(mulout_n.get(0)) as Field);
+        borrow_flags[0] = mulout_p[0].lt(mulout_n[0]) as Field;
         // we have 2N - 2 borrow flags. The number of limbs from our product computation is 2N - 1
         // and there is nothing to borrow against for the final limb.
-        let mut hi_bits = (mulout_p.get(0) - mulout_n.get(0) + (borrow_flags.get(0) * borrow_shift)) * downshift;
+        let mut hi_bits = (mulout_p[0] - mulout_n[0] + (borrow_flags[0] * borrow_shift)) * downshift;
         for i in 1..(N + N - 2) {
             // compute the contribution from limb `i-1` that gets added into limb `i`, and add into limb `i`
             // let hi_bits = (mulout_p.get(i - 1) - mulout_n.get(i - 1) + (borrow_flags.get(i - 1) * borrow_shift))
             //     * downshift;
-            mulout_p.add_assign(i, hi_bits);
+            mulout_p[i] += hi_bits;
 
             // determine whether negative limb values are greater than positive limb values
-            let underflow: Field = mulout_p.get(i).lt(mulout_n.get(i) + (borrow_flags.get(i - 1) * borrow_carry)) as Field;
-            borrow_flags.set(i, underflow);
+            let underflow: Field = mulout_p[i].lt(mulout_n[i] + (borrow_flags[i - 1] * borrow_carry)) as Field;
+            borrow_flags[i] = underflow;
 
-            hi_bits = (mulout_p.get(i) - mulout_n.get(i) + (borrow_flags.get(i) * borrow_shift)
-                - (borrow_flags.get(i - 1) * borrow_carry)) * downshift;
+            hi_bits = (mulout_p[i] - mulout_n[i] + (borrow_flags[i] * borrow_shift)
+                - (borrow_flags[i - 1] * borrow_carry)) * downshift;
         }
 
         let mut q = BigNum::from_array(quotient);
@@ -1487,42 +1472,45 @@ fn get_double_modulus<let N: u32>(modulus: [Field; N]) -> [Field; N] {
 }
 
 unconstrained fn __barrett_reduction<let N: u32>(
-    x: ArrayX<Field, N, 2>,
+    x: [Field; 2 * N],
     redc_param: [Field; N],
     k: u32,
     modulus: [Field; N],
     modulus_u60: U60Repr<N, 4>
 ) -> ([Field; N], [Field; N]) {
-    let mut mulout: ArrayX<Field, N, 3>  = ArrayX { segments: [[0; N]; 3] };
+    let mut mulout: [Field; 3 * N]  = [0; 3 * N];
     for i in 0..(N + N) {
         for j in 0..N {
-            mulout.add_assign(i + j, x.get(i) * redc_param[j]);
+            mulout[i + j] += x[i] * redc_param[j];
         }
     }
-    mulout = mulout.__normalize_limbs(3 * N - 1);
+    mulout = split_bits::__normalize_limbs(mulout, 3 * N - 1);
     let mulout_u60: U60Repr<N, 6> = U60Repr::new(mulout);
     let mut quotient_u60 = mulout_u60.shr((k + k));
 
     // N.B. we assume that the shifted quotient cannot exceed 2 times original bit size.
     //      (partial_quotient should be just slightly larger than the modulus, we could probably represent with a size N+1 array)
-    let partial_quotient: ArrayX<Field, N, 2> = quotient_u60.into_arrayX();
-
+    let partial_quotient_full: [Field; 3 * N] = quotient_u60.into_field_array();
+    let mut partial_quotient: [Field; 2 * N] = [0; 2 * N];
+    for i in 0..2 * N {
+        partial_quotient[i] = partial_quotient_full[i];
+    }
     // quotient_mul_modulus can never exceed input value `x` so can fit into size-2 array
-    let mut quotient_mul_modulus: ArrayX<Field, N, 2>  = ArrayX { segments: [[0; N]; 2] };
-    let mut quotient_mul_modulus_normalized: ArrayX<Field, N, 2>  = ArrayX { segments: [[0; N]; 2] };
+    let mut quotient_mul_modulus: [Field; 2 * N]  = [0; 2 * N];
+    let mut quotient_mul_modulus_normalized: [Field; 2 * N]  = [0; 2 * N];
     for j in 0..N {
         for i in 0..(N + N - j) {
-            quotient_mul_modulus.add_assign(i + j, partial_quotient.get(i) * modulus[j]);
+            quotient_mul_modulus[i + j] += partial_quotient[i] * modulus[j];
         }
     }
 
     for i in 0..(N + N) {
-        let (lo, hi) = split_bits::split_120_bits(quotient_mul_modulus.get(i));
-        quotient_mul_modulus_normalized.set(i, lo);
+        let (lo, hi) = split_bits::split_120_bits(quotient_mul_modulus[i]);
+        quotient_mul_modulus_normalized[i] = lo;
         // TODO: what is faster, leaving this if statement in or out?
         // (array is size-1 too large so we can tolerate adding 0 into max element)
         if (i + 1 < N + N) {
-            quotient_mul_modulus.add_assign(i + 1, hi);
+            quotient_mul_modulus[i + 1] += hi;
         }
     }
     let quotient_mul_modulus_u60: U60Repr<N, 4> = U60Repr::new(quotient_mul_modulus_normalized);
