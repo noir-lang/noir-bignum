@@ -52,7 +52,6 @@ trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::M
     fn __udiv_mod(self, divisor: Self) -> (Self, Self);
     fn __invmod(self) -> Self;
     fn __batch_invert<let M: u32>(to_invert: [Self; M]) -> [Self; M];
-    fn __batch_invert_slice(x: [Self]) -> [Self];
     fn __is_zero(self) -> bool { RuntimeBigNumTrait::__is_zero(self) }
     fn __eq(self, other: Self) -> bool { RuntimeBigNumTrait::__eq(self, other) }
     fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(lhs: [[Self; LHS_N]; NUM_PRODUCTS], lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS], rhs: [[Self; RHS_N]; NUM_PRODUCTS], rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS], add: [Self; ADD_N], add_flags: [bool; ADD_N]) -> (Self, Self);
@@ -143,11 +142,6 @@ impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
         Params::get_instance().__batch_invert(x)
     }
 
-    // n.b. needs to be declared unconstrained because we return a slice from an unconstrained runtime
-    unconstrained fn __batch_invert_slice(x: [Self]) -> [Self] {
-        assert(Params::has_multiplicative_inverse());
-        Params::get_instance().__batch_invert_slice(x)
-    }
     fn __invmod(self) -> Self {
         assert(Params::has_multiplicative_inverse());
         Params::get_instance().__invmod(self)
@@ -273,8 +267,7 @@ impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
     }
 }
 
-impl<let N: u32, Params> BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N>  {
-}
+impl<let N: u32, Params> BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N> {}
 
 impl<let N: u32, Params> std::ops::Add for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N>  {
     // Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
@@ -317,7 +310,6 @@ impl<let N: u32, Params> std::cmp::Eq for BigNum<N, Params> where Params: BigNum
     }
 }
 
-
 // trait Foo<let N: u32>
 // {
 //     fn test() -> [u8; N];
@@ -336,7 +328,6 @@ impl<let N: u32, Params> std::cmp::Eq for BigNum<N, Params> where Params: BigNum
 //     result
 // }
 // }
-
 
 // trait Serialize<let N: u32> {
 //     fn serialize(self) -> [Field; N];
@@ -363,16 +354,12 @@ struct ArrData<let N: u32> {
 
 fn test() {
     // error: Could not determine array length `(0 - 1)`
-    let f: ArrData<5> = ArrData{
-        a: [0; 5],
-        b: [0; 9]
-    };
+    let f: ArrData<5> = ArrData { a: [0; 5], b: [0; 9] };
     assert(f.b[8] == 0);
 }
 
 #[test]
-fn testfoo()
-{
+fn testfoo() {
     test();
     // let a: [Field; 5] = [0; 5];
     // let k: [Field; 10] = a.serialize();
