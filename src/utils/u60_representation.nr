@@ -1,7 +1,6 @@
-use dep::std;
-
 use crate::utils::split_bits;
 use crate::utils::msb::get_msb64;
+
 /**
  * @brief U60Repr represents a BigNum element as a sequence of 60-bit unsigned integers.
  *
@@ -9,8 +8,7 @@ use crate::utils::msb::get_msb64;
  * It is helpful to use u60 types when evaluating addition operations that can overflow the field modulus,
  * as well as when performing bit shifts.
  */
-struct U60Repr<let N: u32, let NumSegments: u32>
-{
+struct U60Repr<let N: u32, let NumSegments: u32> {
     limbs: [u64; N * NumSegments]
 }
 
@@ -19,7 +17,7 @@ impl<let N: u32, let NumSegments: u32> std::ops::Add for U60Repr<N, NumSegments>
         let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
 
         let mut carry: u64 = 0;
-        for i in 0.. N * NumSegments {
+        for i in 0..N * NumSegments {
             let mut add: u64 = self.limbs[i] + b.limbs[i] + carry;
             carry = add >> 60;
             add = add - (carry << 60);
@@ -36,22 +34,24 @@ impl<let N: u32, let NumSegments: u32> std::ops::Sub for U60Repr<N, NumSegments>
         let mut borrow: u64 = 0;
         let mut borrow_in: u64 = 0;
 
-        for i in 0.. N * NumSegments {
-                borrow = ((b.limbs[i] + borrow_in) > self.limbs[i]) as u64;
-                let sub = (borrow << 60) + self.limbs[i] - b.limbs[i] - borrow_in;
-                result.limbs[i] = sub;
-                borrow_in = borrow;
+        for i in 0..N * NumSegments {
+            borrow = ((b.limbs[i] + borrow_in) > self.limbs[i]) as u64;
+            let sub = (borrow << 60) + self.limbs[i] - b.limbs[i] - borrow_in;
+            result.limbs[i] = sub;
+            borrow_in = borrow;
         }
 
         result
     }
 }
 
-impl<let N: u32, let NumSegments: u32> std::convert::From<[Field; N]> for U60Repr<N, NumSegments> { 
+impl<let N: u32, let NumSegments: u32> std::convert::From<[Field; N]> for U60Repr<N, NumSegments> {
     fn from(input: [Field; N]) -> Self {
         let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
         for i in 0..(N) {
-            let (lo, hi) = unsafe{ split_bits::split_60_bits(input[i]) };
+            let (lo, hi) = unsafe {
+                split_bits::split_60_bits(input[i])
+            };
             result.limbs[2 * i] = lo;
             result.limbs[2 * i + 1] = hi;
         }
@@ -70,7 +70,7 @@ impl<let N: u32, let NumSegments: u32> std::convert::Into<[Field; N]> for U60Rep
     }
 }
 
-impl<let N: u32, let NumSegments: u32> std::cmp::Eq for U60Repr<N, NumSegments> { 
+impl<let N: u32, let NumSegments: u32> std::cmp::Eq for U60Repr<N, NumSegments> {
     fn eq(self, other: Self) -> bool {
         self.limbs == other.limbs
     }
@@ -94,7 +94,7 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
         result
     }
 
-    unconstrained fn into_FieldArray(x: U60Repr<N, NumSegments>) -> [Field; N * NumSegments / 2] {
+    unconstrained fn into_field_array(x: U60Repr<N, NumSegments>) -> [Field; N * NumSegments / 2] {
         let mut result: [Field; N * NumSegments / 2] = [0; N * NumSegments / 2];
         let two_pow_60: Field = 0x1000000000000000;
         for i in 0..(N * NumSegments / 2) {

@@ -4,13 +4,12 @@ mod fields;
 mod runtime_bignum;
 mod runtime_bignum_test;
 
-use dep::std;
-use crate::utils::u60_representation::U60Repr;
-use crate::utils::split_bits;
-use crate::runtime_bignum::BigNumInstance as RuntimeBigNumInstance;
-use crate::runtime_bignum::BigNumInstanceTrait as RuntimeBigNumInstanceTrait;
-use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
-use crate::runtime_bignum::BigNumTrait as RuntimeBigNumTrait;
+pub use crate::utils::u60_representation::U60Repr;
+pub use crate::runtime_bignum::BigNumInstance as RuntimeBigNumInstance;
+pub use crate::runtime_bignum::BigNumInstanceTrait as RuntimeBigNumInstanceTrait;
+pub use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
+pub use crate::runtime_bignum::BigNumTrait as RuntimeBigNumTrait;
+
 struct BigNum<let N: u32, Params> {
     limbs: [Field; N]
 }
@@ -77,7 +76,6 @@ trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::M
 
 impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N> {
 
-    
     // Weird compiler issue where if we do not pass `Self` as a parameter to these methods,
     // then a generic struct that conforms to BigNumTrait cannot access these methods?
     // the Params: BigNumParamsTrait<N> needs to be satisfied, but the BigNumTrait has no knowledge of BigNumParamsTrait?
@@ -86,7 +84,9 @@ impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
         let r: u32 = Params::modulus_bits();
         r
     }
-    fn num_limbs(_: Self) -> u32 { N }
+    fn num_limbs(_: Self) -> u32 {
+        N
+    }
 
     fn modulus() -> Self {
         Params::get_instance().modulus()
@@ -269,7 +269,7 @@ impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
 
 impl<let N: u32, Params> BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N> {}
 
-impl<let N: u32, Params> std::ops::Add for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N>  {
+impl<let N: u32, Params> std::ops::Add for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N> {
     // Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
     //       via evaluate_quadratic_expression
     fn add(self, other: Self) -> Self {
@@ -277,7 +277,7 @@ impl<let N: u32, Params> std::ops::Add for BigNum<N, Params> where Params: BigNu
     }
 }
 
-impl<let N: u32, Params> std::ops::Sub for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N>  {
+impl<let N: u32, Params> std::ops::Sub for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N> {
     // Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
     //       via evaluate_quadratic_expression
     fn sub(self, other: Self) -> Self {
@@ -285,7 +285,7 @@ impl<let N: u32, Params> std::ops::Sub for BigNum<N, Params> where Params: BigNu
     }
 }
 
-impl<let N: u32, Params> std::ops::Mul for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N>  {
+impl<let N: u32, Params> std::ops::Mul for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N> {
     // Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
     //       via evaluate_quadratic_expression
     // e.g. performing a sum of multiple multiplications and additions via `evaluate_quadratic_expression`
@@ -295,14 +295,14 @@ impl<let N: u32, Params> std::ops::Mul for BigNum<N, Params> where Params: BigNu
     }
 }
 
-impl<let N: u32, Params> std::ops::Div for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N>  {
+impl<let N: u32, Params> std::ops::Div for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N> {
     // Note: this method is expensive! Witness computation is extremely expensive as it requires modular exponentiation
     fn div(self, other: Self) -> Self {
         Params::get_instance().div(self, other)
     }
 }
 
-impl<let N: u32, Params> std::cmp::Eq for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N>  {
+impl<let N: u32, Params> std::cmp::Eq for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N> {
 
     fn eq(self, other: Self) -> bool {
         let bn: RuntimeBigNumInstance<N, Params> = Params::get_instance();

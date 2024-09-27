@@ -1,5 +1,5 @@
 //! Blurb sourced from https://github.com/arkworks-rs
-//! This library implements the scalar field of the BLS12_377 curve generated in [\[BCGMMW20, “Zexe”\]](https://eprint.iacr.org/2018/962).
+//! This library implements the scalar field of the BLS12_377 curve generated in [BCGMMW20, "Zexe"](https://eprint.iacr.org/2018/962).
 //! The name denotes that it is a Barreto--Lynn--Scott curve of embedding degree
 //! 12, defined over a 377-bit (prime) field. The main feature of this curve is
 //! that both the scalar field and the base field are highly 2-adic.
@@ -21,7 +21,7 @@ use crate::runtime_bignum::BigNumInstance;
 use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
 
-struct BLS12_377_Fr_Params {}
+struct  BLS12_377_Fr_Params {}
 impl RuntimeBigNumParamsTrait<3> for BLS12_377_Fr_Params {
     fn modulus_bits() -> u32 {
         253

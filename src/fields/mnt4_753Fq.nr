@@ -17,14 +17,14 @@
 //! * G2 curve equation: y^2 = x^3 + Ax + B, where
 //!    * A = Fq2 = (a * NON_RESIDUE, 0)
 //!    * B = Fq2(0, b * NON_RESIDUE)
-//!    * NON_RESIDUE = 13 is the quadratic non-residue used to construct the
+//!    * NON_RESIDUE = 13 is the quadratic non-residue used to construct  the
 //!      extension field Fq2
 use crate::BigNumParamsTrait;
 use crate::runtime_bignum::BigNumInstance;
 use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
 
-struct MNT4_753_Fq_Params {}
+struct  MNT4_753_Fq_Params {}
 impl RuntimeBigNumParamsTrait<7> for MNT4_753_Fq_Params {
     fn modulus_bits() -> u32 {
         753

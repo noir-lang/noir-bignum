@@ -89,7 +89,7 @@ trait BigNumParamsTrait<let N: u32> {
     fn has_multiplicative_inverse() -> bool { true }
 }
 
-struct BigNumInstance<let N: u32, Params> {
+struct  BigNumInstance<let N: u32, Params> {
     
     /**
      * @brief modulus: all BigNum operations are evaluated modulo this value
@@ -134,7 +134,9 @@ impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
         BigNum::one()
     }
 
-    fn from(limbs: [Field]) -> Self { BigNum{ limbs: limbs.as_array() }}
+    fn from(limbs: [Field]) -> Self {
+        BigNum { limbs: limbs.as_array() }
+    }
 
     /**
      * @brief construct a BigNum instance out of an array of bytes in BIG ENDIAN format
@@ -185,12 +187,12 @@ impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
 
         let mut result: [u8; NBytes] = [0; NBytes];
         for i in 0..N - 1 {
-            let limb_bytes = val.limbs[i].to_le_bytes::<15>();
+            let limb_bytes: [u8; 15] = val.limbs[i].to_le_bytes();
             for j in 0..15 {
                 result[i * 15 + j] = limb_bytes[j];
             }
         }
-        let last_limb_bytes = val.limbs[N - 1].to_le_bytes::<15>();
+        let last_limb_bytes: [u8; 15] = val.limbs[N - 1].to_le_bytes();
         let num_last_bytes = (NBytes - (N - 1) * 15);
         for i in 0..num_last_bytes {
             result[(N-1) * 15 + i] = last_limb_bytes[i];
@@ -287,7 +289,9 @@ impl<let N: u32, Params> BigNum<N, Params> where Params: BigNumParamsTrait<N> {
 
 impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstance<N, Params> where Params: BigNumParamsTrait<N> {
 
-    fn modulus(self) -> BigNum<N, Params> { BigNum{ limbs: self.modulus } }
+    fn modulus(self) -> BigNum<N, Params> {
+        BigNum { limbs: self.modulus }
+    }
     fn __derive_from_seed<let SeedBytes: u32>(self, seed: [u8; SeedBytes]) -> BigNum<N, Params> {
         unsafe {
         self.__derive_from_seed_impl(seed)
@@ -324,7 +328,6 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
         unsafe{ self.batch_invert_impl(x) }
     }
 
-
     fn __invmod(self, val: BigNum<N, Params>) -> BigNum<N, Params> {
         unsafe { self.__invmod_impl(val) }
     }
@@ -334,33 +337,29 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
     }
 
     fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
-            self,
-            lhs_terms: [[BigNum<N, Params>; LHS_N]; NUM_PRODUCTS],
-            lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
-            rhs_terms: [[BigNum<N, Params>; RHS_N]; NUM_PRODUCTS],
-            rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
-            linear_terms: [BigNum<N, Params>; ADD_N],
-            linear_flags: [bool; ADD_N]
-        ) -> (BigNum<N, Params>, BigNum<N, Params>) {
-            unsafe {
-            self.__compute_quadratic_expression_impl(
-                lhs_terms,
-                lhs_flags,
-                rhs_terms,
-                rhs_flags,
-                linear_terms,
-                linear_flags
-            )
-            }
+        self,
+        lhs_terms: [[BigNum<N, Params>; LHS_N]; NUM_PRODUCTS],
+        lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
+        rhs_terms: [[BigNum<N, Params>; RHS_N]; NUM_PRODUCTS],
+        rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
+        linear_terms: [BigNum<N, Params>; ADD_N],
+        linear_flags: [bool; ADD_N]
+    ) -> (BigNum<N, Params>, BigNum<N, Params>) {
+        self.__compute_quadratic_expression_impl(
+            lhs_terms,
+            lhs_flags,
+            rhs_terms,
+            rhs_flags,
+            linear_terms,
+            linear_flags
+        )
     }
-
 
     // ####################################################################################################################
     // ####################################################################################################################
     // ### C O N S T R A I N E D    F U N C T I O N S
     // ####################################################################################################################
     // ####################################################################################################################
-
 
     /**
      * @brief Constrain a degree-2 BigNum expression to be equal to 0 modulo self.modulus
@@ -409,14 +408,16 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
         linear_flags: [bool; ADD_N]
     ) {
         // use an unconstrained function to compute the value of the quotient
-        let (quotient, _, borrow_flags): (BigNum<N, Params>, BigNum<N, Params>, [Field; 2 * N]) = unsafe{ self.__compute_quadratic_expression_with_borrow_flags(
-            lhs_terms,
-            lhs_flags,
-            rhs_terms,
-            rhs_flags,
-            linear_terms,
-            linear_flags
-        ) };
+        let (quotient, _, borrow_flags): (BigNum<N, Params>, BigNum<N, Params>, [Field; 2 * N]) = unsafe {
+            self.__compute_quadratic_expression_with_borrow_flags(
+                lhs_terms,
+                lhs_flags,
+                rhs_terms,
+                rhs_flags,
+                linear_terms,
+                linear_flags
+            )
+        };
         // constrain the quotient to be in the range [0, ..., 2^{m} - 1], where `m` is log2(modulus) rounded up.
         // Additionally, validate quotient limbs are also in the range [0, ..., 2^{120} - 1]
         quotient.validate_quotient_in_range();
@@ -540,7 +541,9 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
         for i in 0..N {
             p_minus_self[i] = modulus[i] - val.limbs[i];
         }
-        let borrow_flags = unsafe{ self.__validate_in_field_compute_borrow_flags(val) };
+        let borrow_flags = unsafe {
+            self.__validate_in_field_compute_borrow_flags(val)
+        };
         let two_pow_120: Field = 0x1000000000000000000000000000000;
         p_minus_self[0] += borrow_flags[0] as Field * two_pow_120;
         for i in 1..N - 1 {
@@ -599,7 +602,9 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
 
     fn neg(self, val: BigNum<N, Params>) -> BigNum<N, Params> {
         // so we do... p - x - r = 0 and there might be borrow flags
-        let (result, borrow_flags) = unsafe{ self.__neg_with_flags(val) };
+        let (result, borrow_flags) = unsafe {
+            self.__neg_with_flags(val)
+        };
         result.validate_in_range();
         let modulus = self.modulus;
         let borrow_shift = 0x1000000000000000000000000000000;
@@ -617,7 +622,9 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
 
     fn add(self, lhs: BigNum<N, Params>, rhs: BigNum<N, Params>) -> BigNum<N, Params> {
         // so we do... p - x - r = 0 and there might be borrow flags
-        let (result, carry_flags, borrow_flags, overflow_modulus) = unsafe{ self.__add_with_flags(lhs, rhs) };
+        let (result, carry_flags, borrow_flags, overflow_modulus) = unsafe {
+            self.__add_with_flags(lhs, rhs)
+        };
         result.validate_in_range();
         let modulus = self.modulus;
         let borrow_shift = 0x1000000000000000000000000000000;
@@ -655,7 +662,9 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
 
         // a - b = r
         // p + a - b - r = 0
-        let (result, carry_flags, borrow_flags) = unsafe{ self.__validate_gt_remainder(lhs, rhs) };
+        let (result, carry_flags, borrow_flags) = unsafe {
+            self.__validate_gt_remainder(lhs, rhs)
+        };
 
         result.validate_in_range();
 
@@ -685,7 +694,9 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
 
         // a - b = r
         // p + a - b - r = 0
-        let (result, carry_flags, borrow_flags, underflow) = unsafe{ self.__sub_with_flags(lhs, rhs) };
+        let (result, carry_flags, borrow_flags, underflow) = unsafe {
+            self.__sub_with_flags(lhs, rhs)
+        };
         result.validate_in_range();
         let modulus = self.modulus;
         let borrow_shift = 0x1000000000000000000000000000000;
@@ -723,7 +734,9 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
     }
     // Note: this method is expensive! Witness computation is extremely expensive as it requires modular exponentiation
     fn div(self, lhs: BigNum<N, Params>, rhs: BigNum<N, Params>) -> BigNum<N, Params> {
-        assert(Params::has_multiplicative_inverse(), "BigNum has no multiplicative inverse. Use udiv for unsigned integer division");
+        assert(
+            Params::has_multiplicative_inverse(), "BigNum has no multiplicative inverse. Use udiv for unsigned integer division"
+        );
         let result = self.__div(lhs, rhs);
         self.evaluate_quadratic_expression([[result]], [[false]], [[rhs]], [[false]], [lhs], [true]);
         result
@@ -736,8 +749,12 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
      *      2. numerator % divisor = remainder
      *      3. divisor * quotient + remainder = numerator
      **/
-    fn __udiv_mod(self, numerator: BigNum<N, Params>, divisor: BigNum<N, Params>) -> (BigNum<N, Params>, BigNum<N, Params>) {
-        unsafe{ self.__udiv_mod_impl(numerator, divisor) }
+    fn __udiv_mod(
+        self,
+        numerator: BigNum<N, Params>,
+        divisor: BigNum<N, Params>
+    ) -> (BigNum<N, Params>, BigNum<N, Params>) {
+        self.__udiv_mod_impl(numerator, divisor)
     }
     /**
      * @brief udiv_mod performs integer division between numerator, divisor 
@@ -746,8 +763,12 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
      *      2. numerator % divisor = remainder
      *      3. divisor * quotient + remainder = numerator
      **/
-    fn udiv_mod(self, numerator: BigNum<N, Params>, divisor: BigNum<N, Params>) -> (BigNum<N, Params>, BigNum<N, Params>) {
-        let (quotient, remainder) = unsafe{ BigNumInstance::__udiv_mod_impl(self, numerator, divisor) };
+    fn udiv_mod(
+        self,
+        numerator: BigNum<N, Params>,
+        divisor: BigNum<N, Params>
+    ) -> (BigNum<N, Params>, BigNum<N, Params>) {
+        let (quotient, remainder) = BigNumInstance::__udiv_mod_impl(self, numerator, divisor);
 
         // self / divisor = quotient rounded
         // quotient * divisor + remainder - self = 0
@@ -782,7 +803,6 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
     fn umod(self, numerator: BigNum<N, Params>, divisor: BigNum<N, Params>) -> BigNum<N, Params> {
         self.udiv_mod(numerator, divisor).1
     }
-
 }
 
 impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTrait<N> {
@@ -909,7 +929,7 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
             }
         }
         let (q, r) = __barrett_reduction(
-            __normalize_limbs(mul, 2 * N),
+            split_bits::__normalize_limbs(mul, 2 * N),
             self.redc_param,
             Params::modulus_bits(),
             self.modulus,
@@ -1287,7 +1307,7 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
             linear_terms,
             linear_flags
         );
-        let mut relation_result: [Field; 2 * N] = __normalize_limbs(mulout, 2 * N);
+        let mut relation_result: [Field; 2 * N] = split_bits::__normalize_limbs(mulout, 2 * N);
 
         // TODO: ugly! Will fail if input slice is empty
         let k  = Params::modulus_bits();
@@ -1350,7 +1370,7 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
             linear_flags
         );
         let mut mulout_n: [Field; 2 * N] = [0; 2 * N];
-        let mut relation_result: [Field; 2 * N] = __normalize_limbs(mulout_p, 2 * N);
+        let mut relation_result: [Field; 2 * N] = split_bits::__normalize_limbs(mulout_p, 2 * N);
 
         let modulus: [Field; N] = self.modulus;
         let (quotient, remainder) = __barrett_reduction(
@@ -1471,13 +1491,13 @@ unconstrained fn __barrett_reduction<let N: u32>(
             mulout[i + j] += x[i] * redc_param[j];
         }
     }
-    mulout = __normalize_limbs(mulout, 3 * N - 1);
+    mulout = split_bits::__normalize_limbs(mulout, 3 * N - 1);
     let mulout_u60: U60Repr<N, 6> = U60Repr::new(mulout);
     let mut quotient_u60 = mulout_u60.shr((k + k));
 
     // N.B. we assume that the shifted quotient cannot exceed 2 times original bit size.
     //      (partial_quotient should be just slightly larger than the modulus, we could probably represent with a size N+1 array)
-    let partial_quotient_full: [Field; 3 * N] = quotient_u60.into_FieldArray();
+    let partial_quotient_full: [Field; 3 * N] = quotient_u60.into_field_array();
     let mut partial_quotient: [Field; 2 * N] = [0; 2 * N];
     for i in 0..2 * N {
         partial_quotient[i] = partial_quotient_full[i];
