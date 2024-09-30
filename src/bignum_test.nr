@@ -10,6 +10,13 @@ use crate::runtime_bignum::BigNumInstance;
 use crate::BigNumTrait;
 
 struct Test2048Params{}
+
+// See https://github.com/noir-lang/noir/issues/6172
+#[test]
+fn silence_warning() {
+    let _  = Test2048Params {};
+}
+
 impl RuntimeBigNumParamsTrait<18> for Test2048Params {
     fn modulus_bits() -> u32 {
         2048
@@ -85,7 +92,6 @@ impl BigNumParamsTrait<18> for Test2048Params {
 }
 
 type Fq = BigNum<3, BNParams>;
-type Fqq = BigNum<18, Test2048Params>;
 
 fn test_eq<BigNum, let N: u32>(_: BigNum, __: [Field; N]) where BigNum: BigNumTrait {
     let a = BigNum::__derive_from_seed([1, 2, 3, 4]);
@@ -635,3 +641,4 @@ fn test_expressions() {
     let wx_constrained = w * x;
     assert(wx_constrained.limbs == wx.limbs);
 }
+

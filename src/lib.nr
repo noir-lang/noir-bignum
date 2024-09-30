@@ -1,7 +1,7 @@
-mod utils;
+pub(crate) mod utils;
 mod bignum_test;
-mod fields;
-mod runtime_bignum;
+pub mod fields;
+pub(crate) mod runtime_bignum;
 mod runtime_bignum_test;
 
 pub use crate::utils::u60_representation::U60Repr;
@@ -10,7 +10,7 @@ pub use crate::runtime_bignum::BigNumInstanceTrait as RuntimeBigNumInstanceTrait
 pub use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 pub use crate::runtime_bignum::BigNumTrait as RuntimeBigNumTrait;
 
-struct BigNum<let N: u32, Params> {
+pub struct BigNum<let N: u32, Params> {
     limbs: [Field; N]
 }
 

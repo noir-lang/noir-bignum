@@ -1,4 +1,3 @@
-use dep::std;
 use crate::utils::u60_representation::U60Repr;
 use crate::utils::split_bits;
 use crate::BigNum;
@@ -7,7 +6,7 @@ use crate::BigNum;
  *        e.g. RSA where the modulus is a witness value as it changes for every RSA signature
  *        tee `lib.nr` for a trait definition where the modulus is known at compile time
  **/
-trait BigNumTrait {
+pub trait BigNumTrait {
     fn new() -> Self;
     fn one() -> Self;
     fn from(limbs: [Field]) -> Self;
@@ -28,7 +27,7 @@ trait BigNumTrait {
  *        BigNumInstance wraps the modulus parameter (as well as a Barret reduction parameter),
  *        which is required for the majority of BigNum operations
  **/
-trait BigNumInstanceTrait<BN> where BN: BigNumTrait {
+pub trait BigNumInstanceTrait<BN> where BN: BigNumTrait {
     fn modulus(self) -> BN;
     fn __derive_from_seed<let SeedBytes: u32>(self, seed: [u8; SeedBytes]) -> BN;
     fn eq(self, lhs: BN, rhs: BN) -> bool;
@@ -79,7 +78,7 @@ trait BigNumInstanceTrait<BN> where BN: BigNumTrait {
  * @brief BigNumParamsTrait defines a "field" with which to parametrise BigNum.
  * @description The "field" does not need to be prime, any value *should* work (TODO: test!)
 **/
-trait BigNumParamsTrait<let N: u32> {
+pub trait BigNumParamsTrait<let N: u32> {
     /**
      * @brief modulus_bits = log2(modulus) rounded up
      **/
@@ -88,7 +87,7 @@ trait BigNumParamsTrait<let N: u32> {
     fn has_multiplicative_inverse() -> bool { true }
 }
 
-struct  BigNumInstance<let N: u32, Params> {
+pub struct  BigNumInstance<let N: u32, Params> {
     
     /**
      * @brief modulus: all BigNum operations are evaluated modulo this value
@@ -894,7 +893,11 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         flags
     }
 
-    unconstrained fn __pow_impl(self, val: BigNum<N, Params>, exponent: BigNum<N, Params>) -> BigNum<N, Params> {
+    unconstrained fn __pow_impl(
+        self,
+        val: BigNum<N, Params>,
+        exponent: BigNum<N, Params>
+    ) -> BigNum<N, Params> {
         let x: U60Repr<N, 2> = U60Repr::from(exponent.limbs);
 
         let num_bits = Params::modulus_bits() + 1;
@@ -934,12 +937,20 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         (quotient, remainder)
     }
 
-    unconstrained fn __mul_impl(self, lhs: BigNum<N, Params>, rhs: BigNum<N, Params>) -> BigNum<N, Params> {
+    unconstrained fn __mul_impl(
+        self,
+        lhs: BigNum<N, Params>,
+        rhs: BigNum<N, Params>
+    ) -> BigNum<N, Params> {
         let (_, b) = self.__mul_with_quotient(lhs, rhs);
         b
     }
 
-    unconstrained fn __add_impl(self, lhs: BigNum<N, Params>, rhs: BigNum<N, Params>) -> BigNum<N, Params> {
+    unconstrained fn __add_impl(
+        self,
+        lhs: BigNum<N, Params>,
+        rhs: BigNum<N, Params>
+    ) -> BigNum<N, Params> {
         let x_u60 : U60Repr<N, 2> = U60Repr::from(lhs.limbs);
         let y_u60 : U60Repr<N, 2> = U60Repr::from(rhs.limbs);
 
@@ -1111,7 +1122,10 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         (result, carry_flags, borrow_flags, underflow)
     }
 
-    unconstrained fn __neg_with_flags(self, val: BigNum<N, Params>) -> (BigNum<N, Params>, [bool; N]) {
+    unconstrained fn __neg_with_flags(
+        self,
+        val: BigNum<N, Params>
+    ) -> (BigNum<N, Params>, [bool; N]) {
         let f: [Field; N] = val.limbs;
         let x_u60 : U60Repr<N, 2> = U60Repr::from(f);
         let mut result_u60 : U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
@@ -1137,7 +1151,11 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
      * @brief given inputs `x, y` compute 2p + x - y (unconstrained)
      * @description see `__neg` for why we use 2p instead of p
      **/
-    unconstrained fn __sub_impl(self, lhs: BigNum<N, Params>, rhs: BigNum<N, Params>) -> BigNum<N, Params> {
+    unconstrained fn __sub_impl(
+        self,
+        lhs: BigNum<N, Params>,
+        rhs: BigNum<N, Params>
+    ) -> BigNum<N, Params> {
         self.__add(lhs, self.__neg(rhs))
     }
 
@@ -1149,7 +1167,10 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         self.__pow(val, result)
     }
 
-    unconstrained fn batch_invert_impl<let M: u32>(self, x: [BigNum<N, Params>; M]) -> [BigNum<N, Params>; M] {
+    unconstrained fn batch_invert_impl<let M: u32>(
+        self,
+        x: [BigNum<N, Params>; M]
+    ) -> [BigNum<N, Params>; M] {
         // TODO: ugly! Will fail if input slice is empty
         let mut accumulator: BigNum<N, Params> = BigNum::one();
         let mut result: [BigNum<N, Params>; M] = [BigNum::new(); M];
@@ -1202,7 +1223,11 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         result
     }
 
-    unconstrained fn __div_impl(self, numerator: BigNum<N, Params>, divisor: BigNum<N, Params>) -> BigNum<N, Params> {
+    unconstrained fn __div_impl(
+        self,
+        numerator: BigNum<N, Params>,
+        divisor: BigNum<N, Params>
+    ) -> BigNum<N, Params> {
         let t0 = self.__invmod(divisor);
         self.__mul(numerator, t0)
     }
@@ -1215,11 +1240,7 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
     // We know that, for a valid bignum element, the limbs in `x` will be <2^{120}
     // Therefore each of the limbs in `p` (except the most significant) will borrow 2^{120} from the more significant limb.
     // Finally, to ensure we do not underflow in the most significant limb, we use `2p` instead of `p`
-    unconstrained fn __add_linear_expression<let M: u32>(
-        self,
-        x: [BigNum<N, Params>; M],
-        flags: [bool; M]
-    ) -> ([Field; N]) {
+    unconstrained fn __add_linear_expression<let M: u32>(self, x: [BigNum<N, Params>; M], flags: [bool; M]) -> ([Field; N]) {
         // TODO, validate we do not overflow N2 when multiplying and N when adding
         let mut sum: [Field; N] = [0; N];
         // TODO: ugly! Will fail if input array is empty
