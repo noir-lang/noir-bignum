@@ -28,8 +28,6 @@ pub mod U2048;
 pub mod U4096;
 pub mod U8192;
 
-
-
 // example typedef when using a defined bignum instance:
 //
 // use crate::bignum::BigNum;
