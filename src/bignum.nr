@@ -1,6 +1,6 @@
 use crate::utils::map::map;
 
-use crate::params::BigNumParamsTrait;
+use crate::params::BigNumParamsGetter;
 use crate::constrained_ops::{
     conditional_select, assert_is_not_equal, eq, validate_in_field, validate_in_range, neg, add, sub,
     mul, div, udiv_mod, udiv, umod
@@ -85,7 +85,7 @@ pub(crate) trait BigNumTrait<let N: u32> {
     fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self;
 }
 
-impl<let N: u32, Params> BigNumTrait<N> for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u32, Params> BigNumTrait<N> for BigNum<N, Params> where Params: BigNumParamsGetter<N> {
 
     fn new() -> Self {
         Self { limbs: [0; N] }
@@ -292,9 +292,9 @@ impl<let N: u32, Params> BigNumTrait<N> for BigNum<N, Params> where Params: BigN
     }
 }
 
-// impl<let N: u32, Params> BigNumTrait<N, Params> for BigNum<N, Params> where Params: BigNumParamsTrait<N> {}
+// impl<let N: u32, Params> BigNumTrait<N, Params> for BigNum<N, Params> where Params: BigNumParamsGetter<N> {}
 
-impl<let N: u32, Params> std::ops::Add for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u32, Params> std::ops::Add for BigNum<N, Params> where Params: BigNumParamsGetter<N> {
     // Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
     //       via evaluate_quadratic_expression
     fn add(self, other: Self) -> Self {
@@ -303,7 +303,7 @@ impl<let N: u32, Params> std::ops::Add for BigNum<N, Params> where Params: BigNu
     }
 }
 
-impl<let N: u32, Params> std::ops::Sub for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u32, Params> std::ops::Sub for BigNum<N, Params> where Params: BigNumParamsGetter<N> {
     // Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
     //       via evaluate_quadratic_expression
     fn sub(self, other: Self) -> Self {
@@ -312,7 +312,7 @@ impl<let N: u32, Params> std::ops::Sub for BigNum<N, Params> where Params: BigNu
     }
 }
 
-impl<let N: u32, Params> std::ops::Mul for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u32, Params> std::ops::Mul for BigNum<N, Params> where Params: BigNumParamsGetter<N> {
     // Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
     //       via evaluate_quadratic_expression
     // e.g. performing a sum of multiple multiplications and additions via `evaluate_quadratic_expression`
@@ -323,7 +323,7 @@ impl<let N: u32, Params> std::ops::Mul for BigNum<N, Params> where Params: BigNu
     }
 }
 
-impl<let N: u32, Params> std::ops::Div for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u32, Params> std::ops::Div for BigNum<N, Params> where Params: BigNumParamsGetter<N> {
     // Note: this method is expensive! Witness computation is extremely expensive as it requires modular exponentiation
     fn div(self, other: Self) -> Self {
         let params = Params::get_params();
@@ -331,7 +331,7 @@ impl<let N: u32, Params> std::ops::Div for BigNum<N, Params> where Params: BigNu
     }
 }
 
-impl<let N: u32, Params> std::cmp::Eq for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u32, Params> std::cmp::Eq for BigNum<N, Params> where Params: BigNumParamsGetter<N> {
     fn eq(self, other: Self) -> bool {
         let params = Params::get_params();
         eq(params, self.limbs, other.limbs)

@@ -16,7 +16,7 @@
 //! * G1 curve equation: y^2 = x^3 + 1
 //! * G2 curve equation: y^2 = x^3 + B, where
 //!    * B = Fq2(0, 155198655607781456406391640216936120121836107652948796323930557600032281009004493664981332883744016074664192874906)
-use crate::params::BigNumParamsTrait;
+use crate::params::BigNumParamsGetter;
 use crate::params::BigNumParams;
 use crate::utils::u60_representation::U60Repr;
 
@@ -38,9 +38,9 @@ global BLS12_377_Fr_PARAMS: BigNumParams<3> = BigNumParams {
     ]
 };
 
-struct  BLS12_377_Fr_Params {}
+pub struct  BLS12_377_Fr_Params {}
 
-impl BigNumParamsTrait<3> for BLS12_377_Fr_Params {
+impl BigNumParamsGetter<3> for BLS12_377_Fr_Params {
     fn get_params() -> BigNumParams<3> {
         BLS12_377_Fr_PARAMS
     }

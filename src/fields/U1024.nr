@@ -1,4 +1,4 @@
-use crate::params::BigNumParamsTrait;
+use crate::params::BigNumParamsGetter;
 use crate::params::BigNumParams;
 use crate::utils::u60_representation::U60Repr;
 
@@ -20,9 +20,9 @@ global U1024_PARAMS: BigNumParams<9> = BigNumParams {
     ]
 };
 
-struct  U1024Params {}
+pub struct  U1024Params {}
 
-impl BigNumParamsTrait<9> for U1024Params {
+impl BigNumParamsGetter<9> for U1024Params {
     fn get_params() -> BigNumParams<9> {
         U1024_PARAMS
     }

@@ -22,7 +22,7 @@ pub(crate) struct BigNumParams<let N: u32> {
 }
 
 // To be implemented by the user, or within the prebuilt options in the `fields/` dir.
-pub(crate) trait BigNumParamsTrait<let N: u32> {
+pub(crate) trait BigNumParamsGetter<let N: u32> {
     fn get_params() -> BigNumParams<N>;
 }
 
@@ -67,10 +67,10 @@ fn get_double_modulus<let N: u32>(modulus: [Field; N]) -> [Field; N] {
 }
 
 // /**
-//  * @brief BigNumParamsTrait defines a "field" with which to parametrise BigNum.
+//  * @brief BigNumParamsGetter defines a "field" with which to parametrise BigNum.
 //  * @description The "field" does not need to be prime, any value *should* work (TODO: test!)
 // **/
-// trait BigNumParamsTrait<let N: u32> {
+// trait BigNumParamsGetter<let N: u32> {
 //     fn has_multiplicative_inverse() -> bool;
 //     // @brief modulus_bits = log2(modulus) rounded up
 //     fn modulus_bits() -> u32;

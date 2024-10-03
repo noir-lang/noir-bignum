@@ -14,7 +14,7 @@
 //! * valuation(r - 1, 2) = 32
 //! * G1 curve equation: y^2 = x^3 + 4
 //! * G2 curve equation: y^2 = x^3 + Fq2(4, 4)
-use crate::params::BigNumParamsTrait;
+use crate::params::BigNumParamsGetter;
 use crate::params::BigNumParams;
 use crate::utils::u60_representation::U60Repr;
 
@@ -36,9 +36,9 @@ global BLS12_381_Fq_PARAMS: BigNumParams<4> = BigNumParams {
     ]
 };
 
-struct  BLS12_381_Fq_Params {}
+pub struct  BLS12_381_Fq_Params {}
 
-impl BigNumParamsTrait<4> for BLS12_381_Fq_Params {
+impl BigNumParamsGetter<4> for BLS12_381_Fq_Params {
     fn get_params() -> BigNumParams<4> {
         BLS12_381_Fq_PARAMS
     }

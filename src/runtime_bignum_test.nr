@@ -1,10 +1,9 @@
 use crate::utils::u60_representation::U60Repr;
-
 use crate::runtime_bignum::RuntimeBigNum;
-
 use crate::params::BigNumParams;
+use crate::fields::bn254Fq::BN254_Fq_Params;
 
-use crate::fields::bn254Fq::BN254_Fq_PARAMS;
+global BN254_Fq_PARAMS = BN254_Fq_Params::get_params();
 
 fn get_2048_BN_params() -> BigNumParams<18> {
     let has_multiplicative_inverse = false;

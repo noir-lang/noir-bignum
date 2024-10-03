@@ -19,7 +19,7 @@
 //!    * B = Fq2(0, b * NON_RESIDUE)
 //!    * NON_RESIDUE = 13 is the quadratic non-residue used to conpub struct  the
 //!      extension field Fq2
-use crate::params::BigNumParamsTrait;
+use crate::params::BigNumParamsGetter;
 use crate::params::BigNumParams;
 use crate::utils::u60_representation::U60Repr;
 
@@ -41,9 +41,9 @@ global MNT4_753_Fq_PARAMS: BigNumParams<7> = BigNumParams {
     ]
 };
 
-struct  MNT4_753_Fq_Params {}
+pub struct  MNT4_753_Fq_Params {}
 
-impl BigNumParamsTrait<7> for MNT4_753_Fq_Params {
+impl BigNumParamsGetter<7> for MNT4_753_Fq_Params {
     fn get_params() -> BigNumParams<7> {
         MNT4_753_Fq_PARAMS
     }

@@ -1,4 +1,4 @@
-use crate::params::BigNumParamsTrait;
+use crate::params::BigNumParamsGetter;
 use crate::params::BigNumParams;
 use crate::utils::u60_representation::U60Repr;
 
@@ -20,9 +20,9 @@ global ED25519_Fq_PARAMS: BigNumParams<3> = BigNumParams {
     ]
 };
 
-struct  ED25519_Fq_Params {}
+pub struct  ED25519_Fq_Params {}
 
-impl BigNumParamsTrait<3> for ED25519_Fq_Params {
+impl BigNumParamsGetter<3> for ED25519_Fq_Params {
     fn get_params() -> BigNumParams<3> {
         ED25519_Fq_PARAMS
     }

@@ -4,7 +4,7 @@ use crate::bignum::BigNum;
 use crate::bignum::BigNumTrait;
 
 use crate::params::BigNumParams;
-use crate::params::BigNumParamsTrait;
+use crate::params::BigNumParamsGetter;
 
 use crate::fields::bn254Fq::BN254_Fq_Params;
 use crate::fields::U256::U256Params;
@@ -17,7 +17,7 @@ fn silence_warning() {
     let _  = Test2048Params {};
 }
 
-impl BigNumParamsTrait<18> for Test2048Params {
+impl BigNumParamsGetter<18> for Test2048Params {
     fn get_params() -> BigNumParams<18> {
         let has_multiplicative_inverse = false;
         let modulus_bits_getter = || 2048;
@@ -94,7 +94,7 @@ fn test_eq<let N: u32, BN>() where BN: BigNumTrait<N> {
     assert(c.eq(a) == false);
 }
 
-// fn test_eq<let N: u32, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N> {
+// fn test_eq<let N: u32, Params>(_: BigNum<N, Params>) where Params: BigNumParamsGetter<N> + RuntimeBigNumParamsTrait<N> {
 //     let a = BigNum::__derive_from_seed([1, 2, 3, 4]);
 //     let b = BigNum::__derive_from_seed([1, 2, 3, 4]);
 //     let c = BigNum::__derive_from_seed([2, 2, 3, 4]);
