@@ -19,38 +19,33 @@
 //!    * B = Fq3(b * NON_RESIDUE, 0, 0)
 //!    * NON_RESIDUE = 11 is the cubic non-residue used to conpub struct  the
 //!      extension field Fq3
-use crate::BigNumParamsTrait;
-use crate::runtime_bignum::BigNumInstance;
-use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
+use crate::params::BigNumParamsTrait;
+use crate::params::BigNumParams;
 use crate::utils::u60_representation::U60Repr;
 
-pub struct  MNT6_753_Fq_Params {}
-impl RuntimeBigNumParamsTrait<7> for MNT6_753_Fq_Params {
-    fn modulus_bits() -> u32 {
-        753
-    }
-}
-impl BigNumParamsTrait<7> for MNT6_753_Fq_Params {
-    fn get_instance() -> BigNumInstance<7, Self> {
-        MNT6_753_Fq_Instance
-    }
-    fn modulus_bits() -> u32 {
-        753
-    }
-}
-global MNT6_753_Fq_Instance: BigNumInstance<7, MNT6_753_Fq_Params> = BigNumInstance {
-        modulus: [
-            0xa099170fa13a4fd90776e240000001, 0xf97634993aa4d6c381bc3f0057974e, 0x28c859a99b3eebca9429212636b9df, 0xe8a0ed8d99d124d9a15af79db26c5c, 0x8fafed5eb7e8f96c97d87307fdb925, 0xc41110229022eee2cdadb7f997505b, 0x01c4c62d92
-        ],
-        double_modulus: [
-            0x0141322e1f42749fb20eedc480000002, 0x01f2ec69327549ad8703787e00af2e9c, 0x015190b353367dd7952852424c6d73be, 0x01d141db1b33a249b342b5ef3b64d8b7, 0x011f5fdabd6fd1f2d92fb0e60ffb724a, 0x01882220452045ddc59b5b6ff32ea0b6, 0x03898c5b24
-        ],
-        modulus_u60: U60Repr { limbs: [
-            0x090776e240000001, 0x0a099170fa13a4fd, 0x0381bc3f0057974e, 0x0f97634993aa4d6c, 0x0a9429212636b9df, 0x028c859a99b3eebc, 0x09a15af79db26c5c, 0x0e8a0ed8d99d124d, 0x0c97d87307fdb925, 0x08fafed5eb7e8f96, 0x02cdadb7f997505b, 0x0c41110229022eee, 0x01c4c62d92, 0x00]},
-        modulus_u60_x4: U60Repr { limbs: [
-            0x090776e240000001, 0x0a099170fa13a4fd, 0x0381bc3f0057974e, 0x0f97634993aa4d6c, 0x0a9429212636b9df, 0x028c859a99b3eebc, 0x09a15af79db26c5c, 0x0e8a0ed8d99d124d, 0x0c97d87307fdb925, 0x08fafed5eb7e8f96, 0x02cdadb7f997505b, 0x0c41110229022eee, 0x01c4c62d92, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
-        redc_param: [
-            0xa2dae11d15867718ec70f5ff059bba, 0x276d65fe7e00ba391da260f2623ff9, 0x8140a086edaa60c58eb476bdedcb35, 0xa300e0ede1965cbf72f0aa9bee8120, 0x67fb932cae2aba9a5d17c1ff73538b, 0xa82727c6eaef38056aaa0aaedb0574, 0x0242f916cf
-        ]
+global MNT6_753_Fq_PARAMS: BigNumParams<7> = BigNumParams {
+    has_multiplicative_inverse: true,
+    modulus_bits_getter: || 753,
+    modulus: [
+        0xa099170fa13a4fd90776e240000001, 0xf97634993aa4d6c381bc3f0057974e, 0x28c859a99b3eebca9429212636b9df, 0xe8a0ed8d99d124d9a15af79db26c5c, 0x8fafed5eb7e8f96c97d87307fdb925, 0xc41110229022eee2cdadb7f997505b, 0x01c4c62d92
+    ],
+    double_modulus: [
+        0x0141322e1f42749fb20eedc480000002, 0x01f2ec69327549ad8703787e00af2e9c, 0x015190b353367dd7952852424c6d73be, 0x01d141db1b33a249b342b5ef3b64d8b7, 0x011f5fdabd6fd1f2d92fb0e60ffb724a, 0x01882220452045ddc59b5b6ff32ea0b6, 0x03898c5b24
+    ],
+    modulus_u60: U60Repr { limbs: [
+        0x090776e240000001, 0x0a099170fa13a4fd, 0x0381bc3f0057974e, 0x0f97634993aa4d6c, 0x0a9429212636b9df, 0x028c859a99b3eebc, 0x09a15af79db26c5c, 0x0e8a0ed8d99d124d, 0x0c97d87307fdb925, 0x08fafed5eb7e8f96, 0x02cdadb7f997505b, 0x0c41110229022eee, 0x01c4c62d92, 0x00]},
+    modulus_u60_x4: U60Repr { limbs: [
+        0x090776e240000001, 0x0a099170fa13a4fd, 0x0381bc3f0057974e, 0x0f97634993aa4d6c, 0x0a9429212636b9df, 0x028c859a99b3eebc, 0x09a15af79db26c5c, 0x0e8a0ed8d99d124d, 0x0c97d87307fdb925, 0x08fafed5eb7e8f96, 0x02cdadb7f997505b, 0x0c41110229022eee, 0x01c4c62d92, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
+    redc_param: [
+        0xa2dae11d15867718ec70f5ff059bba, 0x276d65fe7e00ba391da260f2623ff9, 0x8140a086edaa60c58eb476bdedcb35, 0xa300e0ede1965cbf72f0aa9bee8120, 0x67fb932cae2aba9a5d17c1ff73538b, 0xa82727c6eaef38056aaa0aaedb0574, 0x0242f916cf
+    ]
 };
+
+struct  MNT6_753_Fq_Params {}
+
+impl BigNumParamsTrait<7> for MNT6_753_Fq_Params {
+    fn get_params() -> BigNumParams<7> {
+        MNT6_753_Fq_PARAMS
+    }
+}
 
