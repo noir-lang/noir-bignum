@@ -6,7 +6,7 @@ use crate::utils::u60_representation::U60Repr;
 // a / b = c
 
 // b * c + (rem < modulus) = a
-struct  U512Params {}
+pub struct  U512Params {}
 impl RuntimeBigNumParamsTrait<5> for U512Params {
     fn modulus_bits() -> u32 {
         513

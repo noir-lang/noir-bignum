@@ -3,8 +3,15 @@ use crate::runtime_bignum::BigNumInstance;
 use crate::runtime_bignum::BigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
 use crate::fields::bn254Fq::BNParams as BNParams;
-use crate::fields::bn254Fq::BN254INSTANCE;
+
 struct Test2048Params {}
+
+// See https://github.com/noir-lang/noir/issues/6172
+#[test]
+fn silence_warning() {
+    let _  = Test2048Params {};
+}
+
 impl BigNumParamsTrait<18> for Test2048Params {
     fn modulus_bits() -> u32 {
         2048
@@ -56,9 +63,9 @@ fn get_2048_BN_instance() -> BigNumInstance<18, Test2048Params> {
 }
 
 type Fq = BigNum<3, BNParams>;
-type FqInstance = BigNumInstance<3, BNParams>;
-type Fqq = BigNum<18, Test2048Params>;
-type FqqInstance = BigNumInstance<18, Test2048Params>;
+// type FqInstance = BigNumInstance<3, BNParams>;
+// type Fqq = BigNum<18, Test2048Params>;
+// type FqqInstance = BigNumInstance<18, Test2048Params>;
 
 fn test_eq<let N: u32, Params>(BNInstance: BigNumInstance<N, Params>) where Params: BigNumParamsTrait<N> {
     let a: BigNum<N, Params> = BNInstance.__derive_from_seed([1, 2, 3, 4]);
@@ -187,12 +194,12 @@ fn assert_is_not_equal_overloaded_fail<let N: u32, Params>(bn: BigNumInstance<N,
 
 #[test]
 fn test_eq_BN() {
-    let instance = BN254INSTANCE;
+    let instance = BNParams::get_instance();
     test_eq(instance);
 }
 #[test]
 fn test_add_BN() {
-    let instance = BN254INSTANCE;
+    let instance = BNParams::get_instance();
 
     let mut a: Fq = instance.modulus();
     let mut b: Fq = instance.modulus();
@@ -208,7 +215,7 @@ fn test_add_BN() {
 
 #[test]
 fn test_sub_test_BN() {
-    let instance = BN254INSTANCE;
+    let instance = BNParams::get_instance();
     // 0 - 1 should equal p - 1
     let mut a: Fq = BigNum::new();
     let mut b: Fq = BigNum::one();
@@ -221,7 +228,7 @@ fn test_sub_test_BN() {
 
 #[test]
 fn test_sub_modulus_limit() {
-    let instance = BN254INSTANCE;
+    let instance = BNParams::get_instance();
     // if we underflow, maximum result should be ...
     // 0 - 1 = o-1
     // 0 - p = 0
@@ -235,7 +242,7 @@ fn test_sub_modulus_limit() {
 
 #[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_sub_modulus_underflow() {
-    let instance = BN254INSTANCE;
+    let instance = BNParams::get_instance();
 
     // 0 - (p + 1) is smaller than p and should produce unsatisfiable constraints
     let mut a: Fq = BigNum::new();
@@ -250,7 +257,7 @@ fn test_sub_modulus_underflow() {
 
 #[test]
 fn test_add_modulus_limit() {
-    let instance = BN254INSTANCE;
+    let instance = BNParams::get_instance();
     // p + 2^{254} - 1 should be the maximum allowed value fed into an add operation
     // when adding, if the result overflows the modulus, we conditionally subtract the modulus, producing 2^{254} -  1
     // this is the largest value that will satisfy the range check applied when constructing a bignum
@@ -264,7 +271,7 @@ fn test_add_modulus_limit() {
 
 #[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_add_modulus_overflow() {
-    let instance = BN254INSTANCE;
+    let instance = BNParams::get_instance();
     //(2^{254} - 1) + (p - 1) = 2^{254} + p
     // after subtracting modulus, result is 2^{254} will does not satisfy the range check applied when constructing a BigNum
     let p : U60Repr<3, 2> = U60Repr::from(instance.modulus().limbs);
@@ -278,55 +285,55 @@ fn test_add_modulus_overflow() {
 
 #[test]
 fn test_mul_BN() {
-    let instance = BN254INSTANCE;
+    let instance = BNParams::get_instance();
     test_mul(instance);
 }
 
 #[test]
 fn test_add_BN2() {
-    let instance = BN254INSTANCE;
+    let instance = BNParams::get_instance();
     test_add(instance);
 }
 
 #[test]
 fn test_div_BN() {
-    let instance = BN254INSTANCE;
+    let instance = BNParams::get_instance();
     test_div(instance);
 }
 
 #[test]
 fn test_invmod_BN() {
-    let instance = BN254INSTANCE;
+    let instance = BNParams::get_instance();
     test_invmod(instance);
 }
 
 #[test]
 fn test_assert_is_not_equal_BN() {
-    let instance = BN254INSTANCE;
+    let instance = BNParams::get_instance();
     assert_is_not_equal(instance);
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_fail_BN() {
-    let instance = BN254INSTANCE;
+    let instance = BNParams::get_instance();
     assert_is_not_equal_fail(instance);
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_lhs_fail_BN() {
-    let instance = BN254INSTANCE;
+    let instance = BNParams::get_instance();
     assert_is_not_equal_overloaded_lhs_fail(instance);
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_rhs_fail_BN() {
-    let instance = BN254INSTANCE;
+    let instance = BNParams::get_instance();
     assert_is_not_equal_overloaded_rhs_fail(instance);
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_fail_BN() {
-    let instance = BN254INSTANCE;
+    let instance = BNParams::get_instance();
     assert_is_not_equal_overloaded_fail(instance);
 }
 
@@ -468,7 +475,7 @@ fn test_2048_bit_quadratic_expression() {
 
 #[test]
 fn test_expressions() {
-    let instance = BN254INSTANCE;
+    let instance = BNParams::get_instance();
     let x: [Field; 6] = [
         0x000000000000000000000000000000000083684820ff40795b8d9f1be2220cba, 0x0000000000000000000000000000000000d4924fbdc522b07b6cd0ef5508fd66, 0x0000000000000000000000000000000000d48f6c43c5930f3d70d6db09a48f4a,
         0x0000000000000000000000000000000000e7f72b2c0756704bea85be38352b34, 0x00000000000000000000000000000000000000000000000000000000b05d5ac5, 0

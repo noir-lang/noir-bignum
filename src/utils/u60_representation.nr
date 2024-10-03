@@ -8,7 +8,7 @@ use crate::utils::msb::get_msb64;
  * It is helpful to use u60 types when evaluating addition operations that can overflow the field modulus,
  * as well as when performing bit shifts.
  */
-struct U60Repr<let N: u32, let NumSegments: u32> {
+pub struct U60Repr<let N: u32, let NumSegments: u32> {
     limbs: [u64; N * NumSegments]
 }
 
