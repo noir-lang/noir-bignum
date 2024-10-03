@@ -1,17 +1,17 @@
-mod utils;
-mod fields;
+pub(crate) mod utils;
+pub mod fields;
 
 // Structs
-mod params;
-mod bignum;
-mod runtime_bignum;
+pub mod params;
+pub mod bignum;
+pub mod runtime_bignum;
 
 // Functions on structs
-mod unconstrained_ops;
-mod constrained_ops;
-mod unconstrained_helpers;
-mod expressions;
-mod serialization;
+pub(crate) mod unconstrained_ops;
+pub(crate) mod constrained_ops;
+pub(crate) mod unconstrained_helpers;
+pub(crate) mod expressions;
+pub(crate) mod serialization;
 
 // Tests
 mod bignum_test;
