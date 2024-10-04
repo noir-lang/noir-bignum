@@ -18,7 +18,6 @@ pub struct RuntimeBigNum<let N: u32> {
     params: BigNumParams<N>,
 }
 
-impl<let N: u32> RuntimeBigNum<N> {}
 
 pub(crate) trait RuntimeBigNumTrait<let N: u32> {
     fn new(params: BigNumParams<N>) -> Self;
