@@ -41,6 +41,7 @@ trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::M
     fn modulus() -> Self;
     fn modulus_bits(self) -> u32;
     fn num_limbs(self) -> u32;
+    fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
     fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
     fn __pow(self, exponent: Self) -> Self;
     fn __neg(self) -> Self;
@@ -117,6 +118,9 @@ impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
         Params::get_instance().__derive_from_seed(seed)
     }
 
+    fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self {
+        Params::get_instance().__derive_from_seed(seed)
+    }
     fn __neg(self) -> Self {
         Params::get_instance().__neg(self)
     }

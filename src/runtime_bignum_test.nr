@@ -3,6 +3,8 @@ use crate::runtime_bignum::BigNumInstance;
 use crate::runtime_bignum::BigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
 use crate::fields::bn254Fq::BNParams as BNParams;
+use crate::fields::secp256k1Fr::Secp256k1_Fr_Instance as Secp256k1FrParams;
+use crate::fields::mnt6_753Fq::MNT6_753_Fq_Instance as MNT6753FqParams;
 
 struct Test2048Params {}
 
@@ -66,6 +68,26 @@ type Fq = BigNum<3, BNParams>;
 // type FqInstance = BigNumInstance<3, BNParams>;
 // type Fqq = BigNum<18, Test2048Params>;
 // type FqqInstance = BigNumInstance<18, Test2048Params>;
+
+fn test_derive<let N: u32, Params>(BNInstance: BigNumInstance<N, Params>) where Params: BigNumParamsTrait<N> {
+    let a: BigNum<N, Params> = BNInstance.derive_from_seed("hello".as_bytes());
+    let b: BigNum<N, Params> = BNInstance.__derive_from_seed("hello".as_bytes());
+    assert(BNInstance.eq(a, b));
+    //  println(f"derived value = {a}");
+}
+
+fn test_tonelli_shanks<let N: u32, Params>(BNInstance: BigNumInstance<N, Params>) where Params: BigNumParamsTrait<N> {
+    // __tonelli_shanks_sqrt
+    let a: BigNum<N, Params> = BNInstance.derive_from_seed("hello".as_bytes());
+
+    let square_number = BNInstance.mul(a, a);
+
+    let result = BNInstance.__tonelli_shanks_sqrt(square_number).unwrap();
+
+    let equal = result.__eq(a);
+    let neg_equal = result.__eq(BNInstance.neg(a));
+    assert(equal | neg_equal);
+}
 
 fn test_eq<let N: u32, Params>(BNInstance: BigNumInstance<N, Params>) where Params: BigNumParamsTrait<N> {
     let a: BigNum<N, Params> = BNInstance.__derive_from_seed([1, 2, 3, 4]);
@@ -192,6 +214,26 @@ fn assert_is_not_equal_overloaded_fail<let N: u32, Params>(bn: BigNumInstance<N,
     bn.assert_is_not_equal(a_plus_modulus, b_plus_modulus);
 }
 
+#[test]
+fn test_derive_bn() {
+    test_derive(BNParams::get_instance());
+}
+
+#[test]
+fn test_tonelli_shanks_bn() {
+    test_tonelli_shanks(BNParams::get_instance());
+}
+
+#[test]
+fn test_tonelli_shanks_secp256k1fr() {
+    test_tonelli_shanks(Secp256k1FrParams);
+}
+
+#[test]
+fn test_tonelli_shanks_mnt6() {
+    test_tonelli_shanks(MNT6753FqParams);
+}
+// MNT6753FqParams
 #[test]
 fn test_eq_BN() {
     let instance = BNParams::get_instance();

@@ -22,6 +22,158 @@ pub trait BigNumTrait {
     fn __eq(self, rhs: Self) -> bool;
 }
 
+// to do quote code injection 
+// we want fn foo<N>(blahblah){}
+// to become fn foo<M>(blahblah){}
+
+comptime fn baz(s: StructDefinition) -> Quoted {
+    let three = quote{ [Field; 3] }.as_type();
+    let four = quote{ [Field; 4] }.as_type();
+    let five = quote{ [Field; 5] }.as_type();
+    let six = quote{ [Field; 6] }.as_type();
+
+    let source = s.fields()[0].1;
+
+    let is_three = source.eq(three);
+    let is_four = source.eq(four);
+    let is_five = source.eq(five);
+    println(f"struct def = {s} {source}");
+    let mut result: Quoted = quote{ [Field; 1] };
+    if (is_three) {
+        result = quote{ [Field; 10] };
+    } else if (is_four) {
+        result = quote{ [Field; 20] };
+    } else if (is_five) {
+        result = quote{ [Field; 30] };
+    }
+    // Quoted {
+    //     struct woo<let N: u32> {
+    //         bar: [Field; N],
+    //         qq: $result
+    //     }
+    // }
+    quote {
+        struct woo<let N: u32> {
+            bar: [Field; N],
+            qq: $result
+        }
+    }
+    //let k= s.fields()[0].1.eq(Type{ [Field; 3]});
+}
+
+#[baz]
+struct foo<let N: u32> { bar: [Field; N] }
+
+// comptime fn hellotest(source: Quoted) -> Quoted {
+//     let three = quote{ [Field; 3] }.as_type();
+//     let four = quote{ [Field; 4] }.as_type();
+//     let five = quote{ [Field; 5] }.as_type();
+//     let six = quote{ [Field; 6] }.as_type();
+
+//     let k = source.as_expr().unwrap();
+//     // k.
+//     // let source = source.as_type();
+//     let is_three = source.eq(three);
+//     let is_four = source.eq(four);
+//     let is_five = source.eq(five);
+
+//     let mut result: Quoted = quote{ let q: [Field; 1] = [0; 1] };
+//     if (is_three) {
+//         result = quote{ let q: [Field; 10] = [0;10] };
+//     } else if (is_four) {
+//         result = quote{ let q: [Field; 20] = [0;20] };
+//     } else if (is_five) {
+//         result = quote{ let q: [Field; 30] = [0;30] };
+//     }
+
+//     quote{ || {$result; q } }
+// }
+
+// comptime fn hellotest() {
+
+// }
+// fn foo<let N: u32>(arr: [Field; N]) -> u32 {
+//     println(f"{arr}");
+//     let q = hellotest!(quote{ arr })();
+//     q.len()
+// }
+
+// comptime fn foo<let N: u32>(arr: [Field; N]) -> Quoted {
+//     #[hellotest]
+//     arr
+
+//    // println(f"{arr}");
+//  //   let q = hellotest(arr);
+//     quote{ 1 }
+// }
+
+// comptime fn derive_teststruct(s: StructDefinition) {
+//     let generics = s.generics();
+//     //     let foo = quote{ (($generics[0] / 32) + ((($generics[0] % 32 != 0)) as u32)) };
+
+//     let k: Type = quote{ $generics[0] }.as_type();
+// }
+// UnresolvedType
+// comptime fn derive_teststruct(s: StructDefinition) -> Quoted {
+//     let generics = s.generics();
+//     let foo = quote{ (($generics[0] / 32) + ((($generics[0] % 32 != 0)) as u32)) };
+//     let y: Expr = foo.as_expr().unwrap();
+//     let k = y.as_integer().unwrap();
+
+//     let bar: Quoted = quote { $k };
+//     let baz = quote {
+//             struct TestStruct<$k> {}
+//         };
+//     baz
+//     //   s.add_generic(bar.);
+//     //  y.resolve(in_function)
+// }
+
+#[derive_teststruct]
+    struct W<let N: u32> {}
+
+trait FieldCount {
+        fn field_count() -> u32;
+    }
+
+#[derive_field_count]
+    struct Bar { x: Field, y: [Field; 2] }
+
+comptime fn derive_field_count(s: StructDefinition) -> Quoted {
+    let typ = s.as_type();
+    let field_count = s.fields().len();
+    quote {
+            impl FieldCount for $typ {
+                fn field_count() -> u32 {
+                    $field_count
+                }
+            }
+        }
+}
+// if N / 32 is zero
+// comptime fn get_limbs<let N: u32>() -> u32 {
+//     (N / 32) + ((N % 32) != 0) as u32
+// }
+
+// fn footest<let N: u32>() {
+//     comptime let K: u32 = get_limbs::<N>();
+//     let mut arr: [Field; K] = [0; K];
+//     // let mut arr: [Field; (N / 32) + (N % 32) / (N % 32)] = [0; (N / 32) + (N % 32) / (N % 32)];
+//     // let length = (N / 32) + ((N % 32) != 0) as u32;
+//     //  assert(arr.len() == length);
+// }
+// #[test]
+// fn test_generics() {
+//     footest::<32>();
+//     footest::<33>();
+//     footest::<34>();
+//     footest::<35>();
+//     footest::<36>();
+//     footest::<37>();
+//     footest::<38>();
+//     footest::<39>();
+//     footest::<40>();
+// }
 /**
  * @brief BigNumInstanceTrait defines methods available to a runtime BigNumInstance.
  *        BigNumInstance wraps the modulus parameter (as well as a Barret reduction parameter),
@@ -29,6 +181,7 @@ pub trait BigNumTrait {
  **/
 pub trait BigNumInstanceTrait<BN> where BN: BigNumTrait {
     fn modulus(self) -> BN;
+    fn derive_from_seed<let SeedBytes: u32>(self, seed: [u8; SeedBytes]) -> BN;
     fn __derive_from_seed<let SeedBytes: u32>(self, seed: [u8; SeedBytes]) -> BN;
     fn eq(self, lhs: BN, rhs: BN) -> bool;
     fn __neg(self, val: BN) -> BN;
@@ -72,6 +225,7 @@ pub trait BigNumInstanceTrait<BN> where BN: BigNumTrait {
     fn udiv(self, numerator: BN, divisor: BN) -> BN;
     fn umod(self, numerator: BN, divisor: BN) -> BN;
 
+unconstrained fn __tonelli_shanks_sqrt(self, input: BN) -> std::option::Option<BN>;
 }
 
 /**
@@ -281,7 +435,362 @@ impl<let N: u32, Params> BigNum<N, Params> where Params: BigNumParamsTrait<N> {
     }
 }
 
+impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTrait<N> {
+
+    unconstrained fn primitive_root_log_size(self) -> u32 {
+        let mut target: U60Repr<N, 2> = self.modulus_u60 - U60Repr::one();
+        let mut result: u32 = 0;
+        for i in 0..Params::modulus_bits() {
+            let lsb_is_one = (target.limbs[0] & 1) == 1;
+            if (!lsb_is_one) {
+                result += 1;
+                target.shr1();
+            } else {
+                break;
+            }
+        }
+        result
+    }
+    unconstrained fn recursively_find_target(
+        self,
+        target: BigNum<N, Params>,
+        p_minus_one_over_two: BigNum<N, Params>
+    ) -> (bool, BigNum<N, Params>) {
+        let exped = (self.__pow(target, p_minus_one_over_two));
+        let found = exped.__eq(self.__neg(BigNum::one()));
+        let mut result: (bool, BigNum<N, Params>) = (found, target);
+        if (!found) {
+            let _target = self.__add(target, BigNum::one());
+            result = self.recursively_find_target(_target, p_minus_one_over_two);
+        }
+        result
+    }
+
+    unconstrained fn multiplicative_generator(self) -> BigNum<N, Params> {
+        let mut target = BigNum::one();
+        let p_minus_one_over_two: U60Repr<N, 2> = (self.modulus_u60 - U60Repr::one()).shr(1);
+        let p_minus_one_over_two: BigNum<N, Params> = BigNum::from_array(U60Repr::into(p_minus_one_over_two));
+
+        let (found, target) = self.recursively_find_target(target, p_minus_one_over_two);
+        assert(found == true, "wtf");
+        target
+        //     for _ in 0..256 {
+        //     }
+        // // field target(1);
+        // // uint256_t p_minus_one_over_two = (modulus - 1) >> 1;
+        // // bool found = false;
+        // while (!found) {
+        //     target += field(1);
+        //     found = (target.pow(p_minus_one_over_two) == -field(1));
+        // }
+        // return target;
+        // constexpr size_t n = COSET_GENERATOR_SIZE;
+        // constexpr uint64_t subgroup_size = 1 << 30;
+        //   let subgroup_size = 0x40000000; // 1 << 30
+        // std::array<field, COSET_GENERATOR_SIZE> result{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        // if (n > 0) {
+        //     result[0] = (multiplicative_generator());
+        // }
+        // field work_variable = multiplicative_generator() + field(1);
+        // size_t count = 1;
+        // while (count < n) {
+        //     // work_variable contains a new field element, and we need to test that, for all previous vector elements,
+        //     // result[i] / work_variable is not a member of our subgroup
+        //     field work_inverse = work_variable.invert();
+        //     bool valid = true;
+        //     for (size_t j = 0; j < count; ++j) {
+        //         field subgroup_check = (work_inverse * result[j]).pow(subgroup_size);
+        //         if (subgroup_check == field(1)) {
+        //             valid = false;
+        //             break;
+        //         }
+        //     }
+        //     if (valid) {
+        //         result[count] = (work_variable);
+        //         ++count;
+        //     }
+        //     work_variable += field(1);
+        // }
+        // return result;
+        //    BigNum::new()
+    }
+
+    unconstrained fn __tonelli_shanks_sqrt_inner_loop_check(self, t2m: BigNum<N, Params>, i: u32) -> u32 {
+        let is_one = t2m.__eq(BigNum::one());
+        let mut result = i;
+        if (!is_one) {
+            let t2m = self.__mul(t2m, t2m);
+            let i = i + 1;
+            result = self.__tonelli_shanks_sqrt_inner_loop_check(t2m, i);
+        }
+        result
+    }
+}
 impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstance<N, Params> where Params: BigNumParamsTrait<N> {
+
+    unconstrained fn __tonelli_shanks_sqrt(
+        self,
+        input: BigNum<N, Params>
+    ) -> std::option::Option<BigNum<N, Params>> {
+        // Tonelli-shanks algorithm begins by finding a field element Q and integer S,
+        // such that (p - 1) = Q.2^{s}
+
+        // We can compute the square root of a, by considering a^{(Q + 1) / 2} = R
+        // Once we have found such an R, we have
+        // R^{2} = a^{Q + 1} = a^{Q}a
+        // If a^{Q} = 1, we have found our square root.
+        // Otherwise, we have a^{Q} = t, where t is a 2^{s-1}'th root of unity.
+        // This is because t^{2^{s-1}} = a^{Q.2^{s-1}}.
+        // We know that (p - 1) = Q.w^{s}, therefore t^{2^{s-1}} = a^{(p - 1) / 2}
+        // From Euler's criterion, if a is a quadratic residue, a^{(p - 1) / 2} = 1
+        // i.e. t^{2^{s-1}} = 1
+
+        // To proceed with computing our square root, we want to transform t into a smaller subgroup,
+        // specifically, the (s-2)'th roots of unity.
+        // We do this by finding some value b,such that
+        // (t.b^2)^{2^{s-2}} = 1 and R' = R.b
+        // Finding such a b is trivial, because from Euler's criterion, we know that,
+        // for any quadratic non-residue z, z^{(p - 1) / 2} = -1
+        // i.e. z^{Q.2^{s-1}} = -1
+        // => z^Q is a 2^{s-1}'th root of -1
+        // => z^{Q^2} is a 2^{s-2}'th root of -1
+        // Since t^{2^{s-1}} = 1, we know that t^{2^{s - 2}} = -1
+        // => t.z^{Q^2} is a 2^{s - 2}'th root of unity.
+
+        // We can iteratively transform t into ever smaller subgroups, until t = 1.
+        // At each iteration, we need to find a new value for b, which we can obtain
+        // by repeatedly squaring z^{Q}
+
+        // ok we are missing:::::
+
+        // 1. COSET GENERATORS
+        // 2. PRIMITIVE ROOT LOG SIZE
+        // 3 NUM BITS (EASIER)
+        // hmm unsafe
+        let one: U60Repr<N, 2> = unsafe {
+            U60Repr::one()
+        };
+        let primitive_root_log_size = self.primitive_root_log_size();
+        let mut Q = self.modulus_u60 - one;
+        Q = Q.shr(primitive_root_log_size - 1);
+        let mut Q_minus_one_over_two = (Q - one).shr(2);
+        let mut Q_minus_one_over_two = BigNum::from_array(U60Repr::into(Q_minus_one_over_two));
+        let mut z = self.multiplicative_generator(); // the generator is a non-residue
+        println(f"z = {z}");
+        let mut b = self.__pow(input, Q_minus_one_over_two);
+        let mut r = self.__mul(input, b);
+        let mut t = self.__mul(r, b);
+
+        let mut check = t;
+        for i in 0..primitive_root_log_size - 1 {
+            check = self.__mul(check, check);
+        }
+        let mut early_exit = false;
+        if (check.__eq(BigNum::one()) == false) {
+            early_exit = true;
+            // return nope
+        }
+
+        let mut t1 = self.__pow(z, Q_minus_one_over_two);
+        let mut t2 = self.__mul(t1, z);
+        let mut c = self.__mul(t2, t1);
+        let mut m: u32 = primitive_root_log_size;
+
+        // tonelli shanks inner 1
+        // (if t2m == 1) then skip
+        // else increase i and square t2m and go again
+        let num_bits: u32 = Params::modulus_bits(); // TODO fix
+        for i in 0..num_bits {
+            if (t.__eq(BigNum::one())) {
+                break;
+            }
+            let mut t2m = t;
+            let i = self.__tonelli_shanks_sqrt_inner_loop_check(t2m, 0);
+            // for _ in 0..32 { // how big should this be?
+            //     if (t2m.__eq(BigNum::one())) {
+            //         break;
+            //     }
+            //     t2m = self.__mul(t2m, t2m);
+            //     i += 1;
+            // }
+            let mut j = m - i - 1;
+            b = c;
+            for _ in 0..200 { // how big
+                if (j == 0) {
+                    break;
+                }
+                b = self.__mul(b, b);
+                j -= 1;
+            }
+            c = self.__mul(b, b);
+            t = self.__mul(t, c);
+            r = self.__mul(r, b);
+            m = i;
+        }
+        let mut result = std::option::Option { _value: r, _is_some: true };
+
+        if (early_exit) {
+            result._is_some = false;
+        }
+        result
+        // field t1 = z.pow(Q_minus_one_over_two);
+        // field t2 = t1 * z;
+        // field c = t2 * t1; // z^Q
+        // size_t m = primitive_root_log_size();
+        // while (t != one()) {
+        //     size_t i = 0;
+        //     field t2m = t;
+        //     // find the smallest value of m, such that t^{2^m} = 1
+        //     while (t2m != one()) {
+        //         t2m.self_sqr();
+        //         i += 1;
+        //     }
+        //     size_t j = m - i - 1;
+        //     b = c;
+        //     while (j > 0) {
+        //         b.self_sqr();
+        //         --j;
+        //     } // b = z^2^(m-i-1)
+        //     c = b.sqr();
+        //     t = t * c;
+        //     r = r * b;
+        //     m = i;
+        // }
+        // // check if t is a square with euler's criterion
+        // // if not, we don't have a quadratic residue and a has no square root!
+        // field check = t;
+        // for (size_t i = 0; i < primitive_root_log_size() - 1; ++i) {
+        //     check.self_sqr();
+        // }
+        // if (check != one()) {
+        //     return zero();
+        // }
+        // constexpr uint256_t Q = (modulus - 1) >> static_cast<uint64_t>(primitive_root_log_size() - 1);
+        // constexpr uint256_t Q_minus_one_over_two = (Q - 1) >> 2;
+        // // __to_montgomery_form(Q_minus_one_over_two, Q_minus_one_over_two);
+        // field z = coset_generator(0); // the generator is a non-residue
+        // field b = pow(Q_minus_one_over_two);
+        // field r = operator*(b); // r = a^{(Q + 1) / 2}
+        // field t = r * b;        // t = a^{(Q - 1) / 2 + (Q + 1) / 2} = a^{Q}
+        // // check if t is a square with euler's criterion
+        // // if not, we don't have a quadratic residue and a has no square root!
+        // field check = t;
+        // for (size_t i = 0; i < primitive_root_log_size() - 1; ++i) {
+        //     check.self_sqr();
+        // }
+        // if (check != one()) {
+        //     return zero();
+        // }
+        // field t1 = z.pow(Q_minus_one_over_two);
+        // field t2 = t1 * z;
+        // field c = t2 * t1; // z^Q
+        // size_t m = primitive_root_log_size();
+        // while (t != one()) {
+        //     size_t i = 0;
+        //     field t2m = t;
+        //     // find the smallest value of m, such that t^{2^m} = 1
+        //     while (t2m != one()) {
+        //         t2m.self_sqr();
+        //         i += 1;
+        //     }
+        //     size_t j = m - i - 1;
+        //     b = c;
+        //     while (j > 0) {
+        //         b.self_sqr();
+        //         --j;
+        //     } // b = z^2^(m-i-1)
+        //     c = b.sqr();
+        //     t = t * c;
+        //     r = r * b;
+        //     m = i;
+        // }
+        // return r;
+        // std::option::Option::default()
+    }
+
+    fn derive_from_seed<let SeedBytes: u32>(self, seed: [u8; SeedBytes]) -> BigNum<N, Params> {
+        let mut rolling_seed: [u8; SeedBytes + 1] = [0; SeedBytes + 1];
+        for i in 0..SeedBytes {
+            rolling_seed[i] = seed[i];
+        }
+
+        let mut hash_buffer: [u8; N * 2 * 15] = [0; N * 2 * 15];
+
+        // (N % 32) / (N % 32)
+        // ((30 * N) / 32) + 1
+        // let mut test: [u8; (30 * N) / 32 + (((30 * N) % 32) != 0) as u32];
+        let num_hashes = (30 * N) / 32 + (((30 * N) % 32) != 0) as u32;
+        for i in 0..num_hashes - 1 {
+            let hash: [u8; 32] = std::hash::sha256(rolling_seed);
+            for j in 0..30 {
+                hash_buffer[i * 30 + j] = hash[j];
+            }
+            rolling_seed[SeedBytes] += 1;
+        }
+        {
+            let hash: [u8; 32] = std::hash::sha256(rolling_seed);
+            let remaining_bytes = 30 * N - (num_hashes - 1) * 30;
+            for j in 0..remaining_bytes {
+                hash_buffer[(num_hashes - 1) * 30 + j] = hash[j];
+            }
+        }
+
+        // let mut hash_limbs: [Field; ]
+
+        // we have 2 * N limbs of data
+        // the modulus will be somewhere between 2^(120 * N) and 2^(120 * N - 120)
+
+        // data bigfields will be (N - 1) limbs
+        // k * (N - 1) = 2 * N rounded up
+        // k = 2 * N / (N - 1)
+        let num_bigfield_chunks = (2 * N) / (N - 1) + (((2 * N) % (N - 1)) != 0) as u32;
+        let mut byte_ptr = 0;
+        let mut bigfield_rhs_limbs: [Field; N] = [0; N];
+        bigfield_rhs_limbs[N-1] = 1;
+        let bigfield_rhs: BigNum<N, Params> = BigNum::from_array(bigfield_rhs_limbs);
+
+        let mut result: BigNum<N, Params> = BigNum::new();
+
+        // we have k slices
+
+        // *= shift
+        // k_max
+        // *= shift
+        // + k_mid
+        // *= shift
+        // + k_lo
+
+        // N = 7 breaks
+        // hash buffer = 7 * 30 = 210 bytes
+        // num_bigfield_chunks is...however many 6 chunks make 14 = 3
+        for k in 0..num_bigfield_chunks {
+            let mut bigfield_limbs: [Field; N] = [0; N];
+            for j in 0..N - 1 {
+                let mut limb: Field = 0;
+                let mut endpoint = 15;
+                // if ((k == num_bigfield_chunks - 1) & (j == N - 2)) {
+                //     let consumed_bytes = ((num_bigfield_chunks - 1) * (N - 1) + (N - 2)) * 15;
+                //     let remaining_bytes = N * 30 - consumed_bytes;
+                //     endpoint = remaining_bytes;
+                // }
+                for _ in 0..15 {
+                    if (byte_ptr < N * 30) {
+                        limb *= 256;
+                        limb += hash_buffer[byte_ptr] as Field;
+                        byte_ptr += 1;
+                    }
+                }
+                bigfield_limbs[j] = limb;
+            }
+            let bigfield_lhs: BigNum<N, Params> = BigNum::from_array(bigfield_limbs);
+
+            result = self.mul(result, bigfield_lhs);
+            result = self.add(result, bigfield_rhs);
+            // let remainder = self.mul(bigfield_lhs, bigfield_rhs);
+            // result = self.add(result, remainder);
+        }
+        result
+    }
 
     fn modulus(self) -> BigNum<N, Params> {
         BigNum { limbs: self.modulus }
@@ -816,7 +1325,11 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
     }
 
     unconstrained fn __derive_from_seed_impl<let SeedBytes: u32>(self, seed: [u8; SeedBytes]) -> BigNum<N, Params> {
-        let mut rolling_seed = seed;
+        let mut rolling_seed: [u8; SeedBytes + 1] = [0; SeedBytes + 1];
+
+        for i in 0..SeedBytes {
+            rolling_seed[i] = seed[i];
+        }
 
         let mut to_reduce: [Field; 2 * N] = [0; 2 * N];
 
@@ -847,7 +1360,7 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
             }
             to_reduce[2 * i] = lo;
             to_reduce[2 * i + 1] = hi;
-            rolling_seed[0] += 1;
+            rolling_seed[SeedBytes] += 1;
         }
 
         {
