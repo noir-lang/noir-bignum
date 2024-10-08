@@ -35,6 +35,10 @@ impl BigNumParamsTrait<4> for BLS12_377_Fq_Params {
         377
     }
 }
+// 44
+// c = 12
+// 1100
+// 46
 global BLS12_377_Fq_Instance: BigNumInstance<4, BLS12_377_Fq_Params> = BigNumInstance {
         modulus: [
             0x0b5d44300000008508c00000000001, 0xd9f300f5138f1ef3622fba09480017, 0x4617c510eac63b05c06ca1493b1a22, 0x01ae3a
@@ -50,4 +54,6 @@ global BLS12_377_Fq_Instance: BigNumInstance<4, BLS12_377_Fq_Params> = BigNumIns
             0xed687789c42a591f9fd58c5e4daffc, 0xd0de6776b1a06af2d488d85a6d02d0, 0x8d0cc4060e976c3ca0582ef4f73bba, 0x026150
         ]
 };
+
+// 0x01ae3a 4617c510eac63b05c06ca1493b1a22 d9f300f5138f1ef3622fba09480017 0b5d44300000008508c00000000001
 

@@ -17,7 +17,7 @@ impl BigNumParamsTrait<3> for Secp256k1_Fr_Params {
         256
     }
 }
-global Secp256k1_Fr_Instance: BigNumInstance<3, Secp256k1_Fr_Params> = BigNumInstance {
+pub global Secp256k1_Fr_Instance: BigNumInstance<3, Secp256k1_Fr_Params> = BigNumInstance {
         modulus: [
             0xaedce6af48a03bbfd25e8cd0364141, 0xfffffffffffffffffffffffffffeba, 0xffff
         ],

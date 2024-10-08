@@ -3,8 +3,202 @@ use crate::runtime_bignum::BigNumInstance;
 use crate::runtime_bignum::BigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
 use crate::fields::bn254Fq::BNParams as BNParams;
-use crate::fields::secp256k1Fr::Secp256k1_Fr_Instance as Secp256k1FrParams;
+use crate::fields::secp256k1Fq::Secp256k1_Fq_Params;
+use crate::fields::bls12_381Fq::BLS12_381_Fq_Params;
+use crate::fields::secp256k1Fr::Secp256k1_Fr_Instance;
 use crate::fields::mnt6_753Fq::MNT6_753_Fq_Instance as MNT6753FqParams;
+
+//             
+ 
+  
+   
+
+#[test]
+fn test_bls() {
+    let X1: BigNum<4, BLS12_381_Fq_Params> = BigNum {
+        limbs: [
+            0x55e83ff97a1aeffb3af00adb22c6bb, 0x8c4f9774b905a14e3a3f171bac586c, 0xa73197d7942695638c4fa9ac0fc368, 0x17f1d3
+        ]
+    };
+    X1.validate_in_field();
+    let mut (_, XX_mul_3): (BigNum<4, BLS12_381_Fq_Params>, BigNum<4, BLS12_381_Fq_Params> ) = BigNum::__compute_quadratic_expression(
+        [[X1, X1, X1]],
+        [[false, false, false]],
+        [[X1]],
+        [[false]],
+        [],
+        []
+    );
+}
+comptime fn make_test(f: StructDefinition, N: Quoted, typ: Quoted) -> Quoted {
+    let k = f.name();
+    quote{
+impl $k {
+#[test]
+fn test_add() {
+    let bn = $typ ::get_instance();
+    let a: BigNum<$N, $typ> = bn.derive_from_seed([1, 2, 3, 4]);
+    let b: BigNum<$N, $typ> = bn.derive_from_seed([4, 5, 6, 7]);
+    let one: BigNum<$N, $typ> = BigNum::one();
+    a.validate_in_range();
+    bn.validate_in_field(a);
+    b.validate_in_range();
+    bn.validate_in_field(b);
+
+    let mut c = bn.add(a, b);
+    c = bn.add(c, c);
+    let d = bn.mul(bn.add(a, b), bn.add(one, one));
+    assert(bn.eq(c, d));
+
+    let e = bn.add(one, one);
+    for i in 1..$N {
+        assert(e.limbs[i] == 0);
+    }
+    assert(e.limbs[0] == 2);
+}
+    
+
+#[test]
+fn test_mul() {
+    let bn = $typ ::get_instance();
+    let a: BigNum<$N, $typ> = bn.derive_from_seed([1, 2, 3, 4]);
+    let b: BigNum<$N, $typ> = bn.derive_from_seed([4, 5, 6, 7]);
+
+    let c = bn.mul(bn.add(a, b), bn.add(a, b));
+    let d = bn.add(
+        bn.add(
+            bn.add(bn.mul(a, a), bn.mul(b, b)),
+            bn.mul(a, b)
+        ),
+        bn.mul(a, b)
+    );
+    assert(bn.eq(c, d));
+}
+
+#[test]
+fn test_quadratic_expression() {
+    let bn = $typ ::get_instance();
+    for i in 0..32 {
+    let X1: BigNum<$N, $typ> = bn.derive_from_seed([i as u8,2,3,4]);
+    let Y1: BigNum<$N, $typ> = bn.derive_from_seed([i as u8,i as u8,6,7]);
+    let Z1: BigNum<$N, $typ> = BigNum::one();
+
+        let (_, YY_mul_2): (BigNum<$N, $typ>, BigNum<$N, $typ> ) = BigNum::__compute_quadratic_expression([[Y1]], [[false]], [[Y1, Y1]], [[false, false]], [], []);
+        println(f"YYmul2 {YY_mul_2}");
+        let mut (_, XX_mul_3): (BigNum<$N, $typ>, BigNum<$N, $typ> ) = BigNum::__compute_quadratic_expression(
+            [[X1]],
+            [[false]],
+            [[X1, X1, X1]],
+            [[false, false, false]],
+            [],
+            []
+        );
+        // if (CurveParams::a().get_limb(0) != 0) {
+        //     let ZZ = Z1.mul(Z1);
+        //     let AZZZZ = ZZ.mul(ZZ).mul(CurveParams::a());
+        //     XX_mul_3 = XX_mul_3.add(AZZZZ);
+        // }
+        println(f"XXmul3 {XX_mul_3}");
+        let (_, D): (BigNum<$N, $typ>, BigNum<$N, $typ> ) = BigNum::__compute_quadratic_expression([[X1, X1]], [[false, false]], [[YY_mul_2]], [[false]], [], []);
+        println(f"D {D}");
+        let mut (_, X3): (BigNum<$N, $typ>, BigNum<$N, $typ> ) = BigNum::__compute_quadratic_expression(
+            [[XX_mul_3]],
+            [[false]],
+            [[XX_mul_3]],
+            [[false]],
+            [D, D],
+            [true, true]
+        );
+        println(f"X3 {X3}");
+        let (_, Y3): (BigNum<$N, $typ>, BigNum<$N, $typ> ) = BigNum::__compute_quadratic_expression(
+            [[XX_mul_3], [YY_mul_2]],
+            [[false], [true]],
+            [[D, X3], [YY_mul_2, YY_mul_2]],
+            [[false, true], [false, false]],
+            [],
+            []
+        );
+        // 3XX * (D - X3) - 8YYYY
+        println(f"Y3 {Y3}");
+        // TODO: tidy this up and make more efficient?!
+
+        let (_, Z3): (BigNum<$N, $typ>, BigNum<$N, $typ> ) = BigNum::__compute_quadratic_expression([[Y1]], [[false]], [[Z1, Z1]], [[false, false]], [], []);
+
+        bn.validate_in_field(X3);
+        bn.validate_in_field(Y3);
+        bn.validate_in_field(Z3);
+    }
+}
+
+#[test]
+fn assert_is_not_equa() {
+    let bn = $typ ::get_instance();
+    let a: BigNum<$N, $typ> = bn.derive_from_seed([1, 2, 3, 4]);
+    let b: BigNum<$N, $typ> = bn.derive_from_seed([4, 5, 6, 7]);
+
+    bn.assert_is_not_equal(a, b);
+}
+
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn assert_is_not_equal_fail() {
+    let bn = $typ ::get_instance();
+    let a: BigNum<$N, $typ> = bn.derive_from_seed([1, 2, 3, 4]);
+    let b: BigNum<$N, $typ> = bn.derive_from_seed([1, 2, 3, 4]);
+
+    bn.assert_is_not_equal(a, b);
+}
+
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn assert_is_not_equal_overloaded_lhs_fail() {
+    let bn = $typ ::get_instance();
+    let a: BigNum<$N, $typ> = bn.derive_from_seed([1, 2, 3, 4]);
+    let b: BigNum<$N, $typ> = bn.derive_from_seed([1, 2, 3, 4]);
+
+    let modulus = bn.modulus();
+
+    let t0: U60Repr<$N, 2> = U60Repr::from(a.limbs);
+    let t1: U60Repr<$N, 2> = U60Repr::from(modulus.limbs);
+    let a_plus_modulus: BigNum<$N, $typ> = BigNum { limbs: U60Repr::into(t0 + t1) };
+    bn.assert_is_not_equal(a_plus_modulus, b);
+}
+
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn assert_is_not_equal_overloaded_rhs_fail() {
+    let bn = $typ ::get_instance();
+    let a: BigNum<$N, $typ> = bn.derive_from_seed([1, 2, 3, 4]);
+    let b: BigNum<$N, $typ> = bn.derive_from_seed([1, 2, 3, 4]);
+
+    let modulus = bn.modulus();
+
+    let t0: U60Repr<$N, 2> = U60Repr::from(b.limbs);
+    let t1: U60Repr<$N, 2> = U60Repr::from(modulus.limbs);
+    let b_plus_modulus: BigNum<$N, $typ> = BigNum { limbs: U60Repr::into(t0 + t1) };
+    bn.assert_is_not_equal(a, b_plus_modulus);
+}
+
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn assert_is_not_equal_overloaded_fail() {
+    let bn = $typ ::get_instance();
+    let a: BigNum<$N, $typ> = bn.derive_from_seed([1, 2, 3, 4]);
+    let b: BigNum<$N, $typ> = bn.derive_from_seed([1, 2, 3, 4]);
+    let modulus = bn.modulus();
+    let t0: U60Repr<$N, 2> = U60Repr::from(a.limbs);
+    let t1: U60Repr<$N, 2> = U60Repr::from(b.limbs);
+    let t2: U60Repr<$N, 2> = U60Repr::from(modulus.limbs);
+    let a_plus_modulus: BigNum<$N, $typ> = BigNum { limbs: U60Repr::into(t0 + t2) };
+    let b_plus_modulus: BigNum<$N, $typ> = BigNum { limbs: U60Repr::into(t1 + t2) };
+    bn.assert_is_not_equal(a_plus_modulus, b_plus_modulus);
+}
+}
+}
+}
+
+#[make_test(quote{3},quote{BNParams})]
+struct BNTests{}
+#[make_test(quote{3},quote{Secp256k1_Fq_Params})]
+struct Secp256K1FqTests{}
+#[make_test(quote{4},quote{BLS12_381_Fq_Params})]
+struct BLS12_381FqTests{}
 
 struct Test2048Params {}
 
@@ -226,7 +420,7 @@ fn test_tonelli_shanks_bn() {
 
 #[test]
 fn test_tonelli_shanks_secp256k1fr() {
-    test_tonelli_shanks(Secp256k1FrParams);
+    test_tonelli_shanks(Secp256k1_Fr_Instance);
 }
 
 #[test]

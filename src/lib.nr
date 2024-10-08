@@ -73,6 +73,7 @@ trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::M
     fn set_limb(&mut self, idx: u32, value: Field)  { RuntimeBigNumTrait::set_limb(self, idx, value) }
     fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self { RuntimeBigNumTrait::conditional_select(lhs, rhs, predicate) }
     fn to_le_bytes<let X: u32>(self) -> [u8; X] { RuntimeBigNumTrait::to_le_bytes(self) }
+    unconstrained fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self>;
 }
 
 impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N> {
@@ -119,7 +120,7 @@ impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
     }
 
     fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self {
-        Params::get_instance().__derive_from_seed(seed)
+        Params::get_instance().derive_from_seed(seed)
     }
     fn __neg(self) -> Self {
         Params::get_instance().__neg(self)
@@ -268,6 +269,10 @@ impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
 
     fn umod(self, divisor: Self) -> Self {
         Params::get_instance().umod(self, divisor)
+    }
+
+    unconstrained fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self> {
+        Params::get_instance().__tonelli_shanks_sqrt(self)
     }
 }
 

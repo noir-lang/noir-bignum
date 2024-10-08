@@ -37,7 +37,6 @@ comptime fn baz(s: StructDefinition) -> Quoted {
     let is_three = source.eq(three);
     let is_four = source.eq(four);
     let is_five = source.eq(five);
-    println(f"struct def = {s} {source}");
     let mut result: Quoted = quote{ [Field; 1] };
     if (is_three) {
         result = quote{ [Field; 10] };
@@ -408,11 +407,15 @@ impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
     }
 
     fn __is_zero(self) -> bool {
-        self.__is_zero_impl()
+        unsafe {
+            self.__is_zero_impl()
+        }
     }
 
     fn __eq(self, rhs: Self) -> bool {
-        self.__eq_impl(rhs)
+        unsafe {
+            self.__eq_impl(rhs)
+        }
     }
 }
 
@@ -460,7 +463,9 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         let found = exped.__eq(self.__neg(BigNum::one()));
         let mut result: (bool, BigNum<N, Params>) = (found, target);
         if (!found) {
-            let _target = self.__add(target, BigNum::one());
+            let _target = unsafe {
+                self.__add(target, BigNum::one())
+            };
             result = self.recursively_find_target(_target, p_minus_one_over_two);
         }
         result
@@ -528,6 +533,7 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
 }
 impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstance<N, Params> where Params: BigNumParamsTrait<N> {
 
+    // TODO clean up, and check result is a square root and set option to none if not
     unconstrained fn __tonelli_shanks_sqrt(
         self,
         input: BigNum<N, Params>
@@ -571,61 +577,73 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
             U60Repr::one()
         };
         let primitive_root_log_size = self.primitive_root_log_size();
-        let mut Q = self.modulus_u60 - one;
-        Q = Q.shr(primitive_root_log_size - 1);
+        let k: U60Repr<N, 2> = self.modulus_u60;
+        //     constexpr uint256_t Q = (modulus - 1) >> static_cast<uint64_t>(primitive_root_log_size() - 1);
+        //   constexpr uint256_t Q_minus_one_over_two = (Q - 1) >> 2;
+
+        let mut Q = (self.modulus_u60 - one).shr(primitive_root_log_size - 1);
         let mut Q_minus_one_over_two = (Q - one).shr(2);
         let mut Q_minus_one_over_two = BigNum::from_array(U60Repr::into(Q_minus_one_over_two));
         let mut z = self.multiplicative_generator(); // the generator is a non-residue
-        println(f"z = {z}");
         let mut b = self.__pow(input, Q_minus_one_over_two);
         let mut r = self.__mul(input, b);
         let mut t = self.__mul(r, b);
 
+        // input * b * b
+        // input * (Q - 1) / 2
+        // input * (p - 1) / 2
+
+        // input * (number with 45 zeroes at the end)
+
+        // (p - 1) / 2 = X * 2^s
+        // (input * X * 2^s) * 2^s
         let mut check = t;
+        println(f"primitive root log size = {primitive_root_log_size}");
         for i in 0..primitive_root_log_size - 1 {
             check = self.__mul(check, check);
         }
         let mut early_exit = false;
+        println(f"check {check}");
         if (check.__eq(BigNum::one()) == false) {
             early_exit = true;
+            //  assert(early_exit == false); // trigger
             // return nope
-        }
-
-        let mut t1 = self.__pow(z, Q_minus_one_over_two);
-        let mut t2 = self.__mul(t1, z);
-        let mut c = self.__mul(t2, t1);
-        let mut m: u32 = primitive_root_log_size;
-
-        // tonelli shanks inner 1
-        // (if t2m == 1) then skip
-        // else increase i and square t2m and go again
-        let num_bits: u32 = Params::modulus_bits(); // TODO fix
-        for i in 0..num_bits {
-            if (t.__eq(BigNum::one())) {
-                break;
-            }
-            let mut t2m = t;
-            let i = self.__tonelli_shanks_sqrt_inner_loop_check(t2m, 0);
-            // for _ in 0..32 { // how big should this be?
-            //     if (t2m.__eq(BigNum::one())) {
-            //         break;
-            //     }
-            //     t2m = self.__mul(t2m, t2m);
-            //     i += 1;
-            // }
-            let mut j = m - i - 1;
-            b = c;
-            for _ in 0..200 { // how big
-                if (j == 0) {
+        } else {
+            let mut t1 = self.__pow(z, Q_minus_one_over_two);
+            let mut t2 = self.__mul(t1, z);
+            let mut c = self.__mul(t2, t1);
+            let mut m: u32 = primitive_root_log_size;
+            // tonelli shanks inner 1
+            // (if t2m == 1) then skip
+            // else increase i and square t2m and go again
+            let num_bits: u32 = Params::modulus_bits(); // TODO fix
+            for i in 0..num_bits {
+                if (t.__eq(BigNum::one())) {
                     break;
                 }
-                b = self.__mul(b, b);
-                j -= 1;
+                let mut t2m = t;
+                let i = self.__tonelli_shanks_sqrt_inner_loop_check(t2m, 0);
+                // for _ in 0..32 { // how big should this be?
+                //     if (t2m.__eq(BigNum::one())) {
+                //         break;
+                //     }
+                //     t2m = self.__mul(t2m, t2m);
+                //     i += 1;
+                // }
+                let mut j = m - i - 1;
+                b = c;
+                for _ in 0..200 { // how big
+                    if (j == 0) {
+                        break;
+                    }
+                    b = self.__mul(b, b);
+                    j -= 1;
+                }
+                c = self.__mul(b, b);
+                t = self.__mul(t, c);
+                r = self.__mul(r, b);
+                m = i;
             }
-            c = self.__mul(b, b);
-            t = self.__mul(t, c);
-            r = self.__mul(r, b);
-            m = i;
         }
         let mut result = std::option::Option { _value: r, _is_some: true };
 
@@ -712,28 +730,52 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
         let mut rolling_seed: [u8; SeedBytes + 1] = [0; SeedBytes + 1];
         for i in 0..SeedBytes {
             rolling_seed[i] = seed[i];
+            assert_eq(rolling_seed[i], seed[i]);
         }
 
         let mut hash_buffer: [u8; N * 2 * 15] = [0; N * 2 * 15];
 
+        let mut rolling_hash_fields: [Field; (SeedBytes / 31) + 1] = [0; (SeedBytes / 31) + 1];
+        let mut seed_ptr = 0;
+        for i in 0..(SeedBytes / 31) + 1 {
+            let mut packed: Field = 0;
+            for _ in 0..31 {
+                if (seed_ptr < SeedBytes) {
+                    packed *= 256;
+                    packed += seed[seed_ptr] as Field;
+                    seed_ptr += 1;
+                }
+            }
+            rolling_hash_fields[i] = packed;
+        }
+
+        let compressed = std::hash::poseidon2::Poseidon2::hash(rolling_hash_fields, (SeedBytes / 31) + 1);
+        //             std::hash::poseidon2::Poseidon2::hash(rolling_seed, message_size)
+        let mut rolling_hash: [Field; 2] = [compressed, 0];
         // (N % 32) / (N % 32)
         // ((30 * N) / 32) + 1
         // let mut test: [u8; (30 * N) / 32 + (((30 * N) % 32) != 0) as u32];
         let num_hashes = (30 * N) / 32 + (((30 * N) % 32) != 0) as u32;
         for i in 0..num_hashes - 1 {
-            let hash: [u8; 32] = std::hash::sha256(rolling_seed);
+            //     let hash: [u8; 32] = std::hash::sha256(rolling_seed);
+            let hash: Field = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
+            let hash: [u8; 32] = hash.to_le_bytes();
             for j in 0..30 {
                 hash_buffer[i * 30 + j] = hash[j];
             }
-            rolling_seed[SeedBytes] += 1;
+            rolling_hash[1] += 1;
         }
         {
-            let hash: [u8; 32] = std::hash::sha256(rolling_seed);
+            let hash: Field = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
+            let hash: [u8; 32] = hash.to_le_bytes();
             let remaining_bytes = 30 * N - (num_hashes - 1) * 30;
             for j in 0..remaining_bytes {
                 hash_buffer[(num_hashes - 1) * 30 + j] = hash[j];
             }
         }
+
+        let num_bits = Params::modulus_bits() * 2;
+        let num_bytes = num_bits / 8 + ((num_bits % 8) != 0) as u32;
 
         // let mut hash_limbs: [Field; ]
 
@@ -745,11 +787,6 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
         // k = 2 * N / (N - 1)
         let num_bigfield_chunks = (2 * N) / (N - 1) + (((2 * N) % (N - 1)) != 0) as u32;
         let mut byte_ptr = 0;
-        let mut bigfield_rhs_limbs: [Field; N] = [0; N];
-        bigfield_rhs_limbs[N-1] = 1;
-        let bigfield_rhs: BigNum<N, Params> = BigNum::from_array(bigfield_rhs_limbs);
-
-        let mut result: BigNum<N, Params> = BigNum::new();
 
         // we have k slices
 
@@ -763,29 +800,51 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
         // N = 7 breaks
         // hash buffer = 7 * 30 = 210 bytes
         // num_bigfield_chunks is...however many 6 chunks make 14 = 3
+
+        // we want to convert our byte array into bigfield chunks
+        // each chunk has at most N-1 limbs
+        // to determine the exact number of chunks, we need the `!=` or `>` operator which is not avaiable when defining array sizes
+        // so we overestimate at 4
+        // e.g. if N = 20, then we have 40 limbs we want to reduce, but each bigfield chunk is 19 limbs, so we need 3
+        // if N = 2, we have 4 limbs we want to reduce but each bigfield chunk is only 1 limb, so we need 4
+        // max possible number of chunks is therefore 4
+
+        let mut bigfield_chunks: [[Field; N]; 4] = [[0; N]; 4];
         for k in 0..num_bigfield_chunks {
             let mut bigfield_limbs: [Field; N] = [0; N];
-            for j in 0..N - 1 {
+            let mut num_filled_bytes = (k * 30);
+            let mut num_remaining_bytes = num_bytes - num_filled_bytes;
+            let mut num_remaining_limbs = (num_remaining_bytes / 15) + (num_remaining_bytes % 15 > 0) as u32;
+            let mut more_than_N_minus_one_limbs = (num_remaining_limbs > (N - 1)) as u32;
+            let mut num_limbs_in_bigfield = more_than_N_minus_one_limbs * (N - 1)
+                + num_remaining_limbs * (1 - more_than_N_minus_one_limbs);
+
+            for j in 0..num_limbs_in_bigfield {
                 let mut limb: Field = 0;
-                let mut endpoint = 15;
-                // if ((k == num_bigfield_chunks - 1) & (j == N - 2)) {
-                //     let consumed_bytes = ((num_bigfield_chunks - 1) * (N - 1) + (N - 2)) * 15;
-                //     let remaining_bytes = N * 30 - consumed_bytes;
-                //     endpoint = remaining_bytes;
-                // }
                 for _ in 0..15 {
-                    if (byte_ptr < N * 30) {
-                        limb *= 256;
-                        limb += hash_buffer[byte_ptr] as Field;
-                        byte_ptr += 1;
-                    }
+                    let need_more_bytes = (byte_ptr < num_bytes);
+                    let mut byte = hash_buffer[byte_ptr];
+                    limb *= (256 * need_more_bytes as Field + (1 - need_more_bytes as Field));
+                    limb += byte as Field * need_more_bytes as Field;
+                    byte_ptr += need_more_bytes as u32;
                 }
-                bigfield_limbs[j] = limb;
+                bigfield_limbs[num_limbs_in_bigfield - 1 - j] = limb;
             }
+            bigfield_chunks[num_bigfield_chunks - 1 - k] = bigfield_limbs;
+        }
+
+        let mut bigfield_rhs_limbs: [Field; N] = [0; N];
+        bigfield_rhs_limbs[N-1] = 1;
+        let bigfield_rhs: BigNum<N, Params> = BigNum::from_array(bigfield_rhs_limbs);
+        bigfield_rhs.validate_in_range();
+        let mut result: BigNum<N, Params> = BigNum::new();
+
+        for i in 0..num_bigfield_chunks {
+            let bigfield_limbs = bigfield_chunks[i];
             let bigfield_lhs: BigNum<N, Params> = BigNum::from_array(bigfield_limbs);
 
-            result = self.mul(result, bigfield_lhs);
-            result = self.add(result, bigfield_rhs);
+            result = self.mul(result, bigfield_rhs);
+            result = self.add(result, bigfield_lhs);
             // let remainder = self.mul(bigfield_lhs, bigfield_rhs);
             // result = self.add(result, remainder);
         }
@@ -796,7 +855,9 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
         BigNum { limbs: self.modulus }
     }
     fn __derive_from_seed<let SeedBytes: u32>(self, seed: [u8; SeedBytes]) -> BigNum<N, Params> {
-        self.__derive_from_seed_impl(seed)
+        unsafe {
+            self.__derive_from_seed_impl(seed)
+        }
     }
     // ####################################################################################################################
     // ####################################################################################################################
@@ -806,35 +867,51 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
     // ####################################################################################################################
 
     fn __neg(self, val: BigNum<N, Params>) -> BigNum<N, Params> {
-        self.__neg_impl(val)
+        unsafe {
+            self.__neg_impl(val)
+        }
     }
 
     fn __add(self, lhs: BigNum<N, Params>, rhs: BigNum<N, Params>) -> BigNum<N, Params> {
-        self.__add_impl(lhs, rhs)
+        unsafe {
+            self.__add_impl(lhs, rhs)
+        }
     }
 
     fn __sub(self, lhs: BigNum<N, Params>, rhs: BigNum<N, Params>) -> BigNum<N, Params> {
-        self.__sub_impl(lhs, rhs)
+        unsafe {
+            self.__sub_impl(lhs, rhs)
+        }
     }
 
     fn __mul(self, lhs: BigNum<N, Params>, rhs: BigNum<N, Params>) -> BigNum<N, Params> {
-        self.__mul_impl(lhs, rhs)
+        unsafe {
+            self.__mul_impl(lhs, rhs)
+        }
     }
 
     fn __div(self, lhs: BigNum<N, Params>, rhs: BigNum<N, Params>) -> BigNum<N, Params> {
-        self.__div_impl(lhs, rhs)
+        unsafe {
+            self.__div_impl(lhs, rhs)
+        }
     }
 
     fn __batch_invert<let M: u32>(self, x: [BigNum<N, Params>; M]) -> [BigNum<N, Params>; M] {
-        self.batch_invert_impl(x)
+        unsafe {
+            self.batch_invert_impl(x)
+        }
     }
 
     fn __invmod(self, val: BigNum<N, Params>) -> BigNum<N, Params> {
-        self.__invmod_impl(val)
+        unsafe {
+            self.__invmod_impl(val)
+        }
     }
 
     fn __pow(self, val: BigNum<N, Params>, exponent: BigNum<N, Params>) -> BigNum<N, Params> {
-        self.__pow_impl(val, exponent)
+        unsafe {
+            self.__pow_impl(val, exponent)
+        }
     }
 
     fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
@@ -910,14 +987,16 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
     ) {
         // use an unconstrained function to compute the value of the quotient
         let (quotient, _, borrow_flags): (BigNum<N, Params>, BigNum<N, Params>, [Field; 2 * N]) = unsafe {
-            self.__compute_quadratic_expression_with_borrow_flags(
-                lhs_terms,
-                lhs_flags,
-                rhs_terms,
-                rhs_flags,
-                linear_terms,
-                linear_flags
-            )
+            unsafe {
+                self.__compute_quadratic_expression_with_borrow_flags(
+                    lhs_terms,
+                    lhs_flags,
+                    rhs_terms,
+                    rhs_flags,
+                    linear_terms,
+                    linear_flags
+                )
+            }
         };
         // constrain the quotient to be in the range [0, ..., 2^{m} - 1], where `m` is log2(modulus) rounded up.
         // Additionally, validate quotient limbs are also in the range [0, ..., 2^{120} - 1]
@@ -1196,7 +1275,9 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
         // a - b = r
         // p + a - b - r = 0
         let (result, carry_flags, borrow_flags, underflow) = unsafe {
-            self.__sub_with_flags(lhs, rhs)
+            unsafe {
+                self.__sub_with_flags(lhs, rhs)
+            }
         };
         result.validate_in_range();
         let modulus = self.modulus;
@@ -1229,7 +1310,9 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
     // e.g. performing a sum of multiple multiplications and additions via `evaluate_quadratic_expression`
     //      will create much fewer constraints than calling `mul` and `add` directly
     fn mul(self, lhs: BigNum<N, Params>, rhs: BigNum<N, Params>) -> BigNum<N, Params> {
-        let result = self.__mul(lhs, rhs);
+        let result = unsafe {
+            self.__mul(lhs, rhs)
+        };
         self.evaluate_quadratic_expression([[lhs]], [[false]], [[rhs]], [[false]], [result], [true]);
         result
     }
@@ -1238,7 +1321,9 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
         assert(
             Params::has_multiplicative_inverse(), "BigNum has no multiplicative inverse. Use udiv for unsigned integer division"
         );
-        let result = self.__div(lhs, rhs);
+        let result = unsafe {
+            self.__div(lhs, rhs)
+        };
         self.evaluate_quadratic_expression([[result]], [[false]], [[rhs]], [[false]], [lhs], [true]);
         result
     }
@@ -1325,11 +1410,21 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
     }
 
     unconstrained fn __derive_from_seed_impl<let SeedBytes: u32>(self, seed: [u8; SeedBytes]) -> BigNum<N, Params> {
-        let mut rolling_seed: [u8; SeedBytes + 1] = [0; SeedBytes + 1];
-
-        for i in 0..SeedBytes {
-            rolling_seed[i] = seed[i];
+        let mut rolling_hash_fields: [Field; (SeedBytes / 31) + 1] = [0; (SeedBytes / 31) + 1];
+        let mut seed_ptr = 0;
+        for i in 0..(SeedBytes / 31) + 1 {
+            let mut packed: Field = 0;
+            for _ in 0..31 {
+                if (seed_ptr < SeedBytes) {
+                    packed *= 256;
+                    packed += seed[seed_ptr] as Field;
+                    seed_ptr += 1;
+                }
+            }
+            rolling_hash_fields[i] = packed;
         }
+        let compressed = std::hash::poseidon2::Poseidon2::hash(rolling_hash_fields, (SeedBytes / 31) + 1);
+        let mut rolling_hash: [Field; 2] = [compressed, 0];
 
         let mut to_reduce: [Field; 2 * N] = [0; 2 * N];
 
@@ -1346,7 +1441,9 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         }
 
         for i in 0..(N - 1) {
-            let hash: [u8; 32] = std::hash::sha256(rolling_seed);
+            let hash = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
+            let hash : [u8; 30] = hash.to_le_bytes();
+            // let hash: [u8; 32] = std::hash::sha256(rolling_seed);
             let mut lo: Field = 0;
             let mut hi: Field = 0;
             for j in 0..15 {
@@ -1360,11 +1457,13 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
             }
             to_reduce[2 * i] = lo;
             to_reduce[2 * i + 1] = hi;
-            rolling_seed[SeedBytes] += 1;
+            rolling_hash[1] += 1;
+            //  rolling_seed[SeedBytes] += 1;
         }
 
         {
-            let hash: [u8; 32] = std::hash::sha256(rolling_seed);
+            let hash = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
+            let hash : [u8; 30] = hash.to_le_bytes();
             let mut hi: Field = 0;
             for j in 0..(last_limb_bytes - 1) {
                 hi *= 256;
@@ -1372,12 +1471,11 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
             }
             hi *= 256;
             let last_byte = hash[last_limb_bytes - 1];
-            let mask = (1 as u64 << (last_limb_bits) as u8) - 1;
-            let last_bits = last_byte as u64 & mask;
-            hi += last_bits as Field;
+            // let mask = (1 as u64 << (last_limb_bits) as u8) - 1;
+            // let last_bits = last_byte as u64 & mask;
+            hi += last_byte as Field;
             to_reduce[2 * N - 2] = hi;
         }
-
         let (_, remainder) = __barrett_reduction(
             to_reduce,
             self.redc_param,
@@ -1437,8 +1535,9 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
                 mul[i + j] += lhs.limbs[i] * rhs.limbs[j];
             }
         }
+        let to_reduce = split_bits::__normalize_limbs(mul, 2 * N);
         let (q, r) = __barrett_reduction(
-            split_bits::__normalize_limbs(mul, 2 * N),
+            to_reduce,
             self.redc_param,
             Params::modulus_bits(),
             self.modulus,
@@ -1835,7 +1934,9 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
             linear_flags
         );
         let mut relation_result: [Field; 2 * N] = split_bits::__normalize_limbs(mulout, 2 * N);
-
+        println(f"relation result {relation_result}");
+        // size 4
+        // a[3] * b[3] = a[6] = 7
         // TODO: ugly! Will fail if input slice is empty
         let k  = Params::modulus_bits();
 
@@ -1849,6 +1950,11 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
 
         let mut q = BigNum::from_array(quotient);
         let mut r = BigNum::from_array(remainder);
+        println(f"q = {q}");
+        println(f"r = {r}");
+        let r_sub_p = self.__sub(r, BigNum::from_array(self.modulus));
+        println(f"r minus p = {r_sub_p}");
+        self.validate_in_field(r); // TODO remove expensive
         (q, r)
     }
 
@@ -2018,13 +2124,27 @@ unconstrained fn __barrett_reduction<let N: u32>(
             mulout[i + j] += x[i] * redc_param[j];
         }
     }
-    mulout = split_bits::__normalize_limbs(mulout, 3 * N - 1);
+    mulout = split_bits::__normalize_limbs(mulout, 3 * N - 2);
     let mulout_u60: U60Repr<N, 6> = U60Repr::new(mulout);
+    // 12 * 60 = 720
+    // k + k = 381 * 2 = 762?
+    /*
+mulout_u60 U60Repr { limbs: [779386285720322552, 497102678227654930, 352079357578002799, 680988361742767279, 135866496518921439, 517231239240761753, 987732801133853848, 861825401572292605, 717485571906275553, 877476962745932207, 587813932403957014, 941668902944207833, 1058486632430057867, 18681343456122761, 879465759024588275, 395418651528445531, 838269198923393919, 95027040027551381, 618146568172623904, 16, 0, 0, 0, 0] }
+shifted mulout_u60 U60Repr { limbs: [744468896566193183, 417422024299516055, 913271585034407199, 402104509141966643, 746352446893648008, 296494551978234982, 4334854, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] }
+ reshifted U60Repr { limbs: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1058482251873910784, 18681343456122761, 879465759024588275, 395418651528445531, 838269198923393919, 95027040027551381, 618146568172623904, 16, 0, 0, 0, 0] }
+    */
+    // 1058486632430057867
+    // 105848 2251873910784
+    
+    println(f"mulout_u60 {mulout_u60}");
     let mut quotient_u60 = mulout_u60.shr((k + k));
-
+    println(f"shifted mulout_u60 {quotient_u60}");
+    let foo = quotient_u60.shl(k + k);
+    println(f"reshifted {foo}");
     // N.B. we assume that the shifted quotient cannot exceed 2 times original bit size.
     //      (partial_quotient should be just slightly larger than the modulus, we could probably represent with a size N+1 array)
     let partial_quotient_full: [Field; 3 * N] = quotient_u60.into_field_array();
+    println(f"partial quotient full {partial_quotient_full}");
     let mut partial_quotient: [Field; 2 * N] = [0; 2 * N];
     for i in 0..2 * N {
         partial_quotient[i] = partial_quotient_full[i];
@@ -2037,7 +2157,7 @@ unconstrained fn __barrett_reduction<let N: u32>(
             quotient_mul_modulus[i + j] += partial_quotient[i] * modulus[j];
         }
     }
-
+    println(f"quotient mul modulus {quotient_mul_modulus}");
     for i in 0..(N + N) {
         let (lo, hi) = split_bits::split_120_bits(quotient_mul_modulus[i]);
         quotient_mul_modulus_normalized[i] = lo;
@@ -2047,15 +2167,24 @@ unconstrained fn __barrett_reduction<let N: u32>(
             quotient_mul_modulus[i + 1] += hi;
         }
     }
+    println(f"quotient mul modulus normalized {quotient_mul_modulus_normalized}");
     let quotient_mul_modulus_u60: U60Repr<N, 4> = U60Repr::new(quotient_mul_modulus_normalized);
 
     let x_u60 : U60Repr<N, 4> = U60Repr::new(x);
     let mut remainder_u60 = x_u60 - quotient_mul_modulus_u60;
+    let F: [Field; N] = U60Repr::into(remainder_u60);
 
+    println(f"remainder u60 {F}");
     if (remainder_u60.gte(modulus_u60)) {
         remainder_u60 = remainder_u60 - modulus_u60;
         quotient_u60.increment();
     } else {}
+    // if (remainder_u60.gte(modulus_u60)) {
+    //     remainder_u60 = remainder_u60 - modulus_u60;
+    //     quotient_u60.increment();
+    // } else {}
+    let F: [Field; N] = U60Repr::into(remainder_u60);
+    println(f"remainder after redc u60 {F}");
 
     let q: [Field; N] = U60Repr::into(quotient_u60);
     let r: [Field; N] = U60Repr::into(remainder_u60);
