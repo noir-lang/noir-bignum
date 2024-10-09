@@ -123,7 +123,7 @@ fn test_quadratic_expression() {
 }
 
 #[test]
-fn assert_is_not_equa() {
+fn assert_is_not_equal() {
     let bn = $typ ::get_instance();
     let a: BigNum<$N, $typ> = unsafe{ bn.__derive_from_seed([1, 2, 3, 4]) };
     let b: BigNum<$N, $typ> = unsafe{ bn.__derive_from_seed([4, 5, 6, 7]) };
