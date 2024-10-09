@@ -1,15 +1,12 @@
+
 use crate::BigNumParamsTrait;
 use crate::runtime_bignum::BigNumInstance;
 use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
-
-pub struct  U1024Params {}
+pub struct U1024Params {}
 impl RuntimeBigNumParamsTrait<9> for U1024Params {
     fn modulus_bits() -> u32 {
         1025
-    }
-    fn has_multiplicative_inverse() -> bool {
-        false
     }
 }
 impl BigNumParamsTrait<9> for U1024Params {
@@ -19,11 +16,8 @@ impl BigNumParamsTrait<9> for U1024Params {
     fn modulus_bits() -> u32 {
         1025
     }
-    fn has_multiplicative_inverse() -> bool {
-        false
-    }
 }
-global U1024_Instance: BigNumInstance<9, U1024Params> = BigNumInstance {
+pub global U1024_Instance: BigNumInstance<9, U1024Params> = BigNumInstance {
         modulus: [
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x010000000000000000
         ],
@@ -35,7 +29,6 @@ global U1024_Instance: BigNumInstance<9, U1024Params> = BigNumInstance {
         modulus_u60_x4: U60Repr { limbs: [
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
         redc_param: [
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x040000000000000000
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x400000000000000000
         ]
 };
-

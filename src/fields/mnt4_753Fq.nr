@@ -1,6 +1,6 @@
 //! Blurb sourced from https://github.com/arkworks-rs
 //! This library implements the base field of the MNT4_753 curve generated in
-//! [\[BCTV14\]](https://eprint.iacr.org/2014/595). The name denotes that it is a
+//! [[BCTV14]](https://eprint.iacr.org/2014/595). The name denotes that it is a
 //! Miyaji--Nakabayashi--Takano curve of embedding degree 4, defined over a
 //! 753-bit (prime) field. The main feature of this curve is that its scalar
 //! field and base field respectively equal the base field and scalar field of
@@ -23,8 +23,7 @@ use crate::BigNumParamsTrait;
 use crate::runtime_bignum::BigNumInstance;
 use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
-
-pub struct  MNT4_753_Fq_Params {}
+pub struct MNT4_753_Fq_Params {}
 impl RuntimeBigNumParamsTrait<7> for MNT4_753_Fq_Params {
     fn modulus_bits() -> u32 {
         753
@@ -38,7 +37,7 @@ impl BigNumParamsTrait<7> for MNT4_753_Fq_Params {
         753
     }
 }
-global MNT4_753_Fq_Instance: BigNumInstance<7, MNT4_753_Fq_Params> = BigNumInstance {
+pub global MNT4_753_Fq_Instance: BigNumInstance<7, MNT4_753_Fq_Params> = BigNumInstance {
         modulus: [
             0x9d54522cdd119f5e9063de245e8001, 0xcce9767254a4638810719ac425f0e3, 0x76f218059db80f0da5cb537e38685a, 0xe8a0ed8d99d124d9a15af79db117e7, 0x8fafed5eb7e8f96c97d87307fdb925, 0xc41110229022eee2cdadb7f997505b, 0x01c4c62d92
         ],
@@ -50,7 +49,6 @@ global MNT4_753_Fq_Instance: BigNumInstance<7, MNT4_753_Fq_Params> = BigNumInsta
         modulus_u60_x4: U60Repr { limbs: [
             0x0e9063de245e8001, 0x09d54522cdd119f5, 0x0810719ac425f0e3, 0x0cce9767254a4638, 0x0da5cb537e38685a, 0x076f218059db80f0, 0x09a15af79db117e7, 0x0e8a0ed8d99d124d, 0x0c97d87307fdb925, 0x08fafed5eb7e8f96, 0x02cdadb7f997505b, 0x0c41110229022eee, 0x01c4c62d92, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
         redc_param: [
-            0x45dcc95da918349f4965a2aee8fd75, 0x282372b75580c27c4d1f1f57a96a11, 0xd58326e3c0552419849e3c7171d852, 0xa300e0ede1965cbf72f0aa9bf03479, 0x67fb932cae2aba9a5d17c1ff73538b, 0xa82727c6eaef38056aaa0aaedb0574, 0x0242f916cf
+            0x5dcc95da918349f4965a2aee8fd750, 0x82372b75580c27c4d1f1f57a96a114, 0x58326e3c0552419849e3c7171d8522, 0x300e0ede1965cbf72f0aa9bf03479d, 0x7fb932cae2aba9a5d17c1ff73538ba, 0x82727c6eaef38056aaa0aaedb05746, 0x242f916cfa
         ]
 };
-

@@ -1,5 +1,5 @@
 //! Blurb sourced from https://github.com/arkworks-rs
-//! This library implements the base field of the BLS12_377 curve generated in [[BCGMMW20, "Zexe"]](https://eprint.iacr.org/2018/962).
+//! This library implements the base field of the BLS12_377 curve generated in [[BCGMMW20, "Zexe"]]((https://eprint.iacr.org/2018/962).
 //! The name denotes that it is a Barreto--Lynn--Scott curve of embedding degree
 //! 12, defined over a 377-bit (prime) field. The main feature of this curve is
 //! that both the scalar field and the base field are highly 2-adic.
@@ -20,8 +20,7 @@ use crate::BigNumParamsTrait;
 use crate::runtime_bignum::BigNumInstance;
 use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
-
-pub struct  BLS12_377_Fq_Params {}
+pub struct BLS12_377_Fq_Params {}
 impl RuntimeBigNumParamsTrait<4> for BLS12_377_Fq_Params {
     fn modulus_bits() -> u32 {
         377
@@ -35,7 +34,7 @@ impl BigNumParamsTrait<4> for BLS12_377_Fq_Params {
         377
     }
 }
-global BLS12_377_Fq_Instance: BigNumInstance<4, BLS12_377_Fq_Params> = BigNumInstance {
+pub global BLS12_377_Fq_Instance: BigNumInstance<4, BLS12_377_Fq_Params> = BigNumInstance {
         modulus: [
             0x0b5d44300000008508c00000000001, 0xd9f300f5138f1ef3622fba09480017, 0x4617c510eac63b05c06ca1493b1a22, 0x01ae3a
         ],
@@ -47,7 +46,6 @@ global BLS12_377_Fq_Instance: BigNumInstance<4, BLS12_377_Fq_Params> = BigNumIns
         modulus_u60_x4: U60Repr { limbs: [
             0x0508c00000000001, 0xb5d44300000008, 0x03622fba09480017, 0x0d9f300f5138f1ef, 0x05c06ca1493b1a22, 0x04617c510eac63b0, 0x01ae3a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
         redc_param: [
-            0xed687789c42a591f9fd58c5e4daffc, 0xd0de6776b1a06af2d488d85a6d02d0, 0x8d0cc4060e976c3ca0582ef4f73bba, 0x026150
+            0xd687789c42a591f9fd58c5e4daffcc, 0x0de6776b1a06af2d488d85a6d02d0e, 0xd0cc4060e976c3ca0582ef4f73bbad, 0x261508
         ]
 };
-

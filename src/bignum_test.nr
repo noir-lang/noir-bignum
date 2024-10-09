@@ -16,7 +16,6 @@ struct Test2048Params{}
 fn silence_warning() {
     let _  = Test2048Params {};
 }
-
 impl RuntimeBigNumParamsTrait<18> for Test2048Params {
     fn modulus_bits() -> u32 {
         2048
@@ -24,79 +23,39 @@ impl RuntimeBigNumParamsTrait<18> for Test2048Params {
 }
 impl BigNumParamsTrait<18> for Test2048Params {
     fn get_instance() -> BigNumInstance<18, Self> {
-        let modulus: [Field; 18] = [
-            0x0000000000000000000000000000000000c0a197a5ae0fcdceb052c9732614fe,
-            0x0000000000000000000000000000000000656ae034423283422243918ab83be3,
-            0x00000000000000000000000000000000006bf590da48a7c1070b7d5aabaac678,
-            0x00000000000000000000000000000000000cce39f530238b606f24b296e2bda9,
-            0x000000000000000000000000000000000001e1fef9bb9c1c3ead98f226f1bfa0,
-            0x0000000000000000000000000000000000ad8c1c816e12e0ed1379055e373abf,
-            0x0000000000000000000000000000000000cebe80e474f753aa9d1461c435123d,
-            0x0000000000000000000000000000000000aee5a18ceedef88d115a8b93c167ad,
-            0x0000000000000000000000000000000000268ba83c4a65c4307427fc495d9e44,
-            0x0000000000000000000000000000000000dd2777926848667b7df79f342639d4,
-            0x0000000000000000000000000000000000f455074c96855ca0068668efe7da3d,
-            0x00000000000000000000000000000000005ddba6b30bbc168bfb3a1225f27d65,
-            0x0000000000000000000000000000000000591fec484f36707524133bcd6f4258,
-            0x000000000000000000000000000000000059641b756766aeebe66781dd01d062,
-            0x000000000000000000000000000000000058bc5eaff4b165e142bf9e2480eebb,
-            0x0000000000000000000000000000000000667a3964f08e06df772ce64b229a72,
-            0x00000000000000000000000000000000009c1fdb18907711bfe3e3c1cf918395,
-            0x00000000000000000000000000000000000000000000000000000000000000b8
-        ];
-        // fn double_modulus() -> [Field; 18] {[
-        //     0x000000000000000000000000000000000181432f4b5c1f9b9d60a592e64c29fc,
-        //     0x0000000000000000000000000000000001cad5c06884650684448723157077c6,
-        //     0x0000000000000000000000000000000001d7eb21b4914f820e16fab557558cef,
-        //     0x0000000000000000000000000000000001199c73ea604716c0de49652dc57b51,
-        //     0x000000000000000000000000000000000103c3fdf37738387d5b31e44de37f3f,
-        //     0x00000000000000000000000000000000015b183902dc25c1da26f20abc6e757d,
-        //     0x00000000000000000000000000000000019d7d01c8e9eea7553a28c3886a247a,
-        //     0x00000000000000000000000000000000015dcb4319ddbdf11a22b5172782cf5a,
-        //     0x00000000000000000000000000000000014d17507894cb8860e84ff892bb3c88,
-        //     0x0000000000000000000000000000000001ba4eef24d090ccf6fbef3e684c73a7,
-        //     0x0000000000000000000000000000000001e8aa0e992d0ab9400d0cd1dfcfb47a,
-        //     0x0000000000000000000000000000000001bbb74d6617782d17f674244be4faca,
-        //     0x0000000000000000000000000000000001b23fd8909e6ce0ea4826779ade84af,
-        //     0x0000000000000000000000000000000001b2c836eacecd5dd7cccf03ba03a0c3,
-        //     0x0000000000000000000000000000000001b178bd5fe962cbc2857f3c4901dd75,
-        //     0x0000000000000000000000000000000001ccf472c9e11c0dbeee59cc964534e3,
-        //     0x0000000000000000000000000000000001383fb63120ee237fc7c7839f230729,
-        //     0x0000000000000000000000000000000000000000000000000000000000000170
-        // ]}
-        let redc_param: [Field; 18] = [
-            0x000000000000000000000000000000000091697def7100cd5cf8d890b4ef2ec3,
-            0x00000000000000000000000000000000006765ba8304214dac764d3f4adc3185,
-            0x000000000000000000000000000000000048404bd14d927ea230e60d4bebf940,
-            0x00000000000000000000000000000000007c4d53a23bacc251ecbfc4b7ba5a0b,
-            0x000000000000000000000000000000000093eaf3499474a6f5b2fff83f1259c8,
-            0x00000000000000000000000000000000005bff4c737b97281f1a5f2384a8c16d,
-            0x000000000000000000000000000000000061b4cf2f55358476b5323782999055,
-            0x00000000000000000000000000000000001e7a804e8eacfe3a2a5673bc3885b8,
-            0x0000000000000000000000000000000000eabadeae4282906c817adf70eab4ae,
-            0x0000000000000000000000000000000000166f7df257fe2bf27f0809aceed9b0,
-            0x00000000000000000000000000000000007d90fb7428901b8bed11f6b81e36bf,
-            0x0000000000000000000000000000000000f36e6ba885c60b7024c563605df7e0,
-            0x000000000000000000000000000000000052b7c58d2fb5d2c8478963ae6d4a44,
-            0x000000000000000000000000000000000036ee761de26635f114ccc3f7d74f85,
-            0x0000000000000000000000000000000000e3fb726a10cf2220897513f05243de,
-            0x0000000000000000000000000000000000f43a26bbd732496eb4d828591b8056,
-            0x0000000000000000000000000000000000ff4e42304e60fb3a54fca735499f2c,
-            0x0000000000000000000000000000000000000000000000000000000000000162
-        ];
-        BigNumInstance::new(modulus, redc_param)
+        test2048_Instance
     }
     fn modulus_bits() -> u32 {
         2048
     }
 }
-
+global test2048_Instance: BigNumInstance<18, Test2048Params> = BigNumInstance {
+        modulus: [
+            0xc0a197a5ae0fcdceb052c9732614fe, 0x656ae034423283422243918ab83be3, 0x6bf590da48a7c1070b7d5aabaac678, 0x0cce39f530238b606f24b296e2bda9, 0x01e1fef9bb9c1c3ead98f226f1bfa0, 0xad8c1c816e12e0ed1379055e373abf, 0xcebe80e474f753aa9d1461c435123d, 0xaee5a18ceedef88d115a8b93c167ad, 0x268ba83c4a65c4307427fc495d9e44, 0xdd2777926848667b7df79f342639d4, 0xf455074c96855ca0068668efe7da3d, 0x5ddba6b30bbc168bfb3a1225f27d65, 0x591fec484f36707524133bcd6f4258, 0x59641b756766aeebe66781dd01d062, 0x58bc5eaff4b165e142bf9e2480eebb, 0x667a3964f08e06df772ce64b229a72, 0x9c1fdb18907711bfe3e3c1cf918395, 0xb8
+        ],
+        double_modulus: [
+            0x0181432f4b5c1f9b9d60a592e64c29fc, 0x01cad5c06884650684448723157077c6, 0x01d7eb21b4914f820e16fab557558cef, 0x01199c73ea604716c0de49652dc57b51, 0x0103c3fdf37738387d5b31e44de37f3f, 0x015b183902dc25c1da26f20abc6e757d, 0x019d7d01c8e9eea7553a28c3886a247a, 0x015dcb4319ddbdf11a22b5172782cf5a, 0x014d17507894cb8860e84ff892bb3c88, 0x01ba4eef24d090ccf6fbef3e684c73a7, 0x01e8aa0e992d0ab9400d0cd1dfcfb47a, 0x01bbb74d6617782d17f674244be4faca, 0x01b23fd8909e6ce0ea4826779ade84af, 0x01b2c836eacecd5dd7cccf03ba03a0c3, 0x01b178bd5fe962cbc2857f3c4901dd75, 0x01ccf472c9e11c0dbeee59cc964534e3, 0x01383fb63120ee237fc7c7839f230729, 0x0170
+        ],
+        modulus_u60: U60Repr { limbs: [
+            0x0eb052c9732614fe, 0x0c0a197a5ae0fcdc, 0x022243918ab83be3, 0x0656ae0344232834, 0x070b7d5aabaac678, 0x06bf590da48a7c10, 0x6f24b296e2bda9, 0xcce39f530238b6, 0x0ead98f226f1bfa0, 0x1e1fef9bb9c1c3, 0x0d1379055e373abf, 0x0ad8c1c816e12e0e, 0x0a9d1461c435123d, 0x0cebe80e474f753a, 0x0d115a8b93c167ad, 0x0aee5a18ceedef88, 0x7427fc495d9e44, 0x0268ba83c4a65c43, 0x0b7df79f342639d4, 0x0dd2777926848667, 0x068668efe7da3d, 0x0f455074c96855ca, 0x0bfb3a1225f27d65, 0x05ddba6b30bbc168, 0x0524133bcd6f4258, 0x0591fec484f36707, 0x0be66781dd01d062, 0x059641b756766aee, 0x0142bf9e2480eebb, 0x058bc5eaff4b165e, 0x0f772ce64b229a72, 0x0667a3964f08e06d, 0x0fe3e3c1cf918395, 0x09c1fdb18907711b, 0xb8, 0x00]},
+        modulus_u60_x4: U60Repr { limbs: [
+            0x0eb052c9732614fe, 0x0c0a197a5ae0fcdc, 0x022243918ab83be3, 0x0656ae0344232834, 0x070b7d5aabaac678, 0x06bf590da48a7c10, 0x6f24b296e2bda9, 0xcce39f530238b6, 0x0ead98f226f1bfa0, 0x1e1fef9bb9c1c3, 0x0d1379055e373abf, 0x0ad8c1c816e12e0e, 0x0a9d1461c435123d, 0x0cebe80e474f753a, 0x0d115a8b93c167ad, 0x0aee5a18ceedef88, 0x7427fc495d9e44, 0x0268ba83c4a65c43, 0x0b7df79f342639d4, 0x0dd2777926848667, 0x068668efe7da3d, 0x0f455074c96855ca, 0x0bfb3a1225f27d65, 0x05ddba6b30bbc168, 0x0524133bcd6f4258, 0x0591fec484f36707, 0x0be66781dd01d062, 0x059641b756766aee, 0x0142bf9e2480eebb, 0x058bc5eaff4b165e, 0x0f772ce64b229a72, 0x0667a3964f08e06d, 0x0fe3e3c1cf918395, 0x09c1fdb18907711b, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
+        redc_param: [
+            0x1697def7100cd5cf8d890b4ef2ec3f, 0x765ba8304214dac764d3f4adc31859, 0x8404bd14d927ea230e60d4bebf9406, 0xc4d53a23bacc251ecbfc4b7ba5a0b4, 0x3eaf3499474a6f5b2fff83f1259c87, 0xbff4c737b97281f1a5f2384a8c16d9, 0x1b4cf2f55358476b53237829990555, 0xe7a804e8eacfe3a2a5673bc3885b86, 0xabadeae4282906c817adf70eab4ae1, 0x66f7df257fe2bf27f0809aceed9b0e, 0xd90fb7428901b8bed11f6b81e36bf1, 0x36e6ba885c60b7024c563605df7e07, 0x2b7c58d2fb5d2c8478963ae6d4a44f, 0x6ee761de26635f114ccc3f7d74f855, 0x3fb726a10cf2220897513f05243de3, 0x43a26bbd732496eb4d828591b8056e, 0xf4e42304e60fb3a54fca735499f2cf, 0x162f
+        ]
+};
 type Fq = BigNum<3, BNParams>;
 
 fn test_eq<BigNum, let N: u32>(_: BigNum, __: [Field; N]) where BigNum: BigNumTrait {
-    let a = BigNum::__derive_from_seed([1, 2, 3, 4]);
-    let b = BigNum::__derive_from_seed([1, 2, 3, 4]);
-    let c = BigNum::__derive_from_seed([2, 2, 3, 4]);
+    let a = unsafe {
+        BigNum::__derive_from_seed([1, 2, 3, 4])
+    };
+    let b = unsafe {
+        BigNum::__derive_from_seed([1, 2, 3, 4])
+    };
+    let c = unsafe {
+        BigNum::__derive_from_seed([2, 2, 3, 4])
+    };
 
     let modulus = BigNum::modulus();
     let t0: U60Repr<N, 2> = (U60Repr::from(modulus.get().as_array()));
@@ -128,8 +87,12 @@ fn test_eq<BigNum, let N: u32>(_: BigNum, __: [Field; N]) where BigNum: BigNumTr
 // // // 99689
 // // // 929 gates for a 2048 bit mul
 fn test_mul<BigNum>(_: BigNum) where BigNum: BigNumTrait + std::ops::Mul + std::ops::Add {
-    let a: BigNum = BigNum::__derive_from_seed([1, 2, 3, 4]);
-    let b: BigNum = BigNum::__derive_from_seed([4, 5, 6, 7]);
+    let a: BigNum = unsafe {
+        BigNum::__derive_from_seed([1, 2, 3, 4])
+    };
+    let b: BigNum = unsafe {
+        BigNum::__derive_from_seed([4, 5, 6, 7])
+    };
 
     let c = (a + b) * (a + b);
     let d = (a * a) + (b * b) + (a * b) + (a * b);
@@ -137,8 +100,12 @@ fn test_mul<BigNum>(_: BigNum) where BigNum: BigNumTrait + std::ops::Mul + std::
 }
 
 fn test_add<BigNum>(_: BigNum) where BigNum: BigNumTrait + std::ops::Add + std::ops::Mul + std::cmp::Eq {
-    let a = BigNum::__derive_from_seed([1, 2, 3, 4]);
-    let b: BigNum = BigNum::__derive_from_seed([4, 5, 6, 7]);
+    let a = unsafe {
+        BigNum::__derive_from_seed([1, 2, 3, 4])
+    };
+    let b: BigNum = unsafe {
+        BigNum::__derive_from_seed([4, 5, 6, 7])
+    };
     let one = BigNum::one();
     a.validate_in_range();
     a.validate_in_field();
@@ -162,40 +129,62 @@ fn test_add<BigNum>(_: BigNum) where BigNum: BigNumTrait + std::ops::Add + std::
 }
 
 fn test_div<BigNum>(_: BigNum) where BigNum: BigNumTrait + std::ops::Div + std::ops::Mul + std::ops::Add + std::cmp::Eq {
-    let a = BigNum::__derive_from_seed([1, 2, 3, 4]);
-    let b = BigNum::__derive_from_seed([4, 5, 6, 7]);
+    let a = unsafe {
+        BigNum::__derive_from_seed([1, 2, 3, 4])
+    };
+    let b = unsafe {
+        BigNum::__derive_from_seed([4, 5, 6, 7])
+    };
 
     let c = a / b;
     assert((b * c) == (a));
 }
 
 fn test_invmod<BigNum>(_: BigNum) where BigNum: BigNumTrait + std::cmp::Eq {
-    let u = BigNum::__derive_from_seed([1, 2, 3, 4]);
+    let u = unsafe {
+        BigNum::__derive_from_seed([1, 2, 3, 4])
+    };
     for _ in 0..1 {
-        let v = u.__invmod();
-        let result = u.__mul(v);
+        let v = unsafe {
+            u.__invmod()
+        };
+        let result = unsafe {
+            u.__mul(v)
+        };
         let expected = BigNum::one();
         assert(result == expected);
     }
 }
 
 fn assert_is_not_equal<BigNum>(_: BigNum) where BigNum: BigNumTrait {
-    let a = BigNum::__derive_from_seed([1, 2, 3, 4]);
-    let b = BigNum::__derive_from_seed([4, 5, 6, 7]);
+    let a = unsafe {
+        BigNum::__derive_from_seed([1, 2, 3, 4])
+    };
+    let b = unsafe {
+        BigNum::__derive_from_seed([4, 5, 6, 7])
+    };
 
     a.assert_is_not_equal(b);
 }
 
 fn assert_is_not_equal_fail<BigNum>(_: BigNum) where BigNum: BigNumTrait {
-    let a = BigNum::__derive_from_seed([1, 2, 3, 4]);
-    let b = BigNum::__derive_from_seed([1, 2, 3, 4]);
+    let a = unsafe {
+        BigNum::__derive_from_seed([1, 2, 3, 4])
+    };
+    let b = unsafe {
+        BigNum::__derive_from_seed([1, 2, 3, 4])
+    };
 
     a.assert_is_not_equal(b);
 }
 
 fn assert_is_not_equal_overloaded_lhs_fail<BigNum, let N: u32>(_: BigNum, __: [Field; N]) where BigNum: BigNumTrait {
-    let a = BigNum::__derive_from_seed([1, 2, 3, 4]);
-    let b = BigNum::__derive_from_seed([1, 2, 3, 4]);
+    let a = unsafe {
+        BigNum::__derive_from_seed([1, 2, 3, 4])
+    };
+    let b = unsafe {
+        BigNum::__derive_from_seed([1, 2, 3, 4])
+    };
 
     let modulus = BigNum::modulus();
 
@@ -206,8 +195,12 @@ fn assert_is_not_equal_overloaded_lhs_fail<BigNum, let N: u32>(_: BigNum, __: [F
 }
 
 fn assert_is_not_equal_overloaded_rhs_fail<BigNum, let N: u32>(_: BigNum, __: [Field; N]) where BigNum: BigNumTrait {
-    let a = BigNum::__derive_from_seed([1, 2, 3, 4]);
-    let b = BigNum::__derive_from_seed([1, 2, 3, 4]);
+    let a = unsafe {
+        BigNum::__derive_from_seed([1, 2, 3, 4])
+    };
+    let b = unsafe {
+        BigNum::__derive_from_seed([1, 2, 3, 4])
+    };
 
     let modulus = BigNum::modulus();
 
@@ -218,8 +211,12 @@ fn assert_is_not_equal_overloaded_rhs_fail<BigNum, let N: u32>(_: BigNum, __: [F
 }
 
 fn assert_is_not_equal_overloaded_fail<BigNum, let N: u32>(_: BigNum, __: [Field; N]) where BigNum: BigNumTrait {
-    let a = BigNum::__derive_from_seed([1, 2, 3, 4]);
-    let b = BigNum::__derive_from_seed([1, 2, 3, 4]);
+    let a = unsafe {
+        BigNum::__derive_from_seed([1, 2, 3, 4])
+    };
+    let b = unsafe {
+        BigNum::__derive_from_seed([1, 2, 3, 4])
+    };
 
     let modulus = BigNum::modulus();
 
@@ -466,13 +463,17 @@ fn test_assert_is_not_equal_overloaded_fail_U256() {
 type U256 = BigNum<3, U256Params>;
 #[test]
 fn test_udiv_mod_U256() {
-    let a: U256 = BigNum::__derive_from_seed([1, 2, 3, 4]);
+    let a: U256 = unsafe {
+        BigNum::__derive_from_seed([1, 2, 3, 4])
+    };
     let b: U256 = BigNum::from_array([12, 0, 0]);
 
     let (q, r) = a.udiv_mod(b);
 
     // let qb = q.__mul(b);
-    let product = q.__mul(b).__add(r);
+    let product = unsafe {
+        q.__mul(b).__add(r)
+    };
     assert(product.eq(a));
 }
 
@@ -555,7 +556,9 @@ fn test_2048_bit_quadratic_expression() {
 
     let a_bn: BigNum<18, Test2048Params> = BigNum { limbs: a };
     let b_bn: BigNum<18, Test2048Params> = BigNum { limbs: b };
-    let c_bn = a_bn.__mul(b_bn);
+    let c_bn = unsafe {
+        a_bn.__mul(b_bn)
+    };
     assert(c_bn.limbs == c_expected);
 
     a_bn.validate_in_range();
@@ -584,7 +587,9 @@ fn test_expressions() {
             0x0
         ]
     };
-    let yy = y.__add(y);
+    let yy = unsafe {
+        y.__add(y)
+    };
 
     assert(yy.limbs == z.limbs);
 
@@ -616,10 +621,18 @@ fn test_expressions() {
             0x0000000000000000000000000000000000000000000000000000000000000f93
         ]
     };
-    let wx = w.__mul(x);
-    let uv = uu.__mul(vv);
-    let y = (uv.__add(wx)).__neg();
-    let z = uv.__add(wx);
+    let wx = unsafe {
+        w.__mul(x)
+    };
+    let uv = unsafe {
+        uu.__mul(vv)
+    };
+    let y = unsafe {
+        (uv.__add(wx)).__neg()
+    };
+    let z = unsafe {
+        uv.__add(wx)
+    };
 
     BigNum::evaluate_quadratic_expression(
         [[uu], [w]],

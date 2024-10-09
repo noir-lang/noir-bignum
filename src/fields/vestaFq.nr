@@ -18,8 +18,7 @@ use crate::BigNumParamsTrait;
 use crate::runtime_bignum::BigNumInstance;
 use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
-
-pub struct  Vesta_Fq_Params {}
+pub struct Vesta_Fq_Params {}
 impl RuntimeBigNumParamsTrait<3> for Vesta_Fq_Params {
     fn modulus_bits() -> u32 {
         255
@@ -33,7 +32,7 @@ impl BigNumParamsTrait<3> for Vesta_Fq_Params {
         255
     }
 }
-global Vesta_Fq_Instance: BigNumInstance<3, Vesta_Fq_Params> = BigNumInstance {
+pub global Vesta_Fq_Instance: BigNumInstance<3, Vesta_Fq_Params> = BigNumInstance {
         modulus: [
             0x4698fc0994a8dd8c46eb2100000001, 0x22, 0x4000
         ],
@@ -45,7 +44,6 @@ global Vesta_Fq_Instance: BigNumInstance<3, Vesta_Fq_Params> = BigNumInstance {
         modulus_u60_x4: U60Repr { limbs: [
             0x0c46eb2100000001, 0x04698fc0994a8dd8, 0x22, 0x00, 0x4000, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
         redc_param: [
-            0xe59c0fd9ad5c89cee4537bfffffffc, 0xffffffffffffffffffffffffffff76, 0xffff
+            0x59c0fd9ad5c89cee4537bfffffffc4, 0xfffffffffffffffffffffffffff76e, 0x0fffff
         ]
 };
-

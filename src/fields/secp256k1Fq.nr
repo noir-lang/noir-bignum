@@ -1,9 +1,9 @@
+
 use crate::BigNumParamsTrait;
 use crate::runtime_bignum::BigNumInstance;
 use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
-
-pub struct  Secp256k1_Fq_Params {}
+pub struct Secp256k1_Fq_Params {}
 impl RuntimeBigNumParamsTrait<3> for Secp256k1_Fq_Params {
     fn modulus_bits() -> u32 {
         256
@@ -17,7 +17,7 @@ impl BigNumParamsTrait<3> for Secp256k1_Fq_Params {
         256
     }
 }
-global Secp256k1_Fq_Instance: BigNumInstance<3, Secp256k1_Fq_Params> = BigNumInstance {
+pub global Secp256k1_Fq_Instance: BigNumInstance<3, Secp256k1_Fq_Params> = BigNumInstance {
         modulus: [
             0xfffffffffffffffffffffefffffc2f, 0xffffffffffffffffffffffffffffff, 0xffff
         ],
@@ -29,7 +29,6 @@ global Secp256k1_Fq_Instance: BigNumInstance<3, Secp256k1_Fq_Params> = BigNumIns
         modulus_u60_x4: U60Repr { limbs: [
             0x0ffffffefffffc2f, 0x0fffffffffffffff, 0x0fffffffffffffff, 0x0fffffffffffffff, 0xffff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
         redc_param: [
-            0x01000003d1, 0x00, 0x010000
+            0x1000003d10, 0x00, 0x100000
         ]
 };
-
