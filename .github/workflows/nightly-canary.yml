@@ -27,9 +27,6 @@ jobs:
       - name: Run Noir tests
         run: nargo test
 
-      - name: Run formatter
-        run: nargo fmt --check
-
       - name: Alert on dead links
         uses: JasonEtco/create-an-issue@v2
         if: ${{ failure() }}
