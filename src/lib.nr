@@ -42,19 +42,19 @@ trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::M
     fn modulus_bits(self) -> u32;
     fn num_limbs(self) -> u32;
     fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
-    fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
-    fn __pow(self, exponent: Self) -> Self;
-    fn __neg(self) -> Self;
-    fn __add(self, other: Self) -> Self;
-    fn __sub(self, other: Self) -> Self;
-    fn __mul(self, other: Self) -> Self;
-    fn __div(self, other: Self) -> Self;
-    fn __udiv_mod(self, divisor: Self) -> (Self, Self);
-    fn __invmod(self) -> Self;
-    fn __batch_invert<let M: u32>(to_invert: [Self; M]) -> [Self; M];
-    fn __is_zero(self) -> bool { RuntimeBigNumTrait::__is_zero(self) }
-    fn __eq(self, other: Self) -> bool { RuntimeBigNumTrait::__eq(self, other) }
-    fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(lhs: [[Self; LHS_N]; NUM_PRODUCTS], lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS], rhs: [[Self; RHS_N]; NUM_PRODUCTS], rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS], add: [Self; ADD_N], add_flags: [bool; ADD_N]) -> (Self, Self);
+    unconstrained fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
+    unconstrained fn __pow(self, exponent: Self) -> Self;
+    unconstrained fn __neg(self) -> Self;
+    unconstrained fn __add(self, other: Self) -> Self;
+    unconstrained fn __sub(self, other: Self) -> Self;
+    unconstrained fn __mul(self, other: Self) -> Self;
+    unconstrained fn __div(self, other: Self) -> Self;
+    unconstrained fn __udiv_mod(self, divisor: Self) -> (Self, Self);
+    unconstrained fn __invmod(self) -> Self;
+    unconstrained fn __batch_invert<let M: u32>(to_invert: [Self; M]) -> [Self; M];
+    unconstrained fn __is_zero(self) -> bool { RuntimeBigNumTrait::__is_zero(self) }
+    unconstrained fn __eq(self, other: Self) -> bool { RuntimeBigNumTrait::__eq(self, other) }
+    unconstrained fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(lhs: [[Self; LHS_N]; NUM_PRODUCTS], lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS], rhs: [[Self; RHS_N]; NUM_PRODUCTS], rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS], add: [Self; ADD_N], add_flags: [bool; ADD_N]) -> (Self, Self);
     fn evaluate_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(lhs: [[Self; LHS_N]; NUM_PRODUCTS], lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS], rhs: [[Self; RHS_N]; NUM_PRODUCTS], rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS], add: [Self; ADD_N], add_flags: [bool; ADD_N]);
     fn validate_in_range(self){ RuntimeBigNumTrait::validate_in_range(self) }
     fn validate_in_field(self);
@@ -115,48 +115,48 @@ impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
     // ### NOTE: these functions call unconstrained internal implementations because trait impl modifiers are not supported 
     // ####################################################################################################################
     // ####################################################################################################################
-    fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self {
+    unconstrained fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self {
         Params::get_instance().__derive_from_seed(seed)
     }
 
     fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self {
         Params::get_instance().derive_from_seed(seed)
     }
-    fn __neg(self) -> Self {
+    unconstrained fn __neg(self) -> Self {
         Params::get_instance().__neg(self)
     }
 
-    fn __add(self, rhs: Self) -> Self {
+    unconstrained fn __add(self, rhs: Self) -> Self {
         Params::get_instance().__add(self, rhs)
     }
 
-    fn __sub(self, rhs: Self) -> Self {
+    unconstrained fn __sub(self, rhs: Self) -> Self {
         Params::get_instance().__sub(self, rhs)
     }
 
-    fn __mul(self, rhs: Self) -> Self {
+    unconstrained fn __mul(self, rhs: Self) -> Self {
         Params::get_instance().__mul(self, rhs)
     }
 
-    fn __div(self, rhs: Self) -> Self {
+    unconstrained fn __div(self, rhs: Self) -> Self {
         Params::get_instance().__div(self, rhs)
     }
 
-    fn __batch_invert<let M: u32>(x: [Self; M]) -> [Self; M] {
+    unconstrained fn __batch_invert<let M: u32>(x: [Self; M]) -> [Self; M] {
         assert(Params::has_multiplicative_inverse());
         Params::get_instance().__batch_invert(x)
     }
 
-    fn __invmod(self) -> Self {
+    unconstrained fn __invmod(self) -> Self {
         assert(Params::has_multiplicative_inverse());
         Params::get_instance().__invmod(self)
     }
 
-    fn __pow(self, exponent: Self) -> Self {
+    unconstrained fn __pow(self, exponent: Self) -> Self {
         Params::get_instance().__pow(self, exponent)
     }
 
-    fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
+    unconstrained fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
         lhs_terms: [[Self; LHS_N]; NUM_PRODUCTS],
         lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
         rhs_terms: [[Self; RHS_N]; NUM_PRODUCTS],
@@ -255,7 +255,7 @@ impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
         Params::get_instance().neg(self)
     }
 
-    fn __udiv_mod(self, divisor: Self) -> (Self, Self) {
+    unconstrained fn __udiv_mod(self, divisor: Self) -> (Self, Self) {
         Params::get_instance().__udiv_mod(self, divisor)
     }
 
