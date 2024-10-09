@@ -246,7 +246,6 @@ fn test_derive<let N: u32, Params>(BNInstance: BigNumInstance<N, Params>) where 
         BNInstance.__derive_from_seed("hello".as_bytes())
     };
     assert(BNInstance.eq(a, b));
-    //  println(f"derived value = {a}");
 }
 
 fn test_eq<let N: u32, Params>(BNInstance: BigNumInstance<N, Params>) where Params: BigNumParamsTrait<N> {
