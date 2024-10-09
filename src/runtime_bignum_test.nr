@@ -90,11 +90,6 @@ fn test_quadratic_expression() {
             [],
             []
         )};
-        // if (CurveParams::a().get_limb(0) != 0) {
-        //     let ZZ = Z1.mul(Z1);
-        //     let AZZZZ = ZZ.mul(ZZ).mul(CurveParams::a());
-        //     XX_mul_3 = XX_mul_3.add(AZZZZ);
-        // }
         let (_, D): (BigNum<$N, $typ>, BigNum<$N, $typ> ) = unsafe{BigNum::__compute_quadratic_expression([[X1, X1]], [[false, false]], [[YY_mul_2]], [[false]], [], [])};
         let mut (_, X3): (BigNum<$N, $typ>, BigNum<$N, $typ> ) = unsafe{BigNum::__compute_quadratic_expression(
             [[XX_mul_3]],
