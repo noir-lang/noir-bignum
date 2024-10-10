@@ -1,11 +1,11 @@
 use crate::utils::u60_representation::U60Repr;
 
-pub(crate) struct BigNumParams<let N: u32> {
+pub(crate) struct BigNumParams<let N: u32, let MOD: u32> {
     has_multiplicative_inverse: bool,
 
     // @brief modulus_bits = log2(modulus) rounded up
     // This needs to be a comptime const, so that it can be used as an argument to std::field::assert_constant()
-    modulus_bits_getter: fn () -> u32,
+    // modulus_bits_getter: fn () -> u32,
 
     // @brief modulus: all BigNum operations are evaluated modulo this value
     modulus: [Field; N],
@@ -22,28 +22,28 @@ pub(crate) struct BigNumParams<let N: u32> {
 }
 
 // To be implemented by the user, or within the prebuilt options in the `fields/` dir.
-pub(crate) trait BigNumParamsGetter<let N: u32> {
-    fn get_params() -> BigNumParams<N>;
+pub(crate) trait BigNumParamsGetter<let N: u32, let MOD: u32> {
+    fn get_params() -> BigNumParams<N, MOD>;
 }
 
-// To be implemented by the user, or within the prebuilt options in the `fields/` dir.
+// // To be implemented by the user, or within the prebuilt options in the `fields/` dir.
 // pub(crate) trait HasGetModulusBits {
-//     fn get_modulus_bits() -> u32; // This needs to be a comptime const, so that it can be used as an argument to std::field::assert_constant()
+//     comptime fn get_modulus_bits() -> u32; // This needs to be a comptime const, so that it can be used as an argument to std::field::assert_constant()
 // }
 
 // impl<let N: u32> HasGetModulusBits<N> for BigNumParams<N> {}
 // impl<let N: u32> RuntimeBigNumParamsTrait<N> for BigNumParams<N> {}
 
-impl<let N: u32> BigNumParams<N> {
+impl<let N: u32, let MOD: u32> BigNumParams<N, MOD> {
     fn new(
         has_multiplicative_inverse: bool,
-        modulus_bits_getter: fn() -> u32,
+        // modulus_bits_getter: fn() -> u32,
         modulus: [Field; N],
         redc_param: [Field; N]
     ) -> Self {
         Self {
             has_multiplicative_inverse,
-            modulus_bits_getter,
+            // modulus_bits_getter,
             modulus,
             modulus_u60: U60Repr::from(modulus),
             modulus_u60_x4: U60Repr::from(modulus),

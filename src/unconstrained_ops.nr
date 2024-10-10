@@ -10,13 +10,12 @@ unconstrained pub(crate) fn __one<let N: u32>() -> [Field; N] {
     limbs
 }
 
-unconstrained pub(crate) fn __derive_from_seed<let N: u32, let SeedBytes: u32>(params: P<N>, seed: [u8; SeedBytes]) -> [Field; N] {
+unconstrained pub(crate) fn __derive_from_seed<let N: u32, let MOD: u32, let SeedBytes: u32>(params: P<N, MOD>, seed: [u8; SeedBytes]) -> [Field; N]  {
     let mut rolling_seed = seed;
 
     let mut to_reduce: [Field; 2 * N] = [0; 2 * N];
 
-    let modulus_bits_getter = params.modulus_bits_getter;
-    let modulus_bits = modulus_bits_getter();
+    let modulus_bits = MOD;
     let mut double_modulus_bits = modulus_bits * 2;
     let mut double_modulus_bytes = (double_modulus_bits) / 8 + (double_modulus_bits % 8 != 0) as u32;
 
@@ -61,8 +60,7 @@ unconstrained pub(crate) fn __derive_from_seed<let N: u32, let SeedBytes: u32>(p
         hi += last_bits as Field;
         to_reduce[2 * N - 2] = hi;
     }
-    let modulus_bits_getter = params.modulus_bits_getter;
-    let modulus_bits = modulus_bits_getter();
+
     let (_, remainder) = __barrett_reduction(
         to_reduce,
         params.redc_param,
@@ -96,14 +94,14 @@ unconstrained pub(crate) fn __is_zero<let N: u32>(limbs: [Field; N]) -> bool {
 *              N.B. constrained BigNum operations do not fully constrain outputs to be in the range [0, p-1]
 *              because such a check is expensive and usually unneccesary.
 */
-unconstrained pub(crate) fn __neg<let N: u32>(params: P<N>, limbs: [Field; N]) -> [Field; N] {
+unconstrained pub(crate) fn __neg<let N: u32, let MOD: u32>(params: P<N, MOD>, limbs: [Field; N]) -> [Field; N] {
     let f: [Field; N] = limbs;
     let x_u60 : U60Repr<N, 2> = U60Repr::from(f);
     U60Repr::into(params.modulus_u60 - x_u60)
 }
 
-unconstrained pub(crate) fn __add<let N: u32>(
-    params: P<N>,
+unconstrained pub(crate) fn __add<let N: u32, let MOD: u32>(
+    params: P<N, MOD>,
     lhs: [Field; N],
     rhs: [Field; N]
 ) -> [Field; N] {
@@ -122,19 +120,22 @@ unconstrained pub(crate) fn __add<let N: u32>(
 * @brief given inputs `x, y` compute 2p + x - y (unconstrained)
 * @description see `__neg` for why we use 2p instead of p
 **/
-unconstrained pub(crate) fn __sub<let N: u32>(params: P<N>, lhs: [Field; N], rhs: [Field; N]) -> [Field; N] {
+unconstrained pub(crate) fn __sub<let N: u32, let MOD: u32>(params: P<N, MOD>, lhs: [Field; N], rhs: [Field; N]) -> [Field; N] {
     __add(params, lhs, __neg(params, rhs))
 }
 
-unconstrained pub(crate) fn __mul_with_quotient<let N: u32>(params: P<N>, lhs: [Field; N], rhs: [Field; N]) -> ([Field; N], [Field; N]) {
+unconstrained pub(crate) fn __mul_with_quotient<let N: u32, let MOD: u32>(
+    params: P<N, MOD>,
+    lhs: [Field; N],
+    rhs: [Field; N]
+) -> ([Field; N], [Field; N])  {
     let mut mul: [Field; 2 * N] = [0; 2 * N];
     for i in 0..N {
         for j in 0..N {
             mul[i + j] += lhs[i] * rhs[j];
         }
     }
-    let modulus_bits_getter = params.modulus_bits_getter;
-    let modulus_bits = modulus_bits_getter();
+    let modulus_bits = MOD;
     let (q, r) = __barrett_reduction(
         split_bits::__normalize_limbs(mul, 2 * N),
         params.redc_param,
@@ -146,22 +147,18 @@ unconstrained pub(crate) fn __mul_with_quotient<let N: u32>(params: P<N>, lhs: [
     (q, r)
 }
 
-unconstrained pub(crate) fn __mul<let N: u32>(
-    params: P<N>,
-    lhs: [Field; N],
-    rhs: [Field; N]
-) -> [Field; N] {
-    let (_, b) = __mul_with_quotient(params, lhs, rhs);
+unconstrained pub(crate) fn __mul<let N: u32, let MOD: u32>(params: P<N, MOD>, lhs: [Field; N], rhs: [Field; N]) -> [Field; N]  {
+    let (_, b) = __mul_with_quotient::<_, MOD>(params, lhs, rhs);
     b
 }
 
-unconstrained pub(crate) fn __div<let N: u32>(
-    params: P<N>,
+unconstrained pub(crate) fn __div<let N: u32, let MOD: u32>(
+    params: P<N, MOD>,
     numerator: [Field; N],
     divisor: [Field; N]
-) -> [Field; N] {
-    let inv_divisor = __invmod(params, divisor);
-    __mul(params, numerator, inv_divisor)
+) -> [Field; N]  {
+    let inv_divisor = __invmod::<_, MOD>(params, divisor);
+    __mul::<_, MOD>(params, numerator, inv_divisor)
 }
 
 /**
@@ -208,37 +205,39 @@ unconstrained pub(crate) fn __udiv_mod<let N: u32>(numerator: [Field; N], diviso
     (U60Repr::into(quotient_u60), U60Repr::into(remainder_u60))
 }
 
-unconstrained pub(crate) fn __invmod<let N: u32>(params: P<N>, val: [Field; N]) -> [Field; N] {
+unconstrained pub(crate) fn __invmod<let N: u32, let MOD: u32>(params: P<N, MOD>, val: [Field; N]) -> [Field; N]  {
     let one: [Field; N] = __one::<N>();
     let one_u60: U60Repr<N, 2> = U60Repr::from(one);
     let exp_u60 = params.modulus_u60.sub(one_u60.add(one_u60));
     let exp = U60Repr::into(exp_u60);
-    __pow(params, val, exp)
+    __pow::<_, MOD>(params, val, exp)
 }
 
-unconstrained pub(crate) fn __pow<let N: u32>(
-    params: P<N>,
+unconstrained pub(crate) fn __pow<let N: u32, let MOD: u32>(
+    params: P<N, MOD>,
     val: [Field; N],
     exponent: [Field; N]
-) -> [Field; N] {
+) -> [Field; N]  {
     let x: U60Repr<N, 2> = U60Repr::from(exponent);
 
-    let modulus_bits_getter = params.modulus_bits_getter;
-    let modulus_bits = modulus_bits_getter();
+    let modulus_bits = MOD;
     let num_bits = modulus_bits + 1;
 
     let mut accumulator: [Field; N] = __one::<N>();
 
     for i in 0..num_bits {
-        accumulator = __mul(params, accumulator, accumulator);
+        accumulator = __mul::<_, MOD>(params, accumulator, accumulator);
         if x.get_bit(num_bits - i - 1) {
-            accumulator = __mul(params, accumulator, val);
+            accumulator = __mul::<_, MOD>(params, accumulator, val);
         }
     }
     accumulator
 }
 
-unconstrained pub(crate) fn __batch_invert<let N: u32, let M: u32>(params: P<N>, x: [[Field; N]; M]) -> [[Field; N]; M] {
+unconstrained pub(crate) fn __batch_invert<let N: u32, let MOD: u32, let M: u32>(
+    params: P<N, MOD>,
+    x: [[Field; N]; M]
+) -> [[Field; N]; M]  {
     // TODO: ugly! Will fail if input slice is empty
     let mut accumulator: [Field; N] = __one::<N>();
     let mut result: [[Field; N]; M] = [[0; N]; M];
@@ -246,24 +245,27 @@ unconstrained pub(crate) fn __batch_invert<let N: u32, let M: u32>(params: P<N>,
     for i in 0..x.len() {
         temporaries = temporaries.push_back(accumulator);
         if (__is_zero(x[i]) == false) {
-            accumulator = __mul(params, accumulator, x[i]);
+            accumulator = __mul::<_, MOD>(params, accumulator, x[i]);
         }
     }
 
-    accumulator = __invmod(params, accumulator);
+    accumulator = __invmod::<_, MOD>(params, accumulator);
     let mut T0: [Field; N] = [0; N];
     for i in 0..x.len() {
         let idx = x.len() - 1 - i;
         if (__is_zero(x[idx]) == false) {
-            T0 = __mul(params, accumulator, temporaries[idx]);
-            accumulator = __mul(params, accumulator, x[idx]);
+            T0 = __mul::<_, MOD>(params, accumulator, temporaries[idx]);
+            accumulator = __mul::<_, MOD>(params, accumulator, x[idx]);
             result[idx] = T0;
         }
     }
     result
 }
 
-unconstrained pub(crate) fn __batch_invert_slice<let N: u32>(params: P<N>, x: [[Field; N]]) -> [[Field; N]] {
+unconstrained pub(crate) fn __batch_invert_slice<let N: u32, let MOD: u32>(
+    params: P<N, MOD>,
+    x: [[Field; N]]
+) -> [[Field; N]]  {
     // TODO: ugly! Will fail if input slice is empty
     let mut accumulator: [Field; N] = __one::<N>();
     let mut result: [[Field; N]] = [[0; N]];
@@ -271,18 +273,18 @@ unconstrained pub(crate) fn __batch_invert_slice<let N: u32>(params: P<N>, x: [[
     for i in 0..x.len() {
         temporaries = temporaries.push_back(accumulator);
         if (__is_zero(x[i]) == false) {
-            accumulator = __mul(params, accumulator, x[i]);
+            accumulator = __mul::<_, MOD>(params, accumulator, x[i]);
         }
         result = result.push_back([0; N]);
     }
 
-    accumulator = __invmod(params, accumulator);
+    accumulator = __invmod::<_, MOD>(params, accumulator);
     let mut T0: [Field; N] = [0; N];
     for i in 0..x.len() {
         let idx = x.len() - 1 - i;
         if (__is_zero(x[idx]) == false) {
-            T0 = __mul(params, accumulator, temporaries[idx]);
-            accumulator = __mul(params, accumulator, x[idx]);
+            T0 = __mul::<_, MOD>(params, accumulator, temporaries[idx]);
+            accumulator = __mul::<_, MOD>(params, accumulator, x[idx]);
             result[idx] = T0;
         }
     }

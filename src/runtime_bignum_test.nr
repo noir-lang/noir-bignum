@@ -5,9 +5,9 @@ use crate::fields::bn254Fq::BN254_Fq_Params;
 
 global BN254_Fq_PARAMS = BN254_Fq_Params::get_params();
 
-fn get_2048_BN_params() -> BigNumParams<18> {
+fn get_2048_BN_params() -> BigNumParams<18, 2048> {
     let has_multiplicative_inverse = false;
-    let modulus_bits_getter = || 2048;
+    // let modulus_bits_getter = || 2048;
     let modulus: [Field; 18] = [
         0x0000000000000000000000000000000000c0a197a5ae0fcdceb052c9732614fe,
         0x0000000000000000000000000000000000656ae034423283422243918ab83be3,
@@ -50,27 +50,27 @@ fn get_2048_BN_params() -> BigNumParams<18> {
     ];
     BigNumParams::new(
         has_multiplicative_inverse,
-        modulus_bits_getter,
+        // modulus_bits_getter,
         modulus,
         redc_param
     )
 }
 
-fn test_eq<let N: u32>(params: BigNumParams<N>) {
-    let a = unsafe {
+fn test_eq<let N: u32, let MOD: u32>(params: BigNumParams<N, MOD>) {
+    let a: RuntimeBigNum<N, MOD> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let b = unsafe {
+    let b: RuntimeBigNum<N, MOD> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let c = unsafe {
+    let c: RuntimeBigNum<N, MOD> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [2, 2, 3, 4])
     };
 
     let modulus = a.modulus();
     let t0: U60Repr<N, 2> = (U60Repr::from(modulus.limbs));
     let t1: U60Repr<N, 2> = (U60Repr::from(b.limbs));
-    let b_plus_modulus = RuntimeBigNum { limbs: U60Repr::into(t0 + t1), params };
+    let b_plus_modulus: RuntimeBigNum<N, MOD> = RuntimeBigNum { limbs: U60Repr::into(t0 + t1), params };
 
     assert((a == b) == true);
     assert((a == b_plus_modulus) == true);
@@ -81,11 +81,11 @@ fn test_eq<let N: u32>(params: BigNumParams<N>) {
 // 98760
 // 99689
 // 929 gates for a 2048 bit mul
-fn test_mul<let N: u32>(params: BigNumParams<N>) {
-    let a = unsafe {
+fn test_mul<let N: u32, let MOD: u32>(params: BigNumParams<N, MOD>) {
+    let a: RuntimeBigNum<N, MOD> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let b = unsafe {
+    let b: RuntimeBigNum<N, MOD> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7])
     };
 
@@ -94,14 +94,14 @@ fn test_mul<let N: u32>(params: BigNumParams<N>) {
     assert(c == d);
 }
 
-fn test_add<let N: u32>(params: BigNumParams<N>) {
-    let a = unsafe {
+fn test_add<let N: u32, let MOD: u32>(params: BigNumParams<N, MOD>) {
+    let a: RuntimeBigNum<N, MOD> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let b = unsafe {
+    let b: RuntimeBigNum<N, MOD> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7])
     };
-    let one = RuntimeBigNum::one(params);
+    let one: RuntimeBigNum<N, MOD> = RuntimeBigNum::one(params);
     a.validate_in_range();
     a.validate_in_field();
     b.validate_in_range();
@@ -119,11 +119,11 @@ fn test_add<let N: u32>(params: BigNumParams<N>) {
     assert(e.limbs[0] == 2);
 }
 
-fn test_div<let N: u32>(params: BigNumParams<N>) {
-    let a = unsafe {
+fn test_div<let N: u32, let MOD: u32>(params: BigNumParams<N, MOD>) {
+    let a: RuntimeBigNum<N, MOD> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let b = unsafe {
+    let b: RuntimeBigNum<N, MOD> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7])
     };
 
@@ -131,8 +131,8 @@ fn test_div<let N: u32>(params: BigNumParams<N>) {
     assert((b * c) == a);
 }
 
-unconstrained fn test_invmod<let N: u32>(params: BigNumParams<N>) {
-    let u = RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4]);
+unconstrained fn test_invmod<let N: u32, let MOD: u32>(params: BigNumParams<N, MOD>) {
+    let u: RuntimeBigNum<N, MOD> = RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4]);
     for _ in 0..1 {
         let v = u.__invmod();
         let result = u.__mul(v);
@@ -141,33 +141,33 @@ unconstrained fn test_invmod<let N: u32>(params: BigNumParams<N>) {
     }
 }
 
-unconstrained fn assert_is_not_equal<let N: u32>(params: BigNumParams<N>) {
-    let a = unsafe {
+unconstrained fn assert_is_not_equal<let N: u32, let MOD: u32>(params: BigNumParams<N, MOD>) {
+    let a: RuntimeBigNum<N, MOD> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let b = unsafe {
+    let b: RuntimeBigNum<N, MOD> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7])
     };
 
     a.assert_is_not_equal(b);
 }
 
-unconstrained fn assert_is_not_equal_fail<let N: u32>(params: BigNumParams<N>) {
-    let a = unsafe {
+unconstrained fn assert_is_not_equal_fail<let N: u32, let MOD: u32>(params: BigNumParams<N, MOD>) {
+    let a: RuntimeBigNum<N, MOD> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let b = unsafe {
+    let b: RuntimeBigNum<N, MOD> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
 
     a.assert_is_not_equal(b);
 }
 
-fn assert_is_not_equal_overloaded_lhs_fail<let N: u32>(params: BigNumParams<N>) {
-    let a = unsafe {
+fn assert_is_not_equal_overloaded_lhs_fail<let N: u32, let MOD: u32>(params: BigNumParams<N, MOD>) {
+    let a: RuntimeBigNum<N, MOD> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let b = unsafe {
+    let b: RuntimeBigNum<N, MOD> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
 
@@ -175,15 +175,15 @@ fn assert_is_not_equal_overloaded_lhs_fail<let N: u32>(params: BigNumParams<N>) 
 
     let t0: U60Repr<N, 2> = U60Repr::from(a.limbs);
     let t1: U60Repr<N, 2> = U60Repr::from(modulus);
-    let a_plus_modulus = RuntimeBigNum { limbs: U60Repr::into(t0 + t1), params };
+    let a_plus_modulus: RuntimeBigNum<N, MOD> = RuntimeBigNum { limbs: U60Repr::into(t0 + t1), params };
     a_plus_modulus.assert_is_not_equal(b);
 }
 
-fn assert_is_not_equal_overloaded_rhs_fail<let N: u32>(params: BigNumParams<N>) {
-    let a = unsafe {
+fn assert_is_not_equal_overloaded_rhs_fail<let N: u32, let MOD: u32>(params: BigNumParams<N, MOD>) {
+    let a: RuntimeBigNum<N, MOD> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let b = unsafe {
+    let b: RuntimeBigNum<N, MOD> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
 
@@ -191,15 +191,15 @@ fn assert_is_not_equal_overloaded_rhs_fail<let N: u32>(params: BigNumParams<N>) 
 
     let t0: U60Repr<N, 2> = U60Repr::from(b.limbs);
     let t1: U60Repr<N, 2> = U60Repr::from(modulus);
-    let b_plus_modulus = RuntimeBigNum { limbs: U60Repr::into(t0 + t1), params };
+    let b_plus_modulus: RuntimeBigNum<N, MOD> = RuntimeBigNum { limbs: U60Repr::into(t0 + t1), params };
     a.assert_is_not_equal(b_plus_modulus);
 }
 
-fn assert_is_not_equal_overloaded_fail<let N: u32>(params: BigNumParams<N>) {
-    let a = unsafe {
+fn assert_is_not_equal_overloaded_fail<let N: u32, let MOD: u32>(params: BigNumParams<N, MOD>) {
+    let a: RuntimeBigNum<N, MOD> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let b = unsafe {
+    let b: RuntimeBigNum<N, MOD> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
 
@@ -208,8 +208,8 @@ fn assert_is_not_equal_overloaded_fail<let N: u32>(params: BigNumParams<N>) {
     let t0: U60Repr<N, 2> = U60Repr::from(a.limbs);
     let t1: U60Repr<N, 2> = U60Repr::from(b.limbs);
     let t2: U60Repr<N, 2> = U60Repr::from(modulus);
-    let a_plus_modulus = RuntimeBigNum { limbs: U60Repr::into(t0 + t2), params };
-    let b_plus_modulus = RuntimeBigNum { limbs: U60Repr::into(t1 + t2), params };
+    let a_plus_modulus: RuntimeBigNum<N, MOD> = RuntimeBigNum { limbs: U60Repr::into(t0 + t2), params };
+    let b_plus_modulus: RuntimeBigNum<N, MOD> = RuntimeBigNum { limbs: U60Repr::into(t1 + t2), params };
     a_plus_modulus.assert_is_not_equal(b_plus_modulus);
 }
 
@@ -218,11 +218,12 @@ fn test_eq_BN() {
     let params = BN254_Fq_PARAMS;
     test_eq(params);
 }
+
 #[test]
 fn test_add_BN() {
     let params = BN254_Fq_PARAMS;
 
-    let mut a = RuntimeBigNum { limbs: params.modulus, params };
+    let mut a: RuntimeBigNum<_, 254> = RuntimeBigNum { limbs: params.modulus, params };
     let mut b = a;
     let mut expected = a;
 
@@ -239,9 +240,9 @@ fn test_sub_test_BN() {
     let params = BN254_Fq_PARAMS;
 
     // 0 - 1 should equal p - 1
-    let mut a = RuntimeBigNum::new(params);
-    let mut b = RuntimeBigNum::one(params);
-    let mut expected = RuntimeBigNum { limbs: params.modulus, params };
+    let mut a: RuntimeBigNum<_, 254> = RuntimeBigNum::new(params);
+    let mut b: RuntimeBigNum<_, 254> = RuntimeBigNum::one(params);
+    let mut expected: RuntimeBigNum<_, 254> = RuntimeBigNum { limbs: params.modulus, params };
     expected.limbs[0] -= 1; // p - 1
 
     let result = a - b;
@@ -255,9 +256,9 @@ fn test_sub_modulus_limit() {
     // if we underflow, maximum result should be ...
     // 0 - 1 = o-1
     // 0 - p = 0
-    let mut a= RuntimeBigNum::new(params);
-    let mut b= RuntimeBigNum { limbs: params.modulus, params };
-    let mut expected= RuntimeBigNum::new(params);
+    let mut a: RuntimeBigNum<_, 254> = RuntimeBigNum::new(params);
+    let mut b: RuntimeBigNum<_, 254> = RuntimeBigNum { limbs: params.modulus, params };
+    let mut expected: RuntimeBigNum<_, 254> = RuntimeBigNum::new(params);
 
     let result = a - b;
     assert(result == expected);
@@ -268,10 +269,10 @@ fn test_sub_modulus_underflow() {
     let params = BN254_Fq_PARAMS;
 
     // 0 - (p + 1) is smaller than p and should produce unsatisfiable constraints
-    let mut a = RuntimeBigNum::new(params);
-    let mut b = RuntimeBigNum { limbs: params.modulus, params };
+    let mut a: RuntimeBigNum<_, 254> = RuntimeBigNum::new(params);
+    let mut b: RuntimeBigNum<_, 254> = RuntimeBigNum { limbs: params.modulus, params };
     b.limbs[0] += 1;
-    let mut expected = RuntimeBigNum::one(params);
+    let mut expected: RuntimeBigNum<_, 254> = RuntimeBigNum::one(params);
 
     let result = a - b;
 
@@ -287,8 +288,8 @@ fn test_add_modulus_limit() {
     // this is the largest value that will satisfy the range check applied when constructing a bignum
     let p : U60Repr<3, 2> = U60Repr::from(params.modulus);
     let two_pow_254_minus_1: U60Repr<3, 2> = U60Repr::from([0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x3fff]);
-    let a = RuntimeBigNum { limbs: U60Repr::into(p), params };
-    let b = RuntimeBigNum { limbs: U60Repr::into(two_pow_254_minus_1), params };
+    let a: RuntimeBigNum<_, 254> = RuntimeBigNum { limbs: U60Repr::into(p), params };
+    let b: RuntimeBigNum<_, 254> = RuntimeBigNum { limbs: U60Repr::into(two_pow_254_minus_1), params };
     let result = a + b;
     assert(result == b);
 }
@@ -302,8 +303,8 @@ fn test_add_modulus_overflow() {
     let p : U60Repr<3, 2> = U60Repr::from(params.modulus);
     let two_pow_254_minus_1: U60Repr<3, 2> = U60Repr::from([0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x3fff]);
     let one = U60Repr::from([1, 0, 0]);
-    let a = RuntimeBigNum { limbs: U60Repr::into(p + one), params };
-    let b = RuntimeBigNum { limbs: U60Repr::into(two_pow_254_minus_1), params };
+    let a: RuntimeBigNum<_, 254> = RuntimeBigNum { limbs: U60Repr::into(p + one), params };
+    let b: RuntimeBigNum<_, 254> = RuntimeBigNum { limbs: U60Repr::into(two_pow_254_minus_1), params };
     let result = a + b;
     assert(result == b);
 }
@@ -488,8 +489,8 @@ fn test_2048_bit_quadratic_expression() {
         0x0000000000000000000000000000000000000000000000000000000000000058
     ];
 
-    let a= RuntimeBigNum { limbs: a, params };
-    let b = RuntimeBigNum { limbs: b, params };
+    let a: RuntimeBigNum<_, 2048> = RuntimeBigNum { limbs: a, params };
+    let b: RuntimeBigNum<_, 2048> = RuntimeBigNum { limbs: b, params };
     let c = a * b;
     assert(c.limbs == c_expected);
 
@@ -507,14 +508,14 @@ fn test_expressions() {
         0x0000000000000000000000000000000000e7f72b2c0756704bea85be38352b34, 0x00000000000000000000000000000000000000000000000000000000b05d5ac5, 0
     ];
 
-    let y= RuntimeBigNum {
+    let y: RuntimeBigNum<_, 254> = RuntimeBigNum {
         limbs: [
             0x1,
             0x1,
             0x0
         ], params
     };
-    let z= RuntimeBigNum {
+    let z: RuntimeBigNum<_, 254> = RuntimeBigNum {
         limbs: [
             0x2,
             0x2,
@@ -527,7 +528,7 @@ fn test_expressions() {
 
     assert(yy.limbs == z.limbs);
 
-    let uu= RuntimeBigNum {
+    let uu: RuntimeBigNum<_, 254> = RuntimeBigNum {
         limbs: [
             0x0000000000000000000000000000000000b4a832748da6ad742a1fd81b787643,
             0x00000000000000000000000000000000009575f594e04080471712c1d7f18e89,
@@ -535,7 +536,7 @@ fn test_expressions() {
         ],
         params
     };
-    let vv= RuntimeBigNum {
+    let vv: RuntimeBigNum<_, 254> = RuntimeBigNum {
         limbs: [
             0x0000000000000000000000000000000000b4aec2748da6ad742a1fd81b787643,
             0x00000000000000000000000000000000009575f594e0408047171a01d7f18e89,
@@ -543,7 +544,7 @@ fn test_expressions() {
         ],
         params
     };
-    let w= RuntimeBigNum {
+    let w: RuntimeBigNum<_, 254> = RuntimeBigNum {
         limbs: [
             0x0000000000000000000000000000000000b4a832748da6ad742a1fd81b787643,
             0x00000000000000000000000000000000009575f594e04080471712c1d7f18e89,
@@ -551,7 +552,7 @@ fn test_expressions() {
         ],
         params
     };
-    let x= RuntimeBigNum {
+    let x: RuntimeBigNum<_, 254> = RuntimeBigNum {
         limbs: [
             0x0000000000000000000000000000000000b4aec2748da6ad742a1fd81b787643,
             0x00000000000000000000000000000000009575f594e0408047171a01d7f18e89,
