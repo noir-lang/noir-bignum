@@ -10,8 +10,7 @@ use crate::fields::bls12_381Fq::BLS12_381_Fq_Params;
 use crate::fields::bls12_381Fr::BLS12_381_Fr_Params;
 use crate::fields::bls12_377Fq::BLS12_377_Fq_Params;
 use crate::fields::bls12_377Fr::BLS12_377_Fr_Params;
-
-//             
+          
 struct Test2048Params {}
 
 // See https://github.com/noir-lang/noir/issues/6172
