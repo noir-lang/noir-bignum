@@ -22,163 +22,6 @@ pub trait BigNumTrait {
     unconstrained fn __eq(self, rhs: Self) -> bool;
 }
 
-// to do quote code injection 
-// we want fn foo<N>(blahblah){}
-// to become fn foo<M>(blahblah){}
-
-comptime fn baz(s: StructDefinition) -> Quoted {
-    let three = quote{ [Field; 3] }.as_type();
-    let four = quote{ [Field; 4] }.as_type();
-    let five = quote{ [Field; 5] }.as_type();
-    let six = quote{ [Field; 6] }.as_type();
-
-    let source = s.fields()[0].1;
-
-    let is_three = source.eq(three);
-    let is_four = source.eq(four);
-    let is_five = source.eq(five);
-    let mut result: Quoted = quote{ [Field; 1] };
-    if (is_three) {
-        result = quote{ [Field; 10] };
-    } else if (is_four) {
-        result = quote{ [Field; 20] };
-    } else if (is_five) {
-        result = quote{ [Field; 30] };
-    }
-    // Quoted {
-    //     struct woo<let N: u32> {
-    //         bar: [Field; N],
-    //         qq: $result
-    //     }
-    // }
-    quote {
-        struct woo<let N: u32> {
-            bar: [Field; N],
-            qq: $result
-        }
-    }
-    //let k= s.fields()[0].1.eq(Type{ [Field; 3]});
-}
-
-#[baz]
-struct foo<let N: u32> { bar: [Field; N] }
-
-// comptime fn hellotest(source: Quoted) -> Quoted {
-//     let three = quote{ [Field; 3] }.as_type();
-//     let four = quote{ [Field; 4] }.as_type();
-//     let five = quote{ [Field; 5] }.as_type();
-//     let six = quote{ [Field; 6] }.as_type();
-
-//     let k = source.as_expr().unwrap();
-//     // k.
-//     // let source = source.as_type();
-//     let is_three = source.eq(three);
-//     let is_four = source.eq(four);
-//     let is_five = source.eq(five);
-
-//     let mut result: Quoted = quote{ let q: [Field; 1] = [0; 1] };
-//     if (is_three) {
-//         result = quote{ let q: [Field; 10] = [0;10] };
-//     } else if (is_four) {
-//         result = quote{ let q: [Field; 20] = [0;20] };
-//     } else if (is_five) {
-//         result = quote{ let q: [Field; 30] = [0;30] };
-//     }
-
-//     quote{ || {$result; q } }
-// }
-
-// comptime fn hellotest() {
-
-// }
-// fn foo<let N: u32>(arr: [Field; N]) -> u32 {
-//     println(f"{arr}");
-//     let q = hellotest!(quote{ arr })();
-//     q.len()
-// }
-
-// comptime fn foo<let N: u32>(arr: [Field; N]) -> Quoted {
-//     #[hellotest]
-//     arr
-
-//    // println(f"{arr}");
-//  //   let q = hellotest(arr);
-//     quote{ 1 }
-// }
-
-// comptime fn derive_teststruct(s: StructDefinition) {
-//     let generics = s.generics();
-//     //     let foo = quote{ (($generics[0] / 32) + ((($generics[0] % 32 != 0)) as u32)) };
-
-//     let k: Type = quote{ $generics[0] }.as_type();
-// }
-// UnresolvedType
-// comptime fn derive_teststruct(s: StructDefinition) -> Quoted {
-//     let generics = s.generics();
-//     let foo = quote{ (($generics[0] / 32) + ((($generics[0] % 32 != 0)) as u32)) };
-//     let y: Expr = foo.as_expr().unwrap();
-//     let k = y.as_integer().unwrap();
-
-//     let bar: Quoted = quote { $k };
-//     let baz = quote {
-//             struct TestStruct<$k> {}
-//         };
-//     baz
-//     //   s.add_generic(bar.);
-//     //  y.resolve(in_function)
-// }
-
-#[derive_teststruct]
-    struct W<let N: u32> {}
-
-trait FieldCount {
-        fn field_count() -> u32;
-    }
-
-#[derive_field_count]
-    struct Bar { x: Field, y: [Field; 2] }
-
-comptime fn derive_field_count(s: StructDefinition) -> Quoted {
-    let typ = s.as_type();
-    let field_count = s.fields().len();
-    quote {
-            impl FieldCount for $typ {
-                fn field_count() -> u32 {
-                    $field_count
-                }
-            }
-        }
-}
-// if N / 32 is zero
-// comptime fn get_limbs<let N: u32>() -> u32 {
-//     (N / 32) + ((N % 32) != 0) as u32
-// }
-
-// fn footest<let N: u32>() {
-//     comptime let K: u32 = get_limbs::<N>();
-//     let mut arr: [Field; K] = [0; K];
-//     // let mut arr: [Field; (N / 32) + (N % 32) / (N % 32)] = [0; (N / 32) + (N % 32) / (N % 32)];
-//     // let length = (N / 32) + ((N % 32) != 0) as u32;
-//     //  assert(arr.len() == length);
-// }
-// #[test]
-// fn test_generics() {
-//     footest::<32>();
-//     footest::<33>();
-//     footest::<34>();
-//     footest::<35>();
-//     footest::<36>();
-//     footest::<37>();
-//     footest::<38>();
-//     footest::<39>();
-//     footest::<40>();
-// }
-/**
- * @brief BARRETT_REDUCTION_OVERFLOW_BITS defines how large an input to barrett reduction can be
- * @details maximum value = modulus^2 <<BARRETT_REDUCTION_OVERFLOW_BITS
- *          see __barrett_reduction for more details
- **/
-comptime global BARRETT_REDUCTION_OVERFLOW_BITS: u32 = 4;
 /**
  * @brief BARRETT_REDUCTION_OVERFLOW_BITS defines how large an input to barrett reduction can be
  * @details maximum value = modulus^2 <<BARRETT_REDUCTION_OVERFLOW_BITS
@@ -448,10 +291,15 @@ impl<let N: u32, Params> BigNum<N, Params> where Params: BigNumParamsTrait<N> {
 
 impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTrait<N> {
 
+    /**
+     * @brief compute the log of the size of the primitive root
+     * @details find the maximum value k where x^k = 1, where x = primitive root
+     *          This is needed for our Tonelli-Shanks sqrt algorithm
+     **/
     unconstrained fn primitive_root_log_size(self) -> u32 {
         let mut target: U60Repr<N, 2> = self.modulus_u60 - U60Repr::one();
         let mut result: u32 = 0;
-        for i in 0..Params::modulus_bits() {
+        for _ in 0..Params::modulus_bits() {
             let lsb_is_one = (target.limbs[0] & 1) == 1;
             if (!lsb_is_one) {
                 result += 1;
@@ -462,7 +310,12 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         }
         result
     }
-    unconstrained fn recursively_find_target(
+
+    /**
+     * @brief inner loop fn for `find_multiplive_generator`
+     * @details recursive function to get around the lack of a `while` keyword
+     **/
+    unconstrained fn recursively_find_multiplicative_generator(
         self,
         target: BigNum<N, Params>,
         p_minus_one_over_two: BigNum<N, Params>
@@ -474,58 +327,23 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
             let _target = unsafe {
                 self.__add(target, BigNum::one())
             };
-            result = self.recursively_find_target(_target, p_minus_one_over_two);
+            result = self.recursively_find_multiplicative_generator(_target, p_minus_one_over_two);
         }
         result
     }
 
+    /**
+     * @brief find multiplicative generator `g` where `g` is the smallest value that is not a quadratic residue
+     *        i.e. smallest g where g^2 = -1
+     * @note WARNING if multiplicative generator does not exist, this function will enter an infinite loop!
+     **/
     unconstrained fn multiplicative_generator(self) -> BigNum<N, Params> {
         let mut target = BigNum::one();
         let p_minus_one_over_two: U60Repr<N, 2> = (self.modulus_u60 - U60Repr::one()).shr(1);
         let p_minus_one_over_two: BigNum<N, Params> = BigNum::from_array(U60Repr::into(p_minus_one_over_two));
 
-        let (found, target) = self.recursively_find_target(target, p_minus_one_over_two);
-        assert(found == true, "wtf");
+        let (_, target) = self.recursively_find_multiplicative_generator(target, p_minus_one_over_two);
         target
-        //     for _ in 0..256 {
-        //     }
-        // // field target(1);
-        // // uint256_t p_minus_one_over_two = (modulus - 1) >> 1;
-        // // bool found = false;
-        // while (!found) {
-        //     target += field(1);
-        //     found = (target.pow(p_minus_one_over_two) == -field(1));
-        // }
-        // return target;
-        // constexpr size_t n = COSET_GENERATOR_SIZE;
-        // constexpr uint64_t subgroup_size = 1 << 30;
-        //   let subgroup_size = 0x40000000; // 1 << 30
-        // std::array<field, COSET_GENERATOR_SIZE> result{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-        // if (n > 0) {
-        //     result[0] = (multiplicative_generator());
-        // }
-        // field work_variable = multiplicative_generator() + field(1);
-        // size_t count = 1;
-        // while (count < n) {
-        //     // work_variable contains a new field element, and we need to test that, for all previous vector elements,
-        //     // result[i] / work_variable is not a member of our subgroup
-        //     field work_inverse = work_variable.invert();
-        //     bool valid = true;
-        //     for (size_t j = 0; j < count; ++j) {
-        //         field subgroup_check = (work_inverse * result[j]).pow(subgroup_size);
-        //         if (subgroup_check == field(1)) {
-        //             valid = false;
-        //             break;
-        //         }
-        //     }
-        //     if (valid) {
-        //         result[count] = (work_variable);
-        //         ++count;
-        //     }
-        //     work_variable += field(1);
-        // }
-        // return result;
-        //    BigNum::new()
     }
 
     unconstrained fn __tonelli_shanks_sqrt_inner_loop_check(self, t2m: BigNum<N, Params>, i: u32) -> u32 {
@@ -542,6 +360,13 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
 impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstance<N, Params> where Params: BigNumParamsTrait<N> {
 
     // TODO clean up, and check result is a square root and set option to none if not
+
+    /**
+     * @brief compute a modular square root using the Tonelli-Shanks algorithm
+     * @details only use for prime fields! Function may infinite loop if used for non-prime fields
+     * @note this is unconstrained fn. To constrain a square root, validate that output^2 = self
+     * TODO: create fn that constrains nonexistence of square root (i.e. find x where x^2 = -self)
+     **/
     unconstrained fn __tonelli_shanks_sqrt(
         self,
         input: BigNum<N, Params>
@@ -575,19 +400,10 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
         // At each iteration, we need to find a new value for b, which we can obtain
         // by repeatedly squaring z^{Q}
 
-        // ok we are missing:::::
-
-        // 1. COSET GENERATORS
-        // 2. PRIMITIVE ROOT LOG SIZE
-        // 3 NUM BITS (EASIER)
-        // hmm unsafe
         let one: U60Repr<N, 2> = unsafe {
             U60Repr::one()
         };
         let primitive_root_log_size = self.primitive_root_log_size();
-        let k: U60Repr<N, 2> = self.modulus_u60;
-        //     constexpr uint256_t Q = (modulus - 1) >> static_cast<uint64_t>(primitive_root_log_size() - 1);
-        //   constexpr uint256_t Q_minus_one_over_two = (Q - 1) >> 2;
 
         let mut Q = (self.modulus_u60 - one).shr(primitive_root_log_size - 1);
         let mut Q_minus_one_over_two = (Q - one).shr(2);
@@ -597,24 +413,12 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
         let mut r = self.__mul(input, b);
         let mut t = self.__mul(r, b);
 
-        // input * b * b
-        // input * (Q - 1) / 2
-        // input * (p - 1) / 2
-
-        // input * (number with 45 zeroes at the end)
-
-        // (p - 1) / 2 = X * 2^s
-        // (input * X * 2^s) * 2^s
         let mut check: BigNum<N, Params> = t;
         for _ in 0..primitive_root_log_size - 1 {
             check = self.__mul(check, check);
         }
-        let mut early_exit = false;
-        if (check.__eq(BigNum::one()) == false) {
-            early_exit = true;
-            //  assert(early_exit == false); // trigger
-            // return nope
-        } else {
+        let mut found_root = false;
+        if (check.__eq(BigNum::one()) == false) {} else {
             let mut t1 = self.__pow(z, Q_minus_one_over_two);
             let mut t2 = self.__mul(t1, z);
             let mut c = self.__mul(t2, t1);
@@ -622,28 +426,25 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
             // tonelli shanks inner 1
             // (if t2m == 1) then skip
             // else increase i and square t2m and go again
-            let num_bits: u32 = Params::modulus_bits(); // TODO fix
-            for i in 0..num_bits {
+            // algorithm runtime should only be max the number of bits in modulus
+            let num_bits: u32 = Params::modulus_bits();
+            for _ in 0..num_bits {
                 if (t.__eq(BigNum::one())) {
+                    found_root = true;
                     break;
                 }
                 let mut t2m = t;
+                // while loop time
                 let i = self.__tonelli_shanks_sqrt_inner_loop_check(t2m, 0);
-                // for _ in 0..32 { // how big should this be?
-                //     if (t2m.__eq(BigNum::one())) {
-                //         break;
-                //     }
-                //     t2m = self.__mul(t2m, t2m);
-                //     i += 1;
-                // }
                 let mut j = m - i - 1;
                 b = c;
-                for _ in 0..200 { // how big
+
+                for _ in 0..j { // how big
                     if (j == 0) {
                         break;
                     }
                     b = self.__mul(b, b);
-                    j -= 1;
+                    //j -= 1;
                 }
                 c = self.__mul(b, b);
                 t = self.__mul(t, c);
@@ -651,87 +452,17 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
                 m = i;
             }
         }
-        let mut result = std::option::Option { _value: r, _is_some: true };
-
-        if (early_exit) {
-            result._is_some = false;
-        }
+        let mut result = std::option::Option { _value: r, _is_some: found_root };
         result
-        // field t1 = z.pow(Q_minus_one_over_two);
-        // field t2 = t1 * z;
-        // field c = t2 * t1; // z^Q
-        // size_t m = primitive_root_log_size();
-        // while (t != one()) {
-        //     size_t i = 0;
-        //     field t2m = t;
-        //     // find the smallest value of m, such that t^{2^m} = 1
-        //     while (t2m != one()) {
-        //         t2m.self_sqr();
-        //         i += 1;
-        //     }
-        //     size_t j = m - i - 1;
-        //     b = c;
-        //     while (j > 0) {
-        //         b.self_sqr();
-        //         --j;
-        //     } // b = z^2^(m-i-1)
-        //     c = b.sqr();
-        //     t = t * c;
-        //     r = r * b;
-        //     m = i;
-        // }
-        // // check if t is a square with euler's criterion
-        // // if not, we don't have a quadratic residue and a has no square root!
-        // field check = t;
-        // for (size_t i = 0; i < primitive_root_log_size() - 1; ++i) {
-        //     check.self_sqr();
-        // }
-        // if (check != one()) {
-        //     return zero();
-        // }
-        // constexpr uint256_t Q = (modulus - 1) >> static_cast<uint64_t>(primitive_root_log_size() - 1);
-        // constexpr uint256_t Q_minus_one_over_two = (Q - 1) >> 2;
-        // // __to_montgomery_form(Q_minus_one_over_two, Q_minus_one_over_two);
-        // field z = coset_generator(0); // the generator is a non-residue
-        // field b = pow(Q_minus_one_over_two);
-        // field r = operator*(b); // r = a^{(Q + 1) / 2}
-        // field t = r * b;        // t = a^{(Q - 1) / 2 + (Q + 1) / 2} = a^{Q}
-        // // check if t is a square with euler's criterion
-        // // if not, we don't have a quadratic residue and a has no square root!
-        // field check = t;
-        // for (size_t i = 0; i < primitive_root_log_size() - 1; ++i) {
-        //     check.self_sqr();
-        // }
-        // if (check != one()) {
-        //     return zero();
-        // }
-        // field t1 = z.pow(Q_minus_one_over_two);
-        // field t2 = t1 * z;
-        // field c = t2 * t1; // z^Q
-        // size_t m = primitive_root_log_size();
-        // while (t != one()) {
-        //     size_t i = 0;
-        //     field t2m = t;
-        //     // find the smallest value of m, such that t^{2^m} = 1
-        //     while (t2m != one()) {
-        //         t2m.self_sqr();
-        //         i += 1;
-        //     }
-        //     size_t j = m - i - 1;
-        //     b = c;
-        //     while (j > 0) {
-        //         b.self_sqr();
-        //         --j;
-        //     } // b = z^2^(m-i-1)
-        //     c = b.sqr();
-        //     t = t * c;
-        //     r = r * b;
-        //     m = i;
-        // }
-        // return r;
-        // std::option::Option::default()
     }
 
+    /**
+     * @brief given an input seed, generate a pseudorandom BigNum value
+     * @details we hash the input seed into `modulus_bits * 2` bits of entropy,
+     * which is then reduced into a BigNum value
+     * We use a hash function that can be modelled as a random oracle
+     * This function *should* produce an output that is a uniformly randomly distributed value modulo BigNum::modulus()
+     **/
     fn derive_from_seed<let SeedBytes: u32>(self, seed: [u8; SeedBytes]) -> BigNum<N, Params> {
         let mut rolling_seed: [u8; SeedBytes + 1] = [0; SeedBytes + 1];
         for i in 0..SeedBytes {
@@ -756,14 +487,9 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
         }
 
         let compressed = std::hash::poseidon2::Poseidon2::hash(rolling_hash_fields, (SeedBytes / 31) + 1);
-        //             std::hash::poseidon2::Poseidon2::hash(rolling_seed, message_size)
         let mut rolling_hash: [Field; 2] = [compressed, 0];
-        // (N % 32) / (N % 32)
-        // ((30 * N) / 32) + 1
-        // let mut test: [u8; (30 * N) / 32 + (((30 * N) % 32) != 0) as u32];
         let num_hashes = (30 * N) / 32 + (((30 * N) % 32) != 0) as u32;
         for i in 0..num_hashes - 1 {
-            //     let hash: [u8; 32] = std::hash::sha256(rolling_seed);
             let hash: Field = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
             let hash: [u8; 32] = hash.to_le_bytes();
             for j in 0..30 {
@@ -783,29 +509,12 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
         let num_bits = Params::modulus_bits() * 2;
         let num_bytes = num_bits / 8 + ((num_bits % 8) != 0) as u32;
 
-        // let mut hash_limbs: [Field; ]
+        let bits_in_last_byte = num_bits as u8 % 8;
+        let last_byte_mask = (1 as u8 << bits_in_last_byte) - 1;
+        hash_buffer[num_bytes - 1] = hash_buffer[num_bytes - 1] & last_byte_mask;
 
-        // we have 2 * N limbs of data
-        // the modulus will be somewhere between 2^(120 * N) and 2^(120 * N - 120)
-
-        // data bigfields will be (N - 1) limbs
-        // k * (N - 1) = 2 * N rounded up
-        // k = 2 * N / (N - 1)
         let num_bigfield_chunks = (2 * N) / (N - 1) + (((2 * N) % (N - 1)) != 0) as u32;
         let mut byte_ptr = 0;
-
-        // we have k slices
-
-        // *= shift
-        // k_max
-        // *= shift
-        // + k_mid
-        // *= shift
-        // + k_lo
-
-        // N = 7 breaks
-        // hash buffer = 7 * 30 = 210 bytes
-        // num_bigfield_chunks is...however many 6 chunks make 14 = 3
 
         // we want to convert our byte array into bigfield chunks
         // each chunk has at most N-1 limbs
@@ -851,8 +560,6 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
 
             result = self.mul(result, bigfield_rhs);
             result = self.add(result, bigfield_lhs);
-            // let remainder = self.mul(bigfield_lhs, bigfield_rhs);
-            // result = self.add(result, remainder);
         }
         result
     }
@@ -1440,7 +1147,6 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         for i in 0..(N - 1) {
             let hash = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
             let hash : [u8; 30] = hash.to_le_bytes();
-            // let hash: [u8; 32] = std::hash::sha256(rolling_seed);
             let mut lo: Field = 0;
             let mut hi: Field = 0;
             for j in 0..15 {
@@ -1455,7 +1161,6 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
             to_reduce[2 * i] = lo;
             to_reduce[2 * i + 1] = hi;
             rolling_hash[1] += 1;
-            //  rolling_seed[SeedBytes] += 1;
         }
 
         {
@@ -1468,9 +1173,9 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
             }
             hi *= 256;
             let last_byte = hash[last_limb_bytes - 1];
-            // let mask = (1 as u64 << (last_limb_bits) as u8) - 1;
-            // let last_bits = last_byte as u64 & mask;
-            hi += last_byte as Field;
+            let mask = (1 as u64 << (last_limb_bits) as u8) - 1;
+            let last_bits = last_byte as u64 & mask;
+            hi += last_bits as Field;
             to_reduce[2 * N - 2] = hi;
         }
         let (_, remainder) = __barrett_reduction(
@@ -1946,8 +1651,6 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
 
         let mut q = BigNum::from_array(quotient);
         let mut r = BigNum::from_array(remainder);
-        let r_sub_p = self.__sub(r, BigNum::from_array(self.modulus));
-        self.validate_in_field(r); // TODO remove expensive
         (q, r)
     }
 
@@ -2163,18 +1866,11 @@ unconstrained fn __barrett_reduction<let N: u32>(
 
     let x_u60 : U60Repr<N, 4> = U60Repr::new(x);
     let mut remainder_u60 = x_u60 - quotient_mul_modulus_u60;
-    let F: [Field; N] = U60Repr::into(remainder_u60);
 
     if (remainder_u60.gte(modulus_u60)) {
         remainder_u60 = remainder_u60 - modulus_u60;
         quotient_u60.increment();
     } else {}
-    // if (remainder_u60.gte(modulus_u60)) {
-    //     remainder_u60 = remainder_u60 - modulus_u60;
-    //     quotient_u60.increment();
-    // } else {}
-    let F: [Field; N] = U60Repr::into(remainder_u60);
-
     let q: [Field; N] = U60Repr::into(quotient_u60);
     let r: [Field; N] = U60Repr::into(remainder_u60);
 
