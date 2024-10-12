@@ -359,8 +359,6 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
 }
 impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstance<N, Params> where Params: BigNumParamsTrait<N> {
 
-    // TODO clean up, and check result is a square root and set option to none if not
-
     /**
      * @brief compute a modular square root using the Tonelli-Shanks algorithm
      * @details only use for prime fields! Function may infinite loop if used for non-prime fields
