@@ -90,11 +90,6 @@ fn test_quadratic_expression() {
             [],
             []
         )};
-        // if (CurveParams::a().get_limb(0) != 0) {
-        //     let ZZ = Z1.mul(Z1);
-        //     let AZZZZ = ZZ.mul(ZZ).mul(CurveParams::a());
-        //     XX_mul_3 = XX_mul_3.add(AZZZZ);
-        // }
         let (_, D): (BigNum<$N, $typ>, BigNum<$N, $typ> ) = unsafe{BigNum::__compute_quadratic_expression([[X1, X1]], [[false, false]], [[YY_mul_2]], [[false]], [], [])};
         let mut (_, X3): (BigNum<$N, $typ>, BigNum<$N, $typ> ) = unsafe{BigNum::__compute_quadratic_expression(
             [[XX_mul_3]],
@@ -123,7 +118,7 @@ fn test_quadratic_expression() {
 }
 
 #[test]
-fn assert_is_not_equa() {
+fn assert_is_not_equal() {
     let bn = $typ ::get_instance();
     let a: BigNum<$N, $typ> = unsafe{ bn.__derive_from_seed([1, 2, 3, 4]) };
     let b: BigNum<$N, $typ> = unsafe{ bn.__derive_from_seed([4, 5, 6, 7]) };
@@ -246,7 +241,6 @@ fn test_derive<let N: u32, Params>(BNInstance: BigNumInstance<N, Params>) where 
         BNInstance.__derive_from_seed("hello".as_bytes())
     };
     assert(BNInstance.eq(a, b));
-    //  println(f"derived value = {a}");
 }
 
 fn test_eq<let N: u32, Params>(BNInstance: BigNumInstance<N, Params>) where Params: BigNumParamsTrait<N> {

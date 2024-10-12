@@ -180,6 +180,12 @@ comptime fn derive_field_count(s: StructDefinition) -> Quoted {
  **/
 comptime global BARRETT_REDUCTION_OVERFLOW_BITS: u32 = 4;
 /**
+ * @brief BARRETT_REDUCTION_OVERFLOW_BITS defines how large an input to barrett reduction can be
+ * @details maximum value = modulus^2 <<BARRETT_REDUCTION_OVERFLOW_BITS
+ *          see __barrett_reduction for more details
+ **/
+comptime global BARRETT_REDUCTION_OVERFLOW_BITS: u32 = 4;
+/**
  * @brief BigNumInstanceTrait defines methods available to a runtime BigNumInstance.
  *        BigNumInstance wraps the modulus parameter (as well as a Barret reduction parameter),
  *        which is required for the majority of BigNum operations

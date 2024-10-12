@@ -213,7 +213,7 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
         }
     }
 
-    unconstrained  fn get_msb(val: Self) -> u32 {
+    unconstrained fn get_msb(val: Self) -> u32 {
         let mut count = 0;
         for i in 0..N * NumSegments {
             let v = val.limbs[((N * NumSegments) - 1 - i)];
