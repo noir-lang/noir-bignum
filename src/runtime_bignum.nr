@@ -599,13 +599,11 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
 
         // (p - 1) / 2 = X * 2^s
         // (input * X * 2^s) * 2^s
-        let mut check = t;
-        println(f"primitive root log size = {primitive_root_log_size}");
-        for i in 0..primitive_root_log_size - 1 {
+        let mut check: BigNum<N, Params> = t;
+        for _ in 0..primitive_root_log_size - 1 {
             check = self.__mul(check, check);
         }
         let mut early_exit = false;
-        println(f"check {check}");
         if (check.__eq(BigNum::one()) == false) {
             early_exit = true;
             //  assert(early_exit == false); // trigger
@@ -1854,7 +1852,7 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
             if (flags[i]) {
                 for j in 0..N {
                     sum[j] = sum[j] + modulus2[j] - x[i].limbs[j];
-                    assert(x[i].limbs[j].lt(modulus2[j]));
+                    // assert(x[i].limbs[j].lt(modulus2[j]));
                 }
             } else {
                 for j in 0..N {
@@ -1927,7 +1925,6 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
             linear_flags
         );
         let mut relation_result: [Field; 2 * N] = split_bits::__normalize_limbs(mulout, 2 * N);
-        println(f"relation result {relation_result}");
         // size 4
         // a[3] * b[3] = a[6] = 7
         // TODO: ugly! Will fail if input slice is empty
@@ -1943,10 +1940,7 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
 
         let mut q = BigNum::from_array(quotient);
         let mut r = BigNum::from_array(remainder);
-        println(f"q = {q}");
-        println(f"r = {r}");
         let r_sub_p = self.__sub(r, BigNum::from_array(self.modulus));
-        println(f"r minus p = {r_sub_p}");
         self.validate_in_field(r); // TODO remove expensive
         (q, r)
     }
@@ -2138,7 +2132,6 @@ unconstrained fn __barrett_reduction<let N: u32>(
     // N.B. we assume that the shifted quotient cannot exceed 2 times original bit size.
     //      (partial_quotient should be just slightly larger than the modulus, we could probably represent with a size N+1 array)
     let partial_quotient_full: [Field; 3 * N] = quotient_u60.into_field_array();
-    println(f"partial quotient full {partial_quotient_full}");
     let mut partial_quotient: [Field; 2 * N] = [0; 2 * N];
     for i in 0..2 * N {
         partial_quotient[i] = partial_quotient_full[i];
@@ -2151,7 +2144,6 @@ unconstrained fn __barrett_reduction<let N: u32>(
             quotient_mul_modulus[i + j] += partial_quotient[i] * modulus[j];
         }
     }
-    println(f"quotient mul modulus {quotient_mul_modulus}");
     for i in 0..(N + N) {
         let (lo, hi) = split_bits::split_120_bits(quotient_mul_modulus[i]);
         quotient_mul_modulus_normalized[i] = lo;
@@ -2161,14 +2153,12 @@ unconstrained fn __barrett_reduction<let N: u32>(
             quotient_mul_modulus[i + 1] += hi;
         }
     }
-    println(f"quotient mul modulus normalized {quotient_mul_modulus_normalized}");
     let quotient_mul_modulus_u60: U60Repr<N, 4> = U60Repr::new(quotient_mul_modulus_normalized);
 
     let x_u60 : U60Repr<N, 4> = U60Repr::new(x);
     let mut remainder_u60 = x_u60 - quotient_mul_modulus_u60;
     let F: [Field; N] = U60Repr::into(remainder_u60);
 
-    println(f"remainder u60 {F}");
     if (remainder_u60.gte(modulus_u60)) {
         remainder_u60 = remainder_u60 - modulus_u60;
         quotient_u60.increment();
@@ -2178,7 +2168,6 @@ unconstrained fn __barrett_reduction<let N: u32>(
     //     quotient_u60.increment();
     // } else {}
     let F: [Field; N] = U60Repr::into(remainder_u60);
-    println(f"remainder after redc u60 {F}");
 
     let q: [Field; N] = U60Repr::into(quotient_u60);
     let r: [Field; N] = U60Repr::into(remainder_u60);

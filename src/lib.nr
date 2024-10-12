@@ -20,7 +20,7 @@ pub struct BigNum<let N: u32, Params> {
 **/
 // 
 // trait BigNumParamsTrait<let N: u32, Params> where Params: RuntimeBigNumParamsTrait<N>, RuntimeBigNumInstance<N, Params>: RuntimeBigNumInstanceTrait<BigNum<N, Params>> {
-trait BigNumParamsTrait<let N: u32> where Self: RuntimeBigNumParamsTrait<N> {
+pub trait BigNumParamsTrait<let N: u32> where Self: RuntimeBigNumParamsTrait<N> {
 
     fn get_instance() -> RuntimeBigNumInstance<N, Self> where Self: RuntimeBigNumParamsTrait<N>;// <N, Params>;
 
@@ -32,7 +32,7 @@ trait BigNumParamsTrait<let N: u32> where Self: RuntimeBigNumParamsTrait<N> {
     fn has_multiplicative_inverse() -> bool { true }
 }
 
-trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::Mul + std::ops::Div + std::ops::Eq + RuntimeBigNumTrait {
+pub trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::Mul + std::ops::Div + std::ops::Eq + RuntimeBigNumTrait {
     // TODO: this crashes the compiler? v0.32
     // fn default() -> Self { std::default::Default::default  () }
     fn from(limbs: [Field]) -> Self { RuntimeBigNumTrait::from(limbs) }
