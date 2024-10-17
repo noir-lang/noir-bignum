@@ -20,7 +20,7 @@ pub struct BigNum<let N: u32, Params> {
 **/
 // 
 // trait BigNumParamsTrait<let N: u32, Params> where Params: RuntimeBigNumParamsTrait<N>, RuntimeBigNumInstance<N, Params>: RuntimeBigNumInstanceTrait<BigNum<N, Params>> {
-trait BigNumParamsTrait<let N: u32> where Self: RuntimeBigNumParamsTrait<N> {
+pub trait BigNumParamsTrait<let N: u32> where Self: RuntimeBigNumParamsTrait<N> {
 
     fn get_instance() -> RuntimeBigNumInstance<N, Self> where Self: RuntimeBigNumParamsTrait<N>;// <N, Params>;
 
@@ -32,7 +32,7 @@ trait BigNumParamsTrait<let N: u32> where Self: RuntimeBigNumParamsTrait<N> {
     fn has_multiplicative_inverse() -> bool { true }
 }
 
-trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::Mul + std::ops::Div + std::ops::Eq + RuntimeBigNumTrait {
+pub trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::Mul + std::ops::Div + std::ops::Eq + RuntimeBigNumTrait {
     // TODO: this crashes the compiler? v0.32
     // fn default() -> Self { std::default::Default::default  () }
     fn from(limbs: [Field]) -> Self { RuntimeBigNumTrait::from(limbs) }
@@ -41,6 +41,7 @@ trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::M
     fn modulus() -> Self;
     fn modulus_bits(self) -> u32;
     fn num_limbs(self) -> u32;
+    fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
     unconstrained fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
     unconstrained fn __pow(self, exponent: Self) -> Self;
     unconstrained fn __neg(self) -> Self;
@@ -72,6 +73,7 @@ trait BigNumTrait where BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::M
     fn set_limb(&mut self, idx: u32, value: Field)  { RuntimeBigNumTrait::set_limb(self, idx, value) }
     fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self { RuntimeBigNumTrait::conditional_select(lhs, rhs, predicate) }
     fn to_le_bytes<let X: u32>(self) -> [u8; X] { RuntimeBigNumTrait::to_le_bytes(self) }
+    unconstrained fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self>;
 }
 
 impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N> {
@@ -117,6 +119,9 @@ impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
         Params::get_instance().__derive_from_seed(seed)
     }
 
+    fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self {
+        Params::get_instance().derive_from_seed(seed)
+    }
     unconstrained fn __neg(self) -> Self {
         Params::get_instance().__neg(self)
     }
@@ -264,6 +269,10 @@ impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
 
     fn umod(self, divisor: Self) -> Self {
         Params::get_instance().umod(self, divisor)
+    }
+
+    unconstrained fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self> {
+        Params::get_instance().__tonelli_shanks_sqrt(self)
     }
 }
 
