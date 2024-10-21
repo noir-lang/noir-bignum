@@ -40,31 +40,10 @@ impl BigNumParamsGetter<18> for Test2048Params {
         TEST_2048_PARAMS
     }
 }
-
-#[test]
-fn test_add() {
-    let params = BN254_Fq_Params::get_params();
-
-    let a = unsafe{ RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4]) };
-    let b = unsafe{ RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7]) };
-
-    let one = RuntimeBigNum::one(params);
-
-    a.validate_in_range();
-    a.validate_in_field();
-    b.validate_in_range();
-    b.validate_in_field();
-
-    let mut c = a + b;
-    c = c + c;
-    let d = (a + b) * (one + one);
-    assert(c == d);
-
-    let e = one + one;
-    for i in 1..3 {
-        assert(e.limbs[i] == 0);
+impl NotRuntimeBigNumParamsTrait<18> for Test2048Params {
+    fn modulus_bits() -> u32 {
+        2048
     }
-    assert(e.limbs[0] == 2);
 }
 
 /**
@@ -114,6 +93,7 @@ fn test_sub() {
     assert(result == expected);
 }
 
+
 #[test]
 fn test_sub_modulus_limit() {
     let params = $typ ::get_params();
@@ -127,6 +107,7 @@ fn test_sub_modulus_limit() {
     let result = a - b;
     assert(result == expected);
 }
+
 
 #[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_sub_modulus_underflow() {

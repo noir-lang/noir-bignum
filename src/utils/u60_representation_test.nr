@@ -4,8 +4,12 @@ use crate::utils::u60_representation::U60Repr;
 unconstrained fn test_conversion() {
     let p = 0xffffffffffffffffffffffffffffff; // 2^120 - 1
     let expected: [Field; 3 * 2] = [p, p - 1, p - 2, p - 3, p - 4, p - 5];
-    let u60repr: U60Repr<3, 4> = U60Repr::new(expected);
-    let result = u60repr.into_field_array();
+    let u60repr: U60Repr<3, 4> = unsafe {
+        U60Repr::new(expected)
+    };
+    let result = unsafe {
+        u60repr.into_field_array()
+    };
     assert(result == expected);
 }
 
@@ -75,22 +79,36 @@ fn test_get_bit() {
 unconstrained fn test_gte() {
     let p = 0xffffffffffffffffffffffffffffff; // 2^120 - 1
     let input: [Field; 6] = [p, p - 1, p - 2, p - 3, p - 4, p - 5];
-    let lhs: U60Repr<3, 6> = U60Repr::new(input);
+    let lhs: U60Repr<3, 6> = unsafe {
+        U60Repr::new(input)
+    };
 
     {
         let rhs = lhs;
-        assert(lhs.gte(rhs));
+        assert(
+            unsafe {
+            lhs.gte(rhs)
+        }
+        );
     }
     {
         // make rhs smaller by 1
         let mut rhs: U60Repr<3, 6> = lhs;
         rhs.limbs[0] -= 1;
-        assert(lhs.gte(rhs));
+        assert(
+            unsafe {
+            lhs.gte(rhs)
+        }
+        );
     }
     {
         // make rhs greater by 1
         let mut rhs = lhs;
         rhs.limbs[0] += 1;
-        assert(!lhs.gte(rhs));
+        assert(
+            !unsafe {
+            lhs.gte(rhs)
+        }
+        );
     }
 }

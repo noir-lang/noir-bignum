@@ -43,4 +43,3 @@ global Vesta_Fq_PARAMS: BigNumParams<3> = BigNumParams {
             0x59c0fd9ad5c89cee4537bfffffffc4, 0xfffffffffffffffffffffffffff76e, 0x0fffff
         ]
 };
-

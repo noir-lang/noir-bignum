@@ -27,4 +27,3 @@ global U768_PARAMS: BigNumParams<7> = BigNumParams {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40000000000000
         ]
 };
-
