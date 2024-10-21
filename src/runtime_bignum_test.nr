@@ -40,11 +40,6 @@ impl BigNumParamsGetter<18> for Test2048Params {
         TEST_2048_PARAMS
     }
 }
-impl NotRuntimeBigNumParamsTrait<18> for Test2048Params {
-    fn modulus_bits() -> u32 {
-        2048
-    }
-}
 
 /**
  * @brief experimenting with macro madness and code generation to make some tests that apply to multiple BigNum parametrisations!
