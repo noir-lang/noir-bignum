@@ -161,11 +161,7 @@ unconstrained pub(crate) fn __add<let N: u32>(
 * @brief given inputs `x, y` compute 2p + x - y (unconstrained)
 * @description see `__neg` for why we use 2p instead of p
 **/
-unconstrained pub(crate) fn __sub<let N: u32>(
-    params: P<N>,
-    lhs: [Field; N],
-    rhs: [Field; N]
-) -> [Field; N] {
+unconstrained pub(crate) fn __sub<let N: u32>(params: P<N>, lhs: [Field; N], rhs: [Field; N]) -> [Field; N] {
     __add(params, lhs, __neg(params, rhs))
 }
 
