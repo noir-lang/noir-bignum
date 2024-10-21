@@ -19,25 +19,21 @@
 //!    * B = Fq2(0, b * NON_RESIDUE)
 //!    * NON_RESIDUE = 13 is the quadratic non-residue used to conpub struct  the
 //!      extension field Fq2
-use crate::BigNumParamsTrait;
-use crate::runtime_bignum::BigNumInstance;
-use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
+use crate::params::BigNumParamsGetter;
+use crate::params::BigNumParams;
 use crate::utils::u60_representation::U60Repr;
+
 pub struct MNT4_753_Fq_Params {}
-impl RuntimeBigNumParamsTrait<7> for MNT4_753_Fq_Params {
-    fn modulus_bits() -> u32 {
-        753
+
+impl BigNumParamsGetter<7> for MNT4_753_Fq_Params {
+    fn get_params() -> BigNumParams<7> {
+        MNT4_753_Fq_PARAMS
     }
 }
-impl BigNumParamsTrait<7> for MNT4_753_Fq_Params {
-    fn get_instance() -> BigNumInstance<7, Self> {
-        MNT4_753_Fq_Instance
-    }
-    fn modulus_bits() -> u32 {
-        753
-    }
-}
-pub global MNT4_753_Fq_Instance: BigNumInstance<7, MNT4_753_Fq_Params> = BigNumInstance {
+
+global MNT4_753_Fq_PARAMS: BigNumParams<7> = BigNumParams {
+        has_multiplicative_inverse: true,
+        modulus_bits_getter: || 753,
         modulus: [
             0x9d54522cdd119f5e9063de245e8001, 0xcce9767254a4638810719ac425f0e3, 0x76f218059db80f0da5cb537e38685a, 0xe8a0ed8d99d124d9a15af79db117e7, 0x8fafed5eb7e8f96c97d87307fdb925, 0xc41110229022eee2cdadb7f997505b, 0x01c4c62d92
         ],

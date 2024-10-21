@@ -1,22 +1,18 @@
-use crate::BigNumParamsTrait;
-use crate::runtime_bignum::BigNumInstance;
-use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
+use crate::params::BigNumParamsGetter;
+use crate::params::BigNumParams;
 use crate::utils::u60_representation::U60Repr;
-pub struct BNParams {}
-impl RuntimeBigNumParamsTrait<3> for BNParams {
-    fn modulus_bits() -> u32 {
-        254
+
+pub struct BN254_Fq_Params {}
+
+impl BigNumParamsGetter<3> for BN254_Fq_Params {
+    fn get_params() -> BigNumParams<3> {
+        BN254_Fq_PARAMS
     }
 }
-impl BigNumParamsTrait<3> for BNParams {
-    fn get_instance() -> BigNumInstance<3, Self> {
-        BN254INSTANCE
-    }
-    fn modulus_bits() -> u32 {
-        254
-    }
-}
-pub global BN254INSTANCE: BigNumInstance<3, BNParams> = BigNumInstance {
+
+global BN254_Fq_PARAMS: BigNumParams<3> = BigNumParams {
+        has_multiplicative_inverse: true,
+        modulus_bits_getter: || 254,
         modulus: [
             0x816a916871ca8d3c208c16d87cfd47, 0x4e72e131a029b85045b68181585d97, 0x3064
         ],

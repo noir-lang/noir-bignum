@@ -14,25 +14,21 @@
 //! * valuation(r - 1, 2) = 32
 //! * G1 curve equation: y^2 = x^3 + 4
 //! * G2 curve equation: y^2 = x^3 + Fq2(4, 4)
-use crate::BigNumParamsTrait;
-use crate::runtime_bignum::BigNumInstance;
-use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
+use crate::params::BigNumParamsGetter;
+use crate::params::BigNumParams;
 use crate::utils::u60_representation::U60Repr;
-pub struct BLS12_381_Fq_Params {}
-impl RuntimeBigNumParamsTrait<4> for BLS12_381_Fq_Params {
-    fn modulus_bits() -> u32 {
-        381
+
+pub struct  BLS12_381_Fq_Params {}
+
+impl BigNumParamsGetter<4> for BLS12_381_Fq_Params {
+    fn get_params() -> BigNumParams<4> {
+        BLS12_381_Fq_PARAMS
     }
 }
-impl BigNumParamsTrait<4> for BLS12_381_Fq_Params {
-    fn get_instance() -> BigNumInstance<4, Self> {
-        BLS12_381_Fq_Instance
-    }
-    fn modulus_bits() -> u32 {
-        381
-    }
-}
-pub global BLS12_381_Fq_Instance: BigNumInstance<4, BLS12_381_Fq_Params> = BigNumInstance {
+
+global BLS12_381_Fq_PARAMS: BigNumParams<4> = BigNumParams {
+        has_multiplicative_inverse: true,
+        modulus_bits_getter: || 381,
         modulus: [
             0xabfffeb153ffffb9feffffffffaaab, 0x4b84f38512bf6730d2a0f6b0f6241e, 0xea397fe69a4b1ba7b6434bacd76477, 0x1a0111
         ],
