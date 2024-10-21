@@ -18,24 +18,6 @@ use crate::params::BigNumParamsGetter;
 use crate::params::BigNumParams;
 use crate::utils::u60_representation::U60Repr;
 
-global Vesta_Fr_PARAMS: BigNumParams<3> = BigNumParams {
-    has_multiplicative_inverse: true,
-    modulus_bits_getter: || 255,
-    modulus: [
-        0x4698fc094cf91b992d30ed00000001, 0x22, 0x4000
-    ],
-    double_modulus: [
-        0x018d31f81299f237325a61da00000002, 0x01000000000000000000000000000043, 0x7fff
-    ],
-    modulus_u60: U60Repr { limbs: [
-        0x092d30ed00000001, 0x04698fc094cf91b9, 0x22, 0x00, 0x4000, 0x00]},
-    modulus_u60_x4: U60Repr { limbs: [
-        0x092d30ed00000001, 0x04698fc094cf91b9, 0x22, 0x00, 0x4000, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
-    redc_param: [
-        0xe59c0fdacc1b919b4b3c4bfffffffc, 0xffffffffffffffffffffffffffff76, 0xffff
-    ]
-};
-
 pub struct  Vesta_Fr_Params {}
 
 impl BigNumParamsGetter<3> for Vesta_Fr_Params {
@@ -44,3 +26,20 @@ impl BigNumParamsGetter<3> for Vesta_Fr_Params {
     }
 }
 
+global Vesta_Fr_PARAMS: BigNumParams<3> = BigNumParams {
+        has_multiplicative_inverse: true,
+        modulus_bits_getter: || 255,
+        modulus: [
+            0x4698fc094cf91b992d30ed00000001, 0x22, 0x4000
+        ],
+        double_modulus: [
+            0x018d31f81299f237325a61da00000002, 0x01000000000000000000000000000043, 0x7fff
+        ],
+        modulus_u60: U60Repr { limbs: [
+            0x092d30ed00000001, 0x04698fc094cf91b9, 0x22, 0x00, 0x4000, 0x00]},
+        modulus_u60_x4: U60Repr { limbs: [
+            0x092d30ed00000001, 0x04698fc094cf91b9, 0x22, 0x00, 0x4000, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
+        redc_param: [
+            0x59c0fdacc1b919b4b3c4bfffffffc4, 0xfffffffffffffffffffffffffff76e, 0x0fffff
+        ]
+};

@@ -8,6 +8,135 @@ use crate::unconstrained_ops::{__mul, __div, __udiv_mod};
 use crate::expressions::evaluate_quadratic_expression;
 
 /**
+ * In this file:
+ *
+ * conditional_select
+ * assert_is_not_equal
+ * eq
+ * validate_in_field
+ * validate_in_range
+ * validate_quotient_in_range
+ * validate_gt
+ * neg
+ * add
+ * sub
+ * mul
+ * div
+ * udiv_mod
+ * udiv
+ * umod
+ */
+
+/**
+* @brief given an input seed, generate a pseudorandom BigNum value
+* @details we hash the input seed into `modulus_bits * 2` bits of entropy,
+* which is then reduced into a BigNum value
+* We use a hash function that can be modelled as a random oracle
+* This function *should* produce an output that is a uniformly randomly distributed value modulo BigNum::modulus()
+**/
+pub(crate) fn derive_from_seed<let N: u32, let SeedBytes: u32>(params: P<N>, seed: [u8; SeedBytes]) -> [Field; N] {
+    let mut rolling_seed: [u8; SeedBytes + 1] = [0; SeedBytes + 1];
+    for i in 0..SeedBytes {
+        rolling_seed[i] = seed[i];
+        assert_eq(rolling_seed[i], seed[i]);
+    }
+
+    let mut hash_buffer: [u8; N * 2 * 15] = [0; N * 2 * 15];
+
+    let mut rolling_hash_fields: [Field; (SeedBytes / 31) + 1] = [0; (SeedBytes / 31) + 1];
+    let mut seed_ptr = 0;
+    for i in 0..(SeedBytes / 31) + 1 {
+        let mut packed: Field = 0;
+        for _ in 0..31 {
+            if (seed_ptr < SeedBytes) {
+                packed *= 256;
+                packed += seed[seed_ptr] as Field;
+                seed_ptr += 1;
+            }
+        }
+        rolling_hash_fields[i] = packed;
+    }
+
+    let compressed = std::hash::poseidon2::Poseidon2::hash(rolling_hash_fields, (SeedBytes / 31) + 1);
+    let mut rolling_hash: [Field; 2] = [compressed, 0];
+    let num_hashes = (30 * N) / 32 + (((30 * N) % 32) != 0) as u32;
+    for i in 0..num_hashes - 1 {
+        let hash: Field = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
+        let hash: [u8; 32] = hash.to_le_bytes();
+        for j in 0..30 {
+            hash_buffer[i * 30 + j] = hash[j];
+        }
+        rolling_hash[1] += 1;
+    }
+    {
+        let hash: Field = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
+        let hash: [u8; 32] = hash.to_le_bytes();
+        let remaining_bytes = 30 * N - (num_hashes - 1) * 30;
+        for j in 0..remaining_bytes {
+            hash_buffer[(num_hashes - 1) * 30 + j] = hash[j];
+        }
+    }
+
+    let modulus_bits_getter = params.modulus_bits_getter;
+    let modulus_bits = modulus_bits_getter();
+    let num_bits = modulus_bits * 2;
+    let num_bytes = num_bits / 8 + ((num_bits % 8) != 0) as u32;
+
+    let bits_in_last_byte = num_bits as u8 % 8;
+    let last_byte_mask = (1 as u8 << bits_in_last_byte) - 1;
+    hash_buffer[num_bytes - 1] = hash_buffer[num_bytes - 1] & last_byte_mask;
+
+    let num_bigfield_chunks = (2 * N) / (N - 1) + (((2 * N) % (N - 1)) != 0) as u32;
+    let mut byte_ptr = 0;
+
+    // we want to convert our byte array into bigfield chunks
+    // each chunk has at most N-1 limbs
+    // to determine the exact number of chunks, we need the `!=` or `>` operator which is not avaiable when defining array sizes
+    // so we overestimate at 4
+    // e.g. if N = 20, then we have 40 limbs we want to reduce, but each bigfield chunk is 19 limbs, so we need 3
+    // if N = 2, we have 4 limbs we want to reduce but each bigfield chunk is only 1 limb, so we need 4
+    // max possible number of chunks is therefore 4
+
+    let mut bigfield_chunks: [[Field; N]; 4] = [[0; N]; 4];
+    for k in 0..num_bigfield_chunks {
+        let mut bigfield_limbs: [Field; N] = [0; N];
+        let mut num_filled_bytes = (k * 30);
+        let mut num_remaining_bytes = num_bytes - num_filled_bytes;
+        let mut num_remaining_limbs = (num_remaining_bytes / 15) + (num_remaining_bytes % 15 > 0) as u32;
+        let mut more_than_N_minus_one_limbs = (num_remaining_limbs > (N - 1)) as u32;
+        let mut num_limbs_in_bigfield = more_than_N_minus_one_limbs * (N - 1)
+            + num_remaining_limbs * (1 - more_than_N_minus_one_limbs);
+
+        for j in 0..num_limbs_in_bigfield {
+            let mut limb: Field = 0;
+            for _ in 0..15 {
+                let need_more_bytes = (byte_ptr < num_bytes);
+                let mut byte = hash_buffer[byte_ptr];
+                limb *= (256 * need_more_bytes as Field + (1 - need_more_bytes as Field));
+                limb += byte as Field * need_more_bytes as Field;
+                byte_ptr += need_more_bytes as u32;
+            }
+            bigfield_limbs[num_limbs_in_bigfield - 1 - j] = limb;
+        }
+        bigfield_chunks[num_bigfield_chunks - 1 - k] = bigfield_limbs;
+    }
+
+    let mut bigfield_rhs_limbs: [Field; N] = [0; N];
+    bigfield_rhs_limbs[N-1] = 1;
+    validate_in_range(params, bigfield_rhs_limbs);
+
+    let mut result: [Field; N] = [0; N];
+
+    for i in 0..num_bigfield_chunks {
+        let bigfield_lhs_limbs = bigfield_chunks[i];
+
+        result = mul(params, result, bigfield_rhs_limbs);
+        result = add(params, result, bigfield_lhs_limbs);
+    }
+    result
+}
+
+/**
 * @brief conditional_select given the value of `predicate` return either `self` (if 0) or `other` (if 1)
 * @description should be cheaper than using an IF statement (TODO: check!)
 **/
@@ -93,7 +222,8 @@ pub(crate) fn validate_in_range<let N: u32>(params: P<N>, limbs: [Field; N]) {
         limbs[i].assert_max_bit_size(120);
     }
     let modulus_bits_getter = params.modulus_bits_getter;
-    let final_limb_bits = modulus_bits_getter() - ((N - 1) * 120);
+    let modulus_bits = modulus_bits_getter();
+    let final_limb_bits = modulus_bits - ((N - 1) * 120);
     limbs[N - 1].assert_max_bit_size(final_limb_bits as u32);
 }
 

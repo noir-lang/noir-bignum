@@ -4,6 +4,26 @@ use crate::utils::split_bits;
 use crate::params::BigNumParams as P;
 use crate::unconstrained_helpers::__barrett_reduction;
 
+/**
+ * In this file:
+ *
+ * __one
+ * __derive_from_seed
+ * __eq
+ * __is_zero
+ * __neg
+ * __add
+ * __sub
+ * __mul_with_quotient
+ * __mul
+ * __div
+ * __udiv_mod
+ * __invmod
+ * __pow
+ * __batch_invert
+ * __batch_invert_slice
+ */
+
 unconstrained pub(crate) fn __one<let N: u32>() -> [Field; N] {
     let mut limbs: [Field; N] = [0; N];
     limbs[0] = 1;
@@ -11,7 +31,21 @@ unconstrained pub(crate) fn __one<let N: u32>() -> [Field; N] {
 }
 
 unconstrained pub(crate) fn __derive_from_seed<let N: u32, let SeedBytes: u32>(params: P<N>, seed: [u8; SeedBytes]) -> [Field; N] {
-    let mut rolling_seed = seed;
+    let mut rolling_hash_fields: [Field; (SeedBytes / 31) + 1] = [0; (SeedBytes / 31) + 1];
+    let mut seed_ptr = 0;
+    for i in 0..(SeedBytes / 31) + 1 {
+        let mut packed: Field = 0;
+        for _ in 0..31 {
+            if (seed_ptr < SeedBytes) {
+                packed *= 256;
+                packed += seed[seed_ptr] as Field;
+                seed_ptr += 1;
+            }
+        }
+        rolling_hash_fields[i] = packed;
+    }
+    let compressed = std::hash::poseidon2::Poseidon2::hash(rolling_hash_fields, (SeedBytes / 31) + 1);
+    let mut rolling_hash: [Field; 2] = [compressed, 0];
 
     let mut to_reduce: [Field; 2 * N] = [0; 2 * N];
 
@@ -30,7 +64,8 @@ unconstrained pub(crate) fn __derive_from_seed<let N: u32, let SeedBytes: u32>(p
     }
 
     for i in 0..(N - 1) {
-        let hash: [u8; 32] = std::hash::sha256(rolling_seed);
+        let hash = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
+        let hash : [u8; 30] = hash.to_le_bytes();
         let mut lo: Field = 0;
         let mut hi: Field = 0;
         for j in 0..15 {
@@ -44,11 +79,12 @@ unconstrained pub(crate) fn __derive_from_seed<let N: u32, let SeedBytes: u32>(p
         }
         to_reduce[2 * i] = lo;
         to_reduce[2 * i + 1] = hi;
-        rolling_seed[0] += 1;
+        rolling_hash[1] += 1;
     }
 
     {
-        let hash: [u8; 32] = std::hash::sha256(rolling_seed);
+        let hash = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
+        let hash : [u8; 30] = hash.to_le_bytes();
         let mut hi: Field = 0;
         for j in 0..(last_limb_bytes - 1) {
             hi *= 256;
@@ -133,10 +169,11 @@ unconstrained pub(crate) fn __mul_with_quotient<let N: u32>(params: P<N>, lhs: [
             mul[i + j] += lhs[i] * rhs[j];
         }
     }
+    let to_reduce = split_bits::__normalize_limbs(mul, 2 * N);
     let modulus_bits_getter = params.modulus_bits_getter;
     let modulus_bits = modulus_bits_getter();
     let (q, r) = __barrett_reduction(
-        split_bits::__normalize_limbs(mul, 2 * N),
+        to_reduce,
         params.redc_param,
         modulus_bits,
         params.modulus,

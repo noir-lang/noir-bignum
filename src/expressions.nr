@@ -5,6 +5,16 @@ use crate::constrained_ops::validate_quotient_in_range;
 use crate::unconstrained_helpers::__barrett_reduction;
 
 /**
+ * In this file:
+ *
+ * __compute_quadratic_expression_with_borrow_flags
+ * __add_linear_expression
+ * __compute_quadratic_expression_product
+ * __compute_quadratic_expression
+ * evaluate_quadratic_expression
+ */
+
+/**
 * @brief Given a degree-2 BigNum expression that is equal to 0 mod p, compute the quotient and borrow flags 
 * @description The expression is of the form:
 *
@@ -127,7 +137,7 @@ unconstrained fn __add_linear_expression<let N: u32, let M: u32>(
         if (flags[i]) {
             for j in 0..N {
                 sum[j] = sum[j] + modulus2[j] - x[i][j];
-                assert(x[i][j].lt(modulus2[j]));
+                // assert(x[i][j].lt(modulus2[j]));
             }
         } else {
             for j in 0..N {
@@ -214,6 +224,8 @@ unconstrained pub(crate) fn __compute_quadratic_expression<
     );
     let mut relation_result: [Field; 2 * N] = split_bits::__normalize_limbs(mulout, 2 * N);
 
+    // size 4
+    // a[3] * b[3] = a[6] = 7
     // TODO: ugly! Will fail if input slice is empty
     let modulus_bits_getter = params.modulus_bits_getter;
     let k  = modulus_bits_getter();

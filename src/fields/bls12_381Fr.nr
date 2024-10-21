@@ -18,24 +18,6 @@ use crate::params::BigNumParamsGetter;
 use crate::params::BigNumParams;
 use crate::utils::u60_representation::U60Repr;
 
-global BLS12_381_Fr_PARAMS: BigNumParams<3> = BigNumParams {
-    has_multiplicative_inverse: true,
-    modulus_bits_getter: || 255,
-    modulus: [
-        0xbda402fffe5bfeffffffff00000001, 0xa753299d7d483339d80809a1d80553, 0x73ed
-    ],
-    double_modulus: [
-        0x017b4805fffcb7fdfffffffe00000002, 0x014ea6533afa906673b0101343b00aa6, 0xe7da
-    ],
-    modulus_u60: U60Repr { limbs: [
-        0x0fffffff00000001, 0x0bda402fffe5bfef, 0x09d80809a1d80553, 0x0a753299d7d48333, 0x73ed, 0x00]},
-    modulus_u60_x4: U60Repr { limbs: [
-        0x0fffffff00000001, 0x0bda402fffe5bfef, 0x09d80809a1d80553, 0x0a753299d7d48333, 0x73ed, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
-    redc_param: [
-        0x410fad2f92eb5c509cde80830358e4, 0x253b7fb78ddf0e2d772dc1f823b4d9, 0x8d54
-    ]
-};
-
 pub struct  BLS12_381_Fr_Params {}
 
 impl BigNumParamsGetter<3> for BLS12_381_Fr_Params {
@@ -44,3 +26,20 @@ impl BigNumParamsGetter<3> for BLS12_381_Fr_Params {
     }
 }
 
+global BLS12_381_Fr_PARAMS: BigNumParams<3> = BigNumParams {
+        has_multiplicative_inverse: true,
+        modulus_bits_getter: || 255,
+        modulus: [
+            0xbda402fffe5bfeffffffff00000001, 0xa753299d7d483339d80809a1d80553, 0x73ed
+        ],
+        double_modulus: [
+            0x017b4805fffcb7fdfffffffe00000002, 0x014ea6533afa906673b0101343b00aa6, 0xe7da
+        ],
+        modulus_u60: U60Repr { limbs: [
+            0x0fffffff00000001, 0x0bda402fffe5bfef, 0x09d80809a1d80553, 0x0a753299d7d48333, 0x73ed, 0x00]},
+        modulus_u60_x4: U60Repr { limbs: [
+            0x0fffffff00000001, 0x0bda402fffe5bfef, 0x09d80809a1d80553, 0x0a753299d7d48333, 0x73ed, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
+        redc_param: [
+            0x10fad2f92eb5c509cde80830358e4c, 0x53b7fb78ddf0e2d772dc1f823b4d94, 0x08d542
+        ]
+};

@@ -2,9 +2,17 @@ use crate::params::BigNumParamsGetter;
 use crate::params::BigNumParams;
 use crate::utils::u60_representation::U60Repr;
 
+pub struct  U512Params {}
+
+impl BigNumParamsGetter<5> for U512Params {
+    fn get_params() -> BigNumParams<5> {
+        U512_PARAMS
+    }
+}
+
 global U512_PARAMS: BigNumParams<5> = BigNumParams {
-    has_multiplicative_inverse: false,
-    modulus_bits_getter: || 513,
+        has_multiplicative_inverse: false,
+        modulus_bits_getter: || 513,
         modulus: [
             0x00, 0x00, 0x00, 0x00, 0x0100000000
         ],
@@ -16,15 +24,7 @@ global U512_PARAMS: BigNumParams<5> = BigNumParams {
         modulus_u60_x4: U60Repr { limbs: [
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0100000000, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
         redc_param: [
-            0x00, 0x00, 0x00, 0x00, 0x0400000000
+            0x00, 0x00, 0x00, 0x00, 0x4000000000
         ]
 };
-
-pub struct  U512Params {}
-
-impl BigNumParamsGetter<5> for U512Params {
-    fn get_params() -> BigNumParams<5> {
-        U512_PARAMS
-    }
-}
 

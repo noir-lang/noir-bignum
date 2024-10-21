@@ -3,7 +3,7 @@ use crate::utils::map::map;
 
 use crate::params::BigNumParams;
 use crate::constrained_ops::{
-    conditional_select, assert_is_not_equal, eq, validate_in_field, validate_in_range, neg, add, sub,
+    derive_from_seed, conditional_select, assert_is_not_equal, eq, validate_in_field, validate_in_range, neg, add, sub,
     mul, div, udiv_mod, udiv, umod
 };
 use crate::unconstrained_ops::{
@@ -23,6 +23,7 @@ pub struct RuntimeBigNum<let N: u32> {
 pub(crate) trait RuntimeBigNumTrait<let N: u32> {
     fn new(params: BigNumParams<N>) -> Self;
     fn one(params: BigNumParams<N>) -> Self;
+    fn derive_from_seed<let SeedBytes: u32>(params: BigNumParams<N>, seed: [u8; SeedBytes]) -> Self;
     fn __derive_from_seed<let SeedBytes: u32>(params: BigNumParams<N>, seed: [u8; SeedBytes]) -> Self;
     fn from_slice(params: BigNumParams<N>, limbs: [Field]) -> Self;
     fn from_array(params: BigNumParams<N>, limbs: [Field; N]) -> Self;
@@ -102,6 +103,13 @@ impl<let N: u32> RuntimeBigNumTrait<N> for RuntimeBigNum<N> {
         let mut result = RuntimeBigNum::new(params);
         result.limbs[0] = 1;
         result
+    }
+
+    fn derive_from_seed<let SeedBytes: u32>(params: BigNumParams<N>, seed: [u8; SeedBytes]) -> Self {
+        let limbs = unsafe {
+            derive_from_seed(params, seed)
+        };
+        Self { limbs, params }
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
@@ -273,11 +281,11 @@ impl<let N: u32> RuntimeBigNumTrait<N> for RuntimeBigNum<N> {
         let (q_limbs, r_limbs) = unsafe {
             __compute_quadratic_expression(
                 params,
-                lhs_terms.map(|bns| map(bns, |bn| Self::get_limbs(bn))),
+                map(lhs_terms, |bns| map(bns, |bn| Self::get_limbs(bn))),
                 lhs_flags,
-                rhs_terms.map(|bns| map(bns, |bn| Self::get_limbs(bn))),
+                map(rhs_terms, |bns| map(bns, |bn| Self::get_limbs(bn))),
                 rhs_flags,
-                linear_terms.map(|bn| Self::get_limbs(bn)),
+                map(linear_terms, |bn| Self::get_limbs(bn)),
                 linear_flags
             )
         };
@@ -295,11 +303,11 @@ impl<let N: u32> RuntimeBigNumTrait<N> for RuntimeBigNum<N> {
     ) {
         evaluate_quadratic_expression(
             params,
-            lhs_terms.map(|bns| map(bns, |bn| Self::get_limbs(bn))),
+            map(lhs_terms, |bns| map(bns, |bn| Self::get_limbs(bn))),
             lhs_flags,
-            rhs_terms.map(|bns| map(bns, |bn| Self::get_limbs(bn))),
+            map(rhs_terms, |bns| map(bns, |bn| Self::get_limbs(bn))),
             rhs_flags,
-            linear_terms.map(|bn| Self::get_limbs(bn)),
+            map(linear_terms, |bn| Self::get_limbs(bn)),
             linear_flags
         )
     }

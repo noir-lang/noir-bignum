@@ -1,87 +1,189 @@
 use crate::utils::u60_representation::U60Repr;
 use crate::runtime_bignum::RuntimeBigNum;
-use crate::params::BigNumParams;
+use crate::params::{ BigNumParams, BigNumParamsGetter };
+
 use crate::fields::bn254Fq::BN254_Fq_Params;
+use crate::fields::secp256k1Fq::Secp256k1_Fq_Params;
+use crate::fields::bls12_381Fq::BLS12_381_Fq_Params;
+use crate::fields::bls12_381Fr::BLS12_381_Fr_Params;
+use crate::fields::bls12_377Fq::BLS12_377_Fq_Params;
+use crate::fields::bls12_377Fr::BLS12_377_Fr_Params;
 
-global BN254_Fq_PARAMS = BN254_Fq_Params::get_params();
+global TEST_2048_PARAMS: BigNumParams<18> = BigNumParams {
+    has_multiplicative_inverse: false,
+    modulus_bits_getter: || 2048,
+    modulus: [
+        0xc0a197a5ae0fcdceb052c9732614fe, 0x656ae034423283422243918ab83be3, 0x6bf590da48a7c1070b7d5aabaac678, 0x0cce39f530238b606f24b296e2bda9, 0x01e1fef9bb9c1c3ead98f226f1bfa0, 0xad8c1c816e12e0ed1379055e373abf, 0xcebe80e474f753aa9d1461c435123d, 0xaee5a18ceedef88d115a8b93c167ad, 0x268ba83c4a65c4307427fc495d9e44, 0xdd2777926848667b7df79f342639d4, 0xf455074c96855ca0068668efe7da3d, 0x5ddba6b30bbc168bfb3a1225f27d65, 0x591fec484f36707524133bcd6f4258, 0x59641b756766aeebe66781dd01d062, 0x58bc5eaff4b165e142bf9e2480eebb, 0x667a3964f08e06df772ce64b229a72, 0x9c1fdb18907711bfe3e3c1cf918395, 0xb8
+    ],
+    double_modulus: [
+        0x0181432f4b5c1f9b9d60a592e64c29fc, 0x01cad5c06884650684448723157077c6, 0x01d7eb21b4914f820e16fab557558cef, 0x01199c73ea604716c0de49652dc57b51, 0x0103c3fdf37738387d5b31e44de37f3f, 0x015b183902dc25c1da26f20abc6e757d, 0x019d7d01c8e9eea7553a28c3886a247a, 0x015dcb4319ddbdf11a22b5172782cf5a, 0x014d17507894cb8860e84ff892bb3c88, 0x01ba4eef24d090ccf6fbef3e684c73a7, 0x01e8aa0e992d0ab9400d0cd1dfcfb47a, 0x01bbb74d6617782d17f674244be4faca, 0x01b23fd8909e6ce0ea4826779ade84af, 0x01b2c836eacecd5dd7cccf03ba03a0c3, 0x01b178bd5fe962cbc2857f3c4901dd75, 0x01ccf472c9e11c0dbeee59cc964534e3, 0x01383fb63120ee237fc7c7839f230729, 0x0170
+    ],
+    modulus_u60: U60Repr { limbs: [
+        0x0eb052c9732614fe, 0x0c0a197a5ae0fcdc, 0x022243918ab83be3, 0x0656ae0344232834, 0x070b7d5aabaac678, 0x06bf590da48a7c10, 0x6f24b296e2bda9, 0xcce39f530238b6, 0x0ead98f226f1bfa0, 0x1e1fef9bb9c1c3, 0x0d1379055e373abf, 0x0ad8c1c816e12e0e, 0x0a9d1461c435123d, 0x0cebe80e474f753a, 0x0d115a8b93c167ad, 0x0aee5a18ceedef88, 0x7427fc495d9e44, 0x0268ba83c4a65c43, 0x0b7df79f342639d4, 0x0dd2777926848667, 0x068668efe7da3d, 0x0f455074c96855ca, 0x0bfb3a1225f27d65, 0x05ddba6b30bbc168, 0x0524133bcd6f4258, 0x0591fec484f36707, 0x0be66781dd01d062, 0x059641b756766aee, 0x0142bf9e2480eebb, 0x058bc5eaff4b165e, 0x0f772ce64b229a72, 0x0667a3964f08e06d, 0x0fe3e3c1cf918395, 0x09c1fdb18907711b, 0xb8, 0x00]},
+    modulus_u60_x4: U60Repr { limbs: [
+        0x0eb052c9732614fe, 0x0c0a197a5ae0fcdc, 0x022243918ab83be3, 0x0656ae0344232834, 0x070b7d5aabaac678, 0x06bf590da48a7c10, 0x6f24b296e2bda9, 0xcce39f530238b6, 0x0ead98f226f1bfa0, 0x1e1fef9bb9c1c3, 0x0d1379055e373abf, 0x0ad8c1c816e12e0e, 0x0a9d1461c435123d, 0x0cebe80e474f753a, 0x0d115a8b93c167ad, 0x0aee5a18ceedef88, 0x7427fc495d9e44, 0x0268ba83c4a65c43, 0x0b7df79f342639d4, 0x0dd2777926848667, 0x068668efe7da3d, 0x0f455074c96855ca, 0x0bfb3a1225f27d65, 0x05ddba6b30bbc168, 0x0524133bcd6f4258, 0x0591fec484f36707, 0x0be66781dd01d062, 0x059641b756766aee, 0x0142bf9e2480eebb, 0x058bc5eaff4b165e, 0x0f772ce64b229a72, 0x0667a3964f08e06d, 0x0fe3e3c1cf918395, 0x09c1fdb18907711b, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
+    redc_param: [
+        0x1697def7100cd5cf8d890b4ef2ec3f, 0x765ba8304214dac764d3f4adc31859, 0x8404bd14d927ea230e60d4bebf9406, 0xc4d53a23bacc251ecbfc4b7ba5a0b4, 0x3eaf3499474a6f5b2fff83f1259c87, 0xbff4c737b97281f1a5f2384a8c16d9, 0x1b4cf2f55358476b53237829990555, 0xe7a804e8eacfe3a2a5673bc3885b86, 0xabadeae4282906c817adf70eab4ae1, 0x66f7df257fe2bf27f0809aceed9b0e, 0xd90fb7428901b8bed11f6b81e36bf1, 0x36e6ba885c60b7024c563605df7e07, 0x2b7c58d2fb5d2c8478963ae6d4a44f, 0x6ee761de26635f114ccc3f7d74f855, 0x3fb726a10cf2220897513f05243de3, 0x43a26bbd732496eb4d828591b8056e, 0xf4e42304e60fb3a54fca735499f2cf, 0x162f
+    ]
+};
 
-fn get_2048_BN_params() -> BigNumParams<18> {
-    let has_multiplicative_inverse = false;
-    let modulus_bits_getter = || 2048;
-    let modulus: [Field; 18] = [
-        0x0000000000000000000000000000000000c0a197a5ae0fcdceb052c9732614fe,
-        0x0000000000000000000000000000000000656ae034423283422243918ab83be3,
-        0x00000000000000000000000000000000006bf590da48a7c1070b7d5aabaac678,
-        0x00000000000000000000000000000000000cce39f530238b606f24b296e2bda9,
-        0x000000000000000000000000000000000001e1fef9bb9c1c3ead98f226f1bfa0,
-        0x0000000000000000000000000000000000ad8c1c816e12e0ed1379055e373abf,
-        0x0000000000000000000000000000000000cebe80e474f753aa9d1461c435123d,
-        0x0000000000000000000000000000000000aee5a18ceedef88d115a8b93c167ad,
-        0x0000000000000000000000000000000000268ba83c4a65c4307427fc495d9e44,
-        0x0000000000000000000000000000000000dd2777926848667b7df79f342639d4,
-        0x0000000000000000000000000000000000f455074c96855ca0068668efe7da3d,
-        0x00000000000000000000000000000000005ddba6b30bbc168bfb3a1225f27d65,
-        0x0000000000000000000000000000000000591fec484f36707524133bcd6f4258,
-        0x000000000000000000000000000000000059641b756766aeebe66781dd01d062,
-        0x000000000000000000000000000000000058bc5eaff4b165e142bf9e2480eebb,
-        0x0000000000000000000000000000000000667a3964f08e06df772ce64b229a72,
-        0x00000000000000000000000000000000009c1fdb18907711bfe3e3c1cf918395,
-        0x00000000000000000000000000000000000000000000000000000000000000b8
-    ];
-    let redc_param: [Field; 18] = [
-        0x000000000000000000000000000000000091697def7100cd5cf8d890b4ef2ec3,
-        0x00000000000000000000000000000000006765ba8304214dac764d3f4adc3185,
-        0x000000000000000000000000000000000048404bd14d927ea230e60d4bebf940,
-        0x00000000000000000000000000000000007c4d53a23bacc251ecbfc4b7ba5a0b,
-        0x000000000000000000000000000000000093eaf3499474a6f5b2fff83f1259c8,
-        0x00000000000000000000000000000000005bff4c737b97281f1a5f2384a8c16d,
-        0x000000000000000000000000000000000061b4cf2f55358476b5323782999055,
-        0x00000000000000000000000000000000001e7a804e8eacfe3a2a5673bc3885b8,
-        0x0000000000000000000000000000000000eabadeae4282906c817adf70eab4ae,
-        0x0000000000000000000000000000000000166f7df257fe2bf27f0809aceed9b0,
-        0x00000000000000000000000000000000007d90fb7428901b8bed11f6b81e36bf,
-        0x0000000000000000000000000000000000f36e6ba885c60b7024c563605df7e0,
-        0x000000000000000000000000000000000052b7c58d2fb5d2c8478963ae6d4a44,
-        0x000000000000000000000000000000000036ee761de26635f114ccc3f7d74f85,
-        0x0000000000000000000000000000000000e3fb726a10cf2220897513f05243de,
-        0x0000000000000000000000000000000000f43a26bbd732496eb4d828591b8056,
-        0x0000000000000000000000000000000000ff4e42304e60fb3a54fca735499f2c,
-        0x0000000000000000000000000000000000000000000000000000000000000162
-    ];
-    BigNumParams::new(
-        has_multiplicative_inverse,
-        modulus_bits_getter,
-        modulus,
-        redc_param
-    )
+struct Test2048Params {}
+
+// See https://github.com/noir-lang/noir/issues/6172
+#[test]
+fn silence_warning() {
+    let _  = Test2048Params {};
 }
 
-fn test_eq<let N: u32>(params: BigNumParams<N>) {
-    let a = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
-    };
-    let b = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
-    };
-    let c = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [2, 2, 3, 4])
-    };
-
-    let modulus = a.modulus();
-    let t0: U60Repr<N, 2> = (U60Repr::from(modulus.limbs));
-    let t1: U60Repr<N, 2> = (U60Repr::from(b.limbs));
-    let b_plus_modulus = RuntimeBigNum { limbs: U60Repr::into(t0 + t1), params };
-
-    assert((a == b) == true);
-    assert((a == b_plus_modulus) == true);
-    assert((c == b) == false);
-    assert((c == a) == false);
+impl BigNumParamsGetter<18> for Test2048Params {
+    fn get_params() -> BigNumParams<18> {
+        TEST_2048_PARAMS
+    }
 }
 
-// 98760
-// 99689
-// 929 gates for a 2048 bit mul
-fn test_mul<let N: u32>(params: BigNumParams<N>) {
+#[test]
+fn test_add() {
+    let params = BN254_Fq_Params::get_params();
+
+    let a = unsafe{ RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4]) };
+    let b = unsafe{ RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7]) };
+
+    let one = RuntimeBigNum::one(params);
+
+    a.validate_in_range();
+    a.validate_in_field();
+    b.validate_in_range();
+    b.validate_in_field();
+
+    let mut c = a + b;
+    c = c + c;
+    let d = (a + b) * (one + one);
+    assert(c == d);
+
+    let e = one + one;
+    for i in 1..3 {
+        assert(e.limbs[i] == 0);
+    }
+    assert(e.limbs[0] == 2);
+}
+
+/**
+ * @brief experimenting with macro madness and code generation to make some tests that apply to multiple BigNum parametrisations!
+ **/
+comptime fn make_test(f: StructDefinition, N: Quoted, typ: Quoted) -> Quoted {
+    let k = f.name();
+    quote{
+impl $k {
+#[test]
+fn test_add() {
+    let params = $typ ::get_params();
+
+    let a = unsafe{ RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4]) };
+    let b = unsafe{ RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7]) };
+
+    let one: RuntimeBigNum<$N> = RuntimeBigNum::one(params);
+
+    a.validate_in_range();
+    a.validate_in_field();
+    b.validate_in_range();
+    b.validate_in_field();
+
+    let mut c = a + b;
+    c = c + c;
+    let d = (a + b) * (one + one);
+    assert(c == d);
+
+    let e = one + one;
+    for i in 1..$N {
+        assert(e.limbs[i] == 0);
+    }
+    assert(e.limbs[0] == 2);
+}
+
+#[test]
+fn test_sub() {
+    let params = $typ ::get_params();
+
+    // 0 - 1 should equal p - 1
+    let mut a: RuntimeBigNum<$N> = RuntimeBigNum::new(params);
+    let mut b: RuntimeBigNum<$N> = RuntimeBigNum::one(params);
+    let mut expected = RuntimeBigNum { limbs: params.modulus, params };
+    expected.limbs[0] -= 1; // p - 1
+
+    let result = a - b;
+    assert(result == expected);
+}
+
+#[test]
+fn test_sub_modulus_limit() {
+    let params = $typ ::get_params();
+    // if we underflow, maximum result should be ...
+    // 0 - 1 = o-1
+    // 0 - p = 0
+    let mut a: RuntimeBigNum<$N> = RuntimeBigNum::new(params);
+    let mut b = RuntimeBigNum { limbs: params.modulus, params };
+    let mut expected: RuntimeBigNum<$N> = RuntimeBigNum::new(params);
+
+    let result = a - b;
+    assert(result == expected);
+}
+
+#[test(should_fail_with = "call to assert_max_bit_size")]
+fn test_sub_modulus_underflow() {
+    let params = $typ ::get_params();
+
+    // 0 - (p + 1) is smaller than p and should produce unsatisfiable constraints
+    let mut a: RuntimeBigNum<$N> = RuntimeBigNum::new(params);
+    let mut b = RuntimeBigNum { limbs: params.modulus, params };
+    b.limbs[0] += 1;
+    let mut expected: RuntimeBigNum<$N> = RuntimeBigNum::one(params);
+
+    let result = a - b;
+
+    assert(result == expected);
+}
+
+#[test]
+fn test_add_modulus_limit() {
+    let params = $typ ::get_params();
+
+    // p + 2^{modulus_bits()} - 1 should be the maximum allowed value fed into an add operation
+    // when adding, if the result overflows the modulus, we conditionally subtract the modulus, producing 2^{254} -  1
+    // this is the largest value that will satisfy the range check applied when constructing a bignum
+    let p: U60Repr<$N, 2> = U60Repr::from(params.modulus);
+    let one = unsafe{ U60Repr::one() };
+
+    let a = RuntimeBigNum { limbs: U60Repr::into(p), params };
+
+    let two_pow_modulus_bits_minus_one: U60Repr<$N, 2> = unsafe{ one.shl(a.modulus_bits()) - one };
+
+    let b = RuntimeBigNum { limbs: U60Repr::into(two_pow_modulus_bits_minus_one), params };
+
+    let result = a + b;
+    assert(result == b);
+}
+
+#[test(should_fail_with = "call to assert_max_bit_size")]
+fn test_add_modulus_overflow() {
+    let params = $typ ::get_params();
+
+    let p : U60Repr<$N, 2> = U60Repr::from(params.modulus);
+    let one = unsafe{ U60Repr::one() };
+
+    let a = RuntimeBigNum { limbs: U60Repr::into(p + one), params };
+    
+    let mut two_pow_modulus_bits_minus_one: U60Repr<$N, 2> = unsafe{ one.shl(a.modulus_bits()) - one };
+
+    let b = RuntimeBigNum { limbs: U60Repr::into(two_pow_modulus_bits_minus_one), params };
+
+    let result = a + b;
+    assert(result == b);
+}
+
+#[test]
+fn test_mul() {
+    let params = $typ ::get_params();
+
     let a = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
@@ -94,30 +196,212 @@ fn test_mul<let N: u32>(params: BigNumParams<N>) {
     assert(c == d);
 }
 
-fn test_add<let N: u32>(params: BigNumParams<N>) {
+#[test]
+fn test_quadratic_expression() {
+    let params = $typ ::get_params();
+
+    for i in 0..32 {
+        let X1 = unsafe{ RuntimeBigNum::__derive_from_seed(params, [i as u8, 2, 3, 4]) };
+        let Y1 = unsafe{ RuntimeBigNum::__derive_from_seed(params, [i as u8, i as u8, 6, 7]) };
+        let Z1: RuntimeBigNum<$N> = RuntimeBigNum::one(params);
+
+        let (_, YY_mul_2) = unsafe{ RuntimeBigNum::__compute_quadratic_expression(params, [[Y1]], [[false]], [[Y1, Y1]], [[false, false]], [], []) };
+        let mut (_, XX_mul_3) = unsafe{ RuntimeBigNum::__compute_quadratic_expression(
+            params,
+            [[X1]],
+            [[false]],
+            [[X1, X1, X1]],
+            [[false, false, false]],
+            [],
+            []
+        ) };
+        let (_, D) = unsafe{ RuntimeBigNum::__compute_quadratic_expression(params, [[X1, X1]], [[false, false]], [[YY_mul_2]], [[false]], [], []) };
+        let mut (_, X3) = unsafe{ RuntimeBigNum::__compute_quadratic_expression(
+            params,
+            [[XX_mul_3]],
+            [[false]],
+            [[XX_mul_3]],
+            [[false]],
+            [D, D],
+            [true, true]
+        ) };
+        let (_, Y3) = unsafe{ RuntimeBigNum::__compute_quadratic_expression(
+            params,
+            [[XX_mul_3], [YY_mul_2]],
+            [[false], [true]],
+            [[D, X3], [YY_mul_2, YY_mul_2]],
+            [[false, true], [false, false]],
+            [],
+            []
+        ) };
+        // 3XX * (D - X3) - 8YYYY
+
+        let (_, Z3) = unsafe{ RuntimeBigNum::__compute_quadratic_expression(params, [[Y1]], [[false]], [[Z1, Z1]], [[false, false]], [], []) };
+
+        X3.validate_in_field();
+        Y3.validate_in_field();
+        Z3.validate_in_field();
+    }
+}
+
+#[test]
+fn assert_is_not_equal() {
+    let params = $typ ::get_params();
+
     let a = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
     let b = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7])
     };
-    let one = RuntimeBigNum::one(params);
-    a.validate_in_range();
-    a.validate_in_field();
-    b.validate_in_range();
-    b.validate_in_field();
 
-    let mut c = a + b;
-    c = c + c;
-    let d = (a + b) * (one + one);
-    assert(c == d);
-
-    let e = one + one;
-    for i in 1..N {
-        assert(e.limbs[i] == 0);
-    }
-    assert(e.limbs[0] == 2);
+    a.assert_is_not_equal(b);
 }
+
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn assert_is_not_equal_fail() {
+    let params = $typ ::get_params();
+
+    let a = unsafe {
+        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
+    };
+    let b = unsafe {
+        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
+    };
+
+    a.assert_is_not_equal(b);
+}
+
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn assert_is_not_equal_overloaded_lhs_fail() {
+    let params = $typ ::get_params();
+
+    let a = unsafe {
+        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
+    };
+    let b = unsafe {
+        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
+    };
+
+    let modulus = params.modulus;
+
+    let t0: U60Repr<$N, 2> = U60Repr::from(a.limbs);
+    let t1: U60Repr<$N, 2> = U60Repr::from(modulus);
+    let a_plus_modulus = RuntimeBigNum { limbs: U60Repr::into(t0 + t1), params };
+
+    a_plus_modulus.assert_is_not_equal(b);
+}
+
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn assert_is_not_equal_overloaded_rhs_fail() {
+    let params = $typ ::get_params();
+
+    let a = unsafe {
+        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
+    };
+    let b = unsafe {
+        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
+    };
+
+    let modulus = params.modulus;
+
+    let t0: U60Repr<$N, 2> = U60Repr::from(b.limbs);
+    let t1: U60Repr<$N, 2> = U60Repr::from(modulus);
+    let b_plus_modulus = RuntimeBigNum { limbs: U60Repr::into(t0 + t1), params };
+
+    a.assert_is_not_equal(b_plus_modulus);
+}
+
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn assert_is_not_equal_overloaded_fail() {
+    let params = $typ ::get_params();
+
+    let a = unsafe {
+        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
+    };
+    let b = unsafe {
+        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
+    };
+
+    let modulus = params.modulus;
+
+    let t0: U60Repr<$N, 2> = U60Repr::from(a.limbs);
+    let t1: U60Repr<$N, 2> = U60Repr::from(b.limbs);
+    let t2: U60Repr<$N, 2> = U60Repr::from(modulus);
+
+    let a_plus_modulus = RuntimeBigNum { limbs: U60Repr::into(t0 + t2), params };
+    let b_plus_modulus = RuntimeBigNum { limbs: U60Repr::into(t1 + t2), params };
+
+    a_plus_modulus.assert_is_not_equal(b_plus_modulus);
+}
+
+#[test]
+fn test_derive()
+{
+    let params = $typ ::get_params();
+
+    let a = RuntimeBigNum::derive_from_seed(params, "hello".as_bytes());
+    let b = unsafe {
+        RuntimeBigNum::__derive_from_seed(params, "hello".as_bytes())
+    };
+    assert(a == b);
+}
+
+#[test]
+fn test_eq() {
+    let params = $typ ::get_params();
+
+    let a = unsafe {
+        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
+    };
+    let b = unsafe {
+        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
+    };
+    let c = unsafe {
+        RuntimeBigNum::__derive_from_seed(params, [2, 2, 3, 4])
+    };
+
+    let modulus = a.modulus();
+
+    let t0: U60Repr<$N, 2> = (U60Repr::from(modulus.limbs));
+    let t1: U60Repr<$N, 2> = (U60Repr::from(b.limbs));
+
+    let b_plus_modulus = RuntimeBigNum { limbs: U60Repr::into(t0 + t1), params };
+
+    assert((a == b) == true);
+    assert((a == b_plus_modulus) == true);
+    assert((c == b) == false);
+    assert((c == a) == false);
+}
+
+}
+}
+}
+
+#[make_test(quote{3},quote{BN254_Fq_Params})]
+pub struct BNTests{}
+
+#[make_test(quote{3},quote{Secp256k1_Fq_Params})]
+pub struct Secp256K1FqTests{}
+
+#[make_test(quote{4},quote{BLS12_381_Fq_Params})]
+pub struct BLS12_381FqTests{}
+
+#[make_test(quote{18},quote{Test2048Params})]
+pub struct Test2048Tests{}
+
+#[make_test(quote{3},quote{BLS12_381_Fr_Params})]
+pub struct BLS12_381_Fr_ParamsTests{}
+
+#[make_test(quote{4},quote{BLS12_377_Fq_Params})]
+pub struct BLS12_377_Fq_ParamsTests{}
+
+#[make_test(quote{3},quote{BLS12_377_Fr_Params})]
+pub struct BLS12_377_Fr_ParamsTests{}
+
+// 98760
+// 99689
+// 929 gates for a 2048 bit mul
 
 fn test_div<let N: u32>(params: BigNumParams<N>) {
     let a = unsafe {
@@ -141,292 +425,35 @@ unconstrained fn test_invmod<let N: u32>(params: BigNumParams<N>) {
     }
 }
 
-unconstrained fn assert_is_not_equal<let N: u32>(params: BigNumParams<N>) {
-    let a = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
-    };
-    let b = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7])
-    };
-
-    a.assert_is_not_equal(b);
-}
-
-unconstrained fn assert_is_not_equal_fail<let N: u32>(params: BigNumParams<N>) {
-    let a = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
-    };
-    let b = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
-    };
-
-    a.assert_is_not_equal(b);
-}
-
-fn assert_is_not_equal_overloaded_lhs_fail<let N: u32>(params: BigNumParams<N>) {
-    let a = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
-    };
-    let b = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
-    };
-
-    let modulus = params.modulus;
-
-    let t0: U60Repr<N, 2> = U60Repr::from(a.limbs);
-    let t1: U60Repr<N, 2> = U60Repr::from(modulus);
-    let a_plus_modulus = RuntimeBigNum { limbs: U60Repr::into(t0 + t1), params };
-    a_plus_modulus.assert_is_not_equal(b);
-}
-
-fn assert_is_not_equal_overloaded_rhs_fail<let N: u32>(params: BigNumParams<N>) {
-    let a = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
-    };
-    let b = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
-    };
-
-    let modulus = params.modulus;
-
-    let t0: U60Repr<N, 2> = U60Repr::from(b.limbs);
-    let t1: U60Repr<N, 2> = U60Repr::from(modulus);
-    let b_plus_modulus = RuntimeBigNum { limbs: U60Repr::into(t0 + t1), params };
-    a.assert_is_not_equal(b_plus_modulus);
-}
-
-fn assert_is_not_equal_overloaded_fail<let N: u32>(params: BigNumParams<N>) {
-    let a = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
-    };
-    let b = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
-    };
-
-    let modulus = params.modulus;
-
-    let t0: U60Repr<N, 2> = U60Repr::from(a.limbs);
-    let t1: U60Repr<N, 2> = U60Repr::from(b.limbs);
-    let t2: U60Repr<N, 2> = U60Repr::from(modulus);
-    let a_plus_modulus = RuntimeBigNum { limbs: U60Repr::into(t0 + t2), params };
-    let b_plus_modulus = RuntimeBigNum { limbs: U60Repr::into(t1 + t2), params };
-    a_plus_modulus.assert_is_not_equal(b_plus_modulus);
-}
-
-#[test]
-fn test_eq_BN() {
-    let params = BN254_Fq_PARAMS;
-    test_eq(params);
-}
-#[test]
-fn test_add_BN() {
-    let params = BN254_Fq_PARAMS;
-
-    let mut a = RuntimeBigNum { limbs: params.modulus, params };
-    let mut b = a;
-    let mut expected = a;
-
-    a.limbs[0] -= 1;
-    b.limbs[0] -= 1;
-    expected.limbs[0] -= 2;
-
-    let result = a + b;
-    assert(result == expected);
-}
-
-#[test]
-fn test_sub_test_BN() {
-    let params = BN254_Fq_PARAMS;
-
-    // 0 - 1 should equal p - 1
-    let mut a = RuntimeBigNum::new(params);
-    let mut b = RuntimeBigNum::one(params);
-    let mut expected = RuntimeBigNum { limbs: params.modulus, params };
-    expected.limbs[0] -= 1; // p - 1
-
-    let result = a - b;
-    assert(result == expected);
-}
-
-#[test]
-fn test_sub_modulus_limit() {
-    let params = BN254_Fq_PARAMS;
-
-    // if we underflow, maximum result should be ...
-    // 0 - 1 = o-1
-    // 0 - p = 0
-    let mut a= RuntimeBigNum::new(params);
-    let mut b= RuntimeBigNum { limbs: params.modulus, params };
-    let mut expected= RuntimeBigNum::new(params);
-
-    let result = a - b;
-    assert(result == expected);
-}
-
-#[test(should_fail_with = "call to assert_max_bit_size")]
-fn test_sub_modulus_underflow() {
-    let params = BN254_Fq_PARAMS;
-
-    // 0 - (p + 1) is smaller than p and should produce unsatisfiable constraints
-    let mut a = RuntimeBigNum::new(params);
-    let mut b = RuntimeBigNum { limbs: params.modulus, params };
-    b.limbs[0] += 1;
-    let mut expected = RuntimeBigNum::one(params);
-
-    let result = a - b;
-
-    assert(result == expected);
-}
-
-#[test]
-fn test_add_modulus_limit() {
-    let params = BN254_Fq_PARAMS;
-
-    // p + 2^{254} - 1 should be the maximum allowed value fed into an add operation
-    // when adding, if the result overflows the modulus, we conditionally subtract the modulus, producing 2^{254} -  1
-    // this is the largest value that will satisfy the range check applied when constructing a bignum
-    let p : U60Repr<3, 2> = U60Repr::from(params.modulus);
-    let two_pow_254_minus_1: U60Repr<3, 2> = U60Repr::from([0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x3fff]);
-    let a = RuntimeBigNum { limbs: U60Repr::into(p), params };
-    let b = RuntimeBigNum { limbs: U60Repr::into(two_pow_254_minus_1), params };
-    let result = a + b;
-    assert(result == b);
-}
-
-#[test(should_fail_with = "call to assert_max_bit_size")]
-fn test_add_modulus_overflow() {
-    let params = BN254_Fq_PARAMS;
-
-    //(2^{254} - 1) + (p - 1) = 2^{254} + p
-    // after subtracting modulus, result is 2^{254} will does not satisfy the range check applied when constructing a BigNum
-    let p : U60Repr<3, 2> = U60Repr::from(params.modulus);
-    let two_pow_254_minus_1: U60Repr<3, 2> = U60Repr::from([0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x3fff]);
-    let one = U60Repr::from([1, 0, 0]);
-    let a = RuntimeBigNum { limbs: U60Repr::into(p + one), params };
-    let b = RuntimeBigNum { limbs: U60Repr::into(two_pow_254_minus_1), params };
-    let result = a + b;
-    assert(result == b);
-}
-
-#[test]
-fn test_mul_BN() {
-    let params = BN254_Fq_PARAMS;
-    test_mul(params);
-}
-
-#[test]
-fn test_add_BN2() {
-    let params = BN254_Fq_PARAMS;
-    test_add(params);
-}
-
 #[test]
 fn test_div_BN() {
-    let params = BN254_Fq_PARAMS;
+    let params = BN254_Fq_Params::get_params();
     test_div(params);
 }
 
 #[test]
-unconstrained fn test_invmod_BN() {
-    let params = BN254_Fq_PARAMS;
-    test_invmod(params);
-}
-
-#[test]
-unconstrained fn test_assert_is_not_equal_BN() {
-    let params = BN254_Fq_PARAMS;
-    assert_is_not_equal(params);
-}
-
-#[test(should_fail_with = "asssert_is_not_equal fail")]
-unconstrained fn test_assert_is_not_equal_fail_BN() {
-    let params = BN254_Fq_PARAMS;
-    assert_is_not_equal_fail(params);
-}
-
-#[test(should_fail_with = "asssert_is_not_equal fail")]
-fn test_assert_is_not_equal_overloaded_lhs_fail_BN() {
-    let params = BN254_Fq_PARAMS;
-    assert_is_not_equal_overloaded_lhs_fail(params);
-}
-
-#[test(should_fail_with = "asssert_is_not_equal fail")]
-fn test_assert_is_not_equal_overloaded_rhs_fail_BN() {
-    let params = BN254_Fq_PARAMS;
-    assert_is_not_equal_overloaded_rhs_fail(params);
-}
-
-#[test(should_fail_with = "asssert_is_not_equal fail")]
-fn test_assert_is_not_equal_overloaded_fail_BN() {
-    let params = BN254_Fq_PARAMS;
-    assert_is_not_equal_overloaded_fail(params);
-}
-
-#[test]
-fn test_eq_2048() {
-    let params = get_2048_BN_params();
-    test_eq(params);
-}
-
-#[test]
-fn test_mul_2048() {
-    let params = get_2048_BN_params();
-    test_mul(params);
-}
-
-#[test]
-fn test_add_2048() {
-    let params = get_2048_BN_params();
-    test_add(params);
-}
-
-#[test]
-unconstrained fn test_assert_is_not_equal_2048() {
-    let params = get_2048_BN_params();
-    assert_is_not_equal(params);
-}
-
-#[test(should_fail_with = "asssert_is_not_equal fail")]
-unconstrained fn test_assert_is_not_equal_fail_2048() {
-    let params = get_2048_BN_params();
-    assert_is_not_equal_fail(params);
-}
-
-#[test(should_fail_with = "asssert_is_not_equal fail")]
-fn test_assert_is_not_equal_overloaded_lhs_fail_2048() {
-    let params = get_2048_BN_params();
-    assert_is_not_equal_overloaded_lhs_fail(params);
-}
-
-#[test(should_fail_with = "asssert_is_not_equal fail")]
-fn test_assert_is_not_equal_overloaded_rhs_fail_2048() {
-    let params = get_2048_BN_params();
-    assert_is_not_equal_overloaded_rhs_fail(params);
-}
-
-#[test(should_fail_with = "asssert_is_not_equal fail")]
-fn test_assert_is_not_equal_overloaded_fail_2048() {
-    let params = get_2048_BN_params();
-    assert_is_not_equal_overloaded_fail(params);
+fn test_invmod_BN() {
+    let params = BN254_Fq_Params::get_params();
+    unsafe { test_invmod(params) };
 }
 
 // N.B. witness generation times make these tests take ~15 minutes each! Uncomment at your peril
 // #[test]
 // fn test_div_2048() {
-// let params = get_2048_BN_params();
+// let params = get_2048_params();
 //     test_div(params);
 // }
 
 // N.B. witness generation times make these tests take ~15 minutes each! Uncomment at your peril
 // #[test]
 // fn test_invmod_2048() {
-// let params = get_2048_BN_params();
+// let params = get_2048_params();
 //     test_invmod(params);
 // }
 
 #[test]
 fn test_2048_bit_quadratic_expression() {
-    let params = get_2048_BN_params();
+    let params = TEST_2048_PARAMS;
     let a: [Field; 18] = [
         0x000000000000000000000000000000000083684820ff40795b8d9f1be2220cba,
         0x0000000000000000000000000000000000d4924fbdc522b07b6cd0ef5508fd66,
@@ -488,109 +515,12 @@ fn test_2048_bit_quadratic_expression() {
         0x0000000000000000000000000000000000000000000000000000000000000058
     ];
 
-    let a= RuntimeBigNum { limbs: a, params };
-    let b = RuntimeBigNum { limbs: b, params };
-    let c = a * b;
+    let a_bn = RuntimeBigNum { limbs: a, params };
+    let b_bn = RuntimeBigNum { limbs: b, params };
+    let c = a_bn * b_bn;
     assert(c.limbs == c_expected);
 
-    a.validate_in_range();
+    a_bn.validate_in_range();
 
-    RuntimeBigNum::evaluate_quadratic_expression(params, [[a]], [[false]], [[b]], [[false]], [c], [true]);
-}
-
-#[test]
-fn test_expressions() {
-    let params = BN254_Fq_PARAMS;
-
-    let x: [Field; 6] = [
-        0x000000000000000000000000000000000083684820ff40795b8d9f1be2220cba, 0x0000000000000000000000000000000000d4924fbdc522b07b6cd0ef5508fd66, 0x0000000000000000000000000000000000d48f6c43c5930f3d70d6db09a48f4a,
-        0x0000000000000000000000000000000000e7f72b2c0756704bea85be38352b34, 0x00000000000000000000000000000000000000000000000000000000b05d5ac5, 0
-    ];
-
-    let y= RuntimeBigNum {
-        limbs: [
-            0x1,
-            0x1,
-            0x0
-        ], params
-    };
-    let z= RuntimeBigNum {
-        limbs: [
-            0x2,
-            0x2,
-            0x0
-        ], params
-    };
-    let yy = unsafe {
-        y.__add(y)
-    };
-
-    assert(yy.limbs == z.limbs);
-
-    let uu= RuntimeBigNum {
-        limbs: [
-            0x0000000000000000000000000000000000b4a832748da6ad742a1fd81b787643,
-            0x00000000000000000000000000000000009575f594e04080471712c1d7f18e89,
-            0x000000000000000000000000000000000000000000000000000000000000063
-        ],
-        params
-    };
-    let vv= RuntimeBigNum {
-        limbs: [
-            0x0000000000000000000000000000000000b4aec2748da6ad742a1fd81b787643,
-            0x00000000000000000000000000000000009575f594e0408047171a01d7f18e89,
-            0x0000000000000000000000000000000000000000000000000000000000000062
-        ],
-        params
-    };
-    let w= RuntimeBigNum {
-        limbs: [
-            0x0000000000000000000000000000000000b4a832748da6ad742a1fd81b787643,
-            0x00000000000000000000000000000000009575f594e04080471712c1d7f18e89,
-            0x0000000000000000000000000000000000000000000000000000000000001f93
-        ],
-        params
-    };
-    let x= RuntimeBigNum {
-        limbs: [
-            0x0000000000000000000000000000000000b4aec2748da6ad742a1fd81b787643,
-            0x00000000000000000000000000000000009575f594e0408047171a01d7f18e89,
-            0x0000000000000000000000000000000000000000000000000000000000000f93
-        ],
-        params
-    };
-    let wx = unsafe {
-        w.__mul(x)
-    };
-    let uv = unsafe {
-        uu.__mul(vv)
-    };
-    let y = unsafe {
-        (uv.__add(wx)).__neg()
-    };
-    let z = unsafe {
-        uv.__add(wx)
-    };
-
-    RuntimeBigNum::evaluate_quadratic_expression(
-        params,
-        [[uu], [w]],
-        [[false], [false]],
-        [[vv], [x]],
-        [[false], [false]],
-        [z],
-        [true]
-    );
-    RuntimeBigNum::evaluate_quadratic_expression(
-        params,
-        [[uu], [w]],
-        [[false], [false]],
-        [[vv], [x]],
-        [[false], [false]],
-        [y],
-        [false]
-    );
-
-    let wx_constrained = w * x;
-    assert(wx_constrained.limbs == wx.limbs);
+    RuntimeBigNum::evaluate_quadratic_expression(params, [[a_bn]], [[false]], [[b_bn]], [[false]], [c], [true]);
 }
