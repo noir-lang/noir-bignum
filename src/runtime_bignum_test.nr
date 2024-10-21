@@ -509,7 +509,9 @@ fn test_sqrt_BN() {
 
     let x = RuntimeBigNum { limbs: [9, 0, 0], params };
 
-    let (_, maybe_sqrt_x) = unsafe { x.__tonelli_shanks_sqrt() };
+    let (_, maybe_sqrt_x) = unsafe {
+        x.__tonelli_shanks_sqrt()
+    };
 
     assert(maybe_sqrt_x * maybe_sqrt_x == x);
 

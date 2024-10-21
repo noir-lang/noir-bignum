@@ -2,7 +2,10 @@ use crate::utils::u60_representation::U60Repr;
 use crate::utils::split_bits;
 
 use crate::params::BigNumParams as P;
-use crate::unconstrained_helpers::{__barrett_reduction, __primitive_root_log_size, __multiplicative_generator, __tonelli_shanks_sqrt_inner_loop_check};
+use crate::unconstrained_helpers::{
+    __barrett_reduction, __primitive_root_log_size, __multiplicative_generator,
+    __tonelli_shanks_sqrt_inner_loop_check
+};
 
 /**
  * In this file:
@@ -158,7 +161,11 @@ unconstrained pub(crate) fn __add<let N: u32>(
 * @brief given inputs `x, y` compute 2p + x - y (unconstrained)
 * @description see `__neg` for why we use 2p instead of p
 **/
-unconstrained pub(crate) fn __sub<let N: u32>(params: P<N>, lhs: [Field; N], rhs: [Field; N]) -> [Field; N] {
+unconstrained pub(crate) fn __sub<let N: u32>(
+    params: P<N>,
+    lhs: [Field; N],
+    rhs: [Field; N]
+) -> [Field; N] {
     __add(params, lhs, __neg(params, rhs))
 }
 
@@ -332,10 +339,7 @@ unconstrained pub(crate) fn __batch_invert_slice<let N: u32>(params: P<N>, x: [[
 * @note this is unconstrained fn. To constrain a square root, validate that output^2 = self
 * TODO: create fn that constrains nonexistence of square root (i.e. find x where x^2 = -self)
 **/
-unconstrained pub(crate) fn __tonelli_shanks_sqrt<let N: u32>(
-    params: P<N>,
-    input: [Field; N]
-) -> std::option::Option<[Field; N]> {
+unconstrained pub(crate) fn __tonelli_shanks_sqrt<let N: u32>(params: P<N>, input: [Field; N]) -> std::option::Option<[Field; N]> {
     // Tonelli-shanks algorithm begins by finding a field element Q and integer S,
     // such that (p - 1) = Q.2^{s}
     // We can compute the square root of a, by considering a^{(Q + 1) / 2} = R
