@@ -507,20 +507,11 @@ fn test_2048_bit_quadratic_expression() {
 fn test_sqrt_BN() {
     let params = BN254_Fq_Params::get_params();
 
-    let x = RuntimeBigNum { limbs: [144, 0, 0], params };
-    // let y = RuntimeBigNum { limbs: [143, 0, 0], params };
+    let x = RuntimeBigNum { limbs: [9, 0, 0], params };
 
-    let maybe_sqrt_x = unsafe { x.__tonelli_shanks_sqrt() };
-    // let maybe_sqrt_y = unsafe { y.__tonelli_shanks_sqrt() };
+    let (_, maybe_sqrt_x) = unsafe { x.__tonelli_shanks_sqrt() };
 
-    // println(f"maybe_sqrt_x: {maybe_sqrt_x}");
-    // println(f"maybe_sqrt_y: {maybe_sqrt_y}");
+    assert(maybe_sqrt_x * maybe_sqrt_x == x);
 
-    // let sqrt_x = maybe_sqrt_x.unwrap();
-    // println(f"sqrt_x: {sqrt_x}");
-
-    assert(x == x);
-
-    // assert(maybe_sqrt_x.unwrap() == RuntimeBigNum { limbs: [12, 0, 0], params });
-    // assert(maybe_sqrt_y.is_none());
+    assert(x == x); // This was breaking for a while, because a previous version of RuntimeBigNum::__tonelli_shanks_sqrt() was returning an Option. My theory is that this meant Option:none() wasn't propagating the params anymore, which for some reason was causing the params of x to no-longer be evaluated as constant, which is strange.
 }

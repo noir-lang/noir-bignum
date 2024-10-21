@@ -54,7 +54,7 @@ pub(crate) trait RuntimeBigNumTrait<let N: u32> {
     fn __batch_invert<let M: u32>(x: [Self; M]) -> [Self; M];
     unconstrained fn __batch_invert_slice<let M: u32>(to_invert: [Self]) -> [Self];
 
-    unconstrained fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self>;
+    unconstrained fn __tonelli_shanks_sqrt(self) -> (bool, Self);
 
     fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
         params: BigNumParams<N>,
@@ -270,15 +270,16 @@ impl<let N: u32> RuntimeBigNumTrait<N> for RuntimeBigNum<N> {
         all_limbs.map(|limbs| Self { limbs, params })
     }
 
-    unconstrained fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self> {
+    // @dev We intentionally don't use std::option::Option, because the Option::none() case doesn't propagate the `params`, so the code breaks. Specifically, the code stops evaluating modulus_bits = self.params.modulus_bits_getter() as constant, which then breaks calls to `validate_in_range()` (e.g. via calls to `==` on `self`), because `validate_in_range` calls `assert_max_bit_size` on a value derived from `modulus_bits`. I'm not sure why it stops evaluating the getter's return value as constant if we return a std::Option, really.
+    unconstrained fn __tonelli_shanks_sqrt(self) -> (bool, Self) {
         let params = self.params;
         let maybe_limbs = unsafe {
             __tonelli_shanks_sqrt(params, self.limbs)
         };
-        let result: std::option::Option<Self> = if maybe_limbs.is_some() {
-            std::option::Option::some(Self { limbs: maybe_limbs.unwrap_unchecked(), params })
+        let result: (bool, Self) = if maybe_limbs.is_some() {
+            (true, Self { limbs: maybe_limbs.unwrap_unchecked(), params })
         } else {
-            std::option::Option::none()
+            (false, Self::new(params))
         };
         result
     }

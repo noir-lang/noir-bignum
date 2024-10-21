@@ -223,12 +223,7 @@ impl<let N: u32, Params> BigNumTrait<N> for BigNum<N, Params> where Params: BigN
         let maybe_limbs = unsafe {
             __tonelli_shanks_sqrt(params, self.limbs)
         };
-        let result: std::option::Option<Self> = if maybe_limbs.is_some() {
-            std::option::Option::some(Self { limbs: maybe_limbs.unwrap_unchecked() })
-        } else {
-            std::option::Option::none()
-        };
-        result
+        maybe_limbs.map(|limbs| Self { limbs })
     }
 
     unconstrained fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
