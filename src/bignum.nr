@@ -2,12 +2,12 @@ use crate::utils::map::map;
 
 use crate::params::BigNumParamsGetter;
 use crate::constrained_ops::{
-    derive_from_seed, conditional_select, assert_is_not_equal, eq, validate_in_field, validate_in_range, neg, add, sub,
-    mul, div, udiv_mod, udiv, umod
+    derive_from_seed, conditional_select, assert_is_not_equal, eq, validate_in_field, validate_in_range,
+    neg, add, sub, mul, div, udiv_mod, udiv, umod
 };
 use crate::unconstrained_ops::{
     __derive_from_seed, __eq, __is_zero, __neg, __add, __sub, __mul, __div, __udiv_mod, __invmod, __pow,
-    __batch_invert, __batch_invert_slice
+    __batch_invert, __batch_invert_slice, __tonelli_shanks_sqrt
 };
 use crate::expressions::{__compute_quadratic_expression, evaluate_quadratic_expression};
 use crate::serialization::{from_be_bytes, to_le_bytes};
@@ -50,6 +50,8 @@ pub(crate) trait BigNumTrait<let N: u32> {
 
     unconstrained fn __batch_invert<let M: u32>(to_invert: [Self; M]) -> [Self; M];
     unconstrained fn __batch_invert_slice<let M: u32>(to_invert: [Self]) -> [Self];
+
+    unconstrained fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self>;
 
     unconstrained fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
         lhs: [[Self; LHS_N]; NUM_PRODUCTS],
@@ -214,6 +216,19 @@ impl<let N: u32, Params> BigNumTrait<N> for BigNum<N, Params> where Params: BigN
         let params = Params::get_params();
         assert(params.has_multiplicative_inverse);
         __batch_invert_slice(params, x.map(|bn| Self::get_limbs(bn))).map(|limbs| Self { limbs })
+    }
+
+    unconstrained fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self> {
+        let params = Params::get_params();
+        let maybe_limbs = unsafe {
+            __tonelli_shanks_sqrt(params, self.limbs)
+        };
+        let result: std::option::Option<Self> = if maybe_limbs.is_some() {
+            std::option::Option::some(Self { limbs: maybe_limbs.unwrap_unchecked() })
+        } else {
+            std::option::Option::none()
+        };
+        result
     }
 
     unconstrained fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(

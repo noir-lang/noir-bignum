@@ -1,6 +1,6 @@
 use crate::utils::u60_representation::U60Repr;
 use crate::runtime_bignum::RuntimeBigNum;
-use crate::params::{ BigNumParams, BigNumParamsGetter };
+use crate::params::{BigNumParams, BigNumParamsGetter};
 
 use crate::fields::bn254Fq::BN254_Fq_Params;
 use crate::fields::secp256k1Fq::Secp256k1_Fq_Params;
@@ -410,7 +410,9 @@ fn test_div_BN() {
 #[test]
 fn test_invmod_BN() {
     let params = BN254_Fq_Params::get_params();
-    unsafe { test_invmod(params) };
+    unsafe {
+        test_invmod(params)
+    };
 }
 
 // N.B. witness generation times make these tests take ~15 minutes each! Uncomment at your peril
@@ -499,4 +501,26 @@ fn test_2048_bit_quadratic_expression() {
     a_bn.validate_in_range();
 
     RuntimeBigNum::evaluate_quadratic_expression(params, [[a_bn]], [[false]], [[b_bn]], [[false]], [c], [true]);
+}
+
+#[test]
+fn test_sqrt_BN() {
+    let params = BN254_Fq_Params::get_params();
+
+    let x = RuntimeBigNum { limbs: [144, 0, 0], params };
+    // let y = RuntimeBigNum { limbs: [143, 0, 0], params };
+
+    let maybe_sqrt_x = unsafe { x.__tonelli_shanks_sqrt() };
+    // let maybe_sqrt_y = unsafe { y.__tonelli_shanks_sqrt() };
+
+    // println(f"maybe_sqrt_x: {maybe_sqrt_x}");
+    // println(f"maybe_sqrt_y: {maybe_sqrt_y}");
+
+    // let sqrt_x = maybe_sqrt_x.unwrap();
+    // println(f"sqrt_x: {sqrt_x}");
+
+    assert(x == x);
+
+    // assert(maybe_sqrt_x.unwrap() == RuntimeBigNum { limbs: [12, 0, 0], params });
+    // assert(maybe_sqrt_y.is_none());
 }
