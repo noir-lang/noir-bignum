@@ -18,11 +18,12 @@ pub struct RuntimeBigNum<let N: u32> {
     params: BigNumParams<N>,
 }
 
-
+// All functions prefixed `__` are unconstrained!
+// They're not actually decorated as `unconstrained` because to return the `params` (as part of Self) from an `unconstrained` fn would cause range constraints. Instead, each `__` fn wraps a call to an unconstrained fn, so that the already-range-constrained `params` can be inserted into Self after the unconstrained call.
 pub(crate) trait RuntimeBigNumTrait<let N: u32> {
     fn new(params: BigNumParams<N>) -> Self;
     fn one(params: BigNumParams<N>) -> Self;
-    unconstrained fn __derive_from_seed<let SeedBytes: u32>(params: BigNumParams<N>, seed: [u8; SeedBytes]) -> Self;
+    fn __derive_from_seed<let SeedBytes: u32>(params: BigNumParams<N>, seed: [u8; SeedBytes]) -> Self;
     fn from_slice(params: BigNumParams<N>, limbs: [Field]) -> Self;
     fn from_array(params: BigNumParams<N>, limbs: [Field; N]) -> Self;
     fn from_be_bytes<let NBytes: u32>(params: BigNumParams<N>, x: [u8; NBytes]) -> Self;
@@ -40,19 +41,19 @@ pub(crate) trait RuntimeBigNumTrait<let N: u32> {
     unconstrained fn __eq(self, other: Self) -> bool;
     unconstrained fn __is_zero(self) -> bool;
 
-    unconstrained fn __neg(self) -> Self;
-    unconstrained fn __add(self, other: Self) -> Self;
-    unconstrained fn __sub(self, other: Self) -> Self;
-    unconstrained fn __mul(self, other: Self) -> Self;
-    unconstrained fn __div(self, other: Self) -> Self;
-    unconstrained fn __udiv_mod(self, divisor: Self) -> (Self, Self);
-    unconstrained fn __invmod(self) -> Self;
-    unconstrained fn __pow(self, exponent: Self) -> Self;
+    fn __neg(self) -> Self;
+    fn __add(self, other: Self) -> Self;
+    fn __sub(self, other: Self) -> Self;
+    fn __mul(self, other: Self) -> Self;
+    fn __div(self, other: Self) -> Self;
+    fn __udiv_mod(self, divisor: Self) -> (Self, Self);
+    fn __invmod(self) -> Self;
+    fn __pow(self, exponent: Self) -> Self;
 
-    unconstrained fn __batch_invert<let M: u32>(x: [Self; M]) -> [Self; M];
+    fn __batch_invert<let M: u32>(x: [Self; M]) -> [Self; M];
     unconstrained fn __batch_invert_slice<let M: u32>(to_invert: [Self]) -> [Self];
 
-    unconstrained fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
+    fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
         params: BigNumParams<N>,
         lhs_terms: [[Self; LHS_N]; NUM_PRODUCTS],
         lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
@@ -103,8 +104,12 @@ impl<let N: u32> RuntimeBigNumTrait<N> for RuntimeBigNum<N> {
         result
     }
 
-    unconstrained fn __derive_from_seed<let SeedBytes: u32>(params: BigNumParams<N>, seed: [u8; SeedBytes]) -> Self {
-        Self { limbs: __derive_from_seed(params, seed), params }
+    // UNCONSTRAINED! (Hence `__` prefix).
+    fn __derive_from_seed<let SeedBytes: u32>(params: BigNumParams<N>, seed: [u8; SeedBytes]) -> Self {
+        let limbs = unsafe {
+            __derive_from_seed(params, seed)
+        };
+        Self { limbs, params }
     }
 
     fn from_slice(params: BigNumParams<N>, limbs: [Field]) -> Self {
@@ -161,61 +166,102 @@ impl<let N: u32> RuntimeBigNumTrait<N> for RuntimeBigNum<N> {
         __is_zero(self.limbs)
     }
 
-    unconstrained fn __neg(self) -> Self {
+    // UNCONSTRAINED! (Hence `__` prefix).
+    fn __neg(self) -> Self {
         let params = self.params;
-        Self::from_array(params, __neg(params, self.limbs))
+        let limbs = unsafe {
+            __neg(params, self.limbs)
+        };
+        Self { params, limbs }
     }
 
-    unconstrained fn __add(self, other: Self) -> Self {
+    // UNCONSTRAINED! (Hence `__` prefix).
+    fn __add(self, other: Self) -> Self {
         let params = self.params;
-        Self::from_array(params, __add(params, self.limbs, other.limbs))
+        let limbs = unsafe {
+            __add(params, self.limbs, other.limbs)
+        };
+        Self { params, limbs }
     }
 
-    unconstrained fn __sub(self, other: Self) -> Self {
+    // UNCONSTRAINED! (Hence `__` prefix).
+    fn __sub(self, other: Self) -> Self {
         let params = self.params;
-        Self::from_array(params, __sub(params, self.limbs, other.limbs))
+        let limbs = unsafe {
+            __sub(params, self.limbs, other.limbs)
+        };
+        Self { params, limbs }
     }
 
-    unconstrained fn __mul(self, other: Self) -> Self {
+    // UNCONSTRAINED! (Hence `__` prefix).
+    fn __mul(self, other: Self) -> Self {
         let params = self.params;
-        Self::from_array(params, __mul(params, self.limbs, other.limbs))
+        let limbs = unsafe {
+            __mul(params, self.limbs, other.limbs)
+        };
+        Self { params, limbs }
     }
 
-    unconstrained fn __div(self, divisor: Self) -> Self {
+    // UNCONSTRAINED! (Hence `__` prefix).
+    fn __div(self, divisor: Self) -> Self {
         let params = self.params;
-        Self::from_array(params, __div(params, self.limbs, divisor.limbs))
+        let limbs = unsafe {
+            __div(params, self.limbs, divisor.limbs)
+        };
+        Self { params, limbs }
     }
 
-    unconstrained fn __udiv_mod(self, divisor: Self) -> (Self, Self) {
+    // UNCONSTRAINED! (Hence `__` prefix).
+    fn __udiv_mod(self, divisor: Self) -> (Self, Self) {
         let params = self.params;
-        let (q, r) = __udiv_mod(self.limbs, divisor.limbs);
+        let (q, r) = unsafe {
+            __udiv_mod(self.limbs, divisor.limbs)
+        };
         (Self { limbs: q, params }, Self { limbs: r, params })
     }
 
-    unconstrained fn __invmod(self) -> Self {
+    // UNCONSTRAINED! (Hence `__` prefix).
+    fn __invmod(self) -> Self {
         let params = self.params;
         assert(params.has_multiplicative_inverse);
-        Self { limbs: __invmod(params, self.limbs), params }
+        let limbs = unsafe {
+            __invmod(params, self.limbs)
+        };
+        Self { limbs, params }
     }
 
-    unconstrained fn __pow(self, exponent: Self) -> Self {
+    // UNCONSTRAINED! (Hence `__` prefix).
+    fn __pow(self, exponent: Self) -> Self {
         let params = self.params;
-        Self { limbs: __pow(params, self.limbs, exponent.limbs), params }
+        let limbs = unsafe {
+            __pow(params, self.limbs, exponent.limbs)
+        };
+        Self { limbs, params }
     }
 
-    unconstrained fn __batch_invert<let M: u32>(x: [Self; M]) -> [Self; M] {
+    // UNCONSTRAINED! (Hence `__` prefix).
+    fn __batch_invert<let M: u32>(x: [Self; M]) -> [Self; M] {
         let params = x[0].params;
         assert(params.has_multiplicative_inverse);
-        __batch_invert(params, x.map(|bn| Self::get_limbs(bn))).map(|limbs| Self { limbs, params })
+        let all_limbs = unsafe {
+            __batch_invert(params, x.map(|bn| Self::get_limbs(bn)))
+        };
+        all_limbs.map(|limbs| Self { limbs, params })
     }
 
+    // Note: can't return a slice from this unconstrained to a constrained function.
     unconstrained fn __batch_invert_slice<let M: u32>(x: [Self]) -> [Self] {
         let params = x[0].params;
         assert(params.has_multiplicative_inverse);
-        __batch_invert_slice(params, x.map(|bn| Self::get_limbs(bn))).map(|limbs| Self { limbs, params })
+        let all_limbs = unsafe {
+            let inv_slice = __batch_invert_slice(params, x.map(|bn| Self::get_limbs(bn)));
+            inv_slice.as_array()
+        };
+        all_limbs.map(|limbs| Self { limbs, params })
     }
 
-    unconstrained fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
+    // UNCONSTRAINED! (Hence `__` prefix).
+    fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
         params: BigNumParams<N>,
         lhs_terms: [[Self; LHS_N]; NUM_PRODUCTS],
         lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
@@ -224,15 +270,17 @@ impl<let N: u32> RuntimeBigNumTrait<N> for RuntimeBigNum<N> {
         linear_terms: [Self; ADD_N],
         linear_flags: [bool; ADD_N]
     ) -> (Self, Self) {
-        let (q_limbs, r_limbs) = __compute_quadratic_expression(
-            params,
-            lhs_terms.map(|bns| map(bns, |bn| Self::get_limbs(bn))),
-            lhs_flags,
-            rhs_terms.map(|bns| map(bns, |bn| Self::get_limbs(bn))),
-            rhs_flags,
-            linear_terms.map(|bn| Self::get_limbs(bn)),
-            linear_flags
-        );
+        let (q_limbs, r_limbs) = unsafe {
+            __compute_quadratic_expression(
+                params,
+                lhs_terms.map(|bns| map(bns, |bn| Self::get_limbs(bn))),
+                lhs_flags,
+                rhs_terms.map(|bns| map(bns, |bn| Self::get_limbs(bn))),
+                rhs_flags,
+                linear_terms.map(|bn| Self::get_limbs(bn)),
+                linear_flags
+            )
+        };
         (Self { limbs: q_limbs, params }, Self { limbs: r_limbs, params })
     }
 

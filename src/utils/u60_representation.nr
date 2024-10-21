@@ -78,7 +78,7 @@ impl<let N: u32, let NumSegments: u32> std::cmp::Eq for U60Repr<N, NumSegments> 
 
 impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
 
-    unconstrained fn new<let NumFieldSegments: u32>(x: [Field; N * NumFieldSegments]) -> Self {
+    unconstrained pub fn new<let NumFieldSegments: u32>(x: [Field; N * NumFieldSegments]) -> Self {
         let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
         for i in 0..(N * NumFieldSegments) {
             let (lo, hi) = split_bits::split_60_bits(x[i]);
@@ -88,7 +88,7 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
         result
     }
 
-    unconstrained fn one() -> Self {
+    unconstrained pub fn one() -> Self {
         let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
         result.limbs[0] = 1;
         result
