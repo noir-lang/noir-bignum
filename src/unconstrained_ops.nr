@@ -392,6 +392,10 @@ unconstrained pub(crate) fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>
             m = i;
         }
     }
-    let mut result = std::option::Option { _value: r, _is_some: found_root };
+    let result = if found_root {
+        std::option::Option::some(r)
+    } else {
+        std::option::Option::none()
+    };
     result
 }

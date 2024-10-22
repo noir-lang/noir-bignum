@@ -1,25 +1,25 @@
 use crate::utils::u60_representation::U60Repr;
 
-pub(crate) struct BigNumParams<let N: u32, let MOD_BITS: u32> {
-    has_multiplicative_inverse: bool,
+pub struct BigNumParams<let N: u32, let MOD_BITS: u32> {
+    pub has_multiplicative_inverse: bool,
 
     // @brief modulus: all BigNum operations are evaluated modulo this value
-    modulus: [Field; N],
+    pub modulus: [Field; N],
 
     // @brief modulus but represented in a U60Repr form
-    modulus_u60: U60Repr<N, 2>,
-    modulus_u60_x4: U60Repr<N, 4>,
+    pub modulus_u60: U60Repr<N, 2>,
+    pub modulus_u60_x4: U60Repr<N, 4>,
 
     // @brief double_modulus: used when performing negations and subtractions
-    double_modulus: [Field; N],
+    pub double_modulus: [Field; N],
 
     // @brief redc_param used for __barrett_reduction. See https://en.wikipedia.org/wiki/Barrett_reduction
-    redc_param: [Field; N],
+    pub redc_param: [Field; N],
 }
 
 // To be implemented by the user for any BigNum they define, or within the predefined BigNums in the `fields/` dir.
-pub(crate) trait BigNumParamsGetter<let N: u32, let MOD_BITS: u32> {
-    fn get_params() -> BigNumParams<N, MOD_BITS>;
+pub trait BigNumParamsGetter<let N: u32, let MOD_BITS: u32> {
+    pub fn get_params() -> BigNumParams<N, MOD_BITS>;
 }
 
 impl<let N: u32, let MOD_BITS: u32> BigNumParams<N, MOD_BITS> {

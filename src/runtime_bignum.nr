@@ -14,8 +14,8 @@ use crate::expressions::{__compute_quadratic_expression, evaluate_quadratic_expr
 use crate::serialization::{from_be_bytes, to_le_bytes};
 
 pub struct RuntimeBigNum<let N: u32, let MOD_BITS: u32> {
-    limbs: [Field; N],
-    params: BigNumParams<N, MOD_BITS>,
+    pub limbs: [Field; N],
+    pub params: BigNumParams<N, MOD_BITS>,
 }
 
 impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {}
@@ -23,52 +23,52 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {}
 // All functions prefixed `__` are unconstrained!
 // They're not actually decorated as `unconstrained` because to return the `params` (as part of Self) from an `unconstrained` fn would cause range constraints. Instead, each `__` fn wraps a call to an unconstrained fn, so that the already-range-constrained `params` can be inserted into Self after the unconstrained call.
 pub(crate) trait RuntimeBigNumTrait<let N: u32, let MOD_BITS: u32> {
-    fn new(params: BigNumParams<N, MOD_BITS>) -> Self;
-    fn one(params: BigNumParams<N, MOD_BITS>) -> Self;
-    fn derive_from_seed<let SeedBytes: u32>(params: BigNumParams<N, MOD_BITS>, seed: [u8; SeedBytes]) -> Self;
-    fn __derive_from_seed<let SeedBytes: u32>(params: BigNumParams<N, MOD_BITS>, seed: [u8; SeedBytes]) -> Self;
-    fn from_slice(params: BigNumParams<N, MOD_BITS>, limbs: [Field]) -> Self;
-    fn from_array(params: BigNumParams<N, MOD_BITS>, limbs: [Field; N]) -> Self;
-    fn from_be_bytes<let NBytes: u32>(params: BigNumParams<N, MOD_BITS>, x: [u8; NBytes]) -> Self;
+    pub fn new(params: BigNumParams<N, MOD_BITS>) -> Self;
+    pub fn one(params: BigNumParams<N, MOD_BITS>) -> Self;
+    pub fn derive_from_seed<let SeedBytes: u32>(params: BigNumParams<N, MOD_BITS>, seed: [u8; SeedBytes]) -> Self;
+    pub fn __derive_from_seed<let SeedBytes: u32>(params: BigNumParams<N, MOD_BITS>, seed: [u8; SeedBytes]) -> Self;
+    pub fn from_slice(params: BigNumParams<N, MOD_BITS>, limbs: [Field]) -> Self;
+    pub fn from_array(params: BigNumParams<N, MOD_BITS>, limbs: [Field; N]) -> Self;
+    pub fn from_be_bytes<let NBytes: u32>(params: BigNumParams<N, MOD_BITS>, x: [u8; NBytes]) -> Self;
 
-    fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes];
+    pub fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes];
 
-    fn modulus(self) -> Self;
-    fn modulus_bits() -> u32;
-    fn num_limbs() -> u32;
-    // fn get(self) -> [Field];
-    fn get_limbs(self) -> [Field; N];
-    fn get_limb(self, idx: u32) -> Field;
-    fn set_limb(&mut self, idx: u32, value: Field);
+    pub fn modulus(self) -> Self;
+    pub fn modulus_bits() -> u32;
+    pub fn num_limbs() -> u32;
+    // pub fn get(self) -> [Field];
+    pub fn get_limbs(self) -> [Field; N];
+    pub fn get_limb(self, idx: u32) -> Field;
+    pub fn set_limb(&mut self, idx: u32, value: Field);
 
     unconstrained fn __eq(self, other: Self) -> bool;
     unconstrained fn __is_zero(self) -> bool;
 
     // unconstrained
-    fn __neg(self) -> Self;
+    pub fn __neg(self) -> Self;
     // unconstrained
-    fn __add(self, other: Self) -> Self;
+    pub fn __add(self, other: Self) -> Self;
     // unconstrained
-    fn __sub(self, other: Self) -> Self;
+    pub fn __sub(self, other: Self) -> Self;
     // unconstrained
-    fn __mul(self, other: Self) -> Self;
+    pub fn __mul(self, other: Self) -> Self;
     // unconstrained
-    fn __div(self, other: Self) -> Self;
+    pub fn __div(self, other: Self) -> Self;
     // unconstrained
-    fn __udiv_mod(self, divisor: Self) -> (Self, Self);
+    pub fn __udiv_mod(self, divisor: Self) -> (Self, Self);
     // unconstrained
-    fn __invmod(self) -> Self;
+    pub fn __invmod(self) -> Self;
     // unconstrained
-    fn __pow(self, exponent: Self) -> Self;
+    pub fn __pow(self, exponent: Self) -> Self;
 
     // unconstrained
-    fn __batch_invert<let M: u32>(x: [Self; M]) -> [Self; M];
+    pub fn __batch_invert<let M: u32>(x: [Self; M]) -> [Self; M];
     unconstrained fn __batch_invert_slice<let M: u32>(to_invert: [Self]) -> [Self];
 
-    fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self>;
+    pub fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self>;
 
     // unconstrained
-    fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
+    pub fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
         params: BigNumParams<N, MOD_BITS>,
         lhs_terms: [[Self; LHS_N]; NUM_PRODUCTS],
         lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
@@ -78,7 +78,7 @@ pub(crate) trait RuntimeBigNumTrait<let N: u32, let MOD_BITS: u32> {
         linear_flags: [bool; ADD_N]
     ) -> (Self, Self);
 
-    fn evaluate_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
+    pub fn evaluate_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
         params: BigNumParams<N, MOD_BITS>,
         lhs_terms: [[Self; LHS_N]; NUM_PRODUCTS],
         lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
@@ -88,22 +88,22 @@ pub(crate) trait RuntimeBigNumTrait<let N: u32, let MOD_BITS: u32> {
         linear_flags: [bool; ADD_N]
     );
 
-    fn eq(lhs: Self, rhs: Self) -> bool { lhs == rhs }
-    fn assert_is_not_equal(self, other: Self);
-    fn validate_in_field(self);
-    fn validate_in_range(self);
-    // fn validate_gt(self, lhs: Self, rhs: Self);
+    pub fn eq(lhs: Self, rhs: Self) -> bool { lhs == rhs }
+    pub fn assert_is_not_equal(self, other: Self);
+    pub fn validate_in_field(self);
+    pub fn validate_in_range(self);
+    // pub fn validate_gt(self, lhs: Self, rhs: Self);
 
-    fn neg(self) -> Self;
-    fn add(lhs: Self, rhs: Self) -> Self { lhs + rhs }
-    fn sub(lhs: Self, rhs: Self) -> Self { lhs - rhs }
-    fn mul(lhs: Self, rhs: Self) -> Self { lhs * rhs }
-    fn div(lhs: Self, rhs: Self) -> Self { lhs / rhs }
-    fn udiv_mod(numerator: Self, divisor: Self) -> (Self, Self);
-    fn udiv(numerator: Self, divisor: Self) -> Self;
-    fn umod(numerator: Self, divisor: Self) -> Self;
+    pub fn neg(self) -> Self;
+    pub fn add(lhs: Self, rhs: Self) -> Self { lhs + rhs }
+    pub fn sub(lhs: Self, rhs: Self) -> Self { lhs - rhs }
+    pub fn mul(lhs: Self, rhs: Self) -> Self { lhs * rhs }
+    pub fn div(lhs: Self, rhs: Self) -> Self { lhs / rhs }
+    pub fn udiv_mod(numerator: Self, divisor: Self) -> (Self, Self);
+    pub fn udiv(numerator: Self, divisor: Self) -> Self;
+    pub fn umod(numerator: Self, divisor: Self) -> Self;
 
-    fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self;
+    pub fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self;
 }
 
 impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeBigNum<N, MOD_BITS> {

@@ -267,8 +267,8 @@ fn test_add_BN() {
     b.limbs[0] -= 1;
     expected.limbs[0] -= 2;
 
-    let result = a.add(b);
-    assert(result.eq(expected));
+    let result = a + b;
+    assert(result == expected);
 }
 
 #[test]
@@ -279,8 +279,8 @@ fn test_sub_test_BN() {
     let mut expected: Fq = BigNum::modulus();
     expected.limbs[0] -= 1; // p - 1
 
-    let result = a.sub(b);
-    assert(result.eq(expected));
+    let result = a - b;
+    assert(result == expected);
 }
 
 #[test]
@@ -292,8 +292,8 @@ fn test_sub_modulus_limit() {
     let mut b: Fq = BigNum::modulus();
     let mut expected = BigNum::new();
 
-    let result = a.sub(b);
-    assert(result.eq(expected));
+    let result = a - b;
+    assert(result == expected);
 }
 
 #[test(should_fail_with = "call to assert_max_bit_size")]
@@ -304,8 +304,8 @@ fn test_sub_modulus_underflow() {
     b.limbs[0] += 1;
     let mut expected = BigNum::one();
 
-    let result = a.sub(b);
-    assert(result.eq(expected));
+    let result = a - b;
+    assert(result == expected);
 }
 
 #[test]
@@ -317,8 +317,8 @@ fn test_add_modulus_limit() {
     let two_pow_254_minus_1: U60Repr<3, 2> = U60Repr::from([0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x3fff]);
     let a: Fq = BigNum { limbs: U60Repr::into(p) };
     let b: Fq = BigNum { limbs: U60Repr::into(two_pow_254_minus_1) };
-    let result = a.add(b);
-    assert(result.eq(b));
+    let result = a + b;
+    assert(result == b);
 }
 
 #[test(should_fail_with = "call to assert_max_bit_size")]
@@ -330,8 +330,8 @@ fn test_add_modulus_overflow() {
     let one = U60Repr::from([1, 0, 0]);
     let a: Fq = BigNum { limbs: U60Repr::into(p + one) };
     let b: Fq = BigNum { limbs: U60Repr::into(two_pow_254_minus_1) };
-    let result = a.add(b);
-    assert(result.eq(b));
+    let result = a + b;
+    assert(result == b);
 }
 
 #[test]
@@ -474,7 +474,7 @@ fn test_udiv_mod_U256() {
     let product = unsafe {
         q.__mul(b).__add(r)
     };
-    assert(product.eq(a));
+    assert(product == a);
 }
 
 // // N.B. witness generation times make these tests take ~15 minutes each! Uncomment at your peril
