@@ -21,12 +21,12 @@ use crate::runtime_bignum::BigNumInstance;
 use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
 pub struct BLS12_377_Fq_Params {}
-impl RuntimeBigNumParamsTrait<4> for BLS12_377_Fq_Params {
+impl RuntimeBigNumParamsTrait<4, 377> for BLS12_377_Fq_Params {
     fn modulus_bits() -> u32 {
         377
     }
 }
-impl BigNumParamsTrait<4> for BLS12_377_Fq_Params {
+impl BigNumParamsTrait<4, 377> for BLS12_377_Fq_Params {
     fn get_instance() -> BigNumInstance<4, Self> {
         BLS12_377_Fq_Instance
     }

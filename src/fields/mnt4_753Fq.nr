@@ -24,12 +24,12 @@ use crate::runtime_bignum::BigNumInstance;
 use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
 pub struct MNT4_753_Fq_Params {}
-impl RuntimeBigNumParamsTrait<7> for MNT4_753_Fq_Params {
+impl RuntimeBigNumParamsTrait<7, 753> for MNT4_753_Fq_Params {
     fn modulus_bits() -> u32 {
         753
     }
 }
-impl BigNumParamsTrait<7> for MNT4_753_Fq_Params {
+impl BigNumParamsTrait<7, 753> for MNT4_753_Fq_Params {
     fn get_instance() -> BigNumInstance<7, Self> {
         MNT4_753_Fq_Instance
     }

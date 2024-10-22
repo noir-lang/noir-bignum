@@ -3,12 +3,12 @@ use crate::runtime_bignum::BigNumInstance;
 use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
 pub struct U8192Params {}
-impl RuntimeBigNumParamsTrait<69> for U8192Params {
+impl RuntimeBigNumParamsTrait<69, 8193> for U8192Params {
     fn modulus_bits() -> u32 {
         8193
     }
 }
-impl BigNumParamsTrait<69> for U8192Params {
+impl BigNumParamsTrait<69, 8193> for U8192Params {
     fn get_instance() -> BigNumInstance<69, Self> {
         U8192_Instance
     }

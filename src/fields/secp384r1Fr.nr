@@ -3,12 +3,12 @@ use crate::runtime_bignum::BigNumInstance;
 use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
 pub struct Secp384r1_Fr_Params {}
-impl RuntimeBigNumParamsTrait<4> for Secp384r1_Fr_Params {
+impl RuntimeBigNumParamsTrait<4, 384> for Secp384r1_Fr_Params {
     fn modulus_bits() -> u32 {
         384
     }
 }
-impl BigNumParamsTrait<4> for Secp384r1_Fr_Params {
+impl BigNumParamsTrait<4, 384> for Secp384r1_Fr_Params {
     fn get_instance() -> BigNumInstance<4, Self> {
         Secp384r1_Fr_Instance
     }

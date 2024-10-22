@@ -16,12 +16,12 @@ struct Test2048Params{}
 fn silence_warning() {
     let _  = Test2048Params {};
 }
-impl RuntimeBigNumParamsTrait<18> for Test2048Params {
+impl RuntimeBigNumParamsTrait<18, 2048> for Test2048Params {
     fn modulus_bits() -> u32 {
         2048
     }
 }
-impl BigNumParamsTrait<18> for Test2048Params {
+impl BigNumParamsTrait<18, 2048> for Test2048Params {
     fn get_instance() -> BigNumInstance<18, Self> {
         test2048_Instance
     }

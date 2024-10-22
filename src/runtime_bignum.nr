@@ -86,11 +86,13 @@ unconstrained fn __tonelli_shanks_sqrt(self, input: BN) -> std::option::Option<B
  * @brief BigNumParamsTrait defines a "field" with which to parametrise BigNum.
  * @description The "field" does not need to be prime, any value *should* work (TODO: test!)
 **/
-pub trait BigNumParamsTrait<let N: u32> {
+pub trait BigNumParamsTrait<let N: u32, let MOD_BITS: u32> {
     /**
      * @brief modulus_bits = log2(modulus) rounded up
      **/
-    fn modulus_bits() -> u32;
+    fn modulus_bits() -> u32 {
+        MOD_BITS
+    }
 
     fn has_multiplicative_inverse() -> bool { true }
 }
@@ -131,7 +133,7 @@ impl<let N: u32, Params> BigNum<N, Params> {
     }
 }
 
-impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u32, let MOD_BITS: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumParamsTrait<N, MOD_BITS> {
 
     fn new() -> Self {
         BigNum::new()
@@ -178,12 +180,9 @@ impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
             result.limbs[N - i - 1] = limb;
         }
 
-        // max_bits_in_most_significant_byte should be known at comptime. if not...messy!
-        let mut max_bits_in_most_significant_byte = 8 - (num_bits - modulus_bits);
-
         let most_significant_byte: Field = x[0] as Field;
 
-        most_significant_byte.assert_max_bit_size(max_bits_in_most_significant_byte as u32);
+        most_significant_byte.assert_max_bit_size::<8 - (NBytes*8 - MOD_BITS)>();
         result
     }
 
@@ -233,10 +232,9 @@ impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
      **/
     fn validate_in_range(self) {
         for i in 0..(N - 1) {
-            self.limbs[i].assert_max_bit_size(120);
+            self.limbs[i].assert_max_bit_size::<120>();
         }
-        let final_limb_bits = Params::modulus_bits() - ((N - 1) * 120);
-        self.limbs[N - 1].assert_max_bit_size(final_limb_bits as u32);
+        self.limbs[N - 1].assert_max_bit_size::<MOD_BITS - ((N - 1) * 120)>();
     }
 
     /**
@@ -254,11 +252,10 @@ impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
      **/
     fn validate_quotient_in_range(self) {
         for i in 0..(N) {
-            self.limbs[i].assert_max_bit_size(120);
+            self.limbs[i].assert_max_bit_size::<120>();
         }
         // Note: replace magic number 6 with definition
-        let final_limb_bits = Params::modulus_bits() - ((N - 1) * 120) + 6;
-        self.limbs[N - 1].assert_max_bit_size(final_limb_bits as u32);
+        self.limbs[N - 1].assert_max_bit_size::<MOD_BITS - ((N - 1) * 120) + 6>();
     }
 
     unconstrained fn __is_zero(self) -> bool {
@@ -270,7 +267,7 @@ impl<let N: u32, Params> BigNumTrait for BigNum<N, Params> where Params: BigNumP
     }
 }
 
-impl<let N: u32, Params> BigNum<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u32, let MOD_BITS: u32, Params> BigNum<N, Params> where Params: BigNumParamsTrait<N, MOD_BITS> {
 
     fn from_array(limbs: [Field; N]) -> BigNum<N, Params> {
         BigNum { limbs }
@@ -289,7 +286,7 @@ impl<let N: u32, Params> BigNum<N, Params> where Params: BigNumParamsTrait<N> {
     }
 }
 
-impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u32, let MOD_BITS: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTrait<N, MOD_BITS> {
 
     /**
      * @brief compute the log of the size of the primitive root
@@ -357,7 +354,7 @@ impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTra
         result
     }
 }
-impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstance<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u32, let MOD_BITS: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstance<N, Params> where Params: BigNumParamsTrait<N, MOD_BITS> {
 
     /**
      * @brief compute a modular square root using the Tonelli-Shanks algorithm
@@ -365,10 +362,7 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
      * @note this is unconstrained fn. To constrain a square root, validate that output^2 = self
      * TODO: create fn that constrains nonexistence of square root (i.e. find x where x^2 = -self)
      **/
-    unconstrained fn __tonelli_shanks_sqrt(
-        self,
-        input: BigNum<N, Params>
-    ) -> std::option::Option<BigNum<N, Params>> {
+    unconstrained fn __tonelli_shanks_sqrt(self, input: BigNum<N, Params>) -> std::option::Option<BigNum<N, Params>> {
         // Tonelli-shanks algorithm begins by finding a field element Q and integer S,
         // such that (p - 1) = Q.2^{s}
 
@@ -782,10 +776,10 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
         // N.B. borrow_flags is `Field` type because making it `bool` would apply boolean constraints to all `N2` array entries.
         //      We only use `N2 - 2` borrow flags so applying 1-bit range checks on the array elements we use is more efficient.
         // TODO: Once it is possible to perform arithmetic on generics we can use `borrow_flags: [bool;N+N-2]` to avoid this issue
-        borrow_flags[0].assert_max_bit_size(1);
+        borrow_flags[0].assert_max_bit_size::<1>();
         product_limbs[0] += borrow_flags[0] * borrow_shift;
         for i in 1..(N + N - 2) {
-            borrow_flags[i].assert_max_bit_size(1);
+            borrow_flags[i].assert_max_bit_size::<1>();
             product_limbs[i] += 
                 (borrow_flags[i] * borrow_shift - borrow_flags[i - 1] * borrow_carry);
         }
@@ -807,7 +801,7 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
         for i in 0..N + N - 2 {
             product_limbs[i] *= hi_downshift;
             std::as_witness(product_limbs[i]);
-            product_limbs[i].assert_max_bit_size(126); // N.B. is this sufficient? going beyond 126 costs us 1 gate per limb
+            product_limbs[i].assert_max_bit_size::<126>(); // N.B. is this sufficient? going beyond 126 costs us 1 gate per limb
             product_limbs[i + 1] += product_limbs[i];
         }
         // the most significant limb has no limb to "carry" values into - the entire limb must equal zero
@@ -1093,7 +1087,7 @@ impl<let N: u32, Params> BigNumInstanceTrait<BigNum<N, Params>> for BigNumInstan
     }
 }
 
-impl<let N: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTrait<N> {
+impl<let N: u32, let MOD_BITS: u32, Params> BigNumInstance<N, Params> where Params: BigNumParamsTrait<N, MOD_BITS> {
 
     // ####################################################################################################################
     // ####################################################################################################################

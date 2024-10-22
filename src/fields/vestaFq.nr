@@ -19,12 +19,12 @@ use crate::runtime_bignum::BigNumInstance;
 use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
 pub struct Vesta_Fq_Params {}
-impl RuntimeBigNumParamsTrait<3> for Vesta_Fq_Params {
+impl RuntimeBigNumParamsTrait<3, 255> for Vesta_Fq_Params {
     fn modulus_bits() -> u32 {
         255
     }
 }
-impl BigNumParamsTrait<3> for Vesta_Fq_Params {
+impl BigNumParamsTrait<3, 255> for Vesta_Fq_Params {
     fn get_instance() -> BigNumInstance<3, Self> {
         Vesta_Fq_Instance
     }
