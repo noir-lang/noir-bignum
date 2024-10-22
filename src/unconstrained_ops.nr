@@ -3,7 +3,7 @@ use crate::utils::split_bits;
 
 use crate::params::BigNumParams as P;
 use crate::unconstrained_helpers::{
-    __barrett_reduction //, __primitive_root_log_size, __multiplicative_generator, __tonelli_shanks_sqrt_inner_loop_check
+    __barrett_reduction , __primitive_root_log_size, __multiplicative_generator, __tonelli_shanks_sqrt_inner_loop_check
 };
 
 /**
@@ -321,88 +321,88 @@ unconstrained pub(crate) fn __batch_invert_slice<let N: u32, let MOD_BITS: u32>(
     result
 }
 
-// /**
-// * @brief compute a modular square root using the Tonelli-Shanks algorithm
-// * @details only use for prime fields! Function may infinite loop if used for non-prime fields
-// * @note this is unconstrained fn. To constrain a square root, validate that output^2 = self
-// * TODO: create fn that constrains nonexistence of square root (i.e. find x where x^2 = -self)
-// **/
-// unconstrained pub(crate) fn __tonelli_shanks_sqrt<let N: u32>(params: P<N, MOD_BITS>, input: [Field; N]) -> std::option::Option<[Field; N]> {
-//     // Tonelli-shanks algorithm begins by finding a field element Q and integer S,
-//     // such that (p - 1) = Q.2^{s}
-//     // We can compute the square root of a, by considering a^{(Q + 1) / 2} = R
-//     // Once we have found such an R, we have
-//     // R^{2} = a^{Q + 1} = a^{Q}a
-//     // If a^{Q} = 1, we have found our square root.
-//     // Otherwise, we have a^{Q} = t, where t is a 2^{s-1}'th root of unity.
-//     // This is because t^{2^{s-1}} = a^{Q.2^{s-1}}.
-//     // We know that (p - 1) = Q.w^{s}, therefore t^{2^{s-1}} = a^{(p - 1) / 2}
-//     // From Euler's criterion, if a is a quadratic residue, a^{(p - 1) / 2} = 1
-//     // i.e. t^{2^{s-1}} = 1
-//     // To proceed with computing our square root, we want to transform t into a smaller subgroup,
-//     // specifically, the (s-2)'th roots of unity.
-//     // We do this by finding some value b,such that
-//     // (t.b^2)^{2^{s-2}} = 1 and R' = R.b
-//     // Finding such a b is trivial, because from Euler's criterion, we know that,
-//     // for any quadratic non-residue z, z^{(p - 1) / 2} = -1
-//     // i.e. z^{Q.2^{s-1}} = -1
-//     // => z^Q is a 2^{s-1}'th root of -1
-//     // => z^{Q^2} is a 2^{s-2}'th root of -1
-//     // Since t^{2^{s-1}} = 1, we know that t^{2^{s - 2}} = -1
-//     // => t.z^{Q^2} is a 2^{s - 2}'th root of unity.
-//     // We can iteratively transform t into ever smaller subgroups, until t = 1.
-//     // At each iteration, we need to find a new value for b, which we can obtain
-//     // by repeatedly squaring z^{Q}
-//     let one_u60: U60Repr<N, 2> = unsafe {
-//         U60Repr::one()
-//     };
-//     let primitive_root_log_size = __primitive_root_log_size(params);
-//     let mut Q = (params.modulus_u60 - one_u60).shr(primitive_root_log_size - 1);
-//     let Q_minus_one_over_two_u60 = (Q - one_u60).shr(2);
-//     let Q_minus_one_over_two: [Field; N] = U60Repr::into(Q_minus_one_over_two_u60);
-//     let mut z = __multiplicative_generator(params); // the generator is a non-residue
-//     let mut b = __pow(params, input, Q_minus_one_over_two);
-//     let mut r = __mul(params, input, b);
-//     let mut t = __mul(params, r, b);
-//     let mut check: [Field; N] = t;
-//     for _ in 0..primitive_root_log_size - 1 {
-//         check = __mul(params, check, check);
-//     }
-//     let mut found_root = false;
-//     let one: [Field; N] = __one::<N>();
-//     if (__eq(check, one) == false) {} else {
-//         let mut t1 = __pow(params, z, Q_minus_one_over_two);
-//         let mut t2 = __mul(params, t1, z);
-//         let mut c = __mul(params, t2, t1);
-//         let mut m: u32 = primitive_root_log_size;
-//         // tonelli shanks inner 1
-//         // (if t2m == 1) then skip
-//         // else increase i and square t2m and go again
-//         // algorithm runtime should only be max the number of bits in modulus
+/**
+* @brief compute a modular square root using the Tonelli-Shanks algorithm
+* @details only use for prime fields! Function may infinite loop if used for non-prime fields
+* @note this is unconstrained fn. To constrain a square root, validate that output^2 = self
+* TODO: create fn that constrains nonexistence of square root (i.e. find x where x^2 = -self)
+**/
+unconstrained pub(crate) fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, input: [Field; N]) -> std::option::Option<[Field; N]> {
+    // Tonelli-shanks algorithm begins by finding a field element Q and integer S,
+    // such that (p - 1) = Q.2^{s}
+    // We can compute the square root of a, by considering a^{(Q + 1) / 2} = R
+    // Once we have found such an R, we have
+    // R^{2} = a^{Q + 1} = a^{Q}a
+    // If a^{Q} = 1, we have found our square root.
+    // Otherwise, we have a^{Q} = t, where t is a 2^{s-1}'th root of unity.
+    // This is because t^{2^{s-1}} = a^{Q.2^{s-1}}.
+    // We know that (p - 1) = Q.w^{s}, therefore t^{2^{s-1}} = a^{(p - 1) / 2}
+    // From Euler's criterion, if a is a quadratic residue, a^{(p - 1) / 2} = 1
+    // i.e. t^{2^{s-1}} = 1
+    // To proceed with computing our square root, we want to transform t into a smaller subgroup,
+    // specifically, the (s-2)'th roots of unity.
+    // We do this by finding some value b,such that
+    // (t.b^2)^{2^{s-2}} = 1 and R' = R.b
+    // Finding such a b is trivial, because from Euler's criterion, we know that,
+    // for any quadratic non-residue z, z^{(p - 1) / 2} = -1
+    // i.e. z^{Q.2^{s-1}} = -1
+    // => z^Q is a 2^{s-1}'th root of -1
+    // => z^{Q^2} is a 2^{s-2}'th root of -1
+    // Since t^{2^{s-1}} = 1, we know that t^{2^{s - 2}} = -1
+    // => t.z^{Q^2} is a 2^{s - 2}'th root of unity.
+    // We can iteratively transform t into ever smaller subgroups, until t = 1.
+    // At each iteration, we need to find a new value for b, which we can obtain
+    // by repeatedly squaring z^{Q}
+    let one_u60: U60Repr<N, 2> = unsafe {
+        U60Repr::one()
+    };
+    let primitive_root_log_size = __primitive_root_log_size::<_, MOD_BITS>(params);
+    let mut Q = (params.modulus_u60 - one_u60).shr(primitive_root_log_size - 1);
+    let Q_minus_one_over_two_u60 = (Q - one_u60).shr(2);
+    let Q_minus_one_over_two: [Field; N] = U60Repr::into(Q_minus_one_over_two_u60);
+    let mut z = __multiplicative_generator::<_, MOD_BITS>(params); // the generator is a non-residue
+    let mut b = __pow::<_, MOD_BITS>(params, input, Q_minus_one_over_two);
+    let mut r = __mul::<_, MOD_BITS>(params, input, b);
+    let mut t = __mul::<_, MOD_BITS>(params, r, b);
+    let mut check: [Field; N] = t;
+    for _ in 0..primitive_root_log_size - 1 {
+        check = __mul::<_, MOD_BITS>(params, check, check);
+    }
+    let mut found_root = false;
+    let one: [Field; N] = __one::<N>();
+    if (__eq(check, one) == false) {} else {
+        let mut t1 = __pow::<_, MOD_BITS>(params, z, Q_minus_one_over_two);
+        let mut t2 = __mul::<_, MOD_BITS>(params, t1, z);
+        let mut c = __mul::<_, MOD_BITS>(params, t2, t1);
+        let mut m: u32 = primitive_root_log_size;
+        // tonelli shanks inner 1
+        // (if t2m == 1) then skip
+        // else increase i and square t2m and go again
+        // algorithm runtime should only be max the number of bits in modulus
 
-//         for _ in 0..MOD_BITS {
-//             if (__eq(t, one)) {
-//                 found_root = true;
-//                 break;
-//             }
-//             let mut t2m = t;
-//             // while loop time
-//             let i = __tonelli_shanks_sqrt_inner_loop_check(params, t2m, 0);
-//             let mut j = m - i - 1;
-//             b = c;
-//             for _ in 0..j { // how big
-//                 if (j == 0) {
-//                     break;
-//                 }
-//                 b = __mul(params, b, b);
-//                 //j -= 1;
-//             }
-//             c = __mul(params, b, b);
-//             t = __mul(params, t, c);
-//             r = __mul(params, r, b);
-//             m = i;
-//         }
-//     }
-//     let mut result = std::option::Option { _value: r, _is_some: found_root };
-//     result
-// }
+        for _ in 0..MOD_BITS {
+            if (__eq(t, one)) {
+                found_root = true;
+                break;
+            }
+            let mut t2m = t;
+            // while loop time
+            let i = __tonelli_shanks_sqrt_inner_loop_check::<_, MOD_BITS>(params, t2m, 0);
+            let mut j = m - i - 1;
+            b = c;
+            for _ in 0..j { // how big
+                if (j == 0) {
+                    break;
+                }
+                b = __mul(params, b, b);
+                //j -= 1;
+            }
+            c = __mul::<_, MOD_BITS>(params, b, b);
+            t = __mul::<_, MOD_BITS>(params, t, c);
+            r = __mul::<_, MOD_BITS>(params, r, b);
+            m = i;
+        }
+    }
+    let mut result = std::option::Option { _value: r, _is_some: found_root };
+    result
+}

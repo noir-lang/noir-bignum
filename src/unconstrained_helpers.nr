@@ -256,70 +256,70 @@ unconstrained pub(crate) fn __barrett_reduction<let N: u32>(
     (q, r)
 }
 
-// /**
-// * @brief compute the log of the size of the primitive root
-// * @details find the maximum value k where x^k = 1, where x = primitive root
-// *          This is needed for our Tonelli-Shanks sqrt algorithm
-// **/
-// unconstrained pub(crate) fn __primitive_root_log_size<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>) -> u32 {
-//     let mut target: U60Repr<N, 2> = params.modulus_u60 - U60Repr::one();
-//     let mut result: u32 = 0;
-//     for _ in 0..MOD_BITS {
-//         let lsb_is_one = (target.limbs[0] & 1) == 1;
-//         if (!lsb_is_one) {
-//             result += 1;
-//             target.shr1();
-//         } else {
-//             break;
-//         }
-//     }
-//     result
-// }
+/**
+* @brief compute the log of the size of the primitive root
+* @details find the maximum value k where x^k = 1, where x = primitive root
+*          This is needed for our Tonelli-Shanks sqrt algorithm
+**/
+unconstrained pub(crate) fn __primitive_root_log_size<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>) -> u32 {
+    let mut target: U60Repr<N, 2> = params.modulus_u60 - U60Repr::one();
+    let mut result: u32 = 0;
+    for _ in 0..MOD_BITS {
+        let lsb_is_one = (target.limbs[0] & 1) == 1;
+        if (!lsb_is_one) {
+            result += 1;
+            target.shr1();
+        } else {
+            break;
+        }
+    }
+    result
+}
 
-// /**
-// * @brief inner loop fn for `find_multiplive_generator`
-// * @details recursive function to get around the lack of a `while` keyword
-// **/
-// unconstrained fn __recursively_find_multiplicative_generator<let N: u32, let MOD_BITS: u32>(
-//     params: P<N, MOD_BITS>,
-//     target: [Field; N],
-//     p_minus_one_over_two: [Field; N]
-// ) -> (bool, [Field; N]) {
-//     let exped = __pow(params, target, p_minus_one_over_two);
-//     let one: [Field; N] = __one();
-//     let neg_one = __neg(params, one);
-//     let found = __eq(exped, neg_one);
-//     let mut result: (bool, [Field; N]) = (found, target);
-//     if (!found) {
-//         let _target = unsafe {
-//             __add(params, target, one)
-//         };
-//         result = __recursively_find_multiplicative_generator(params, _target, p_minus_one_over_two);
-//     }
-//     result
-// }
+/**
+* @brief inner loop fn for `find_multiplive_generator`
+* @details recursive function to get around the lack of a `while` keyword
+**/
+unconstrained fn __recursively_find_multiplicative_generator<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    target: [Field; N],
+    p_minus_one_over_two: [Field; N]
+) -> (bool, [Field; N]) {
+    let exped = __pow(params, target, p_minus_one_over_two);
+    let one: [Field; N] = __one();
+    let neg_one = __neg(params, one);
+    let found = __eq(exped, neg_one);
+    let mut result: (bool, [Field; N]) = (found, target);
+    if (!found) {
+        let _target = unsafe {
+            __add(params, target, one)
+        };
+        result = __recursively_find_multiplicative_generator::<_, MOD_BITS>(params, _target, p_minus_one_over_two);
+    }
+    result
+}
 
-// /**
-// * @brief find multiplicative generator `g` where `g` is the smallest value that is not a quadratic residue
-// *        i.e. smallest g where g^2 = -1
-// * @note WARNING if multiplicative generator does not exist, this function will enter an infinite loop!
-// **/
-// unconstrained pub(crate) fn __multiplicative_generator<let N: u32>(params: P<N, MOD_BITS>) -> [Field; N] {
-//     let mut target: [Field; N] = __one();
-//     let p_minus_one_over_two: U60Repr<N, 2> = (params.modulus_u60 - U60Repr::one()).shr(1);
-//     let p_minus_one_over_two: [Field; N] = U60Repr::into(p_minus_one_over_two);
-//     let (_, target) = __recursively_find_multiplicative_generator(params, target, p_minus_one_over_two);
-//     target
-// }
+/**
+* @brief find multiplicative generator `g` where `g` is the smallest value that is not a quadratic residue
+*        i.e. smallest g where g^2 = -1
+* @note WARNING if multiplicative generator does not exist, this function will enter an infinite loop!
+**/
+unconstrained pub(crate) fn __multiplicative_generator<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>) -> [Field; N] {
+    let mut target: [Field; N] = __one();
+    let p_minus_one_over_two: U60Repr<N, 2> = (params.modulus_u60 - U60Repr::one()).shr(1);
+    let p_minus_one_over_two: [Field; N] = U60Repr::into(p_minus_one_over_two);
+    let (_, target) = __recursively_find_multiplicative_generator::<_, MOD_BITS>(params, target, p_minus_one_over_two);
+    target
+}
 
-// unconstrained pub(crate) fn __tonelli_shanks_sqrt_inner_loop_check<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, t2m: [Field; N], i: u32) -> u32 {
-//     let one: [Field; N] = __one();
-//     let is_one = __eq(t2m, one);
-//     let mut result = i;
-//     if (!is_one) {
-//         let t2m = __mul::<_, MOD_BITS>(params, t2m, t2m);
-//         let i = i + 1;
-//         result = __tonelli_shanks_sqrt_inner_loop_check::<_, MOD_BITS>(params, t2m, i);
-//     }
-//     result
-// }
+unconstrained pub(crate) fn __tonelli_shanks_sqrt_inner_loop_check<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, t2m: [Field; N], i: u32) -> u32 {
+    let one: [Field; N] = __one();
+    let is_one = __eq(t2m, one);
+    let mut result = i;
+    if (!is_one) {
+        let t2m = __mul::<_, MOD_BITS>(params, t2m, t2m);
+        let i = i + 1;
+        result = __tonelli_shanks_sqrt_inner_loop_check::<_, MOD_BITS>(params, t2m, i);
+    }
+    result
+}

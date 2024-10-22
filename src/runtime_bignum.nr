@@ -8,7 +8,7 @@ use crate::constrained_ops::{
 };
 use crate::unconstrained_ops::{
     __derive_from_seed, __eq, __is_zero, __neg, __add, __sub, __mul, __div, __udiv_mod, __invmod, __pow,
-    __batch_invert, __batch_invert_slice //, __tonelli_shanks_sqrt
+    __batch_invert, __batch_invert_slice, __tonelli_shanks_sqrt
 };
 use crate::expressions::{__compute_quadratic_expression, evaluate_quadratic_expression};
 use crate::serialization::{from_be_bytes, to_le_bytes};
@@ -56,7 +56,7 @@ pub(crate) trait RuntimeBigNumTrait<let N: u32, let MOD_BITS: u32> {
     fn __batch_invert<let M: u32>(x: [Self; M]) -> [Self; M];
     unconstrained fn __batch_invert_slice<let M: u32>(to_invert: [Self]) -> [Self];
 
-    // unconstrained fn __tonelli_shanks_sqrt(self) -> (bool, Self);
+    unconstrained fn __tonelli_shanks_sqrt(self) -> (bool, Self);
 
     fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
         params: BigNumParams<N, MOD_BITS>,
@@ -272,18 +272,18 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeB
     }
 
     // @dev We intentionally don't use std::option::Option, because the Option::none() case doesn't propagate the `params`, so the code breaks. Specifically, the code stops evaluating modulus_bits = self.params.modulus_bits_getter() as constant, which then breaks calls to `validate_in_range()` (e.g. via calls to `==` on `self`), because `validate_in_range` calls `assert_max_bit_size` on a value derived from `modulus_bits`. I'm not sure why it stops evaluating the getter's return value as constant if we return a std::Option, really.
-    // unconstrained fn __tonelli_shanks_sqrt(self) -> (bool, Self) {
-    //     let params = self.params;
-    //     let maybe_limbs = unsafe {
-    //         __tonelli_shanks_sqrt(params, self.limbs)
-    //     };
-    //     let result: (bool, Self) = if maybe_limbs.is_some() {
-    //         (true, Self { limbs: maybe_limbs.unwrap_unchecked(), params })
-    //     } else {
-    //         (false, Self::new(params))
-    //     };
-    //     result
-    // }
+    unconstrained fn __tonelli_shanks_sqrt(self) -> (bool, Self) {
+        let params = self.params;
+        let maybe_limbs = unsafe {
+            __tonelli_shanks_sqrt(params, self.limbs)
+        };
+        let result: (bool, Self) = if maybe_limbs.is_some() {
+            (true, Self { limbs: maybe_limbs.unwrap_unchecked(), params })
+        } else {
+            (false, Self::new(params))
+        };
+        result
+    }
 
     // UNCONSTRAINED! (Hence `__` prefix).
     fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
