@@ -1,22 +1,17 @@
-use crate::BigNumParamsTrait;
-use crate::runtime_bignum::BigNumInstance;
-use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
+use crate::params::BigNumParamsGetter;
+use crate::params::BigNumParams;
 use crate::utils::u60_representation::U60Repr;
-pub struct Secp256r1_Fr_Params {}
-impl RuntimeBigNumParamsTrait<3> for Secp256r1_Fr_Params {
-    fn modulus_bits() -> u32 {
-        256
+
+pub struct  Secp256r1_Fr_Params {}
+
+impl BigNumParamsGetter<3, 256> for Secp256r1_Fr_Params {
+    fn get_params() -> BigNumParams<3, 256> {
+        Secp256r1_Fr_PARAMS
     }
 }
-impl BigNumParamsTrait<3> for Secp256r1_Fr_Params {
-    fn get_instance() -> BigNumInstance<3, Self> {
-        Secp256r1_Fr_Instance
-    }
-    fn modulus_bits() -> u32 {
-        256
-    }
-}
-pub global Secp256r1_Fr_Instance: BigNumInstance<3, Secp256r1_Fr_Params> = BigNumInstance {
+
+global Secp256r1_Fr_PARAMS: BigNumParams<3, 256> = BigNumParams {
+        has_multiplicative_inverse: true,
         modulus: [
             0xe6faada7179e84f3b9cac2fc632551, 0xffff00000000ffffffffffffffffbc, 0xffff
         ],

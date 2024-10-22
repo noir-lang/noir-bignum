@@ -13,25 +13,20 @@
 //! * Curve equation: y^2 = x^3 + 5
 //! * Valuation(q - 1, 2) = 32
 //! * Valuation(r - 1, 2) = 32
-use crate::BigNumParamsTrait;
-use crate::runtime_bignum::BigNumInstance;
-use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
+use crate::params::BigNumParamsGetter;
+use crate::params::BigNumParams;
 use crate::utils::u60_representation::U60Repr;
-pub struct Pallas_Fq_Params {}
-impl RuntimeBigNumParamsTrait<3> for Pallas_Fq_Params {
-    fn modulus_bits() -> u32 {
-        255
+
+pub struct  Pallas_Fq_Params {}
+
+impl BigNumParamsGetter<3, 255> for Pallas_Fq_Params {
+    fn get_params() -> BigNumParams<3, 255> {
+        Pallas_Fq_PARAMS
     }
 }
-impl BigNumParamsTrait<3> for Pallas_Fq_Params {
-    fn get_instance() -> BigNumInstance<3, Self> {
-        Pallas_Fq_Instance
-    }
-    fn modulus_bits() -> u32 {
-        255
-    }
-}
-pub global Pallas_Fq_Instance: BigNumInstance<3, Pallas_Fq_Params> = BigNumInstance {
+
+global Pallas_Fq_PARAMS: BigNumParams<3, 255> = BigNumParams {
+        has_multiplicative_inverse: true,
         modulus: [
             0x4698fc094cf91b992d30ed00000001, 0x22, 0x4000
         ],

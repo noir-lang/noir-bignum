@@ -1,7 +1,7 @@
 use crate::utils::u60_representation::U60Repr;
 
 #[test]
-fn test_conversion() {
+unconstrained fn test_conversion() {
     let p = 0xffffffffffffffffffffffffffffff; // 2^120 - 1
     let expected: [Field; 3 * 2] = [p, p - 1, p - 2, p - 3, p - 4, p - 5];
     let u60repr: U60Repr<3, 4> = unsafe {
@@ -76,7 +76,7 @@ fn test_get_bit() {
 }
 
 #[test]
-fn test_gte() {
+unconstrained fn test_gte() {
     let p = 0xffffffffffffffffffffffffffffff; // 2^120 - 1
     let input: [Field; 6] = [p, p - 1, p - 2, p - 3, p - 4, p - 5];
     let lhs: U60Repr<3, 6> = unsafe {

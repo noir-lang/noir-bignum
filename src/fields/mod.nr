@@ -28,42 +28,10 @@ pub mod U2048;
 pub mod U4096;
 pub mod U8192;
 
-pub use crate::runtime_bignum::BigNumInstance;
-use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
+// example typedef when using a defined bignum instance:
+//
+// use crate::bignum::BigNum;
+// use bn254Fq::BN254_Fq_Params;
+//
+// type Fq = BigNum<3, 254, BN254_Fq_Params>;
 
-/**
- * @brief Parameter definitions for generic fields of varying bit lengths
- *        (these can be used when defining modular fields where the
- *         modulus is a witness value and cannot be predefined
- *         e.g. 2048-bit RSA)
- **/
-pub struct Params512 {}
-impl RuntimeBigNumParamsTrait<5> for Params512 {
-    fn modulus_bits() -> u32 {
-        512
-    }
-}
-pub struct Params768 {}
-impl RuntimeBigNumParamsTrait<7> for Params768 {
-    fn modulus_bits() -> u32 {
-        768
-    }
-}
-pub struct Params1024 {}
-impl RuntimeBigNumParamsTrait<9> for Params1024 {
-    fn modulus_bits() -> u32 {
-        1024
-    }
-}
-pub struct Params2048 {}
-impl RuntimeBigNumParamsTrait<18> for Params2048 {
-    fn modulus_bits() -> u32 {
-        2048
-    }
-}
-pub struct Params4096 {}
-impl RuntimeBigNumParamsTrait<35> for Params4096 {
-    fn modulus_bits() -> u32 {
-        4096
-    }
-}
