@@ -2,16 +2,19 @@ use dep::std;
 use crate::utils::map::map;
 
 use crate::params::BigNumParams;
-use crate::constrained_ops::{
-    derive_from_seed, conditional_select, assert_is_not_equal, eq, validate_in_field, validate_in_range,
-    neg, add, sub, mul, div, udiv_mod, udiv, umod
+
+use crate::fns::{
+    constrained_ops::{
+        derive_from_seed, conditional_select, assert_is_not_equal, eq, validate_in_field, validate_in_range,
+        neg, add, sub, mul, div, udiv_mod, udiv, umod
+    },
+    unconstrained_ops::{
+        __derive_from_seed, __eq, __is_zero, __neg, __add, __sub, __mul, __div, __udiv_mod, __invmod, __pow,
+        __batch_invert, __batch_invert_slice, __tonelli_shanks_sqrt
+    },
+    expressions::{__compute_quadratic_expression, evaluate_quadratic_expression},
+    serialization::{from_be_bytes, to_le_bytes},
 };
-use crate::unconstrained_ops::{
-    __derive_from_seed, __eq, __is_zero, __neg, __add, __sub, __mul, __div, __udiv_mod, __invmod, __pow,
-    __batch_invert, __batch_invert_slice, __tonelli_shanks_sqrt
-};
-use crate::expressions::{__compute_quadratic_expression, evaluate_quadratic_expression};
-use crate::serialization::{from_be_bytes, to_le_bytes};
 
 pub struct RuntimeBigNum<let N: u32, let MOD_BITS: u32> {
     pub limbs: [Field; N],

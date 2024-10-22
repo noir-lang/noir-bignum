@@ -1,18 +1,18 @@
-pub(crate) mod utils;
-pub mod fields;
-
-// Structs
-pub mod params;
+// BigNum
 pub mod bignum;
+
+// RuntimeBigNum
 pub mod runtime_bignum;
 
-// Free functions called by structs
-pub(crate) mod unconstrained_ops;
-pub(crate) mod constrained_ops;
-pub(crate) mod unconstrained_helpers;
-pub(crate) mod expressions;
-pub(crate) mod serialization;
+// Pre-defined fields and bignums for people to use:
+pub mod fields;
+
+// Structs enabling people to define their own bignum params
+pub mod params;
+
+// Free functions and other utils, called by the BigNum and RuntimeBigNum structs
+pub(crate) mod fns;
+pub(crate) mod utils;
 
 // Tests
-mod bignum_test;
-mod runtime_bignum_test;
+mod tests;
