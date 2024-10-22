@@ -1,12 +1,10 @@
-use crate::params::BigNumParams as P;
-
 /**
 * @brief construct a BigNum instance out of an array of bytes in BIG ENDIAN format
 * @description: each 120-bit limb represents 15 bytes, we require that the size of the byte array
 *               is precisely large enough to cover MOD_BITS
 * @param x: input byte array
 **/
-pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32, let NBytes: u32>(params: P<N, MOD_BITS>, x: [u8; NBytes]) -> [Field; N] {
+pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32, let NBytes: u32>(x: [u8; NBytes]) -> [Field; N] {
     let num_bits = NBytes * 8;
     assert(num_bits >= MOD_BITS);
     assert(num_bits - MOD_BITS < 8);
@@ -42,7 +40,7 @@ pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32, let NBytes: u32>(para
     result
 }
 
-pub(crate) fn to_le_bytes<let N: u32, let MOD_BITS: u32, let NBytes: u32>(params: P<N, MOD_BITS>, val: [Field; N]) -> [u8; NBytes] {
+pub(crate) fn to_le_bytes<let N: u32, let MOD_BITS: u32, let NBytes: u32>(val: [Field; N]) -> [u8; NBytes] {
     let nbytes = (MOD_BITS / 8) + (MOD_BITS % 8 != 0) as u32;
     assert(nbytes <= NBytes);
 

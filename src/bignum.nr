@@ -119,13 +119,11 @@ impl<let N: u32, let MOD_BITS: u32, Params> BigNumTrait<N> for BigNum<N, MOD_BIT
     }
 
     fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> Self {
-        let params = Params::get_params();
-        Self { limbs: from_be_bytes::<_, MOD_BITS, _>(params, x) }
+        Self { limbs: from_be_bytes::<_, MOD_BITS, _>(x) }
     }
 
     fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes] {
-        let params = Params::get_params();
-        to_le_bytes::<_, MOD_BITS, _>(params, self.limbs)
+        to_le_bytes::<_, MOD_BITS, _>(self.limbs)
     }
 
     fn modulus() -> Self {

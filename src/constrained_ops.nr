@@ -236,7 +236,7 @@ pub(crate) fn validate_in_range<let N: u32, let MOD_BITS: u32>(limbs: [Field; N]
 *              Note: doesn't this mean that final_limb_bits should be constrained to be 126 bits, not modulus_bits() - ((N - 1) * 120) + 6?
 *              TODO: think about this more! we want the range constraint we apply to be as small as allowable as this is more efficient
 **/
-pub(crate) fn validate_quotient_in_range<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, limbs: [Field; N]) {
+pub(crate) fn validate_quotient_in_range<let N: u32, let MOD_BITS: u32>(limbs: [Field; N]) {
     for i in 0..(N) {
         limbs[i].assert_max_bit_size(120);
     }
@@ -246,7 +246,7 @@ pub(crate) fn validate_quotient_in_range<let N: u32, let MOD_BITS: u32>(params: 
 }
 
 // validate that lhs - rhs does not underflow i.e. lhs > rhs
-pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, lhs: [Field; N], rhs: [Field; N]) {
+pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [Field; N], rhs: [Field; N]) {
     // so we do... p - x - r = 0 and there might be borrow flags
 
     // a - b = r
@@ -409,7 +409,7 @@ pub(crate) fn udiv_mod<let N: u32, let MOD_BITS: u32>(
     );
     // we need (remainder < divisor)
     // implies (divisor - remainder > 0)
-    validate_gt::<_, MOD_BITS>(params, divisor, remainder);
+    validate_gt::<_, MOD_BITS>(divisor, remainder);
     (quotient, remainder)
 }
 

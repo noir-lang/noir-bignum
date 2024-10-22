@@ -34,7 +34,7 @@ pub(crate) trait RuntimeBigNumTrait<let N: u32, let MOD_BITS: u32> {
     fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes];
 
     fn modulus(self) -> Self;
-    fn modulus_bits(self) -> u32;
+    fn modulus_bits() -> u32;
     fn num_limbs() -> u32;
     // fn get(self) -> [Field];
     fn get_limbs(self) -> [Field; N];
@@ -143,11 +143,11 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeB
     }
 
     fn from_be_bytes<let NBytes: u32>(params: BigNumParams<N, MOD_BITS>, x: [u8; NBytes]) -> Self {
-        Self { limbs: from_be_bytes::<_, MOD_BITS, _>(params, x), params }
+        Self { limbs: from_be_bytes::<_, MOD_BITS, _>(x), params }
     }
 
     fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes] {
-        to_le_bytes::<_, MOD_BITS, _>(self.params, self.limbs)
+        to_le_bytes::<_, MOD_BITS, _>(self.limbs)
     }
 
     fn modulus(self) -> Self {
@@ -155,7 +155,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeB
         Self { limbs: params.modulus, params }
     }
 
-    fn modulus_bits(self) -> u32 {
+    fn modulus_bits() -> u32 {
         MOD_BITS
     }
 

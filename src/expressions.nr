@@ -312,7 +312,7 @@ pub(crate) fn evaluate_quadratic_expression<
     };
     // constrain the quotient to be in the range [0, ..., 2^{m} - 1], where `m` is log2(modulus) rounded up.
     // Additionally, validate quotient limbs are also in the range [0, ..., 2^{120} - 1]
-    validate_quotient_in_range::<_, MOD_BITS>(params, quotient);
+    validate_quotient_in_range::<_, MOD_BITS>(quotient);
     // TODO, validate we do not overflow N2 when multiplying and N when adding
     // (should be a compile-time check...unconstrained function?)
 

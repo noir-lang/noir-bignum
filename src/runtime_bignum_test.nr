@@ -131,7 +131,7 @@ fn test_add_modulus_limit() {
 
     let a: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum { limbs: U60Repr::into(p), params };
 
-    let two_pow_modulus_bits_minus_one: U60Repr<$N, 2> = unsafe{ one.shl(a.modulus_bits()) - one };
+    let two_pow_modulus_bits_minus_one: U60Repr<$N, 2> = unsafe{ one.shl($MOD_BITS) - one };
 
     let b: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum { limbs: U60Repr::into(two_pow_modulus_bits_minus_one), params };
 
@@ -148,7 +148,7 @@ fn test_add_modulus_overflow() {
 
     let a: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum { limbs: U60Repr::into(p + one), params };
     
-    let mut two_pow_modulus_bits_minus_one: U60Repr<$N, 2> = unsafe{ one.shl(a.modulus_bits()) - one };
+    let mut two_pow_modulus_bits_minus_one: U60Repr<$N, 2> = unsafe{ one.shl($MOD_BITS) - one };
 
     let b: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum { limbs: U60Repr::into(two_pow_modulus_bits_minus_one), params };
 
