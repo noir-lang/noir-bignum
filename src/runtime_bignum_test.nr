@@ -56,21 +56,21 @@ fn get_2048_BN_params() -> BigNumParams<18, 2048> {
     )
 }
 
-fn test_eq<let N: u32, let MOD: u32>(params: BigNumParams<N, MOD>) {
-    let a: RuntimeBigNum<N, MOD> = unsafe {
+fn test_eq<let N: u32, let MOD_BITS: u32>(params: BigNumParams<N, MOD_BITS>) {
+    let a: RuntimeBigNum<N, MOD_BITS> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let b: RuntimeBigNum<N, MOD> = unsafe {
+    let b: RuntimeBigNum<N, MOD_BITS> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let c: RuntimeBigNum<N, MOD> = unsafe {
+    let c: RuntimeBigNum<N, MOD_BITS> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [2, 2, 3, 4])
     };
 
     let modulus = a.modulus();
     let t0: U60Repr<N, 2> = (U60Repr::from(modulus.limbs));
     let t1: U60Repr<N, 2> = (U60Repr::from(b.limbs));
-    let b_plus_modulus: RuntimeBigNum<N, MOD> = RuntimeBigNum { limbs: U60Repr::into(t0 + t1), params };
+    let b_plus_modulus: RuntimeBigNum<N, MOD_BITS> = RuntimeBigNum { limbs: U60Repr::into(t0 + t1), params };
 
     assert((a == b) == true);
     assert((a == b_plus_modulus) == true);
@@ -81,11 +81,11 @@ fn test_eq<let N: u32, let MOD: u32>(params: BigNumParams<N, MOD>) {
 // 98760
 // 99689
 // 929 gates for a 2048 bit mul
-fn test_mul<let N: u32, let MOD: u32>(params: BigNumParams<N, MOD>) {
-    let a: RuntimeBigNum<N, MOD> = unsafe {
+fn test_mul<let N: u32, let MOD_BITS: u32>(params: BigNumParams<N, MOD_BITS>) {
+    let a: RuntimeBigNum<N, MOD_BITS> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let b: RuntimeBigNum<N, MOD> = unsafe {
+    let b: RuntimeBigNum<N, MOD_BITS> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7])
     };
 
@@ -94,14 +94,14 @@ fn test_mul<let N: u32, let MOD: u32>(params: BigNumParams<N, MOD>) {
     assert(c == d);
 }
 
-fn test_add<let N: u32, let MOD: u32>(params: BigNumParams<N, MOD>) {
-    let a: RuntimeBigNum<N, MOD> = unsafe {
+fn test_add<let N: u32, let MOD_BITS: u32>(params: BigNumParams<N, MOD_BITS>) {
+    let a: RuntimeBigNum<N, MOD_BITS> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let b: RuntimeBigNum<N, MOD> = unsafe {
+    let b: RuntimeBigNum<N, MOD_BITS> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7])
     };
-    let one: RuntimeBigNum<N, MOD> = RuntimeBigNum::one(params);
+    let one: RuntimeBigNum<N, MOD_BITS> = RuntimeBigNum::one(params);
     a.validate_in_range();
     a.validate_in_field();
     b.validate_in_range();
@@ -119,11 +119,11 @@ fn test_add<let N: u32, let MOD: u32>(params: BigNumParams<N, MOD>) {
     assert(e.limbs[0] == 2);
 }
 
-fn test_div<let N: u32, let MOD: u32>(params: BigNumParams<N, MOD>) {
-    let a: RuntimeBigNum<N, MOD> = unsafe {
+fn test_div<let N: u32, let MOD_BITS: u32>(params: BigNumParams<N, MOD_BITS>) {
+    let a: RuntimeBigNum<N, MOD_BITS> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let b: RuntimeBigNum<N, MOD> = unsafe {
+    let b: RuntimeBigNum<N, MOD_BITS> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7])
     };
 
@@ -131,8 +131,8 @@ fn test_div<let N: u32, let MOD: u32>(params: BigNumParams<N, MOD>) {
     assert((b * c) == a);
 }
 
-unconstrained fn test_invmod<let N: u32, let MOD: u32>(params: BigNumParams<N, MOD>) {
-    let u: RuntimeBigNum<N, MOD> = RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4]);
+unconstrained fn test_invmod<let N: u32, let MOD_BITS: u32>(params: BigNumParams<N, MOD_BITS>) {
+    let u: RuntimeBigNum<N, MOD_BITS> = RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4]);
     for _ in 0..1 {
         let v = u.__invmod();
         let result = u.__mul(v);
@@ -141,33 +141,33 @@ unconstrained fn test_invmod<let N: u32, let MOD: u32>(params: BigNumParams<N, M
     }
 }
 
-unconstrained fn assert_is_not_equal<let N: u32, let MOD: u32>(params: BigNumParams<N, MOD>) {
-    let a: RuntimeBigNum<N, MOD> = unsafe {
+unconstrained fn assert_is_not_equal<let N: u32, let MOD_BITS: u32>(params: BigNumParams<N, MOD_BITS>) {
+    let a: RuntimeBigNum<N, MOD_BITS> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let b: RuntimeBigNum<N, MOD> = unsafe {
+    let b: RuntimeBigNum<N, MOD_BITS> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7])
     };
 
     a.assert_is_not_equal(b);
 }
 
-unconstrained fn assert_is_not_equal_fail<let N: u32, let MOD: u32>(params: BigNumParams<N, MOD>) {
-    let a: RuntimeBigNum<N, MOD> = unsafe {
+unconstrained fn assert_is_not_equal_fail<let N: u32, let MOD_BITS: u32>(params: BigNumParams<N, MOD_BITS>) {
+    let a: RuntimeBigNum<N, MOD_BITS> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let b: RuntimeBigNum<N, MOD> = unsafe {
+    let b: RuntimeBigNum<N, MOD_BITS> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
 
     a.assert_is_not_equal(b);
 }
 
-fn assert_is_not_equal_overloaded_lhs_fail<let N: u32, let MOD: u32>(params: BigNumParams<N, MOD>) {
-    let a: RuntimeBigNum<N, MOD> = unsafe {
+fn assert_is_not_equal_overloaded_lhs_fail<let N: u32, let MOD_BITS: u32>(params: BigNumParams<N, MOD_BITS>) {
+    let a: RuntimeBigNum<N, MOD_BITS> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let b: RuntimeBigNum<N, MOD> = unsafe {
+    let b: RuntimeBigNum<N, MOD_BITS> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
 
@@ -175,15 +175,15 @@ fn assert_is_not_equal_overloaded_lhs_fail<let N: u32, let MOD: u32>(params: Big
 
     let t0: U60Repr<N, 2> = U60Repr::from(a.limbs);
     let t1: U60Repr<N, 2> = U60Repr::from(modulus);
-    let a_plus_modulus: RuntimeBigNum<N, MOD> = RuntimeBigNum { limbs: U60Repr::into(t0 + t1), params };
+    let a_plus_modulus: RuntimeBigNum<N, MOD_BITS> = RuntimeBigNum { limbs: U60Repr::into(t0 + t1), params };
     a_plus_modulus.assert_is_not_equal(b);
 }
 
-fn assert_is_not_equal_overloaded_rhs_fail<let N: u32, let MOD: u32>(params: BigNumParams<N, MOD>) {
-    let a: RuntimeBigNum<N, MOD> = unsafe {
+fn assert_is_not_equal_overloaded_rhs_fail<let N: u32, let MOD_BITS: u32>(params: BigNumParams<N, MOD_BITS>) {
+    let a: RuntimeBigNum<N, MOD_BITS> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let b: RuntimeBigNum<N, MOD> = unsafe {
+    let b: RuntimeBigNum<N, MOD_BITS> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
 
@@ -191,15 +191,15 @@ fn assert_is_not_equal_overloaded_rhs_fail<let N: u32, let MOD: u32>(params: Big
 
     let t0: U60Repr<N, 2> = U60Repr::from(b.limbs);
     let t1: U60Repr<N, 2> = U60Repr::from(modulus);
-    let b_plus_modulus: RuntimeBigNum<N, MOD> = RuntimeBigNum { limbs: U60Repr::into(t0 + t1), params };
+    let b_plus_modulus: RuntimeBigNum<N, MOD_BITS> = RuntimeBigNum { limbs: U60Repr::into(t0 + t1), params };
     a.assert_is_not_equal(b_plus_modulus);
 }
 
-fn assert_is_not_equal_overloaded_fail<let N: u32, let MOD: u32>(params: BigNumParams<N, MOD>) {
-    let a: RuntimeBigNum<N, MOD> = unsafe {
+fn assert_is_not_equal_overloaded_fail<let N: u32, let MOD_BITS: u32>(params: BigNumParams<N, MOD_BITS>) {
+    let a: RuntimeBigNum<N, MOD_BITS> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let b: RuntimeBigNum<N, MOD> = unsafe {
+    let b: RuntimeBigNum<N, MOD_BITS> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
 
@@ -208,8 +208,8 @@ fn assert_is_not_equal_overloaded_fail<let N: u32, let MOD: u32>(params: BigNumP
     let t0: U60Repr<N, 2> = U60Repr::from(a.limbs);
     let t1: U60Repr<N, 2> = U60Repr::from(b.limbs);
     let t2: U60Repr<N, 2> = U60Repr::from(modulus);
-    let a_plus_modulus: RuntimeBigNum<N, MOD> = RuntimeBigNum { limbs: U60Repr::into(t0 + t2), params };
-    let b_plus_modulus: RuntimeBigNum<N, MOD> = RuntimeBigNum { limbs: U60Repr::into(t1 + t2), params };
+    let a_plus_modulus: RuntimeBigNum<N, MOD_BITS> = RuntimeBigNum { limbs: U60Repr::into(t0 + t2), params };
+    let b_plus_modulus: RuntimeBigNum<N, MOD_BITS> = RuntimeBigNum { limbs: U60Repr::into(t1 + t2), params };
     a_plus_modulus.assert_is_not_equal(b_plus_modulus);
 }
 

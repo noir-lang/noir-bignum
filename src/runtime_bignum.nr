@@ -13,20 +13,20 @@ use crate::unconstrained_ops::{
 use crate::expressions::{__compute_quadratic_expression, evaluate_quadratic_expression};
 use crate::serialization::{from_be_bytes, to_le_bytes};
 
-pub struct RuntimeBigNum<let N: u32, let MOD: u32> {
+pub struct RuntimeBigNum<let N: u32, let MOD_BITS: u32> {
     limbs: [Field; N],
-    params: BigNumParams<N, MOD>,
+    params: BigNumParams<N, MOD_BITS>,
 }
 
-impl<let N: u32, let MOD: u32> RuntimeBigNum<N, MOD> {}
+impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {}
 
-pub(crate) trait RuntimeBigNumTrait<let N: u32, let MOD: u32> {
-    fn new(params: BigNumParams<N, MOD>) -> Self;
-    fn one(params: BigNumParams<N, MOD>) -> Self;
-    unconstrained fn __derive_from_seed<let SeedBytes: u32>(params: BigNumParams<N, MOD>, seed: [u8; SeedBytes]) -> Self;
-    fn from_slice(params: BigNumParams<N, MOD>, limbs: [Field]) -> Self;
-    fn from_array(params: BigNumParams<N, MOD>, limbs: [Field; N]) -> Self;
-    fn from_be_bytes<let NBytes: u32>(params: BigNumParams<N, MOD>, x: [u8; NBytes]) -> Self;
+pub(crate) trait RuntimeBigNumTrait<let N: u32, let MOD_BITS: u32> {
+    fn new(params: BigNumParams<N, MOD_BITS>) -> Self;
+    fn one(params: BigNumParams<N, MOD_BITS>) -> Self;
+    unconstrained fn __derive_from_seed<let SeedBytes: u32>(params: BigNumParams<N, MOD_BITS>, seed: [u8; SeedBytes]) -> Self;
+    fn from_slice(params: BigNumParams<N, MOD_BITS>, limbs: [Field]) -> Self;
+    fn from_array(params: BigNumParams<N, MOD_BITS>, limbs: [Field; N]) -> Self;
+    fn from_be_bytes<let NBytes: u32>(params: BigNumParams<N, MOD_BITS>, x: [u8; NBytes]) -> Self;
 
     fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes];
 
@@ -54,7 +54,7 @@ pub(crate) trait RuntimeBigNumTrait<let N: u32, let MOD: u32> {
     unconstrained fn __batch_invert_slice<let M: u32>(to_invert: [Self]) -> [Self];
 
     unconstrained fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
-        params: BigNumParams<N, MOD>,
+        params: BigNumParams<N, MOD_BITS>,
         lhs_terms: [[Self; LHS_N]; NUM_PRODUCTS],
         lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
         rhs_terms: [[Self; RHS_N]; NUM_PRODUCTS],
@@ -64,7 +64,7 @@ pub(crate) trait RuntimeBigNumTrait<let N: u32, let MOD: u32> {
     ) -> (Self, Self);
 
     fn evaluate_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
-        params: BigNumParams<N, MOD>,
+        params: BigNumParams<N, MOD_BITS>,
         lhs_terms: [[Self; LHS_N]; NUM_PRODUCTS],
         lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
         rhs_terms: [[Self; RHS_N]; NUM_PRODUCTS],
@@ -91,37 +91,37 @@ pub(crate) trait RuntimeBigNumTrait<let N: u32, let MOD: u32> {
     fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self;
 }
 
-impl<let N: u32, let MOD: u32> RuntimeBigNumTrait<N, MOD> for RuntimeBigNum<N, MOD> {
+impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeBigNum<N, MOD_BITS> {
 
-    fn new(params: BigNumParams<N, MOD>) -> Self {
+    fn new(params: BigNumParams<N, MOD_BITS>) -> Self {
         let limbs: [Field; N] = [0; N];
         Self { limbs, params }
     }
 
-    fn one(params: BigNumParams<N, MOD>) -> Self {
+    fn one(params: BigNumParams<N, MOD_BITS>) -> Self {
         let mut result = RuntimeBigNum::new(params);
         result.limbs[0] = 1;
         result
     }
 
-    unconstrained fn __derive_from_seed<let SeedBytes: u32>(params: BigNumParams<N, MOD>, seed: [u8; SeedBytes]) -> Self {
-        Self { limbs: __derive_from_seed::<_, MOD, _>(params, seed), params }
+    unconstrained fn __derive_from_seed<let SeedBytes: u32>(params: BigNumParams<N, MOD_BITS>, seed: [u8; SeedBytes]) -> Self {
+        Self { limbs: __derive_from_seed::<_, MOD_BITS, _>(params, seed), params }
     }
 
-    fn from_slice(params: BigNumParams<N, MOD>, limbs: [Field]) -> Self {
+    fn from_slice(params: BigNumParams<N, MOD_BITS>, limbs: [Field]) -> Self {
         Self { limbs: limbs.as_array(), params }
     }
 
-    fn from_array(params: BigNumParams<N, MOD>, limbs: [Field; N]) -> Self {
+    fn from_array(params: BigNumParams<N, MOD_BITS>, limbs: [Field; N]) -> Self {
         Self { limbs, params }
     }
 
-    fn from_be_bytes<let NBytes: u32>(params: BigNumParams<N, MOD>, x: [u8; NBytes]) -> Self {
-        Self { limbs: from_be_bytes::<_, MOD, _>(params, x), params }
+    fn from_be_bytes<let NBytes: u32>(params: BigNumParams<N, MOD_BITS>, x: [u8; NBytes]) -> Self {
+        Self { limbs: from_be_bytes::<_, MOD_BITS, _>(params, x), params }
     }
 
     fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes] {
-        to_le_bytes::<_, MOD, _>(self.limbs)
+        to_le_bytes::<_, MOD_BITS, _>(self.limbs)
     }
 
     fn modulus(self) -> Self {
@@ -130,7 +130,7 @@ impl<let N: u32, let MOD: u32> RuntimeBigNumTrait<N, MOD> for RuntimeBigNum<N, M
     }
 
     fn modulus_bits(self) -> u32 {
-        MOD
+        MOD_BITS
     }
 
     fn num_limbs() -> u32 {
@@ -178,12 +178,12 @@ impl<let N: u32, let MOD: u32> RuntimeBigNumTrait<N, MOD> for RuntimeBigNum<N, M
 
     unconstrained fn __mul(self, other: Self) -> Self {
         let params = self.params;
-        Self::from_array(params, __mul::<_, MOD>(params, self.limbs, other.limbs))
+        Self::from_array(params, __mul::<_, MOD_BITS>(params, self.limbs, other.limbs))
     }
 
     unconstrained fn __div(self, divisor: Self) -> Self {
         let params = self.params;
-        Self::from_array(params, __div::<_, MOD>(params, self.limbs, divisor.limbs))
+        Self::from_array(params, __div::<_, MOD_BITS>(params, self.limbs, divisor.limbs))
     }
 
     unconstrained fn __udiv_mod(self, divisor: Self) -> (Self, Self) {
@@ -195,28 +195,28 @@ impl<let N: u32, let MOD: u32> RuntimeBigNumTrait<N, MOD> for RuntimeBigNum<N, M
     unconstrained fn __invmod(self) -> Self {
         let params = self.params;
         assert(params.has_multiplicative_inverse);
-        Self { limbs: __invmod::<_, MOD>(params, self.limbs), params }
+        Self { limbs: __invmod::<_, MOD_BITS>(params, self.limbs), params }
     }
 
     unconstrained fn __pow(self, exponent: Self) -> Self {
         let params = self.params;
-        Self { limbs: __pow::<_, MOD>(params, self.limbs, exponent.limbs), params }
+        Self { limbs: __pow::<_, MOD_BITS>(params, self.limbs, exponent.limbs), params }
     }
 
     unconstrained fn __batch_invert<let M: u32>(x: [Self; M]) -> [Self; M] {
         let params = x[0].params;
         assert(params.has_multiplicative_inverse);
-        __batch_invert::<_, MOD, _>(params, x.map(|bn| Self::get_limbs(bn))).map(|limbs| Self { limbs, params })
+        __batch_invert::<_, MOD_BITS, _>(params, x.map(|bn| Self::get_limbs(bn))).map(|limbs| Self { limbs, params })
     }
 
     unconstrained fn __batch_invert_slice<let M: u32>(x: [Self]) -> [Self] {
         let params = x[0].params;
         assert(params.has_multiplicative_inverse);
-        __batch_invert_slice::<_, MOD>(params, x.map(|bn| Self::get_limbs(bn))).map(|limbs| Self { limbs, params })
+        __batch_invert_slice::<_, MOD_BITS>(params, x.map(|bn| Self::get_limbs(bn))).map(|limbs| Self { limbs, params })
     }
 
     unconstrained fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
-        params: BigNumParams<N, MOD>,
+        params: BigNumParams<N, MOD_BITS>,
         lhs_terms: [[Self; LHS_N]; NUM_PRODUCTS],
         lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
         rhs_terms: [[Self; RHS_N]; NUM_PRODUCTS],
@@ -224,7 +224,7 @@ impl<let N: u32, let MOD: u32> RuntimeBigNumTrait<N, MOD> for RuntimeBigNum<N, M
         linear_terms: [Self; ADD_N],
         linear_flags: [bool; ADD_N]
     ) -> (Self, Self) {
-        let (q_limbs, r_limbs) = __compute_quadratic_expression::<_, MOD, _, _, _, _>(
+        let (q_limbs, r_limbs) = __compute_quadratic_expression::<_, MOD_BITS, _, _, _, _>(
             params,
             lhs_terms.map(|bns| map(bns, |bn| Self::get_limbs(bn))),
             lhs_flags,
@@ -237,7 +237,7 @@ impl<let N: u32, let MOD: u32> RuntimeBigNumTrait<N, MOD> for RuntimeBigNum<N, M
     }
 
     fn evaluate_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
-        params: BigNumParams<N, MOD>,
+        params: BigNumParams<N, MOD_BITS>,
         lhs_terms: [[Self; LHS_N]; NUM_PRODUCTS],
         lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
         rhs_terms: [[Self; RHS_N]; NUM_PRODUCTS],
@@ -245,7 +245,7 @@ impl<let N: u32, let MOD: u32> RuntimeBigNumTrait<N, MOD> for RuntimeBigNum<N, M
         linear_terms: [Self; ADD_N],
         linear_flags: [bool; ADD_N]
     ) {
-        evaluate_quadratic_expression::<_, MOD, _, _, _, _>(
+        evaluate_quadratic_expression::<_, MOD_BITS, _, _, _, _>(
             params,
             lhs_terms.map(|bns| map(bns, |bn| Self::get_limbs(bn))),
             lhs_flags,
@@ -258,11 +258,11 @@ impl<let N: u32, let MOD: u32> RuntimeBigNumTrait<N, MOD> for RuntimeBigNum<N, M
 
     fn validate_in_field(self: Self) {
         let params = self.params;
-        validate_in_field::<_, MOD>(params, self.limbs);
+        validate_in_field::<_, MOD_BITS>(params, self.limbs);
     }
 
     fn validate_in_range(self) {
-        validate_in_range::<_, MOD>(self.limbs);
+        validate_in_range::<_, MOD_BITS>(self.limbs);
     }
 
     fn assert_is_not_equal(self, other: Self) {
@@ -272,23 +272,23 @@ impl<let N: u32, let MOD: u32> RuntimeBigNumTrait<N, MOD> for RuntimeBigNum<N, M
 
     fn neg(self) -> Self {
         let params = self.params;
-        Self { limbs: neg::<_, MOD>(params, self.limbs), params }
+        Self { limbs: neg::<_, MOD_BITS>(params, self.limbs), params }
     }
 
     fn udiv_mod(self, divisor: Self) -> (Self, Self) {
         let params = self.params;
-        let (q, r) = udiv_mod::<_, MOD>(params, self.limbs, divisor.limbs);
+        let (q, r) = udiv_mod::<_, MOD_BITS>(params, self.limbs, divisor.limbs);
         (Self { limbs: q, params }, Self { limbs: r, params })
     }
 
     fn udiv(self, divisor: Self) -> Self {
         let params = self.params;
-        Self { limbs: udiv::<_, MOD>(params, self.limbs, divisor.limbs), params }
+        Self { limbs: udiv::<_, MOD_BITS>(params, self.limbs, divisor.limbs), params }
     }
 
     fn umod(self, divisor: Self) -> Self {
         let params = self.params;
-        Self { limbs: umod::<_, MOD>(params, self.limbs, divisor.limbs), params }
+        Self { limbs: umod::<_, MOD_BITS>(params, self.limbs, divisor.limbs), params }
     }
 
     fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self {
@@ -297,46 +297,46 @@ impl<let N: u32, let MOD: u32> RuntimeBigNumTrait<N, MOD> for RuntimeBigNum<N, M
     }
 }
 
-impl<let N: u32, let MOD: u32> std::ops::Add for RuntimeBigNum<N, MOD> {
+impl<let N: u32, let MOD_BITS: u32> std::ops::Add for RuntimeBigNum<N, MOD_BITS> {
     // Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
     //       via evaluate_quadratic_expression
     fn add(self, other: Self) -> Self {
         let params = self.params;
-        Self { limbs: add::<_, MOD>(params, self.limbs, other.limbs), params }
+        Self { limbs: add::<_, MOD_BITS>(params, self.limbs, other.limbs), params }
     }
 }
 
-impl<let N: u32, let MOD: u32> std::ops::Sub for RuntimeBigNum<N, MOD> {
+impl<let N: u32, let MOD_BITS: u32> std::ops::Sub for RuntimeBigNum<N, MOD_BITS> {
     // Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
     //       via evaluate_quadratic_expression
     fn sub(self, other: Self) -> Self {
         let params = self.params;
-        Self { limbs: sub::<_, MOD>(params, self.limbs, other.limbs), params }
+        Self { limbs: sub::<_, MOD_BITS>(params, self.limbs, other.limbs), params }
     }
 }
 
-impl<let N: u32, let MOD: u32> std::ops::Mul for RuntimeBigNum<N, MOD> {
+impl<let N: u32, let MOD_BITS: u32> std::ops::Mul for RuntimeBigNum<N, MOD_BITS> {
     // Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
     //       via evaluate_quadratic_expression
     // e.g. performing a sum of multiple multiplications and additions via `evaluate_quadratic_expression`
     //      will create much fewer constraints than calling `mul` and `add` directly
     fn mul(self, other: Self) -> Self {
         let params = self.params;
-        Self { limbs: mul::<_, MOD>(params, self.limbs, other.limbs), params }
+        Self { limbs: mul::<_, MOD_BITS>(params, self.limbs, other.limbs), params }
     }
 }
 
-impl<let N: u32, let MOD: u32> std::ops::Div for RuntimeBigNum<N, MOD> {
+impl<let N: u32, let MOD_BITS: u32> std::ops::Div for RuntimeBigNum<N, MOD_BITS> {
     // Note: this method is expensive! Witness computation is extremely expensive as it requires modular exponentiation
     fn div(self, divisor: Self) -> Self {
         let params = self.params;
-        Self { limbs: div::<_, MOD>(params, self.limbs, divisor.limbs), params }
+        Self { limbs: div::<_, MOD_BITS>(params, self.limbs, divisor.limbs), params }
     }
 }
 
-impl<let N: u32, let MOD: u32> std::cmp::Eq for RuntimeBigNum<N, MOD> {
+impl<let N: u32, let MOD_BITS: u32> std::cmp::Eq for RuntimeBigNum<N, MOD_BITS> {
     fn eq(self, other: Self) -> bool {
         let params = self.params;
-        eq::<_, MOD>(params, self.limbs, other.limbs)
+        eq::<_, MOD_BITS>(params, self.limbs, other.limbs)
     }
 }

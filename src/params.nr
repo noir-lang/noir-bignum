@@ -1,6 +1,6 @@
 use crate::utils::u60_representation::U60Repr;
 
-pub(crate) struct BigNumParams<let N: u32, let MOD: u32> {
+pub(crate) struct BigNumParams<let N: u32, let MOD_BITS: u32> {
     has_multiplicative_inverse: bool,
 
     // @brief modulus_bits = log2(modulus) rounded up
@@ -22,8 +22,8 @@ pub(crate) struct BigNumParams<let N: u32, let MOD: u32> {
 }
 
 // To be implemented by the user, or within the prebuilt options in the `fields/` dir.
-pub(crate) trait BigNumParamsGetter<let N: u32, let MOD: u32> {
-    fn get_params() -> BigNumParams<N, MOD>;
+pub(crate) trait BigNumParamsGetter<let N: u32, let MOD_BITS: u32> {
+    fn get_params() -> BigNumParams<N, MOD_BITS>;
 }
 
 // // To be implemented by the user, or within the prebuilt options in the `fields/` dir.
@@ -34,7 +34,7 @@ pub(crate) trait BigNumParamsGetter<let N: u32, let MOD: u32> {
 // impl<let N: u32> HasGetModulusBits<N> for BigNumParams<N> {}
 // impl<let N: u32> RuntimeBigNumParamsTrait<N> for BigNumParams<N> {}
 
-impl<let N: u32, let MOD: u32> BigNumParams<N, MOD> {
+impl<let N: u32, let MOD_BITS: u32> BigNumParams<N, MOD_BITS> {
     fn new(
         has_multiplicative_inverse: bool,
         // modulus_bits_getter: fn() -> u32,

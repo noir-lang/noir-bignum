@@ -6,9 +6,9 @@ use crate::params::BigNumParams as P;
 *               is precisely large enough to cover Params::modulus_bits()
 * @param x: input byte array
 **/
-pub(crate) fn from_be_bytes<let N: u32, let MOD: u32, let NBytes: u32>(params: P<N, MOD>, x: [u8; NBytes]) -> [Field; N]  {
+pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32, let NBytes: u32>(params: P<N, MOD_BITS>, x: [u8; NBytes]) -> [Field; N]  {
     let num_bits = NBytes * 8;
-    let modulus_bits = MOD;
+    let modulus_bits = MOD_BITS;
     assert(num_bits >= modulus_bits);
     assert(num_bits - modulus_bits < 8);
     let mut result = [0; N];
@@ -43,10 +43,10 @@ pub(crate) fn from_be_bytes<let N: u32, let MOD: u32, let NBytes: u32>(params: P
     result
 }
 
-pub(crate) fn to_le_bytes<let N: u32, let MOD: u32, let NBytes: u32>(
+pub(crate) fn to_le_bytes<let N: u32, let MOD_BITS: u32, let NBytes: u32>(
     val: [Field; N]
 ) -> [u8; NBytes]  {
-    let modulus_bits = MOD;
+    let modulus_bits = MOD_BITS;
     let nbytes = (modulus_bits / 8) + (modulus_bits % 8 != 0) as u32;
     assert(nbytes <= NBytes);
 

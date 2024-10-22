@@ -31,13 +31,13 @@ use crate::unconstrained_helpers::__barrett_reduction;
 **/
 unconstrained fn __compute_quadratic_expression_with_borrow_flags<
     let N: u32,
-    let MOD: u32,
+    let MOD_BITS: u32,
     let LHS_N: u32,
     let RHS_N: u32,
     let NUM_PRODUCTS: u32,
     let ADD_N: u32
 >(
-    params: P<N, MOD>,
+    params: P<N, MOD_BITS>,
     lhs_terms: [[[Field; N]; LHS_N]; NUM_PRODUCTS],
     lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
     rhs_terms: [[[Field; N]; RHS_N]; NUM_PRODUCTS],
@@ -60,7 +60,7 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<
     let mut relation_result: [Field; 2 * N] = split_bits::__normalize_limbs(mulout_p, 2 * N);
 
     let modulus: [Field; N] = params.modulus;
-    let modulus_bits = MOD;
+    let modulus_bits = MOD_BITS;
     let (quotient, remainder) = __barrett_reduction(
         relation_result,
         params.redc_param,
@@ -115,7 +115,7 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<
 // We know that, for a valid bignum element, the limbs in `x` will be <2^{120}
 // Therefore each of the limbs in `p` (except the most significant) will borrow 2^{120} from the more significant limb.
 // Finally, to ensure we do not underflow in the most significant limb, we use `2p` instead of `p`
-unconstrained fn __add_linear_expression<let N: u32, let MOD: u32, let M: u32>(params: P<N, MOD>, x: [[Field; N]; M], flags: [bool; M]) -> ([Field; N]) {
+unconstrained fn __add_linear_expression<let N: u32, let MOD_BITS: u32, let M: u32>(params: P<N, MOD_BITS>, x: [[Field; N]; M], flags: [bool; M]) -> ([Field; N]) {
     // TODO, validate we do not overflow N2 when multiplying and N when adding
     let mut sum: [Field; N] = [0; N];
     // TODO: ugly! Will fail if input array is empty
@@ -142,13 +142,13 @@ unconstrained fn __add_linear_expression<let N: u32, let MOD: u32, let M: u32>(p
 **/
 unconstrained fn __compute_quadratic_expression_product<
     let N: u32,
-    let MOD: u32,
+    let MOD_BITS: u32,
     let LHS_N: u32,
     let RHS_N: u32,
     let NUM_PRODUCTS: u32,
     let ADD_N: u32
 >(
-    params: P<N, MOD>,
+    params: P<N, MOD_BITS>,
     lhs_terms: [[[Field; N]; LHS_N]; NUM_PRODUCTS],
     lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
     rhs_terms: [[[Field; N]; RHS_N]; NUM_PRODUCTS],
@@ -187,13 +187,13 @@ unconstrained fn __compute_quadratic_expression_product<
 **/
 unconstrained pub(crate) fn __compute_quadratic_expression<
     let N: u32,
-    let MOD: u32,
+    let MOD_BITS: u32,
     let LHS_N: u32,
     let RHS_N: u32,
     let NUM_PRODUCTS: u32,
     let ADD_N: u32
 >(
-    params: P<N, MOD>,
+    params: P<N, MOD_BITS>,
     lhs_terms: [[[Field; N]; LHS_N]; NUM_PRODUCTS],
     lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
     rhs_terms: [[[Field; N]; RHS_N]; NUM_PRODUCTS],
@@ -214,7 +214,7 @@ unconstrained pub(crate) fn __compute_quadratic_expression<
     let mut relation_result: [Field; 2 * N] = split_bits::__normalize_limbs(mulout, 2 * N);
 
     // TODO: ugly! Will fail if input slice is empty
-    let modulus_bits = MOD;
+    let modulus_bits = MOD_BITS;
     let k  = modulus_bits;
 
     let (quotient, remainder) = __barrett_reduction(
@@ -269,13 +269,13 @@ unconstrained pub(crate) fn __compute_quadratic_expression<
 **/
 pub(crate) fn evaluate_quadratic_expression<
     let N: u32,
-    let MOD: u32,
+    let MOD_BITS: u32,
     let LHS_N: u32,
     let RHS_N: u32,
     let NUM_PRODUCTS: u32,
     let ADD_N: u32
 >(
-    params: P<N, MOD>,
+    params: P<N, MOD_BITS>,
     lhs_terms: [[[Field; N]; LHS_N]; NUM_PRODUCTS],
     lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
     rhs_terms: [[[Field; N]; RHS_N]; NUM_PRODUCTS],
@@ -285,7 +285,7 @@ pub(crate) fn evaluate_quadratic_expression<
 ) {
     // use an unconstrained function to compute the value of the quotient
     let (quotient, _, borrow_flags): ([Field; N], [Field; N], [Field; 2 * N]) = unsafe {
-        __compute_quadratic_expression_with_borrow_flags::<_, MOD, _, _, _, _>(
+        __compute_quadratic_expression_with_borrow_flags::<_, MOD_BITS, _, _, _, _>(
             params,
             lhs_terms,
             lhs_flags,
@@ -297,7 +297,7 @@ pub(crate) fn evaluate_quadratic_expression<
     };
     // constrain the quotient to be in the range [0, ..., 2^{m} - 1], where `m` is log2(modulus) rounded up.
     // Additionally, validate quotient limbs are also in the range [0, ..., 2^{120} - 1]
-    validate_quotient_in_range::<_, MOD>(quotient);
+    validate_quotient_in_range::<_, MOD_BITS>(quotient);
     // TODO, validate we do not overflow N2 when multiplying and N when adding
     // (should be a compile-time check...unconstrained function?)
 
