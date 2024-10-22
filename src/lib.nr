@@ -276,7 +276,7 @@ impl<let N: u32, let MOD_BITS: u32, Params> BigNumTrait for BigNum<N, Params> wh
     }
 }
 
-impl<let N: u32, Params> BigNum<N, Params> where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N> {}
+impl<let N: u32, let MOD_BITS: u32, Params> BigNum<N, Params> where Params: BigNumParamsTrait<N, MOD_BITS> + RuntimeBigNumParamsTrait<N, MOD_BITS> {}
 
 impl<let N: u32, let MOD_BITS: u32, Params> std::ops::Add for BigNum<N, Params> where Params: BigNumParamsTrait<N, MOD_BITS> + RuntimeBigNumParamsTrait<N, MOD_BITS> {
     // Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
