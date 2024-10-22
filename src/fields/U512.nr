@@ -9,14 +9,14 @@ impl RuntimeBigNumParamsTrait<5, 513> for U512Params {
     }
 }
 impl BigNumParamsTrait<5, 513> for U512Params {
-    fn get_instance() -> BigNumInstance<5, Self> {
+    fn get_instance() -> BigNumInstance<5, 513, Self> {
         U512_Instance
     }
     fn modulus_bits() -> u32 {
         513
     }
 }
-pub global U512_Instance: BigNumInstance<5, U512Params> = BigNumInstance {
+pub global U512_Instance: BigNumInstance<5, 513, U512Params> = BigNumInstance {
         modulus: [
             0x00, 0x00, 0x00, 0x00, 0x0100000000
         ],

@@ -9,14 +9,14 @@ impl RuntimeBigNumParamsTrait<35, 4097> for U4096Params {
     }
 }
 impl BigNumParamsTrait<35, 4097> for U4096Params {
-    fn get_instance() -> BigNumInstance<35, Self> {
+    fn get_instance() -> BigNumInstance<35, 4097, Self> {
         U4096_Instance
     }
     fn modulus_bits() -> u32 {
         4097
     }
 }
-pub global U4096_Instance: BigNumInstance<35, U4096Params> = BigNumInstance {
+pub global U4096_Instance: BigNumInstance<35, 4097, U4096Params> = BigNumInstance {
         modulus: [
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x010000
         ],

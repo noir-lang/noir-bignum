@@ -28,7 +28,7 @@ impl NotRuntimeBigNumParamsTrait<18, 2048> for Test2048Params {
     fn modulus_bits() -> u32 {
         2048
     }
-    fn get_instance() -> BigNumInstance<18, Test2048Params> {
+    fn get_instance() -> BigNumInstance<18, 2048, Test2048Params> {
         let modulus: [Field; 18] = [
             0x0000000000000000000000000000000000c0a197a5ae0fcdceb052c9732614fe,
             0x0000000000000000000000000000000000656ae034423283422243918ab83be3,
@@ -61,13 +61,13 @@ impl NotRuntimeBigNumParamsTrait<18, 2048> for Test2048Params {
  **/
 #[test]
 fn test_bls_reduction() {
-    let X1: BigNum<4, BLS12_381_Fq_Params> = BigNum {
+    let X1: BigNum<4, 381, BLS12_381_Fq_Params> = BigNum {
         limbs: [
             0x55e83ff97a1aeffb3af00adb22c6bb, 0x8c4f9774b905a14e3a3f171bac586c, 0xa73197d7942695638c4fa9ac0fc368, 0x17f1d3
         ]
     };
     X1.validate_in_field();
-    let mut (_, XX_mul_3): (BigNum<4, BLS12_381_Fq_Params>, BigNum<4, BLS12_381_Fq_Params> ) = unsafe {
+    let mut (_, XX_mul_3): (BigNum<4, 381, BLS12_381_Fq_Params>, BigNum<4, 381, BLS12_381_Fq_Params> ) = unsafe {
         BigNum::__compute_quadratic_expression(
             [[X1, X1, X1]],
             [[false, false, false]],
@@ -80,298 +80,296 @@ fn test_bls_reduction() {
     XX_mul_3.validate_in_field();
 }
 
-// /**
-//  * @brief experimenting with macro madness and code generation to make some tests that apply to multiple BigNum parametrisations!
-//  **/
-// comptime fn make_test(f: StructDefinition, N: Quoted, typ: Quoted) -> Quoted {
-//     let k = f.name();
-//     quote{
-// impl $k {
-// #[test]
-// fn test_add() {
-//     let bn = $typ ::get_instance();
-//     let a: BigNum<$N, $typ> = unsafe{ bn.__derive_from_seed([1, 2, 3, 4]) };
-//     let b: BigNum<$N, $typ> = unsafe{ bn.__derive_from_seed([4, 5, 6, 7]) };
-//     let one: BigNum<$N, $typ> = BigNum::one();
-//     a.validate_in_range();
-//     bn.validate_in_field(a);
-//     b.validate_in_range();
-//     bn.validate_in_field(b);
+/**
+ * @brief experimenting with macro madness and code generation to make some tests that apply to multiple BigNum parametrisations!
+ **/
+comptime fn make_test(f: StructDefinition, N: Quoted, NUM_BITS: Quoted, typ: Quoted) -> Quoted {
+    let k = f.name();
+    quote{
+impl $k {
+#[test]
+fn test_add() {
+    let bn = $typ ::get_instance();
+    let a: BigNum<$N, $NUM_BITS, $typ> = unsafe{ bn.__derive_from_seed([1, 2, 3, 4]) };
+    let b: BigNum<$N, $NUM_BITS, $typ> = unsafe{ bn.__derive_from_seed([4, 5, 6, 7]) };
+    let one: BigNum<$N, $NUM_BITS, $typ> = BigNum::one();
+    a.validate_in_range();
+    bn.validate_in_field(a);
+    b.validate_in_range();
+    bn.validate_in_field(b);
 
-//     let mut c = bn.add(a, b);
-//     c = bn.add(c, c);
-//     let d = bn.mul(bn.add(a, b), bn.add(one, one));
-//     assert(bn.eq(c, d));
+    let mut c = bn.add(a, b);
+    c = bn.add(c, c);
+    let d = bn.mul(bn.add(a, b), bn.add(one, one));
+    assert(bn.eq(c, d));
 
-//     let e = bn.add(one, one);
-//     for i in 1..$N {
-//         assert(e.limbs[i] == 0);
-//     }
-//     assert(e.limbs[0] == 2);
-// }
+    let e = bn.add(one, one);
+    for i in 1..$N {
+        assert(e.limbs[i] == 0);
+    }
+    assert(e.limbs[0] == 2);
+}
 
-// #[test]
-// fn test_sub() {
-//     let bn = $typ::get_instance();
-//     // 0 - 1 should equal p - 1
-//     let mut a: BigNum<$N, $typ> = BigNum::new();
-//     let mut b: BigNum<$N, $typ> = BigNum::one();
-//     let mut expected: BigNum<$N, $typ> = bn.modulus();
-//     expected.limbs[0] -= 1; // p - 1
+#[test]
+fn test_sub() {
+    let bn = $typ::get_instance();
+    // 0 - 1 should equal p - 1
+    let mut a: BigNum<$N, $NUM_BITS, $typ> = BigNum::new();
+    let mut b: BigNum<$N, $NUM_BITS, $typ> = BigNum::one();
+    let mut expected: BigNum<$N, $NUM_BITS, $typ> = bn.modulus();
+    expected.limbs[0] -= 1; // p - 1
 
-//     let result = bn.sub(a, b);
-//     assert(bn.eq(result, expected));
-// }
+    let result = bn.sub(a, b);
+    assert(bn.eq(result, expected));
+}
 
+#[test]
+fn test_sub_modulus_limit() {
+    let instance = $typ::get_instance();
+    // if we underflow, maximum result should be ...
+    // 0 - 1 = o-1
+    // 0 - p = 0
+    let mut a: BigNum<$N, $NUM_BITS, $typ> = BigNum::new();
+    let mut b: BigNum<$N, $NUM_BITS, $typ> = instance.modulus();
+    let mut expected: BigNum<$N, $NUM_BITS, $typ> = BigNum::new();
+    let result = instance.sub(a, b);
+    assert(instance.eq(result, expected));
+}
 
-// #[test]
-// fn test_sub_modulus_limit() {
-//     let instance = $typ::get_instance();
-//     // if we underflow, maximum result should be ...
-//     // 0 - 1 = o-1
-//     // 0 - p = 0
-//     let mut a: BigNum<$N, $typ> = BigNum::new();
-//     let mut b: BigNum<$N, $typ> = instance.modulus();
-//     let mut expected: BigNum<$N, $typ> = BigNum::new();
-//     let result = instance.sub(a, b);
-//     assert(instance.eq(result, expected));
-// }
+#[test(should_fail_with = "call to assert_max_bit_size")]
+fn test_sub_modulus_underflow() {
+    let instance = $typ::get_instance();
 
+    // 0 - (p + 1) is smaller than p and should produce unsatisfiable constraints
+    let mut a: BigNum<$N, $NUM_BITS, $typ> = BigNum::new();
+    let mut b: BigNum<$N, $NUM_BITS, $typ> = instance.modulus();
+    b.limbs[0] += 1;
+    let mut expected: BigNum<$N, $NUM_BITS, $typ> = BigNum::one();
 
-// #[test(should_fail_with = "call to assert_max_bit_size")]
-// fn test_sub_modulus_underflow() {
-//     let instance = $typ::get_instance();
+    let result = instance.sub(a, b);
 
-//     // 0 - (p + 1) is smaller than p and should produce unsatisfiable constraints
-//     let mut a: BigNum<$N, $typ> = BigNum::new();
-//     let mut b: BigNum<$N, $typ> = instance.modulus();
-//     b.limbs[0] += 1;
-//     let mut expected: BigNum<$N, $typ> = BigNum::one();
+    assert(instance.eq(result, expected));
+}
 
-//     let result = instance.sub(a, b);
+#[test]
+fn test_add_modulus_limit() {
+    let instance = $typ::get_instance();
+    // p + 2^{modulus_bits()} - 1 should be the maximum allowed value fed into an add operation
+    // when adding, if the result overflows the modulus, we conditionally subtract the modulus, producing 2^{254} -  1
+    // this is the largest value that will satisfy the range check applied when constructing a bignum
+    let p : U60Repr<$N, 2> = U60Repr::from(instance.modulus().limbs);
+    let one = unsafe{ U60Repr::one() };
 
-//     assert(instance.eq(result, expected));
-// }
+    let a: BigNum<$N, $NUM_BITS, $typ> = unsafe{ BigNum { limbs: U60Repr::into(p) } };
+    let mut two_pow_modulus_bits_minus_one: U60Repr<$N, 2> = unsafe{ one.shl(a.modulus_bits()) - one };
+    let b: BigNum<$N, $NUM_BITS, $typ> = BigNum { limbs: U60Repr::into(two_pow_modulus_bits_minus_one) };
+    let result = instance.add(a, b);
+    assert(instance.eq(result, b));
+}
 
-// #[test]
-// fn test_add_modulus_limit() {
-//     let instance = $typ::get_instance();
-//     // p + 2^{modulus_bits()} - 1 should be the maximum allowed value fed into an add operation
-//     // when adding, if the result overflows the modulus, we conditionally subtract the modulus, producing 2^{254} -  1
-//     // this is the largest value that will satisfy the range check applied when constructing a bignum
-//     let p : U60Repr<$N, 2> = U60Repr::from(instance.modulus().limbs);
-//     let one = unsafe{ U60Repr::one() };
+#[test(should_fail_with = "call to assert_max_bit_size")]
+fn test_add_modulus_overflow() {
 
-//     let a: BigNum<$N, $typ> = unsafe{ BigNum { limbs: U60Repr::into(p) } };
-//     let mut two_pow_modulus_bits_minus_one: U60Repr<$N, 2> = unsafe{ one.shl(a.modulus_bits()) - one };
-//     let b: BigNum<$N, $typ> = BigNum { limbs: U60Repr::into(two_pow_modulus_bits_minus_one) };
-//     let result = instance.add(a, b);
-//     assert(instance.eq(result, b));
-// }
+    let instance = $typ::get_instance();
+    let p : U60Repr<$N, 2> = U60Repr::from(instance.modulus().limbs);
+    let one = unsafe{ U60Repr::one() };
+    let a: BigNum<$N, $NUM_BITS, $typ> = unsafe{ BigNum { limbs: U60Repr::into(p + one) } };
+    let mut two_pow_modulus_bits_minus_one: U60Repr<$N, 2> = unsafe{ one.shl(a.modulus_bits()) - one };
+    let b: BigNum<$N, $NUM_BITS, $typ> = BigNum { limbs: U60Repr::into(two_pow_modulus_bits_minus_one) };
+    let result = instance.add(a, b);
+    assert(instance.eq(result, b));
+}
 
-// #[test(should_fail_with = "call to assert_max_bit_size")]
-// fn test_add_modulus_overflow() {
+#[test]
+fn test_mul() {
+    let bn = $typ ::get_instance();
+    let a: BigNum<$N, $NUM_BITS, $typ> = unsafe{ bn.__derive_from_seed([1, 2, 3, 4]) };
+    let b: BigNum<$N, $NUM_BITS, $typ> = unsafe{ bn.__derive_from_seed([4, 5, 6, 7]) };
 
-//     let instance = $typ::get_instance();
-//     let p : U60Repr<$N, 2> = U60Repr::from(instance.modulus().limbs);
-//     let one = unsafe{ U60Repr::one() };
-//     let a: BigNum<$N, $typ> = unsafe{ BigNum { limbs: U60Repr::into(p + one) } };
-//     let mut two_pow_modulus_bits_minus_one: U60Repr<$N, 2> = unsafe{ one.shl(a.modulus_bits()) - one };
-//     let b: BigNum<$N, $typ> = BigNum { limbs: U60Repr::into(two_pow_modulus_bits_minus_one) };
-//     let result = instance.add(a, b);
-//     assert(instance.eq(result, b));
-// }
+    let c = bn.mul(bn.add(a, b), bn.add(a, b));
+    let d = bn.add(
+        bn.add(
+            bn.add(bn.mul(a, a), bn.mul(b, b)),
+            bn.mul(a, b)
+        ),
+        bn.mul(a, b)
+    );
+    assert(bn.eq(c, d));
+}
 
-// #[test]
-// fn test_mul() {
-//     let bn = $typ ::get_instance();
-//     let a: BigNum<$N, $typ> = unsafe{ bn.__derive_from_seed([1, 2, 3, 4]) };
-//     let b: BigNum<$N, $typ> = unsafe{ bn.__derive_from_seed([4, 5, 6, 7]) };
+#[test]
+fn test_quadratic_expression() {
+    let bn = $typ ::get_instance();
+    for i in 0..32 {
+    let X1: BigNum<$N, $NUM_BITS, $typ> = unsafe{ bn.__derive_from_seed([i as u8,2,3,4]) };
+    let Y1: BigNum<$N, $NUM_BITS, $typ> = unsafe{ bn.__derive_from_seed([i as u8,i as u8,6,7]) };
+    let Z1: BigNum<$N, $NUM_BITS, $typ> = BigNum::one();
 
-//     let c = bn.mul(bn.add(a, b), bn.add(a, b));
-//     let d = bn.add(
-//         bn.add(
-//             bn.add(bn.mul(a, a), bn.mul(b, b)),
-//             bn.mul(a, b)
-//         ),
-//         bn.mul(a, b)
-//     );
-//     assert(bn.eq(c, d));
-// }
+        let (_, YY_mul_2): (BigNum<$N, $NUM_BITS, $typ>, BigNum<$N, $NUM_BITS, $typ> ) = unsafe{BigNum::__compute_quadratic_expression([[Y1]], [[false]], [[Y1, Y1]], [[false, false]], [], [])};
+        let mut (_, XX_mul_3): (BigNum<$N, $NUM_BITS, $typ>, BigNum<$N, $NUM_BITS, $typ> ) = unsafe{BigNum::__compute_quadratic_expression(
+            [[X1]],
+            [[false]],
+            [[X1, X1, X1]],
+            [[false, false, false]],
+            [],
+            []
+        )};
+        let (_, D): (BigNum<$N, $NUM_BITS, $typ>, BigNum<$N, $NUM_BITS, $typ> ) = unsafe{BigNum::__compute_quadratic_expression([[X1, X1]], [[false, false]], [[YY_mul_2]], [[false]], [], [])};
+        let mut (_, X3): (BigNum<$N, $NUM_BITS, $typ>, BigNum<$N, $NUM_BITS, $typ> ) = unsafe{BigNum::__compute_quadratic_expression(
+            [[XX_mul_3]],
+            [[false]],
+            [[XX_mul_3]],
+            [[false]],
+            [D, D],
+            [true, true]
+        )};
+        let (_, Y3): (BigNum<$N, $NUM_BITS, $typ>, BigNum<$N, $NUM_BITS, $typ> ) = unsafe{BigNum::__compute_quadratic_expression(
+            [[XX_mul_3], [YY_mul_2]],
+            [[false], [true]],
+            [[D, X3], [YY_mul_2, YY_mul_2]],
+            [[false, true], [false, false]],
+            [],
+            []
+        )};
+        // 3XX * (D - X3) - 8YYYY
 
-// #[test]
-// fn test_quadratic_expression() {
-//     let bn = $typ ::get_instance();
-//     for i in 0..32 {
-//     let X1: BigNum<$N, $typ> = unsafe{ bn.__derive_from_seed([i as u8,2,3,4]) };
-//     let Y1: BigNum<$N, $typ> = unsafe{ bn.__derive_from_seed([i as u8,i as u8,6,7]) };
-//     let Z1: BigNum<$N, $typ> = BigNum::one();
+        let (_, Z3): (BigNum<$N, $NUM_BITS, $typ>, BigNum<$N, $NUM_BITS, $typ> ) = unsafe{ BigNum::__compute_quadratic_expression([[Y1]], [[false]], [[Z1, Z1]], [[false, false]], [], []) };
 
-//         let (_, YY_mul_2): (BigNum<$N, $typ>, BigNum<$N, $typ> ) = unsafe{BigNum::__compute_quadratic_expression([[Y1]], [[false]], [[Y1, Y1]], [[false, false]], [], [])};
-//         let mut (_, XX_mul_3): (BigNum<$N, $typ>, BigNum<$N, $typ> ) = unsafe{BigNum::__compute_quadratic_expression(
-//             [[X1]],
-//             [[false]],
-//             [[X1, X1, X1]],
-//             [[false, false, false]],
-//             [],
-//             []
-//         )};
-//         let (_, D): (BigNum<$N, $typ>, BigNum<$N, $typ> ) = unsafe{BigNum::__compute_quadratic_expression([[X1, X1]], [[false, false]], [[YY_mul_2]], [[false]], [], [])};
-//         let mut (_, X3): (BigNum<$N, $typ>, BigNum<$N, $typ> ) = unsafe{BigNum::__compute_quadratic_expression(
-//             [[XX_mul_3]],
-//             [[false]],
-//             [[XX_mul_3]],
-//             [[false]],
-//             [D, D],
-//             [true, true]
-//         )};
-//         let (_, Y3): (BigNum<$N, $typ>, BigNum<$N, $typ> ) = unsafe{BigNum::__compute_quadratic_expression(
-//             [[XX_mul_3], [YY_mul_2]],
-//             [[false], [true]],
-//             [[D, X3], [YY_mul_2, YY_mul_2]],
-//             [[false, true], [false, false]],
-//             [],
-//             []
-//         )};
-//         // 3XX * (D - X3) - 8YYYY
+        bn.validate_in_field(X3);
+        bn.validate_in_field(Y3);
+        bn.validate_in_field(Z3);
+    }
+}
 
-//         let (_, Z3): (BigNum<$N, $typ>, BigNum<$N, $typ> ) = unsafe{ BigNum::__compute_quadratic_expression([[Y1]], [[false]], [[Z1, Z1]], [[false, false]], [], []) };
+#[test]
+fn assert_is_not_equal() {
+    let bn = $typ ::get_instance();
+    let a: BigNum<$N, $NUM_BITS, $typ> = unsafe{ bn.__derive_from_seed([1, 2, 3, 4]) };
+    let b: BigNum<$N, $NUM_BITS, $typ> = unsafe{ bn.__derive_from_seed([4, 5, 6, 7]) };
 
-//         bn.validate_in_field(X3);
-//         bn.validate_in_field(Y3);
-//         bn.validate_in_field(Z3);
-//     }
-// }
+    bn.assert_is_not_equal(a, b);
+}
 
-// #[test]
-// fn assert_is_not_equal() {
-//     let bn = $typ ::get_instance();
-//     let a: BigNum<$N, $typ> = unsafe{ bn.__derive_from_seed([1, 2, 3, 4]) };
-//     let b: BigNum<$N, $typ> = unsafe{ bn.__derive_from_seed([4, 5, 6, 7]) };
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn assert_is_not_equal_fail() {
+    let bn = $typ ::get_instance();
+    let a: BigNum<$N, $NUM_BITS, $typ> = unsafe{ bn.__derive_from_seed([1, 2, 3, 4]) };
+    let b: BigNum<$N, $NUM_BITS, $typ> = unsafe{ bn.__derive_from_seed([1, 2, 3, 4]) };
 
-//     bn.assert_is_not_equal(a, b);
-// }
+    bn.assert_is_not_equal(a, b);
+}
 
-// #[test(should_fail_with = "asssert_is_not_equal fail")]
-// fn assert_is_not_equal_fail() {
-//     let bn = $typ ::get_instance();
-//     let a: BigNum<$N, $typ> = unsafe{ bn.__derive_from_seed([1, 2, 3, 4]) };
-//     let b: BigNum<$N, $typ> = unsafe{ bn.__derive_from_seed([1, 2, 3, 4]) };
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn assert_is_not_equal_overloaded_lhs_fail() {
+    let bn = $typ ::get_instance();
+    let a: BigNum<$N, $NUM_BITS, $typ> = unsafe{ bn.__derive_from_seed([1, 2, 3, 4]) };
+    let b: BigNum<$N, $NUM_BITS, $typ> = unsafe{ bn.__derive_from_seed([1, 2, 3, 4]) };
 
-//     bn.assert_is_not_equal(a, b);
-// }
+    let modulus = bn.modulus();
 
-// #[test(should_fail_with = "asssert_is_not_equal fail")]
-// fn assert_is_not_equal_overloaded_lhs_fail() {
-//     let bn = $typ ::get_instance();
-//     let a: BigNum<$N, $typ> = unsafe{ bn.__derive_from_seed([1, 2, 3, 4]) };
-//     let b: BigNum<$N, $typ> = unsafe{ bn.__derive_from_seed([1, 2, 3, 4]) };
+    let t0: U60Repr<$N, 2> = U60Repr::from(a.limbs);
+    let t1: U60Repr<$N, 2> = U60Repr::from(modulus.limbs);
+    let a_plus_modulus: BigNum<$N, $NUM_BITS, $typ> = BigNum { limbs: U60Repr::into(t0 + t1) };
+    bn.assert_is_not_equal(a_plus_modulus, b);
+}
 
-//     let modulus = bn.modulus();
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn assert_is_not_equal_overloaded_rhs_fail() {
+    let bn = $typ ::get_instance();
+    let a: BigNum<$N, $NUM_BITS, $typ> = unsafe{ bn.__derive_from_seed([1, 2, 3, 4]) };
+    let b: BigNum<$N, $NUM_BITS, $typ> = unsafe{ bn.__derive_from_seed([1, 2, 3, 4]) };
 
-//     let t0: U60Repr<$N, 2> = U60Repr::from(a.limbs);
-//     let t1: U60Repr<$N, 2> = U60Repr::from(modulus.limbs);
-//     let a_plus_modulus: BigNum<$N, $typ> = BigNum { limbs: U60Repr::into(t0 + t1) };
-//     bn.assert_is_not_equal(a_plus_modulus, b);
-// }
+    let modulus = bn.modulus();
 
-// #[test(should_fail_with = "asssert_is_not_equal fail")]
-// fn assert_is_not_equal_overloaded_rhs_fail() {
-//     let bn = $typ ::get_instance();
-//     let a: BigNum<$N, $typ> = unsafe{ bn.__derive_from_seed([1, 2, 3, 4]) };
-//     let b: BigNum<$N, $typ> = unsafe{ bn.__derive_from_seed([1, 2, 3, 4]) };
+    let t0: U60Repr<$N, 2> = U60Repr::from(b.limbs);
+    let t1: U60Repr<$N, 2> = U60Repr::from(modulus.limbs);
+    let b_plus_modulus: BigNum<$N, $NUM_BITS, $typ> = BigNum { limbs: U60Repr::into(t0 + t1) };
+    bn.assert_is_not_equal(a, b_plus_modulus);
+}
 
-//     let modulus = bn.modulus();
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn assert_is_not_equal_overloaded_fail() {
+    let bn = $typ ::get_instance();
+    let a: BigNum<$N, $NUM_BITS, $typ> = unsafe{ bn.__derive_from_seed([1, 2, 3, 4]) };
+    let b: BigNum<$N, $NUM_BITS, $typ> = unsafe{ bn.__derive_from_seed([1, 2, 3, 4]) };
+    let modulus = bn.modulus();
+    let t0: U60Repr<$N, 2> = U60Repr::from(a.limbs);
+    let t1: U60Repr<$N, 2> = U60Repr::from(b.limbs);
+    let t2: U60Repr<$N, 2> = U60Repr::from(modulus.limbs);
+    let a_plus_modulus: BigNum<$N, $NUM_BITS, $typ> = BigNum { limbs: U60Repr::into(t0 + t2) };
+    let b_plus_modulus: BigNum<$N, $NUM_BITS, $typ> = BigNum { limbs: U60Repr::into(t1 + t2) };
+    bn.assert_is_not_equal(a_plus_modulus, b_plus_modulus);
+}
 
-//     let t0: U60Repr<$N, 2> = U60Repr::from(b.limbs);
-//     let t1: U60Repr<$N, 2> = U60Repr::from(modulus.limbs);
-//     let b_plus_modulus: BigNum<$N, $typ> = BigNum { limbs: U60Repr::into(t0 + t1) };
-//     bn.assert_is_not_equal(a, b_plus_modulus);
-// }
+#[test]
+fn test_derive()
+{
+    let bn = $typ ::get_instance();
+    let a: BigNum<$N, $NUM_BITS, $typ> = bn.derive_from_seed("hello".as_bytes());
+    let b: BigNum<$N, $NUM_BITS, $typ> = unsafe {
+        bn.__derive_from_seed("hello".as_bytes())
+    };
+    assert(bn.eq(a, b));
+}
 
-// #[test(should_fail_with = "asssert_is_not_equal fail")]
-// fn assert_is_not_equal_overloaded_fail() {
-//     let bn = $typ ::get_instance();
-//     let a: BigNum<$N, $typ> = unsafe{ bn.__derive_from_seed([1, 2, 3, 4]) };
-//     let b: BigNum<$N, $typ> = unsafe{ bn.__derive_from_seed([1, 2, 3, 4]) };
-//     let modulus = bn.modulus();
-//     let t0: U60Repr<$N, 2> = U60Repr::from(a.limbs);
-//     let t1: U60Repr<$N, 2> = U60Repr::from(b.limbs);
-//     let t2: U60Repr<$N, 2> = U60Repr::from(modulus.limbs);
-//     let a_plus_modulus: BigNum<$N, $typ> = BigNum { limbs: U60Repr::into(t0 + t2) };
-//     let b_plus_modulus: BigNum<$N, $typ> = BigNum { limbs: U60Repr::into(t1 + t2) };
-//     bn.assert_is_not_equal(a_plus_modulus, b_plus_modulus);
-// }
+#[test]
+fn test_eq() {
+    let bn = $typ ::get_instance();
+    let a: BigNum<$N, $NUM_BITS, $typ> = unsafe {
+        bn.__derive_from_seed([1, 2, 3, 4])
+    };
+    let b: BigNum<$N, $NUM_BITS, $typ> = unsafe {
+        bn.__derive_from_seed([1, 2, 3, 4])
+    };
+    let c: BigNum<$N, $NUM_BITS, $typ> = unsafe {
+        bn.__derive_from_seed([2, 2, 3, 4])
+    };
 
-// #[test]
-// fn test_derive()
-// {
-//     let bn = $typ ::get_instance();
-//     let a: BigNum<$N, $typ> = bn.derive_from_seed("hello".as_bytes());
-//     let b: BigNum<$N, $typ> = unsafe {
-//         bn.__derive_from_seed("hello".as_bytes())
-//     };
-//     assert(bn.eq(a, b));
-// }
+    let modulus: BigNum<$N, $NUM_BITS, $typ> = bn.modulus();
+    let t0: U60Repr<$N, 2> = (U60Repr::from(modulus.limbs));
+    let t1: U60Repr<$N, 2> = (U60Repr::from(b.limbs));
+    let b_plus_modulus: BigNum<$N, $NUM_BITS, $typ> = BigNum { limbs: U60Repr::into(t0 + t1) };
 
-// #[test]
-// fn test_eq() {
-//     let bn = $typ ::get_instance();
-//     let a: BigNum<$N, $typ> = unsafe {
-//         bn.__derive_from_seed([1, 2, 3, 4])
-//     };
-//     let b: BigNum<$N, $typ> = unsafe {
-//         bn.__derive_from_seed([1, 2, 3, 4])
-//     };
-//     let c: BigNum<$N, $typ> = unsafe {
-//         bn.__derive_from_seed([2, 2, 3, 4])
-//     };
+    assert(bn.eq(a, b) == true);
+    assert(bn.eq(a, b_plus_modulus) == true);
+    assert(bn.eq(c, b) == false);
+    assert(bn.eq(c, a) == false);
+}
 
-//     let modulus: BigNum<$N, $typ> = bn.modulus();
-//     let t0: U60Repr<$N, 2> = (U60Repr::from(modulus.limbs));
-//     let t1: U60Repr<$N, 2> = (U60Repr::from(b.limbs));
-//     let b_plus_modulus: BigNum<$N, $typ> = BigNum { limbs: U60Repr::into(t0 + t1) };
+}
+}
+}
 
-//     assert(bn.eq(a, b) == true);
-//     assert(bn.eq(a, b_plus_modulus) == true);
-//     assert(bn.eq(c, b) == false);
-//     assert(bn.eq(c, a) == false);
-// }
+#[make_test(quote{3},quote{254},quote{BNParams})]
+pub struct BNTests{}
+#[make_test(quote{3},quote{256},quote{Secp256k1_Fq_Params})]
+pub struct Secp256K1FqTests{}
+#[make_test(quote{4},quote{381},quote{BLS12_381_Fq_Params})]
+pub struct BLS12_381FqTests{}
 
-// }
-// }
-// }
+#[make_test(quote{18},quote{2048},quote{Test2048Params})]
+pub struct Test2048Tests{}
 
-// #[make_test(quote{3},quote{BNParams})]
-// pub struct BNTests{}
-// #[make_test(quote{3},quote{Secp256k1_Fq_Params})]
-// pub struct Secp256K1FqTests{}
-// #[make_test(quote{4},quote{BLS12_381_Fq_Params})]
-// pub struct BLS12_381FqTests{}
+#[make_test(quote{3},quote{255},quote{BLS12_381_Fr_Params})]
+pub struct BLS12_381_Fr_ParamsTests{}
 
-// #[make_test(quote{18},quote{Test2048Params})]
-// pub struct Test2048Tests{}
+#[make_test(quote{4},quote{377},quote{BLS12_377_Fq_Params})]
+pub struct BLS12_377_Fq_ParamsTests{}
 
-// #[make_test(quote{3},quote{BLS12_381_Fr_Params})]
-// pub struct BLS12_381_Fr_ParamsTests{}
+#[make_test(quote{3},quote{253},quote{BLS12_377_Fr_Params})]
+pub struct BLS12_377_Fr_ParamsTests{}
 
-// #[make_test(quote{4},quote{BLS12_377_Fq_Params})]
-// pub struct BLS12_377_Fq_ParamsTests{}
-
-// #[make_test(quote{3},quote{BLS12_377_Fr_Params})]
-// pub struct BLS12_377_Fr_ParamsTests{}
-
-type Fq = BigNum<3, BNParams>;
+type Fq = BigNum<3, 254, BNParams>;
 
 // 98760
 // 99689
 // 929 gates for a 2048 bit mul
 
-fn test_div<let N: u32, let MOD_BITS: u32, Params>(bn: BigNumInstance<N, Params>) where Params: BigNumParamsTrait<N, MOD_BITS> {
-    let a: BigNum<N, Params> = unsafe {
+fn test_div<let N: u32, let MOD_BITS: u32, Params>(bn: BigNumInstance<N, MOD_BITS, Params>) where Params: BigNumParamsTrait<N, MOD_BITS> {
+    let a: BigNum<N, MOD_BITS, Params> = unsafe {
         bn.__derive_from_seed([1, 2, 3, 4])
     };
-    let b: BigNum<N, Params> = unsafe {
+    let b: BigNum<N, MOD_BITS, Params> = unsafe {
         bn.__derive_from_seed([4, 5, 6, 7])
     };
 
@@ -379,8 +377,8 @@ fn test_div<let N: u32, let MOD_BITS: u32, Params>(bn: BigNumInstance<N, Params>
     assert(bn.eq(bn.mul(b, c), a));
 }
 
-fn test_invmod<let N: u32, let MOD_BITS: u32, Params>(bn: BigNumInstance<N, Params>) where Params: BigNumParamsTrait<N, MOD_BITS> {
-    let u: BigNum<N, Params> = unsafe {
+fn test_invmod<let N: u32, let MOD_BITS: u32, Params>(bn: BigNumInstance<N, MOD_BITS, Params>) where Params: BigNumParamsTrait<N, MOD_BITS> {
+    let u: BigNum<N, MOD_BITS, Params> = unsafe {
         bn.__derive_from_seed([1, 2, 3, 4])
     };
     for _ in 0..1 {
@@ -390,7 +388,7 @@ fn test_invmod<let N: u32, let MOD_BITS: u32, Params>(bn: BigNumInstance<N, Para
         let result = unsafe {
             bn.__mul(u, v)
         };
-        let expected: BigNum<N, Params> = BigNum::one();
+        let expected: BigNum<N, MOD_BITS, Params> = BigNum::one();
         assert(result.limbs == expected.limbs);
     }
 }
@@ -485,8 +483,8 @@ fn test_2048_bit_quadratic_expression() {
         0x0000000000000000000000000000000000000000000000000000000000000058
     ];
 
-    let a_bn: BigNum<18, Test2048Params> = BigNum { limbs: a };
-    let b_bn: BigNum<18, Test2048Params> = BigNum { limbs: b };
+    let a_bn: BigNum<18, 2048, Test2048Params> = BigNum { limbs: a };
+    let b_bn: BigNum<18, 2048, Test2048Params> = BigNum { limbs: b };
     let c_bn = unsafe {
         instance.__mul(a_bn, b_bn)
     };

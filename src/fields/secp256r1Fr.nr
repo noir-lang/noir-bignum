@@ -9,14 +9,14 @@ impl RuntimeBigNumParamsTrait<3, 256> for Secp256r1_Fr_Params {
     }
 }
 impl BigNumParamsTrait<3, 256> for Secp256r1_Fr_Params {
-    fn get_instance() -> BigNumInstance<3, Self> {
+    fn get_instance() -> BigNumInstance<3, 256, Self> {
         Secp256r1_Fr_Instance
     }
     fn modulus_bits() -> u32 {
         256
     }
 }
-pub global Secp256r1_Fr_Instance: BigNumInstance<3, Secp256r1_Fr_Params> = BigNumInstance {
+pub global Secp256r1_Fr_Instance: BigNumInstance<3, 256, Secp256r1_Fr_Params> = BigNumInstance {
         modulus: [
             0xe6faada7179e84f3b9cac2fc632551, 0xffff00000000ffffffffffffffffbc, 0xffff
         ],

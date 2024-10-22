@@ -9,14 +9,14 @@ impl RuntimeBigNumParamsTrait<3, 254> for BNParams {
     }
 }
 impl BigNumParamsTrait<3, 254> for BNParams {
-    fn get_instance() -> BigNumInstance<3, Self> {
+    fn get_instance() -> BigNumInstance<3, 254, Self> {
         BN254INSTANCE
     }
     fn modulus_bits() -> u32 {
         254
     }
 }
-pub global BN254INSTANCE: BigNumInstance<3, BNParams> = BigNumInstance {
+pub global BN254INSTANCE: BigNumInstance<3, 254, BNParams> = BigNumInstance {
         modulus: [
             0x816a916871ca8d3c208c16d87cfd47, 0x4e72e131a029b85045b68181585d97, 0x3064
         ],

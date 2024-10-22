@@ -9,14 +9,14 @@ impl RuntimeBigNumParamsTrait<18, 2049> for U2048Params {
     }
 }
 impl BigNumParamsTrait<18, 2049> for U2048Params {
-    fn get_instance() -> BigNumInstance<18, Self> {
+    fn get_instance() -> BigNumInstance<18, 2049, Self> {
         U2048_Instance
     }
     fn modulus_bits() -> u32 {
         2049
     }
 }
-pub global U2048_Instance: BigNumInstance<18, U2048Params> = BigNumInstance {
+pub global U2048_Instance: BigNumInstance<18, 2049, U2048Params> = BigNumInstance {
         modulus: [
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0100
         ],

@@ -9,14 +9,14 @@ impl RuntimeBigNumParamsTrait<3, 253> for ED25519_Fr_Params {
     }
 }
 impl BigNumParamsTrait<3, 253> for ED25519_Fr_Params {
-    fn get_instance() -> BigNumInstance<3, Self> {
+    fn get_instance() -> BigNumInstance<3, 253, Self> {
         ED25519_Fr_Instance
     }
     fn modulus_bits() -> u32 {
         253
     }
 }
-pub global ED25519_Fr_Instance: BigNumInstance<3, ED25519_Fr_Params> = BigNumInstance {
+pub global ED25519_Fr_Instance: BigNumInstance<3, 253, ED25519_Fr_Params> = BigNumInstance {
         modulus: [
             0xdef9dea2f79cd65812631a5cf5d3ed, 0x14, 0x1000
         ],

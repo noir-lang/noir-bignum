@@ -9,14 +9,14 @@ impl RuntimeBigNumParamsTrait<3, 257> for U256Params {
     }
 }
 impl BigNumParamsTrait<3, 257> for U256Params {
-    fn get_instance() -> BigNumInstance<3, Self> {
+    fn get_instance() -> BigNumInstance<3, 257, Self> {
         U256_Instance
     }
     fn modulus_bits() -> u32 {
         257
     }
 }
-pub global U256_Instance: BigNumInstance<3, U256Params> = BigNumInstance {
+pub global U256_Instance: BigNumInstance<3, 257, U256Params> = BigNumInstance {
         modulus: [
             0x00, 0x00, 0x010000
         ],

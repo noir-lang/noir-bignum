@@ -22,14 +22,14 @@ impl RuntimeBigNumParamsTrait<18, 2048> for Test2048Params {
     }
 }
 impl BigNumParamsTrait<18, 2048> for Test2048Params {
-    fn get_instance() -> BigNumInstance<18, Self> {
+    fn get_instance() -> BigNumInstance<18, 2048, Self> {
         test2048_Instance
     }
     fn modulus_bits() -> u32 {
         2048
     }
 }
-global test2048_Instance: BigNumInstance<18, Test2048Params> = BigNumInstance {
+global test2048_Instance: BigNumInstance<18, 2048, Test2048Params> = BigNumInstance {
         modulus: [
             0xc0a197a5ae0fcdceb052c9732614fe, 0x656ae034423283422243918ab83be3, 0x6bf590da48a7c1070b7d5aabaac678, 0x0cce39f530238b606f24b296e2bda9, 0x01e1fef9bb9c1c3ead98f226f1bfa0, 0xad8c1c816e12e0ed1379055e373abf, 0xcebe80e474f753aa9d1461c435123d, 0xaee5a18ceedef88d115a8b93c167ad, 0x268ba83c4a65c4307427fc495d9e44, 0xdd2777926848667b7df79f342639d4, 0xf455074c96855ca0068668efe7da3d, 0x5ddba6b30bbc168bfb3a1225f27d65, 0x591fec484f36707524133bcd6f4258, 0x59641b756766aeebe66781dd01d062, 0x58bc5eaff4b165e142bf9e2480eebb, 0x667a3964f08e06df772ce64b229a72, 0x9c1fdb18907711bfe3e3c1cf918395, 0xb8
         ],
@@ -44,7 +44,7 @@ global test2048_Instance: BigNumInstance<18, Test2048Params> = BigNumInstance {
             0x1697def7100cd5cf8d890b4ef2ec3f, 0x765ba8304214dac764d3f4adc31859, 0x8404bd14d927ea230e60d4bebf9406, 0xc4d53a23bacc251ecbfc4b7ba5a0b4, 0x3eaf3499474a6f5b2fff83f1259c87, 0xbff4c737b97281f1a5f2384a8c16d9, 0x1b4cf2f55358476b53237829990555, 0xe7a804e8eacfe3a2a5673bc3885b86, 0xabadeae4282906c817adf70eab4ae1, 0x66f7df257fe2bf27f0809aceed9b0e, 0xd90fb7428901b8bed11f6b81e36bf1, 0x36e6ba885c60b7024c563605df7e07, 0x2b7c58d2fb5d2c8478963ae6d4a44f, 0x6ee761de26635f114ccc3f7d74f855, 0x3fb726a10cf2220897513f05243de3, 0x43a26bbd732496eb4d828591b8056e, 0xf4e42304e60fb3a54fca735499f2cf, 0x162f
         ]
 };
-type Fq = BigNum<3, BNParams>;
+type Fq = BigNum<3, 254, BNParams>;
 
 fn test_eq<BigNum, let N: u32>(_: BigNum, __: [Field; N]) where BigNum: BigNumTrait {
     let a = unsafe {
@@ -67,15 +67,15 @@ fn test_eq<BigNum, let N: u32>(_: BigNum, __: [Field; N]) where BigNum: BigNumTr
     assert(c.eq(a) == false);
 }
 
-// fn test_eq<let N: u32, Params>(_: BigNum<N, Params>) where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N> {
+// fn test_eq<let N: u32, Params>(_: BigNum<N, MOD_BITS, Params>) where Params: BigNumParamsTrait<N> + RuntimeBigNumParamsTrait<N> {
 //     let a = BigNum::__derive_from_seed([1, 2, 3, 4]);
 //     let b = BigNum::__derive_from_seed([1, 2, 3, 4]);
 //     let c = BigNum::__derive_from_seed([2, 2, 3, 4]);
 
-//     let modulus: BigNum<N, Params> = Params::get_instance().modulus();
+//     let modulus: BigNum<N, MOD_BITS, Params> = Params::get_instance().modulus();
 //     let t0: U60Repr<N, 2> = (U60Repr::from(modulus.limbs));
 //     let t1: U60Repr<N, 2> = (U60Repr::from(b.limbs));
-//     let b_plus_modulus: BigNum<N, Params> = BigNum { limbs: U60Repr::into(t0 + t1) };
+//     let b_plus_modulus: BigNum<N, MOD_BITS, Params> = BigNum { limbs: U60Repr::into(t0 + t1) };
 
 //     assert(a.eq(b) == true);
 //     assert(a.eq(b_plus_modulus) == true);
@@ -230,7 +230,7 @@ fn assert_is_not_equal_overloaded_fail<BigNum, let N: u32>(_: BigNum, __: [Field
 
 #[test]
 fn test_eq_BN() {
-    let stub: BigNum<3, BNParams> = BigNum::new();
+    let stub: BigNum<3, 254, BNParams> = BigNum::new();
     test_eq(stub, [0; 3]);
 }
 #[test]
@@ -312,155 +312,155 @@ fn test_add_modulus_overflow() {
 
 #[test]
 fn test_mul_BN() {
-    let stub: BigNum<3, BNParams> = BigNum::new();
+    let stub: BigNum<3, 254, BNParams> = BigNum::new();
     test_mul(stub);
 }
 
 #[test]
 fn test_add_BN2() {
-    let stub: BigNum<3, BNParams> = BigNum::new();
+    let stub: BigNum<3, 254, BNParams> = BigNum::new();
     test_add(stub);
 }
 
 #[test]
 fn test_div_BN() {
-    let stub: BigNum<3, BNParams> = BigNum::new();
+    let stub: BigNum<3, 254, BNParams> = BigNum::new();
     test_div(stub);
 }
 
 #[test]
 fn test_invmod_BN() {
-    let stub: BigNum<3, BNParams> = BigNum::new();
+    let stub: BigNum<3, 254, BNParams> = BigNum::new();
     test_invmod(stub);
 }
 
 #[test]
 fn test_assert_is_not_equal_BN() {
-    let stub: BigNum<3, BNParams> = BigNum::new();
+    let stub: BigNum<3, 254, BNParams> = BigNum::new();
     assert_is_not_equal(stub);
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_fail_BN() {
-    let stub: BigNum<3, BNParams> = BigNum::new();
+    let stub: BigNum<3, 254, BNParams> = BigNum::new();
     assert_is_not_equal_fail(stub);
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_lhs_fail_BN() {
-    let stub: BigNum<3, BNParams> = BigNum::new();
+    let stub: BigNum<3, 254, BNParams> = BigNum::new();
     assert_is_not_equal_overloaded_lhs_fail(stub, [0; 3]);
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_rhs_fail_BN() {
-    let stub: BigNum<3, BNParams> = BigNum::new();
+    let stub: BigNum<3, 254, BNParams> = BigNum::new();
     assert_is_not_equal_overloaded_rhs_fail(stub, [0; 3]);
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_fail_BN() {
-    let stub: BigNum<3, BNParams> = BigNum::new();
+    let stub: BigNum<3, 254, BNParams> = BigNum::new();
     assert_is_not_equal_overloaded_fail(stub, [0; 3]);
 }
 
 #[test]
 fn test_eq_2048() {
-    let stub: BigNum<18, Test2048Params> = BigNum::new();
+    let stub: BigNum<18, 2048, Test2048Params> = BigNum::new();
     test_eq(stub, [0; 18]);
 }
 
 #[test]
 fn test_mul_2048() {
-    let stub: BigNum<18, Test2048Params> = BigNum::new();
+    let stub: BigNum<18, 2048, Test2048Params> = BigNum::new();
     test_mul(stub);
 }
 
 #[test]
 fn test_add_2048() {
-    let stub: BigNum<18, Test2048Params> = BigNum::new();
+    let stub: BigNum<18, 2048, Test2048Params> = BigNum::new();
     test_add(stub);
 }
 
 #[test]
 fn test_assert_is_not_equal_2048() {
-    let stub: BigNum<18, Test2048Params> = BigNum::new();
+    let stub: BigNum<18, 2048, Test2048Params> = BigNum::new();
     assert_is_not_equal(stub);
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_fail_2048() {
-    let stub: BigNum<18, Test2048Params> = BigNum::new();
+    let stub: BigNum<18, 2048, Test2048Params> = BigNum::new();
     assert_is_not_equal_fail(stub);
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_lhs_fail_2048() {
-    let stub: BigNum<18, Test2048Params> = BigNum::new();
+    let stub: BigNum<18, 2048, Test2048Params> = BigNum::new();
     assert_is_not_equal_overloaded_lhs_fail(stub, [0; 18]);
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_rhs_fail_2048() {
-    let stub: BigNum<18, Test2048Params> = BigNum::new();
+    let stub: BigNum<18, 2048, Test2048Params> = BigNum::new();
     assert_is_not_equal_overloaded_rhs_fail(stub, [0; 18]);
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_fail_2048() {
-    let stub: BigNum<18, Test2048Params> = BigNum::new();
+    let stub: BigNum<18, 2048, Test2048Params> = BigNum::new();
     assert_is_not_equal_overloaded_fail(stub, [0; 18]);
 }
 
 #[test]
 fn test_eq_U256() {
-    let stub: BigNum<3, U256Params> = BigNum::new();
+    let stub: BigNum<3, 257, U256Params> = BigNum::new();
     test_eq(stub, [0; 3]);
 }
 
 #[test]
 fn test_mul_U256() {
-    let stub: BigNum<3, U256Params> = BigNum::new();
+    let stub: BigNum<3, 257, U256Params> = BigNum::new();
     test_mul(stub);
 }
 
 #[test]
 fn test_add_U256() {
-    let stub: BigNum<3, U256Params> = BigNum::new();
+    let stub: BigNum<3, 257, U256Params> = BigNum::new();
     test_add(stub);
 }
 
 #[test]
 fn test_assert_is_not_equal_U256() {
-    let stub: BigNum<3, U256Params> = BigNum::new();
+    let stub: BigNum<3, 257, U256Params> = BigNum::new();
     assert_is_not_equal(stub);
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_fail_U256() {
-    let stub: BigNum<3, U256Params> = BigNum::new();
+    let stub: BigNum<3, 257, U256Params> = BigNum::new();
     assert_is_not_equal_fail(stub);
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_lhs_fail_U256() {
-    let stub: BigNum<3, U256Params> = BigNum::new();
+    let stub: BigNum<3, 257, U256Params> = BigNum::new();
     assert_is_not_equal_overloaded_lhs_fail(stub, [0; 3]);
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_rhs_fail_U256() {
-    let stub: BigNum<3, U256Params> = BigNum::new();
+    let stub: BigNum<3, 257, U256Params> = BigNum::new();
     assert_is_not_equal_overloaded_rhs_fail(stub, [0; 3]);
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_fail_U256() {
-    let stub: BigNum<18, Test2048Params> = BigNum::new();
+    let stub: BigNum<18, 2048, Test2048Params> = BigNum::new();
     assert_is_not_equal_overloaded_fail(stub, [0; 18]);
 }
 
-type U256 = BigNum<3, U256Params>;
+type U256 = BigNum<3, 257, U256Params>;
 #[test]
 fn test_udiv_mod_U256() {
     let a: U256 = unsafe {
@@ -480,14 +480,14 @@ fn test_udiv_mod_U256() {
 // // N.B. witness generation times make these tests take ~15 minutes each! Uncomment at your peril
 // #[test]
 // fn test_div_2048() {
-//     let stub: BigNum<18, Test2048Params> = BigNum::new();
+//     let stub: BigNum<18, 2048, Test2048Params> = BigNum::new();
 //     test_div(stub);
 // }
 
 // // N.B. witness generation times make these tests take ~15 minutes each! Uncomment at your peril
 // #[test]
 // fn test_invmod_2048() {
-//     let stub: BigNum<18, Test2048Params> = BigNum::new();
+//     let stub: BigNum<18, 2048, Test2048Params> = BigNum::new();
 //     test_invmod(stub);
 // }
 
@@ -554,8 +554,8 @@ fn test_2048_bit_quadratic_expression() {
         0x0000000000000000000000000000000000000000000000000000000000000058
     ];
 
-    let a_bn: BigNum<18, Test2048Params> = BigNum { limbs: a };
-    let b_bn: BigNum<18, Test2048Params> = BigNum { limbs: b };
+    let a_bn: BigNum<18, 2048, Test2048Params> = BigNum { limbs: a };
+    let b_bn: BigNum<18, 2048, Test2048Params> = BigNum { limbs: b };
     let c_bn = unsafe {
         a_bn.__mul(b_bn)
     };

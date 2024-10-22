@@ -30,14 +30,14 @@ impl RuntimeBigNumParamsTrait<7, 753> for MNT4_753_Fq_Params {
     }
 }
 impl BigNumParamsTrait<7, 753> for MNT4_753_Fq_Params {
-    fn get_instance() -> BigNumInstance<7, Self> {
+    fn get_instance() -> BigNumInstance<7, 753, Self> {
         MNT4_753_Fq_Instance
     }
     fn modulus_bits() -> u32 {
         753
     }
 }
-pub global MNT4_753_Fq_Instance: BigNumInstance<7, MNT4_753_Fq_Params> = BigNumInstance {
+pub global MNT4_753_Fq_Instance: BigNumInstance<7, 753, MNT4_753_Fq_Params> = BigNumInstance {
         modulus: [
             0x9d54522cdd119f5e9063de245e8001, 0xcce9767254a4638810719ac425f0e3, 0x76f218059db80f0da5cb537e38685a, 0xe8a0ed8d99d124d9a15af79db117e7, 0x8fafed5eb7e8f96c97d87307fdb925, 0xc41110229022eee2cdadb7f997505b, 0x01c4c62d92
         ],

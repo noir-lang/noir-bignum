@@ -27,14 +27,14 @@ impl RuntimeBigNumParamsTrait<4, 377> for BLS12_377_Fq_Params {
     }
 }
 impl BigNumParamsTrait<4, 377> for BLS12_377_Fq_Params {
-    fn get_instance() -> BigNumInstance<4, Self> {
+    fn get_instance() -> BigNumInstance<4, 377, Self> {
         BLS12_377_Fq_Instance
     }
     fn modulus_bits() -> u32 {
         377
     }
 }
-pub global BLS12_377_Fq_Instance: BigNumInstance<4, BLS12_377_Fq_Params> = BigNumInstance {
+pub global BLS12_377_Fq_Instance: BigNumInstance<4, 377, BLS12_377_Fq_Params> = BigNumInstance {
         modulus: [
             0x0b5d44300000008508c00000000001, 0xd9f300f5138f1ef3622fba09480017, 0x4617c510eac63b05c06ca1493b1a22, 0x01ae3a
         ],

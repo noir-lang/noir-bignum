@@ -9,14 +9,14 @@ impl RuntimeBigNumParamsTrait<4, 385> for U384Params {
     }
 }
 impl BigNumParamsTrait<4, 385> for U384Params {
-    fn get_instance() -> BigNumInstance<4, Self> {
+    fn get_instance() -> BigNumInstance<4, 385, Self> {
         U384_Instance
     }
     fn modulus_bits() -> u32 {
         385
     }
 }
-pub global U384_Instance: BigNumInstance<4, U384Params> = BigNumInstance {
+pub global U384_Instance: BigNumInstance<4, 385, U384Params> = BigNumInstance {
         modulus: [
             0x00, 0x00, 0x00, 0x01000000
         ],

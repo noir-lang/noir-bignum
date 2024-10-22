@@ -25,14 +25,14 @@ impl RuntimeBigNumParamsTrait<3, 255> for Vesta_Fr_Params {
     }
 }
 impl BigNumParamsTrait<3, 255> for Vesta_Fr_Params {
-    fn get_instance() -> BigNumInstance<3, Self> {
+    fn get_instance() -> BigNumInstance<3, 255, Self> {
         Vesta_Fr_Instance
     }
     fn modulus_bits() -> u32 {
         255
     }
 }
-pub global Vesta_Fr_Instance: BigNumInstance<3, Vesta_Fr_Params> = BigNumInstance {
+pub global Vesta_Fr_Instance: BigNumInstance<3, 255, Vesta_Fr_Params> = BigNumInstance {
         modulus: [
             0x4698fc094cf91b992d30ed00000001, 0x22, 0x4000
         ],
