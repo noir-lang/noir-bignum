@@ -121,7 +121,7 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
 
     let mut bigfield_rhs_limbs: [Field; N] = [0; N];
     bigfield_rhs_limbs[N-1] = 1;
-    validate_in_range(params, bigfield_rhs_limbs);
+    validate_in_range::<_, MOD_BITS>(bigfield_rhs_limbs);
 
     let mut result: [Field; N] = [0; N];
 
@@ -209,13 +209,13 @@ pub(crate) fn validate_in_field<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_
     p_minus_self[N - 1] -= borrow_flags[N - 2] as Field;
     let mut compare = val;
     compare = p_minus_self;
-    validate_in_range::<_, MOD_BITS>(params, compare);
+    validate_in_range::<_, MOD_BITS>(compare);
 }
 
 /**
 * @brief Validate a BigNum instance is correctly range constrained to contain no more than Params::modulus_bits()
 **/
-pub(crate) fn validate_in_range<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, limbs: [Field; N]) {
+pub(crate) fn validate_in_range<let N: u32, let MOD_BITS: u32>(limbs: [Field; N]) {
     for i in 0..(N - 1) {
         limbs[i].assert_max_bit_size(120);
     }
@@ -255,7 +255,7 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>,
         __validate_gt_remainder(lhs, rhs)
     };
 
-    validate_in_range::<_, MOD_BITS>(params, result);
+    validate_in_range::<_, MOD_BITS>(result);
 
     let borrow_shift = 0x1000000000000000000000000000000;
     let carry_shift = 0x1000000000000000000000000000000;
@@ -280,7 +280,7 @@ pub(crate) fn neg<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, val: [F
     let (result, borrow_flags) = unsafe {
         __neg_with_flags(params, val)
     };
-    validate_in_range::<_, MOD_BITS>(params, result);
+    validate_in_range::<_, MOD_BITS>(result);
     let modulus = params.modulus;
     let borrow_shift = 0x1000000000000000000000000000000;
     let result_limb = modulus[0] - val[0] - result[0] + (borrow_flags[0] as Field * borrow_shift);
@@ -300,7 +300,7 @@ pub(crate) fn add<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, lhs: [F
     let (result, carry_flags, borrow_flags, overflow_modulus) = unsafe {
         __add_with_flags(params, lhs, rhs)
     };
-    validate_in_range::<_, MOD_BITS>(params, result);
+    validate_in_range::<_, MOD_BITS>(result);
     let modulus = params.modulus;
     let borrow_shift = 0x1000000000000000000000000000000;
     let carry_shift = 0x1000000000000000000000000000000;
@@ -332,7 +332,7 @@ pub(crate) fn sub<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, lhs: [F
     let (result, carry_flags, borrow_flags, underflow) = unsafe {
         __sub_with_flags(params, lhs, rhs)
     };
-    validate_in_range::<_, MOD_BITS>(params, result);
+    validate_in_range::<_, MOD_BITS>(result);
     let modulus = params.modulus;
     let borrow_shift = 0x1000000000000000000000000000000;
     let carry_shift = 0x1000000000000000000000000000000;

@@ -272,8 +272,7 @@ impl<let N: u32, let MOD_BITS: u32, Params> BigNumTrait<N> for BigNum<N, MOD_BIT
     }
 
     fn validate_in_range(self) {
-        let params = Params::get_params();
-        validate_in_range::<_, MOD_BITS>(params, self.limbs);
+        validate_in_range::<_, MOD_BITS>(self.limbs);
     }
 
     fn assert_is_not_equal(self, other: Self) {

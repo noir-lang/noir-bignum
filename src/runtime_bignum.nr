@@ -340,8 +340,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeB
     }
 
     fn validate_in_range(self) {
-        let params = self.params;
-        validate_in_range::<_, MOD_BITS>(params, self.limbs);
+        validate_in_range::<_, MOD_BITS>(self.limbs);
     }
 
     fn assert_is_not_equal(self, other: Self) {
