@@ -16,8 +16,8 @@ TODO
 
 ## Dependencies
 
-- Noir ≥v0.32.0
-- Barretenberg ≥v0.46.1
+- Noir ≥v0.35.0
+- Barretenberg ≥v0.56.1
 
 Refer to [Noir's docs](https://noir-lang.org/docs/getting_started/installation/) and [Barretenberg's docs](https://github.com/AztecProtocol/aztec-packages/blob/master/barretenberg/cpp/src/barretenberg/bb/readme.md#installation) for installation steps.
 
@@ -50,12 +50,13 @@ If your field moduli is _also_ known at compile-time, use the `BigNumTrait` defi
 Big numbers are instantiated with the BigNum struct:
 
 ```rust
-struct BigNum<let N: u64, Params> {
+struct BigNum<let N: u32, let MOD_BITS: u32, Params> {
     limbs: [Field; N]
 }
 ```
 
 - `N` is the number of `Field` limbs together holding the value of the big number
+- `MOD_BITS` is the bit-length of the modulus of the big number.
 - `Params` is the parameters associated with the big number; refer to sections below for presets and customizations
 
 ### Usage
@@ -68,7 +69,7 @@ A simple 1 + 2 = 3 check in 256-bit unsigned integers:
 use dep::bignum::fields::U256::U256Params;
 use dep::bignum::BigNum;
 
-type U256 = BigNum<3, U256Params>;
+type U256 = BigNum<3, 257, U256Params>;
 
 fn main() {
     let one: U256 = BigNum::from_array([1, 0, 0]);
@@ -96,7 +97,7 @@ e.g.
 use dep::bignum::fields::U256::U256Params;
 use dep::bignum::BigNum;
 
-type U256 = BigNum<3, U256Params>;
+type U256 = BigNum<3, 257, U256Params>;
 
 fn foo(x: U256, y: U256) -> U256 {
     x.udiv(y)
@@ -105,70 +106,76 @@ fn foo(x: U256, y: U256) -> U256 {
 
 ##### Fields
 
-`BigNum::fields` contains `BigNumInstance` constructors for common fields.
+`BigNum::fields` contains `BigNumParams` for common fields.
 
 Feature requests and/or pull requests welcome for missing fields you need.
 
 TODO: Document existing field presets (e.g. bls, ed25519, secp256k1)
 
-## `runtime_bignum`
+## `RuntimeBigNum`
 
-If your field moduli is _not_ known at compile-time (e.g. RSA verification), use the traits and structs defined in `runtime_bignum`: `runtime_bignum::BigNumTrait` and `runtime_bignum::BigNumInstanceTrait`
+If your field moduli is _not_ known at compile-time (e.g. RSA verification), use the `RuntimeBigNum` struct defined in `runtime_bignum.nr`: `runtime_bignum::RuntimeBigNum`.
 
-A `runtime_bignum::BigNumInstance` wraps the bignum modulus (as well as a derived parameter used internally to perform Barret reductions). A `BigNumInstance` object is required to evaluate most bignum operations.
+```rust
+use dep::bignum::fields::bn254Fq::BN254_Fq_Params;
+
+// Notice how we don't provide the params here, because we're pretending they're
+// not known at compile-time, for illustration purposes.
+type My_RBN = RuntimeBigNum<3, 254>;
+
+fn main() {
+    let params = BN254_Fq_Params::get_params(); // or some other params known at runtime.
+
+    // Notice how we feed the params in, because we're pretending they're not
+    // known at compile-time.
+    let one: My_RBN = RuntimeBigNum::from_array(params, [1, 0, 0]);
+    let two: My_RBN = RuntimeBigNum::from_array(params, [2, 0, 0]);
+    let three: My_RBN = RuntimeBigNum::from_array(params, [3, 0, 0]);
+
+    assert((one + two) == three);
+}
+```
 
 ### Types
 
-bignum operations are evaluated using two structs and a trait: `ParamsTrait`, `BigNum<N, Params>`, `BigNumInstance<N, Params>`
+User-facing structs:
 
-`ParamsTrait` defines the compile-time properties of a BigNum instance: the number of modulus bits and the Barret reduction parameter `k` (TODO: these two values should be the same?!)
+`BigNum`: big numbers whose parameters are all known at compile-time.
 
-`BigNumInstance` is a generator type that is used to create `BigNum` objects and evaluate operations on `BigNum` objects. It wraps BigNum parameters that may not be known at compile time (the `modulus` and a reduction parameter required for Barret reductions (`redc_param`))
+`RuntimeBigNum`: big numbers whose parameters are only known at runtime. (Note: the number of bits of the modulus of the bignum must be known at compile-time).
 
-The `BigNum` struct represents individual big numbers.
 
-BigNumInstance parameters (`modulus`, `redc_param`) can be provided at runtime via witnesses (e.g. RSA verification). The `redc_param` is only used in unconstrained functions and does not need to be derived from `modulus` in-circuit.
+If creating custom bignum params:
 
-### Usage
+`BigNumParams` is needed, to declare your params. These parameters (`modulus`, `redc_param`) can be provided at runtime via witnesses (e.g. RSA verification). The `redc_param` is only used in unconstrained functions and does not need to be derived from `modulus` in-circuit.
 
-#### Example
+`BigNumParamsGetter` is a convenient wrapper around params, which is needed if declaring a new type of `BigNum`.
 
-```rust
-use crate::bignum::fields::bn254Fq{BNParams, BN254INSTANCE};
-use crate::bignum::runtime_bignum::BigNumInstance;
-use crate::bignum::BigNum;
-
-type Fq = BigNum<3, BNParams>;
-type FqInst = BigNumInstance<3, BNParams>;
-
-fn example(Fq a, Fq b) -> Fq {
-    let instance: FqInst = BN254INSTANCE;
-    instance.mul(a, b)
-}
-```
 
 #### Methods
 
 ##### Arithmetics
 
-Basic expressions can be evaluated using `BigNumInstance::add, BigNumInstance::sub, BigNumInstance::mul`. However, when evaluating relations (up to degree 2) that are more complex than single operations, the function `BigNumInstance::evaluate_quadratic_expression` is more efficient (due to needing only a single modular reduction).
+Basic expressions can be evaluated using the `BigNum` and `RuntimeBigNum` operators `+`,`-`,`*`,`/`. However, when evaluating relations (up to degree 2) that are more complex than single operations, the static methods `BigNum::evaluate_quadratic_expression` or `RuntimeBigNum::evaluate_quadratic_expression` are much more efficient (due to needing only a single modular reduction).
 
 ##### Unconstrained arithmetics
 
-Unconstrained functions `__mul, __add, __sub, __div, __pow` can be used to compute witnesses that can then be fed into `BigNumInstance::evaluate_quadratic_expression`.
+Unconstrained functions `__mul, __add, __sub, __div, __pow` etc. can be used to compute witnesses that can then be fed into `BigNumInstance::evaluate_quadratic_expression`.
 
-> **Note:** `__div`, `__pow` and `div` are expensive due to requiring modular exponentiations during witness computation. It is worth modifying witness generation algorithms to minimize the number of modular exponentiations required. (for example, using batch inverses)
+> **Note:** `__div`, `__pow` and `div` are expensive due to requiring modular exponentiations during witness computation. It is worth modifying witness generation algorithms to minimize the number of modular exponentiations required. (for example, using batch inverses).
 
 e.g. if we wanted to compute `(a + b) * c + (d - e) * f = g` by evaluating the above example, `g` can be derived via:
 
 ```rust
-let bn: BigNumInstance<3, BNParams> = BNInstance();
-let t0 = bn.__mul(bn.__add(a, b), c);
-let t1 = bn.__mul(bn.__add(d, bn.__neg(e)), f);
+let a: BigNumInstance<3, 254, BN254_Fq_Params> = BigNum::new();
+let t0 = c.__mul(a.__add(b));
+let t1 = f.__mul(d.__sub(e));
 let g = bn.__add(t0, t1);
 ```
 
-See `bignum_test.nr` for more examples.
+then the values can be arranged and fed-into `evaluate_quadratic_expression`.
+
+See `bignum_test.nr` and `runtime_bignum_test.nr` for more examples.
 
 ##### `evaluate_quadratic_expression`
 
@@ -206,9 +213,9 @@ BigNum::evaluate_quadratic_expresson(lhs_terms, lhs_flags, rhs_terms, rhs_flags,
 
 ##### TODO: Document other available methods
 
-#### Deriving BigNumInstance parameters: `modulus`, `redc_param`
+#### Deriving BigNumParams parameters: `modulus`, `redc_param`
 
-For common fields, BigNumInstance parameters can be pulled from the presets in `BigNum::fields`.
+For common fields, BigNumParams parameters can be pulled from the presets in `bignum/fields/`.
 
 For other moduli (e.g. those used in RSA verification), both `modulus` and `redc_param` must be computed and formatted according to the following speficiations:
 
@@ -218,17 +225,16 @@ For other moduli (e.g. those used in RSA verification), both `modulus` and `redc
 
 `double_modulus` is derived via the method `compute_double_modulus` in `runtime_bignum.nr`. If you want to provide this value as a compile-time constant (see `fields/bn254Fq.nr` for an example), follow the algorithm `compute_double_modulus` as this parameter is _not_ structly 2 \* modulus. Each limb except the most significant limb borrows 2^120 from the next most significant limb. This ensure that when performing limb subtractions `double_modulus.limbs[i] - x.limbs[i]`, we know that the result will not underflow.
 
-BigNumInstance parameters can be derived from a known modulus using the rust crate `noir-bignum-paramgen` (https://crates.io/crates/noir-bignum-paramgen)
+BigNumParams parameters can be derived from a known modulus using the rust crate `noir-bignum-paramgen` (https://crates.io/crates/noir-bignum-paramgen)
 
 ## Additional usage examples
 
 ```rust
-use crate::bignum::fields::bn254Fq::BNParams;
-use crate::bignum::fields::BN254Instance;
-use crate::bignum::BigNum;
-use crate::bignum::runtime_bignum::BigNumInstance;
+use dep::bignum::fields::bn254Fq::BN254_Fq_Params;
 
-type Fq = BigNum<3, BNParams>;
+use dep::bignum::BigNum;
+
+type Fq = BigNum<3, 254, BN254_Fq_Params>;
 
 fn example_mul(Fq a, Fq b) -> Fq {
     a * b
