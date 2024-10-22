@@ -34,7 +34,10 @@ use crate::expressions::evaluate_quadratic_expression;
 * We use a hash function that can be modelled as a random oracle
 * This function *should* produce an output that is a uniformly randomly distributed value modulo BigNum::modulus()
 **/
-pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(params: P<N, MOD_BITS>, seed: [u8; SeedBytes]) -> [Field; N] {
+pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(
+    params: P<N, MOD_BITS>,
+    seed: [u8; SeedBytes]
+) -> [Field; N] {
     let mut rolling_seed: [u8; SeedBytes + 1] = [0; SeedBytes + 1];
     for i in 0..SeedBytes {
         rolling_seed[i] = seed[i];
@@ -427,7 +430,11 @@ pub(crate) fn udiv<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, numera
 *
 * i.e. 1. numerator % divisor = return value
 **/
-pub(crate) fn umod<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, numerator: [Field; N], divisor: [Field; N]) -> [Field; N] {
+pub(crate) fn umod<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    numerator: [Field; N],
+    divisor: [Field; N]
+) -> [Field; N] {
     udiv_mod::<_, MOD_BITS>(params, numerator, divisor).1
 }
 

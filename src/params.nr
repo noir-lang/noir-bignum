@@ -23,11 +23,7 @@ pub(crate) trait BigNumParamsGetter<let N: u32, let MOD_BITS: u32> {
 }
 
 impl<let N: u32, let MOD_BITS: u32> BigNumParams<N, MOD_BITS> {
-    pub fn new(
-        has_multiplicative_inverse: bool,
-        modulus: [Field; N],
-        redc_param: [Field; N]
-    ) -> Self {
+    pub fn new(has_multiplicative_inverse: bool, modulus: [Field; N], redc_param: [Field; N]) -> Self {
         Self {
             has_multiplicative_inverse,
             modulus,

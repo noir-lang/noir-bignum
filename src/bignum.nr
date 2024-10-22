@@ -7,7 +7,7 @@ use crate::constrained_ops::{
 };
 use crate::unconstrained_ops::{
     __derive_from_seed, __eq, __is_zero, __neg, __add, __sub, __mul, __div, __udiv_mod, __invmod, __pow,
-    __batch_invert, __batch_invert_slice , __tonelli_shanks_sqrt
+    __batch_invert, __batch_invert_slice, __tonelli_shanks_sqrt
 };
 use crate::expressions::{__compute_quadratic_expression, evaluate_quadratic_expression};
 use crate::serialization::{from_be_bytes, to_le_bytes};

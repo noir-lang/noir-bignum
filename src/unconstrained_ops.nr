@@ -3,7 +3,8 @@ use crate::utils::split_bits;
 
 use crate::params::BigNumParams as P;
 use crate::unconstrained_helpers::{
-    __barrett_reduction , __primitive_root_log_size, __multiplicative_generator, __tonelli_shanks_sqrt_inner_loop_check
+    __barrett_reduction, __primitive_root_log_size, __multiplicative_generator,
+    __tonelli_shanks_sqrt_inner_loop_check
 };
 
 /**
@@ -137,11 +138,7 @@ unconstrained pub(crate) fn __neg<let N: u32, let MOD_BITS: u32>(params: P<N, MO
     U60Repr::into(params.modulus_u60 - x_u60)
 }
 
-unconstrained pub(crate) fn __add<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
-    lhs: [Field; N],
-    rhs: [Field; N]
-) -> [Field; N] {
+unconstrained pub(crate) fn __add<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, lhs: [Field; N], rhs: [Field; N]) -> [Field; N] {
     let x_u60 : U60Repr<N, 2> = U60Repr::from(lhs);
     let y_u60 : U60Repr<N, 2> = U60Repr::from(rhs);
 
@@ -157,7 +154,11 @@ unconstrained pub(crate) fn __add<let N: u32, let MOD_BITS: u32>(
 * @brief given inputs `x, y` compute 2p + x - y (unconstrained)
 * @description see `__neg` for why we use 2p instead of p
 **/
-unconstrained pub(crate) fn __sub<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, lhs: [Field; N], rhs: [Field; N]) -> [Field; N] {
+unconstrained pub(crate) fn __sub<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    lhs: [Field; N],
+    rhs: [Field; N]
+) -> [Field; N] {
     __add(params, lhs, __neg(params, rhs))
 }
 
@@ -180,20 +181,12 @@ unconstrained pub(crate) fn __mul_with_quotient<let N: u32, let MOD_BITS: u32>(p
     (q, r)
 }
 
-unconstrained pub(crate) fn __mul<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
-    lhs: [Field; N],
-    rhs: [Field; N]
-) -> [Field; N] {
+unconstrained pub(crate) fn __mul<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, lhs: [Field; N], rhs: [Field; N]) -> [Field; N] {
     let (_, b) = __mul_with_quotient::<_, MOD_BITS>(params, lhs, rhs);
     b
 }
 
-unconstrained pub(crate) fn __div<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
-    numerator: [Field; N],
-    divisor: [Field; N]
-) -> [Field; N] {
+unconstrained pub(crate) fn __div<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, numerator: [Field; N], divisor: [Field; N]) -> [Field; N] {
     let inv_divisor = __invmod::<_, MOD_BITS>(params, divisor);
     __mul::<_, MOD_BITS>(params, numerator, inv_divisor)
 }
@@ -250,11 +243,7 @@ unconstrained pub(crate) fn __invmod<let N: u32, let MOD_BITS: u32>(params: P<N,
     __pow::<_, MOD_BITS>(params, val, exp)
 }
 
-unconstrained pub(crate) fn __pow<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
-    val: [Field; N],
-    exponent: [Field; N]
-) -> [Field; N] {
+unconstrained pub(crate) fn __pow<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, val: [Field; N], exponent: [Field; N]) -> [Field; N] {
     let x: U60Repr<N, 2> = U60Repr::from(exponent);
 
     let num_bits = MOD_BITS + 1;

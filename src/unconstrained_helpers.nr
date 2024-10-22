@@ -88,7 +88,11 @@ unconstrained pub(crate) fn __neg_with_flags<let N: u32, let MOD_BITS: u32>(para
     (result, borrow_flags)
 }
 
-unconstrained pub(crate) fn __add_with_flags<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, lhs: [Field; N], rhs: [Field; N]) -> ([Field; N], [bool; N], [bool; N], bool) {
+unconstrained pub(crate) fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    lhs: [Field; N],
+    rhs: [Field; N]
+) -> ([Field; N], [bool; N], [bool; N], bool) {
     let a_u60 : U60Repr<N, 2> = U60Repr::from(lhs);
     let b_u60 : U60Repr<N, 2> = U60Repr::from(rhs);
     let add_u60 = a_u60 + b_u60;
@@ -134,7 +138,11 @@ unconstrained pub(crate) fn __add_with_flags<let N: u32, let MOD_BITS: u32>(para
     (result, carry_flags, borrow_flags, overflow)
 }
 
-unconstrained pub(crate) fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, lhs: [Field; N], rhs: [Field; N]) -> ([Field; N], [bool; N], [bool; N], bool) {
+unconstrained pub(crate) fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    lhs: [Field; N],
+    rhs: [Field; N]
+) -> ([Field; N], [bool; N], [bool; N], bool) {
     let a_u60 : U60Repr<N, 2> = U60Repr::from(lhs);
     let b_u60 : U60Repr<N, 2> = U60Repr::from(rhs);
 
