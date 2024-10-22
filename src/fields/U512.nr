@@ -3,20 +3,20 @@ use crate::runtime_bignum::BigNumInstance;
 use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 use crate::utils::u60_representation::U60Repr;
 pub struct U512Params {}
-impl RuntimeBigNumParamsTrait<5> for U512Params {
+impl RuntimeBigNumParamsTrait<5, 513> for U512Params {
     fn modulus_bits() -> u32 {
         513
     }
 }
-impl BigNumParamsTrait<5> for U512Params {
-    fn get_instance() -> BigNumInstance<5, Self> {
+impl BigNumParamsTrait<5, 513> for U512Params {
+    fn get_instance() -> BigNumInstance<5, 513, Self> {
         U512_Instance
     }
     fn modulus_bits() -> u32 {
         513
     }
 }
-pub global U512_Instance: BigNumInstance<5, U512Params> = BigNumInstance {
+pub global U512_Instance: BigNumInstance<5, 513, U512Params> = BigNumInstance {
         modulus: [
             0x00, 0x00, 0x00, 0x00, 0x0100000000
         ],

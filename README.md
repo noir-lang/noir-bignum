@@ -119,7 +119,7 @@ A `runtime_bignum::BigNumInstance` wraps the bignum modulus (as well as a derive
 
 ### Types
 
-bignum operations are evaluated using two structs and a trait: `ParamsTrait`, `BigNum<N, Params>`, `BigNumInstance<N, Params>`
+bignum operations are evaluated using two structs and a trait: `ParamsTrait`, `BigNum<N, MOD_BITS, Params>`, `BigNumInstance<N, MOD_BITS, Params>`
 
 `ParamsTrait` defines the compile-time properties of a BigNum instance: the number of modulus bits and the Barret reduction parameter `k` (TODO: these two values should be the same?!)
 
