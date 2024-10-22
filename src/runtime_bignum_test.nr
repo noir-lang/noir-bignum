@@ -510,11 +510,11 @@ fn test_sqrt_BN() {
 
     let x = RuntimeBigNum { limbs: [9, 0, 0], params };
 
-    let (_, maybe_sqrt_x) = unsafe {
-        x.__tonelli_shanks_sqrt()
-    };
+    let maybe_sqrt_x = x.__tonelli_shanks_sqrt();
 
-    assert(maybe_sqrt_x * maybe_sqrt_x == x);
+    let sqrt_x = maybe_sqrt_x.unwrap();
+
+    assert(sqrt_x * sqrt_x == x);
 
     assert(x == x); // This was breaking for a while, because a previous version of RuntimeBigNum::__tonelli_shanks_sqrt() was returning an Option. My theory is that this meant Option:none() wasn't propagating the params anymore, which for some reason was causing the params of x to no-longer be evaluated as constant, which is strange.
 }
