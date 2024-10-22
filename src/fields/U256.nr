@@ -12,7 +12,6 @@ impl BigNumParamsGetter<3, 257> for U256Params {
 
 global U256_PARAMS: BigNumParams<3, 257> = BigNumParams {
         has_multiplicative_inverse: false,
-        // modulus_bits_getter: || 257,
         modulus: [
             0x00, 0x00, 0x010000
         ],

@@ -12,7 +12,6 @@ impl BigNumParamsGetter<7, 769> for U768Params {
 
 global U768_PARAMS: BigNumParams<7, 769> = BigNumParams {
         has_multiplicative_inverse: false,
-        // modulus_bits_getter: || 769,
         modulus: [
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01000000000000
         ],

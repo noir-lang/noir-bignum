@@ -3,10 +3,6 @@ use crate::utils::u60_representation::U60Repr;
 pub(crate) struct BigNumParams<let N: u32, let MOD_BITS: u32> {
     has_multiplicative_inverse: bool,
 
-    // @brief modulus_bits = log2(modulus) rounded up
-    // This needs to be a comptime const, so that it can be used as an argument to std::field::assert_constant()
-    // modulus_bits_getter: fn () -> u32,
-
     // @brief modulus: all BigNum operations are evaluated modulo this value
     modulus: [Field; N],
 

@@ -12,7 +12,6 @@ impl BigNumParamsGetter<5, 513> for U512Params {
 
 global U512_PARAMS: BigNumParams<5, 513> = BigNumParams {
         has_multiplicative_inverse: false,
-        // modulus_bits_getter: || 513,
         modulus: [
             0x00, 0x00, 0x00, 0x00, 0x0100000000
         ],

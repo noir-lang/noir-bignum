@@ -12,7 +12,6 @@ impl BigNumParamsGetter<4, 385> for U384_Params {
 
 global U384_PARAMS: BigNumParams<4, 385> = BigNumParams {
         has_multiplicative_inverse: false,
-        // modulus_bits_getter: || 385,
         modulus: [
             0x00, 0x00, 0x00, 0x01000000
         ],

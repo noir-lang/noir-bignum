@@ -44,20 +44,30 @@ pub(crate) trait RuntimeBigNumTrait<let N: u32, let MOD_BITS: u32> {
     unconstrained fn __eq(self, other: Self) -> bool;
     unconstrained fn __is_zero(self) -> bool;
 
+    // unconstrained
     fn __neg(self) -> Self;
+    // unconstrained
     fn __add(self, other: Self) -> Self;
+    // unconstrained
     fn __sub(self, other: Self) -> Self;
+    // unconstrained
     fn __mul(self, other: Self) -> Self;
+    // unconstrained
     fn __div(self, other: Self) -> Self;
+    // unconstrained
     fn __udiv_mod(self, divisor: Self) -> (Self, Self);
+    // unconstrained
     fn __invmod(self) -> Self;
+    // unconstrained
     fn __pow(self, exponent: Self) -> Self;
 
+    // unconstrained
     fn __batch_invert<let M: u32>(x: [Self; M]) -> [Self; M];
     unconstrained fn __batch_invert_slice<let M: u32>(to_invert: [Self]) -> [Self];
 
     fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self>;
 
+    // unconstrained
     fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
         params: BigNumParams<N, MOD_BITS>,
         lhs_terms: [[Self; LHS_N]; NUM_PRODUCTS],

@@ -12,7 +12,6 @@ impl BigNumParamsGetter<18, 2049> for U2048Params {
 
 global U2048_PARAMS: BigNumParams<18, 2049> = BigNumParams {
         has_multiplicative_inverse: false,
-        // modulus_bits_getter: || 2049,
         modulus: [
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0100
         ],

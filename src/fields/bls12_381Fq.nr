@@ -28,7 +28,6 @@ impl BigNumParamsGetter<4, 381> for BLS12_381_Fq_Params {
 
 global BLS12_381_Fq_PARAMS: BigNumParams<4, 381> = BigNumParams {
         has_multiplicative_inverse: true,
-        // modulus_bits_getter: || 381,
         modulus: [
             0xabfffeb153ffffb9feffffffffaaab, 0x4b84f38512bf6730d2a0f6b0f6241e, 0xea397fe69a4b1ba7b6434bacd76477, 0x1a0111
         ],

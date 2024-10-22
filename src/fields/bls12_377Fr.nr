@@ -31,7 +31,6 @@ impl BigNumParamsGetter<3, 253> for BLS12_377_Fr_Params {
 
 global BLS12_377_Fr_PARAMS: BigNumParams<3, 253> = BigNumParams {
         has_multiplicative_inverse: true,
-        // modulus_bits_getter: || 253,
         modulus: [
             0xaa76fed00000010a11800000000001, 0x655e9a2ca55660b44d1e5c37b00159, 0x12ab
         ],

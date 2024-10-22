@@ -28,7 +28,6 @@ impl BigNumParamsGetter<3, 255> for Vesta_Fr_Params {
 
 global Vesta_Fr_PARAMS: BigNumParams<3, 255> = BigNumParams {
         has_multiplicative_inverse: true,
-        // modulus_bits_getter: || 255,
         modulus: [
             0x4698fc094cf91b992d30ed00000001, 0x22, 0x4000
         ],

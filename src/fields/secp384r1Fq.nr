@@ -12,7 +12,6 @@ impl BigNumParamsGetter<4, 384> for Secp384r1_Fq_Params {
 
 global Secp384r1_Fq_PARAMS: BigNumParams<4, 384> = BigNumParams {
         has_multiplicative_inverse: true,
-        // modulus_bits_getter: || 384,
         modulus: [
             0xffffff0000000000000000ffffffff, 0xfffffffffffffffffffffffffffeff, 0xffffffffffffffffffffffffffffff, 0xffffff
         ],

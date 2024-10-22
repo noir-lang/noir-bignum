@@ -33,7 +33,7 @@ impl BigNumParamsGetter<7, 753> for MNT6_753_Fq_Params {
 
 global MNT6_753_Fq_PARAMS: BigNumParams<7, 753> = BigNumParams {
         has_multiplicative_inverse: true,
-        // modulus_bits_getter: || 753,
+
         modulus: [
             0xa099170fa13a4fd90776e240000001, 0xf97634993aa4d6c381bc3f0057974e, 0x28c859a99b3eebca9429212636b9df, 0xe8a0ed8d99d124d9a15af79db26c5c, 0x8fafed5eb7e8f96c97d87307fdb925, 0xc41110229022eee2cdadb7f997505b, 0x01c4c62d92
         ],

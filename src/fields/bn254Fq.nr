@@ -12,7 +12,6 @@ impl BigNumParamsGetter<3, 254> for BN254_Fq_Params {
 
 global BN254_Fq_PARAMS: BigNumParams<3, 254> = BigNumParams {
         has_multiplicative_inverse: true,
-        // modulus_bits_getter: || 254,
         modulus: [
             0x816a916871ca8d3c208c16d87cfd47, 0x4e72e131a029b85045b68181585d97, 0x3064
         ],

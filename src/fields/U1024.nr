@@ -12,7 +12,6 @@ impl BigNumParamsGetter<9, 1025> for U1024Params {
 
 global U1024_PARAMS: BigNumParams<9, 1025> = BigNumParams {
         has_multiplicative_inverse: false,
-        // modulus_bits_getter: || 1025,
         modulus: [
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x010000000000000000
         ],

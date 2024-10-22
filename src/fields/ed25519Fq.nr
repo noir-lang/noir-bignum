@@ -12,7 +12,6 @@ impl BigNumParamsGetter<3, 255> for ED25519_Fq_Params {
 
 global ED25519_Fq_PARAMS: BigNumParams<3, 255> = BigNumParams {
         has_multiplicative_inverse: true,
-        // modulus_bits_getter: || 255,
         modulus: [
             0xffffffffffffffffffffffffffffed, 0xffffffffffffffffffffffffffffff, 0x7fff
         ],

@@ -12,7 +12,6 @@ impl BigNumParamsGetter<3, 265> for Secp256r1_Fq_Params {
 
 global Secp256r1_Fq_PARAMS: BigNumParams<3, 265> = BigNumParams {
         has_multiplicative_inverse: true,
-        // modulus_bits_getter: || 256,
         modulus: [
             0xffffffffffffffffffffffff, 0xffff00000001000000000000000000, 0xffff
         ],

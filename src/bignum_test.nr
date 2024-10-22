@@ -20,7 +20,6 @@ fn silence_warning() {
 
 global TEST_2048_PARAMS: BigNumParams<18, 2048> = BigNumParams {
     has_multiplicative_inverse: false,
-    // modulus_bits_getter: || 2048,
     modulus: [
         0xc0a197a5ae0fcdceb052c9732614fe, 0x656ae034423283422243918ab83be3, 0x6bf590da48a7c1070b7d5aabaac678, 0x0cce39f530238b606f24b296e2bda9, 0x01e1fef9bb9c1c3ead98f226f1bfa0, 0xad8c1c816e12e0ed1379055e373abf, 0xcebe80e474f753aa9d1461c435123d, 0xaee5a18ceedef88d115a8b93c167ad, 0x268ba83c4a65c4307427fc495d9e44, 0xdd2777926848667b7df79f342639d4, 0xf455074c96855ca0068668efe7da3d, 0x5ddba6b30bbc168bfb3a1225f27d65, 0x591fec484f36707524133bcd6f4258, 0x59641b756766aeebe66781dd01d062, 0x58bc5eaff4b165e142bf9e2480eebb, 0x667a3964f08e06df772ce64b229a72, 0x9c1fdb18907711bfe3e3c1cf918395, 0xb8
     ],
