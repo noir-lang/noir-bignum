@@ -394,10 +394,10 @@ pub(crate) fn evaluate_quadratic_expression<
     // N.B. borrow_flags is `Field` type because making it `bool` would apply boolean constraints to all `N2` array entries.
     //      We only use `N2 - 2` borrow flags so applying 1-bit range checks on the array elements we use is more efficient.
     // TODO: Once it is possible to perform arithmetic on generics we can use `borrow_flags: [bool;N+N-2]` to avoid this issue
-    borrow_flags[0].assert_max_bit_size(1);
+    borrow_flags[0].assert_max_bit_size::<1>();
     product_limbs[0] += borrow_flags[0] * borrow_shift;
     for i in 1..(N + N - 2) {
-        borrow_flags[i].assert_max_bit_size(1);
+        borrow_flags[i].assert_max_bit_size::<1>();
         product_limbs[i] += 
             (borrow_flags[i] * borrow_shift - borrow_flags[i - 1] * borrow_carry);
     }
@@ -419,7 +419,7 @@ pub(crate) fn evaluate_quadratic_expression<
     for i in 0..N + N - 2 {
         product_limbs[i] *= hi_downshift;
         std::as_witness(product_limbs[i]);
-        product_limbs[i].assert_max_bit_size(126); // N.B. is this sufficient? going beyond 126 costs us 1 gate per limb
+        product_limbs[i].assert_max_bit_size::<126>(); // N.B. is this sufficient? going beyond 126 costs us 1 gate per limb
         product_limbs[i + 1] += product_limbs[i];
     }
     // the most significant limb has no limb to "carry" values into - the entire limb must equal zero

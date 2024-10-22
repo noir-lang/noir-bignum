@@ -31,12 +31,9 @@ pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32, let NBytes: u32>(x: [
         result[N - i - 1] = limb;
     }
 
-    // max_bits_in_most_significant_byte should be known at comptime. if not...messy!
-    let mut max_bits_in_most_significant_byte = 8 - (num_bits - MOD_BITS);
-
     let most_significant_byte: Field = x[0] as Field;
 
-    most_significant_byte.assert_max_bit_size(max_bits_in_most_significant_byte as u32);
+    most_significant_byte.assert_max_bit_size::<8 - (NBytes * 8 - MOD_BITS)>();
     result
 }
 

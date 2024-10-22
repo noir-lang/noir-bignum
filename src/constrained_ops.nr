@@ -220,10 +220,9 @@ pub(crate) fn validate_in_field<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_
 **/
 pub(crate) fn validate_in_range<let N: u32, let MOD_BITS: u32>(limbs: [Field; N]) {
     for i in 0..(N - 1) {
-        limbs[i].assert_max_bit_size(120);
+        limbs[i].assert_max_bit_size::<120>();
     }
-    let final_limb_bits = MOD_BITS - ((N - 1) * 120);
-    limbs[N - 1].assert_max_bit_size(final_limb_bits as u32);
+    limbs[N - 1].assert_max_bit_size::<MOD_BITS - ((N - 1) * 120)>();
 }
 
 /**
@@ -241,11 +240,10 @@ pub(crate) fn validate_in_range<let N: u32, let MOD_BITS: u32>(limbs: [Field; N]
 **/
 pub(crate) fn validate_quotient_in_range<let N: u32, let MOD_BITS: u32>(limbs: [Field; N]) {
     for i in 0..(N) {
-        limbs[i].assert_max_bit_size(120);
+        limbs[i].assert_max_bit_size::<120>();
     }
     // Note: replace magic number 6 with definition
-    let final_limb_bits = MOD_BITS - ((N - 1) * 120) + 6;
-    limbs[N - 1].assert_max_bit_size(final_limb_bits as u32);
+    limbs[N - 1].assert_max_bit_size::<MOD_BITS - ((N - 1) * 120) + 6>();
 }
 
 // validate that lhs - rhs does not underflow i.e. lhs > rhs
