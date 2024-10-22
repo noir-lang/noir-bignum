@@ -19,15 +19,15 @@ use crate::utils::u60_representation::U60Repr;
 
 pub struct  Pallas_Fr_Params {}
 
-impl BigNumParamsGetter<3> for Pallas_Fr_Params {
-    fn get_params() -> BigNumParams<3> {
+impl BigNumParamsGetter<3, 255> for Pallas_Fr_Params {
+    fn get_params() -> BigNumParams<3, 255> {
         Pallas_Fr_PARAMS
     }
 }
 
-global Pallas_Fr_PARAMS: BigNumParams<3> = BigNumParams {
+global Pallas_Fr_PARAMS: BigNumParams<3, 255> = BigNumParams {
         has_multiplicative_inverse: true,
-        modulus_bits_getter: || 255,
+        // modulus_bits_getter: || 255,
         modulus: [
             0x4698fc0994a8dd8c46eb2100000001, 0x22, 0x4000
         ],

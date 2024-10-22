@@ -4,15 +4,15 @@ use crate::utils::u60_representation::U60Repr;
 
 pub struct  U768Params {}
 
-impl BigNumParamsGetter<7> for U768Params {
-    fn get_params() -> BigNumParams<7> {
+impl BigNumParamsGetter<7, 769> for U768Params {
+    fn get_params() -> BigNumParams<7, 769> {
         U768_PARAMS
     }
 }
 
-global U768_PARAMS: BigNumParams<7> = BigNumParams {
+global U768_PARAMS: BigNumParams<7, 769> = BigNumParams {
         has_multiplicative_inverse: false,
-        modulus_bits_getter: || 769,
+        // modulus_bits_getter: || 769,
         modulus: [
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01000000000000
         ],

@@ -25,15 +25,15 @@ use crate::utils::u60_representation::U60Repr;
 
 pub struct  MNT6_753_Fr_Params {}
 
-impl BigNumParamsGetter<7> for MNT6_753_Fr_Params {
-    fn get_params() -> BigNumParams<7> {
+impl BigNumParamsGetter<7, 753> for MNT6_753_Fr_Params {
+    fn get_params() -> BigNumParams<7, 753> {
         MNT6_753_Fr_PARAMS
     }
 }
 
-global MNT6_753_Fr_PARAMS: BigNumParams<7> = BigNumParams {
+global MNT6_753_Fr_PARAMS: BigNumParams<7, 753> = BigNumParams {
         has_multiplicative_inverse: true,
-        modulus_bits_getter: || 753,
+        // modulus_bits_getter: || 753,
         modulus: [
             0x9d54522cdd119f5e9063de245e8001, 0xcce9767254a4638810719ac425f0e3, 0x76f218059db80f0da5cb537e38685a, 0xe8a0ed8d99d124d9a15af79db117e7, 0x8fafed5eb7e8f96c97d87307fdb925, 0xc41110229022eee2cdadb7f997505b, 0x01c4c62d92
         ],

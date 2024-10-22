@@ -20,15 +20,15 @@ use crate::utils::u60_representation::U60Repr;
 
 pub struct  BLS12_381_Fr_Params {}
 
-impl BigNumParamsGetter<3> for BLS12_381_Fr_Params {
-    fn get_params() -> BigNumParams<3> {
+impl BigNumParamsGetter<3, 255> for BLS12_381_Fr_Params {
+    fn get_params() -> BigNumParams<3, 255> {
         BLS12_381_Fr_PARAMS
     }
 }
 
-global BLS12_381_Fr_PARAMS: BigNumParams<3> = BigNumParams {
+global BLS12_381_Fr_PARAMS: BigNumParams<3, 255> = BigNumParams {
         has_multiplicative_inverse: true,
-        modulus_bits_getter: || 255,
+        // modulus_bits_getter: || 255,
         modulus: [
             0xbda402fffe5bfeffffffff00000001, 0xa753299d7d483339d80809a1d80553, 0x73ed
         ],

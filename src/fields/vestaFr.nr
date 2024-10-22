@@ -20,15 +20,15 @@ use crate::utils::u60_representation::U60Repr;
 
 pub struct  Vesta_Fr_Params {}
 
-impl BigNumParamsGetter<3> for Vesta_Fr_Params {
-    fn get_params() -> BigNumParams<3> {
+impl BigNumParamsGetter<3, 255> for Vesta_Fr_Params {
+    fn get_params() -> BigNumParams<3, 255> {
         Vesta_Fr_PARAMS
     }
 }
 
-global Vesta_Fr_PARAMS: BigNumParams<3> = BigNumParams {
+global Vesta_Fr_PARAMS: BigNumParams<3, 255> = BigNumParams {
         has_multiplicative_inverse: true,
-        modulus_bits_getter: || 255,
+        // modulus_bits_getter: || 255,
         modulus: [
             0x4698fc094cf91b992d30ed00000001, 0x22, 0x4000
         ],

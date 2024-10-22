@@ -3,15 +3,13 @@ use crate::params::BigNumParams as P;
 /**
 * @brief construct a BigNum instance out of an array of bytes in BIG ENDIAN format
 * @description: each 120-bit limb represents 15 bytes, we require that the size of the byte array
-*               is precisely large enough to cover Params::modulus_bits()
+*               is precisely large enough to cover MOD_BITS
 * @param x: input byte array
 **/
-pub(crate) fn from_be_bytes<let N: u32, let NBytes: u32>(params: P<N>, x: [u8; NBytes]) -> [Field; N] {
+pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32, let NBytes: u32>(params: P<N, MOD_BITS>, x: [u8; NBytes]) -> [Field; N] {
     let num_bits = NBytes * 8;
-    let modulus_bits_getter = params.modulus_bits_getter;
-    let modulus_bits = modulus_bits_getter();
-    assert(num_bits >= modulus_bits);
-    assert(num_bits - modulus_bits < 8);
+    assert(num_bits >= MOD_BITS);
+    assert(num_bits - MOD_BITS < 8);
     let mut result = [0; N];
 
     let excess_bytes = N * 15 - NBytes;
@@ -36,7 +34,7 @@ pub(crate) fn from_be_bytes<let N: u32, let NBytes: u32>(params: P<N>, x: [u8; N
     }
 
     // max_bits_in_most_significant_byte should be known at comptime. if not...messy!
-    let mut max_bits_in_most_significant_byte = 8 - (num_bits - modulus_bits);
+    let mut max_bits_in_most_significant_byte = 8 - (num_bits - MOD_BITS);
 
     let most_significant_byte: Field = x[0] as Field;
 
@@ -44,10 +42,8 @@ pub(crate) fn from_be_bytes<let N: u32, let NBytes: u32>(params: P<N>, x: [u8; N
     result
 }
 
-pub(crate) fn to_le_bytes<let N: u32, let NBytes: u32>(params: P<N>, val: [Field; N]) -> [u8; NBytes] {
-    let modulus_bits_getter = params.modulus_bits_getter;
-    let modulus_bits = modulus_bits_getter();
-    let nbytes = (modulus_bits / 8) + (modulus_bits % 8 != 0) as u32;
+pub(crate) fn to_le_bytes<let N: u32, let MOD_BITS: u32, let NBytes: u32>(params: P<N, MOD_BITS>, val: [Field; N]) -> [u8; NBytes] {
+    let nbytes = (MOD_BITS / 8) + (MOD_BITS % 8 != 0) as u32;
     assert(nbytes <= NBytes);
 
     let mut result: [u8; NBytes] = [0; NBytes];

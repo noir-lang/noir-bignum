@@ -33,5 +33,5 @@ pub mod U8192;
 // use crate::bignum::BigNum;
 // use bn254Fq::BN254_Fq_Params;
 //
-// type Fq = BigNum<3, BN254_Fq_Params>;
+// type Fq = BigNum<3, 254, BN254_Fq_Params>;
 

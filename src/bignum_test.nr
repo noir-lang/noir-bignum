@@ -18,9 +18,9 @@ fn silence_warning() {
     let _  = Test2048Params {};
 }
 
-global TEST_2048_PARAMS: BigNumParams<18> = BigNumParams {
+global TEST_2048_PARAMS: BigNumParams<18, 2048> = BigNumParams {
     has_multiplicative_inverse: false,
-    modulus_bits_getter: || 2048,
+    // modulus_bits_getter: || 2048,
     modulus: [
         0xc0a197a5ae0fcdceb052c9732614fe, 0x656ae034423283422243918ab83be3, 0x6bf590da48a7c1070b7d5aabaac678, 0x0cce39f530238b606f24b296e2bda9, 0x01e1fef9bb9c1c3ead98f226f1bfa0, 0xad8c1c816e12e0ed1379055e373abf, 0xcebe80e474f753aa9d1461c435123d, 0xaee5a18ceedef88d115a8b93c167ad, 0x268ba83c4a65c4307427fc495d9e44, 0xdd2777926848667b7df79f342639d4, 0xf455074c96855ca0068668efe7da3d, 0x5ddba6b30bbc168bfb3a1225f27d65, 0x591fec484f36707524133bcd6f4258, 0x59641b756766aeebe66781dd01d062, 0x58bc5eaff4b165e142bf9e2480eebb, 0x667a3964f08e06df772ce64b229a72, 0x9c1fdb18907711bfe3e3c1cf918395, 0xb8
     ],
@@ -36,26 +36,29 @@ global TEST_2048_PARAMS: BigNumParams<18> = BigNumParams {
     ]
 };
 
-impl BigNumParamsGetter<18> for Test2048Params {
-    fn get_params() -> BigNumParams<18> {
+impl BigNumParamsGetter<18, 2048> for Test2048Params {
+    fn get_params() -> BigNumParams<18, 2048> {
         TEST_2048_PARAMS
     }
 }
 
-type Fq = BigNum<3, BN254_Fq_Params>;
+type Fq = BigNum<3, 254, BN254_Fq_Params>;
+type BN256 = BigNum<3, 257, U256Params>;
+type BN381 = BigNum<4, 381, BLS12_381_Fq_Params>;
+type BN2048 = BigNum<18, 2048, Test2048Params>;
 
 /**
  * @brief this example was failing - sanity test to validate it now works
  **/
 #[test]
 fn test_bls_reduction() {
-    let X1: BigNum<4, BLS12_381_Fq_Params> = BigNum {
+    let X1: BN381 = BigNum {
         limbs: [
             0x55e83ff97a1aeffb3af00adb22c6bb, 0x8c4f9774b905a14e3a3f171bac586c, 0xa73197d7942695638c4fa9ac0fc368, 0x17f1d3
         ]
     };
     X1.validate_in_field();
-    let mut (_, XX_mul_3): (BigNum<4, BLS12_381_Fq_Params>, BigNum<4, BLS12_381_Fq_Params> ) = unsafe {
+    let mut (_, XX_mul_3): (BN381, BN381) = unsafe {
         BigNum::__compute_quadratic_expression(
             [[X1, X1, X1]],
             [[false, false, false]],
@@ -252,8 +255,8 @@ fn assert_is_not_equal_overloaded_fail<let N: u32, BN>() where BN: BigNumTrait<N
 
 #[test]
 fn test_eq_BN() {
-    // let stub: BigNum<3, BN254_Fq_Params> = BigNum::new();
-    test_eq::<3, BigNum<3, BN254_Fq_Params>>();
+    // let stub: Fq = BigNum::new();
+    test_eq::<3, Fq>();
 }
 #[test]
 fn test_add_BN() {
@@ -334,130 +337,131 @@ fn test_add_modulus_overflow() {
 
 #[test]
 fn test_mul_BN() {
-    test_mul::<3, BigNum<3, BN254_Fq_Params>>();
+    test_mul::<3, Fq>();
 }
 
 #[test]
 fn test_add_BN2() {
-    test_add::<3, BigNum<3, BN254_Fq_Params>>();
+    test_add::<3, Fq>();
 }
 
 #[test]
 fn test_div_BN() {
-    test_div::<3, BigNum<3, BN254_Fq_Params>>();
+    test_div::<3, Fq>();
 }
 
 #[test]
 fn test_invmod_BN() {
-    test_invmod::<3, BigNum<3, BN254_Fq_Params>>();
+    test_invmod::<3, Fq>();
 }
 
 #[test]
 fn test_assert_is_not_equal_BN() {
-    assert_is_not_equal::<3, BigNum<3, BN254_Fq_Params>>();
+    assert_is_not_equal::<3, Fq>();
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_fail_BN() {
-    assert_is_not_equal_fail::<3, BigNum<3, BN254_Fq_Params>>();
+    assert_is_not_equal_fail::<3, Fq>();
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_lhs_fail_BN() {
-    assert_is_not_equal_overloaded_lhs_fail::<3, BigNum<3, BN254_Fq_Params>>();
+    assert_is_not_equal_overloaded_lhs_fail::<3, Fq>();
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_rhs_fail_BN() {
-    assert_is_not_equal_overloaded_rhs_fail::<3, BigNum<3, BN254_Fq_Params>>();
+    assert_is_not_equal_overloaded_rhs_fail::<3, Fq>();
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_fail_BN() {
-    assert_is_not_equal_overloaded_fail::<3, BigNum<3, BN254_Fq_Params>>();
+    assert_is_not_equal_overloaded_fail::<3, Fq>();
 }
 
 #[test]
 fn test_eq_2048() {
-    test_eq::<18, BigNum<18, Test2048Params>>();
+    test_eq::<18, BN2048>();
 }
 
 #[test]
 fn test_mul_2048() {
-    test_mul::<18, BigNum<18, Test2048Params>>();
+    test_mul::<18, BN2048>();
 }
 
 #[test]
 fn test_add_2048() {
-    test_add::<18, BigNum<18, Test2048Params>>();
+    test_add::<18, BN2048>();
 }
 
 #[test]
 fn test_assert_is_not_equal_2048() {
-    assert_is_not_equal::<18, BigNum<18, Test2048Params>>();
+    assert_is_not_equal::<18, BN2048>();
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_fail_2048() {
-    assert_is_not_equal_fail::<18, BigNum<18, Test2048Params>>();
+    assert_is_not_equal_fail::<18, BN2048>();
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_lhs_fail_2048() {
-    assert_is_not_equal_overloaded_lhs_fail::<18, BigNum<18, Test2048Params>>();
+    assert_is_not_equal_overloaded_lhs_fail::<18, BN2048>();
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_rhs_fail_2048() {
-    assert_is_not_equal_overloaded_rhs_fail::<18, BigNum<18, Test2048Params>>();
+    assert_is_not_equal_overloaded_rhs_fail::<18, BN2048>();
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_fail_2048() {
-    assert_is_not_equal_overloaded_fail::<18, BigNum<18, Test2048Params>>();
+    assert_is_not_equal_overloaded_fail::<18, BN2048>();
 }
 
 #[test]
 fn test_eq_U256() {
-    test_eq::<3, BigNum<3, U256Params>>();
+    test_eq::<3, BN256>();
 }
 
 #[test]
 fn test_mul_U256() {
-    test_mul::<3, BigNum<3, U256Params>>();
+    test_mul::<3, BN256>();
 }
 
 #[test]
 fn test_add_U256() {
-    test_add::<3, BigNum<3, U256Params>>();
+    test_add::<3, BN256>();
 }
 
 #[test]
 fn test_assert_is_not_equal_U256() {
-    assert_is_not_equal::<3, BigNum<3, U256Params>>();
+    assert_is_not_equal::<3, BN256>();
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_fail_U256() {
-    assert_is_not_equal_fail::<3, BigNum<3, U256Params>>();
+    assert_is_not_equal_fail::<3, BN256>();
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_lhs_fail_U256() {
-    assert_is_not_equal_overloaded_lhs_fail::<3, BigNum<3, U256Params>>();
+    assert_is_not_equal_overloaded_lhs_fail::<3, BN256>();
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_rhs_fail_U256() {
-    assert_is_not_equal_overloaded_rhs_fail::<3, BigNum<3, U256Params>>();
+    assert_is_not_equal_overloaded_rhs_fail::<3, BN256>();
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_fail_U256() {
-    assert_is_not_equal_overloaded_fail::<3, BigNum<3, U256Params>>();
+    assert_is_not_equal_overloaded_fail::<3, BN256>();
 }
 
-type U256 = BigNum<3, U256Params>;
+type U256 = BN256;
+
 #[test]
 fn test_udiv_mod_U256() {
     let a: U256 = unsafe {
@@ -477,14 +481,14 @@ fn test_udiv_mod_U256() {
 // // N.B. witness generation times make these tests take ~15 minutes each! Uncomment at your peril
 // #[test]
 // fn test_div_2048() {
-//     let stub: BigNum<18, Test2048Params> = BigNum::new();
+//     let stub: BN2048 = BigNum::new();
 //     test_div(stub);
 // }
 
 // // N.B. witness generation times make these tests take ~15 minutes each! Uncomment at your peril
 // #[test]
 // fn test_invmod_2048() {
-//     let stub: BigNum<18, Test2048Params> = BigNum::new();
+//     let stub: BN2048 = BigNum::new();
 //     test_invmod(stub);
 // }
 
@@ -551,8 +555,8 @@ fn test_2048_bit_quadratic_expression() {
         0x0000000000000000000000000000000000000000000000000000000000000058
     ];
 
-    let a_bn: BigNum<18, Test2048Params> = BigNum { limbs: a };
-    let b_bn: BigNum<18, Test2048Params> = BigNum { limbs: b };
+    let a_bn: BN2048 = BigNum { limbs: a };
+    let b_bn: BN2048 = BigNum { limbs: b };
     let c_bn = unsafe {
         a_bn.__mul(b_bn)
     };

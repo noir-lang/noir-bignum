@@ -4,15 +4,15 @@ use crate::utils::u60_representation::U60Repr;
 
 pub struct BN254_Fq_Params {}
 
-impl BigNumParamsGetter<3> for BN254_Fq_Params {
-    fn get_params() -> BigNumParams<3> {
+impl BigNumParamsGetter<3, 254> for BN254_Fq_Params {
+    fn get_params() -> BigNumParams<3, 254> {
         BN254_Fq_PARAMS
     }
 }
 
-global BN254_Fq_PARAMS: BigNumParams<3> = BigNumParams {
+global BN254_Fq_PARAMS: BigNumParams<3, 254> = BigNumParams {
         has_multiplicative_inverse: true,
-        modulus_bits_getter: || 254,
+        // modulus_bits_getter: || 254,
         modulus: [
             0x816a916871ca8d3c208c16d87cfd47, 0x4e72e131a029b85045b68181585d97, 0x3064
         ],
