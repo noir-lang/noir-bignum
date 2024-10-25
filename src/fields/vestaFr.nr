@@ -14,36 +14,44 @@
 //! * Curve equation: y^2 = x^3 + 5
 //! * Valuation(q - 1, 2) = 32
 //! * Valuation(r - 1, 2) = 32
-use crate::BigNumParamsTrait;
-use crate::runtime_bignum::BigNumInstance;
-use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
+use crate::params::BigNumParamsGetter;
+use crate::params::BigNumParams;
 use crate::utils::u60_representation::U60Repr;
+
 pub struct Vesta_Fr_Params {}
-impl RuntimeBigNumParamsTrait<3> for Vesta_Fr_Params {
-    fn modulus_bits() -> u32 {
-        255
+
+impl BigNumParamsGetter<3, 255> for Vesta_Fr_Params {
+    fn get_params() -> BigNumParams<3, 255> {
+        Vesta_Fr_PARAMS
     }
 }
-impl BigNumParamsTrait<3> for Vesta_Fr_Params {
-    fn get_instance() -> BigNumInstance<3, Self> {
-        Vesta_Fr_Instance
-    }
-    fn modulus_bits() -> u32 {
-        255
-    }
-}
-pub global Vesta_Fr_Instance: BigNumInstance<3, Vesta_Fr_Params> = BigNumInstance {
-        modulus: [
-            0x4698fc094cf91b992d30ed00000001, 0x22, 0x4000
+
+global Vesta_Fr_PARAMS: BigNumParams<3, 255> = BigNumParams {
+    has_multiplicative_inverse: true,
+    modulus: [0x4698fc094cf91b992d30ed00000001, 0x22, 0x4000],
+    double_modulus: [
+        0x018d31f81299f237325a61da00000002,
+        0x01000000000000000000000000000043,
+        0x7fff,
+    ],
+    modulus_u60: U60Repr {
+        limbs: [0x092d30ed00000001, 0x04698fc094cf91b9, 0x22, 0x00, 0x4000, 0x00],
+    },
+    modulus_u60_x4: U60Repr {
+        limbs: [
+            0x092d30ed00000001,
+            0x04698fc094cf91b9,
+            0x22,
+            0x00,
+            0x4000,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
         ],
-        double_modulus: [
-            0x018d31f81299f237325a61da00000002, 0x01000000000000000000000000000043, 0x7fff
-        ],
-        modulus_u60: U60Repr { limbs: [
-            0x092d30ed00000001, 0x04698fc094cf91b9, 0x22, 0x00, 0x4000, 0x00]},
-        modulus_u60_x4: U60Repr { limbs: [
-            0x092d30ed00000001, 0x04698fc094cf91b9, 0x22, 0x00, 0x4000, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
-        redc_param: [
-            0x59c0fdacc1b919b4b3c4bfffffffc4, 0xfffffffffffffffffffffffffff76e, 0x0fffff
-        ]
+    },
+    redc_param: [0x59c0fdacc1b919b4b3c4bfffffffc4, 0xfffffffffffffffffffffffffff76e, 0x0fffff],
 };
