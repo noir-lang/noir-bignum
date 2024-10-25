@@ -16,7 +16,10 @@ use crate::fns::unconstrained_ops::{__one, __eq, __neg, __add, __mul, __pow};
  * __tonelli_shanks_sqrt
  */
 
-unconstrained pub(crate) fn __validate_in_field_compute_borrow_flags<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, val: [Field; N]) -> [bool; N] {
+pub(crate) unconstrained fn __validate_in_field_compute_borrow_flags<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    val: [Field; N],
+) -> [bool; N] {
     let mut flags: [bool; N] = [false; N];
     let modulus: [Field; N] = params.modulus;
     flags[0] = modulus[0].lt(val[0]);
@@ -26,15 +29,18 @@ unconstrained pub(crate) fn __validate_in_field_compute_borrow_flags<let N: u32,
     flags
 }
 
-unconstrained pub(crate) fn __validate_gt_remainder<let N: u32, let MOD_BITS: u32>(lhs: [Field; N], rhs: [Field; N]) -> ([Field; N], [bool; N], [bool; N]) {
-    let a_u60 : U60Repr<N, 2> = U60Repr::from(lhs);
-    let mut b_u60 : U60Repr<N, 2> = U60Repr::from(rhs);
+pub(crate) unconstrained fn __validate_gt_remainder<let N: u32, let MOD_BITS: u32>(
+    lhs: [Field; N],
+    rhs: [Field; N],
+) -> ([Field; N], [bool; N], [bool; N]) {
+    let a_u60: U60Repr<N, 2> = U60Repr::from(lhs);
+    let mut b_u60: U60Repr<N, 2> = U60Repr::from(rhs);
 
     let underflow = b_u60.gte(a_u60);
     b_u60 += U60Repr::one();
     assert(underflow == false, "BigNum::validate_gt check fails");
-    let mut addend_u60 : U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
-    let mut result_u60 : U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
+    let mut addend_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
+    let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
 
     let mut carry: u64 = 0;
     let mut carry_in: u64 = 0;
@@ -58,8 +64,8 @@ unconstrained pub(crate) fn __validate_gt_remainder<let N: u32, let MOD_BITS: u3
                 carry = 0;
                 borrow = 0;
             }
-            carry_flags[i/2] = carry as bool;
-            borrow_flags[i/2] = borrow as bool;
+            carry_flags[i / 2] = carry as bool;
+            borrow_flags[i / 2] = borrow as bool;
         }
     }
 
@@ -67,9 +73,12 @@ unconstrained pub(crate) fn __validate_gt_remainder<let N: u32, let MOD_BITS: u3
     (result, carry_flags, borrow_flags)
 }
 
-unconstrained pub(crate) fn __neg_with_flags<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, val: [Field; N]) -> ([Field; N], [bool; N]) {
-    let x_u60 : U60Repr<N, 2> = U60Repr::from(val);
-    let mut result_u60 : U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
+pub(crate) unconstrained fn __neg_with_flags<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    val: [Field; N],
+) -> ([Field; N], [bool; N]) {
+    let x_u60: U60Repr<N, 2> = U60Repr::from(val);
+    let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
 
     let mut borrow: u64 = 0;
     let mut borrow_in: u64 = 0;
@@ -88,19 +97,19 @@ unconstrained pub(crate) fn __neg_with_flags<let N: u32, let MOD_BITS: u32>(para
     (result, borrow_flags)
 }
 
-unconstrained pub(crate) fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
+pub(crate) unconstrained fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     lhs: [Field; N],
-    rhs: [Field; N]
+    rhs: [Field; N],
 ) -> ([Field; N], [bool; N], [bool; N], bool) {
-    let a_u60 : U60Repr<N, 2> = U60Repr::from(lhs);
-    let b_u60 : U60Repr<N, 2> = U60Repr::from(rhs);
+    let a_u60: U60Repr<N, 2> = U60Repr::from(lhs);
+    let b_u60: U60Repr<N, 2> = U60Repr::from(rhs);
     let add_u60 = a_u60 + b_u60;
 
     let overflow = add_u60.gte(params.modulus_u60);
 
-    let mut subtrahend_u60 : U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
-    let mut result_u60 : U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
+    let mut subtrahend_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
+    let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
 
     if overflow {
         subtrahend_u60 = params.modulus_u60;
@@ -138,18 +147,18 @@ unconstrained pub(crate) fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
     (result, carry_flags, borrow_flags, overflow)
 }
 
-unconstrained pub(crate) fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
+pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     lhs: [Field; N],
-    rhs: [Field; N]
+    rhs: [Field; N],
 ) -> ([Field; N], [bool; N], [bool; N], bool) {
-    let a_u60 : U60Repr<N, 2> = U60Repr::from(lhs);
-    let b_u60 : U60Repr<N, 2> = U60Repr::from(rhs);
+    let a_u60: U60Repr<N, 2> = U60Repr::from(lhs);
+    let b_u60: U60Repr<N, 2> = U60Repr::from(rhs);
 
     let underflow = b_u60.gte(a_u60 + U60Repr::one());
 
-    let mut addend_u60 : U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
-    let mut result_u60 : U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
+    let mut addend_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
+    let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
 
     if underflow {
         addend_u60 = params.modulus_u60;
@@ -177,8 +186,8 @@ unconstrained pub(crate) fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
                 carry = 0;
                 borrow = 0;
             }
-            carry_flags[i/2] = carry as bool;
-            borrow_flags[i/2] = borrow as bool;
+            carry_flags[i / 2] = carry as bool;
+            borrow_flags[i / 2] = borrow as bool;
         }
     }
     let result = U60Repr::into(result_u60);
@@ -192,14 +201,14 @@ unconstrained pub(crate) fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
  **/
 comptime global BARRETT_REDUCTION_OVERFLOW_BITS: u32 = 4;
 
-unconstrained pub(crate) fn __barrett_reduction<let N: u32>(
+pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     x: [Field; 2 * N],
     redc_param: [Field; N],
     k: u32,
     modulus: [Field; N],
-    modulus_u60: U60Repr<N, 4>
+    modulus_u60: U60Repr<N, 4>,
 ) -> ([Field; N], [Field; N]) {
-    let mut mulout: [Field; 3 * N]  = [0; 3 * N];
+    let mut mulout: [Field; 3 * N] = [0; 3 * N];
     for i in 0..(N + N) {
         for j in 0..N {
             mulout[i + j] += x[i] * redc_param[j];
@@ -231,8 +240,8 @@ unconstrained pub(crate) fn __barrett_reduction<let N: u32>(
         partial_quotient[i] = partial_quotient_full[i];
     }
     // quotient_mul_modulus can never exceed input value `x` so can fit into size-2 array
-    let mut quotient_mul_modulus: [Field; 2 * N]  = [0; 2 * N];
-    let mut quotient_mul_modulus_normalized: [Field; 2 * N]  = [0; 2 * N];
+    let mut quotient_mul_modulus: [Field; 2 * N] = [0; 2 * N];
+    let mut quotient_mul_modulus_normalized: [Field; 2 * N] = [0; 2 * N];
     for j in 0..N {
         for i in 0..(N + N - j) {
             quotient_mul_modulus[i + j] += partial_quotient[i] * modulus[j];
@@ -250,7 +259,7 @@ unconstrained pub(crate) fn __barrett_reduction<let N: u32>(
     }
     let quotient_mul_modulus_u60: U60Repr<N, 4> = U60Repr::new(quotient_mul_modulus_normalized);
 
-    let x_u60 : U60Repr<N, 4> = U60Repr::new(x);
+    let x_u60: U60Repr<N, 4> = U60Repr::new(x);
     let mut remainder_u60 = x_u60 - quotient_mul_modulus_u60;
 
     if (remainder_u60.gte(modulus_u60)) {
@@ -269,7 +278,9 @@ unconstrained pub(crate) fn __barrett_reduction<let N: u32>(
 * @details find the maximum value k where x^k = 1, where x = primitive root
 *          This is needed for our Tonelli-Shanks sqrt algorithm
 **/
-unconstrained pub(crate) fn __primitive_root_log_size<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>) -> u32 {
+pub(crate) unconstrained fn __primitive_root_log_size<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+) -> u32 {
     let mut target: U60Repr<N, 2> = params.modulus_u60 - U60Repr::one();
     let mut result: u32 = 0;
     for _ in 0..MOD_BITS {
@@ -291,7 +302,7 @@ unconstrained pub(crate) fn __primitive_root_log_size<let N: u32, let MOD_BITS: 
 unconstrained fn __recursively_find_multiplicative_generator<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     target: [Field; N],
-    p_minus_one_over_two: [Field; N]
+    p_minus_one_over_two: [Field; N],
 ) -> (bool, [Field; N]) {
     let exped = __pow(params, target, p_minus_one_over_two);
     let one: [Field; N] = __one();
@@ -299,10 +310,12 @@ unconstrained fn __recursively_find_multiplicative_generator<let N: u32, let MOD
     let found = __eq(exped, neg_one);
     let mut result: (bool, [Field; N]) = (found, target);
     if (!found) {
-        let _target = unsafe {
-            __add(params, target, one)
-        };
-        result = __recursively_find_multiplicative_generator::<_, MOD_BITS>(params, _target, p_minus_one_over_two);
+        let _target = unsafe { __add(params, target, one) };
+        result = __recursively_find_multiplicative_generator::<_, MOD_BITS>(
+            params,
+            _target,
+            p_minus_one_over_two,
+        );
     }
     result
 }
@@ -312,15 +325,25 @@ unconstrained fn __recursively_find_multiplicative_generator<let N: u32, let MOD
 *        i.e. smallest g where g^2 = -1
 * @note WARNING if multiplicative generator does not exist, this function will enter an infinite loop!
 **/
-unconstrained pub(crate) fn __multiplicative_generator<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>) -> [Field; N] {
+pub(crate) unconstrained fn __multiplicative_generator<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+) -> [Field; N] {
     let mut target: [Field; N] = __one();
     let p_minus_one_over_two: U60Repr<N, 2> = (params.modulus_u60 - U60Repr::one()).shr(1);
     let p_minus_one_over_two: [Field; N] = U60Repr::into(p_minus_one_over_two);
-    let (_, target) = __recursively_find_multiplicative_generator::<_, MOD_BITS>(params, target, p_minus_one_over_two);
+    let (_, target) = __recursively_find_multiplicative_generator::<_, MOD_BITS>(
+        params,
+        target,
+        p_minus_one_over_two,
+    );
     target
 }
 
-unconstrained pub(crate) fn __tonelli_shanks_sqrt_inner_loop_check<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, t2m: [Field; N], i: u32) -> u32 {
+pub(crate) unconstrained fn __tonelli_shanks_sqrt_inner_loop_check<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    t2m: [Field; N],
+    i: u32,
+) -> u32 {
     let one: [Field; N] = __one();
     let is_one = __eq(t2m, one);
     let mut result = i;

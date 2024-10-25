@@ -9,7 +9,7 @@ use crate::utils::msb::get_msb64;
  * as well as when performing bit shifts.
  */
 pub struct U60Repr<let N: u32, let NumSegments: u32> {
-    pub(crate) limbs: [u64; N * NumSegments]
+    pub(crate) limbs: [u64; N * NumSegments],
 }
 
 impl<let N: u32, let NumSegments: u32> std::ops::Add for U60Repr<N, NumSegments> {
@@ -49,9 +49,7 @@ impl<let N: u32, let NumSegments: u32> std::convert::From<[Field; N]> for U60Rep
     fn from(input: [Field; N]) -> Self {
         let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
         for i in 0..(N) {
-            let (lo, hi) = unsafe {
-                split_bits::split_60_bits(input[i])
-            };
+            let (lo, hi) = unsafe { split_bits::split_60_bits(input[i]) };
             result.limbs[2 * i] = lo;
             result.limbs[2 * i + 1] = hi;
         }
@@ -78,7 +76,9 @@ impl<let N: u32, let NumSegments: u32> std::cmp::Eq for U60Repr<N, NumSegments> 
 
 impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
 
-    unconstrained pub(crate) fn new<let NumFieldSegments: u32>(x: [Field; N * NumFieldSegments]) -> Self {
+    pub(crate) unconstrained fn new<let NumFieldSegments: u32>(
+        x: [Field; N * NumFieldSegments],
+    ) -> Self {
         let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
         for i in 0..(N * NumFieldSegments) {
             let (lo, hi) = split_bits::split_60_bits(x[i]);
@@ -88,22 +88,24 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
         result
     }
 
-    unconstrained pub(crate) fn one() -> Self {
+    pub(crate) unconstrained fn one() -> Self {
         let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
         result.limbs[0] = 1;
         result
     }
 
-    unconstrained pub(crate) fn into_field_array(x: U60Repr<N, NumSegments>) -> [Field; N * NumSegments / 2] {
+    pub(crate) unconstrained fn into_field_array(
+        x: U60Repr<N, NumSegments>,
+    ) -> [Field; N * NumSegments / 2] {
         let mut result: [Field; N * NumSegments / 2] = [0; N * NumSegments / 2];
         let two_pow_60: Field = 0x1000000000000000;
         for i in 0..(N * NumSegments / 2) {
-            result[i]= x.limbs[2 * i] as Field + (x.limbs[2 * i + 1] as Field * two_pow_60);
+            result[i] = x.limbs[2 * i] as Field + (x.limbs[2 * i + 1] as Field * two_pow_60);
         }
         result
     }
 
-    unconstrained pub(crate) fn gte(self, b: Self) -> bool {
+    pub(crate) unconstrained fn gte(self, b: Self) -> bool {
         let mut result = false;
         let mut early_exit = false;
         for i in 0..(N * NumSegments) {
@@ -111,7 +113,9 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
                 result = true;
                 early_exit = true;
                 break;
-            } else if (b.limbs[(N * NumSegments) - 1 - i] != self.limbs[((N * NumSegments) - 1 - i)]) {
+            } else if (
+                b.limbs[(N * NumSegments) - 1 - i] != self.limbs[((N * NumSegments) - 1 - i)]
+            ) {
                 result = false;
                 early_exit = true;
                 break;
@@ -185,7 +189,6 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
         result.limbs[num_shifted_limbs] = (value << (limb_shift as u8)) & mask;
 
         // shift 84. num shifted = 1
-
         for i in 1..((N * NumSegments) - num_shifted_limbs) {
             let value = self.limbs[i];
             let upshift = ((value << (limb_shift as u8)) + remainder) & mask;
@@ -213,7 +216,7 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
         }
     }
 
-    unconstrained pub(crate) fn get_msb(val: Self) -> u32 {
+    pub(crate) unconstrained fn get_msb(val: Self) -> u32 {
         let mut count = 0;
         for i in 0..N * NumSegments {
             let v = val.limbs[((N * NumSegments) - 1 - i)];

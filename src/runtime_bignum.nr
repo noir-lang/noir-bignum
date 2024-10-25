@@ -5,14 +5,13 @@ use crate::params::BigNumParams;
 
 use crate::fns::{
     constrained_ops::{
-        derive_from_seed, conditional_select, assert_is_not_equal, eq, validate_in_field, validate_in_range,
-        neg, add, sub, mul, div, udiv_mod, udiv, umod
+        derive_from_seed, conditional_select, assert_is_not_equal, eq, validate_in_field,
+        validate_in_range, neg, add, sub, mul, div, udiv_mod, udiv, umod,
     },
     unconstrained_ops::{
-        __derive_from_seed, __eq, __is_zero, __neg, __add, __sub, __mul, __div, __udiv_mod, __invmod, __pow,
-        __batch_invert, __batch_invert_slice, __tonelli_shanks_sqrt
-    },
-    expressions::{__compute_quadratic_expression, evaluate_quadratic_expression},
+        __derive_from_seed, __eq, __is_zero, __neg, __add, __sub, __mul, __div, __udiv_mod,
+        __invmod, __pow, __batch_invert, __batch_invert_slice, __tonelli_shanks_sqrt,
+    }, expressions::{__compute_quadratic_expression, evaluate_quadratic_expression},
     serialization::{from_be_bytes, to_le_bytes},
 };
 
@@ -28,11 +27,20 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {}
 pub(crate) trait RuntimeBigNumTrait<let N: u32, let MOD_BITS: u32> {
     pub fn new(params: BigNumParams<N, MOD_BITS>) -> Self;
     pub fn one(params: BigNumParams<N, MOD_BITS>) -> Self;
-    pub fn derive_from_seed<let SeedBytes: u32>(params: BigNumParams<N, MOD_BITS>, seed: [u8; SeedBytes]) -> Self;
-    pub fn __derive_from_seed<let SeedBytes: u32>(params: BigNumParams<N, MOD_BITS>, seed: [u8; SeedBytes]) -> Self;
+    pub fn derive_from_seed<let SeedBytes: u32>(
+        params: BigNumParams<N, MOD_BITS>,
+        seed: [u8; SeedBytes],
+    ) -> Self;
+    pub fn __derive_from_seed<let SeedBytes: u32>(
+        params: BigNumParams<N, MOD_BITS>,
+        seed: [u8; SeedBytes],
+    ) -> Self;
     pub fn from_slice(params: BigNumParams<N, MOD_BITS>, limbs: [Field]) -> Self;
     pub fn from_array(params: BigNumParams<N, MOD_BITS>, limbs: [Field; N]) -> Self;
-    pub fn from_be_bytes<let NBytes: u32>(params: BigNumParams<N, MOD_BITS>, x: [u8; NBytes]) -> Self;
+    pub fn from_be_bytes<let NBytes: u32>(
+        params: BigNumParams<N, MOD_BITS>,
+        x: [u8; NBytes],
+    ) -> Self;
 
     pub fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes];
 
@@ -78,7 +86,7 @@ pub(crate) trait RuntimeBigNumTrait<let N: u32, let MOD_BITS: u32> {
         rhs_terms: [[Self; RHS_N]; NUM_PRODUCTS],
         rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
         linear_terms: [Self; ADD_N],
-        linear_flags: [bool; ADD_N]
+        linear_flags: [bool; ADD_N],
     ) -> (Self, Self);
 
     pub fn evaluate_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
@@ -88,20 +96,30 @@ pub(crate) trait RuntimeBigNumTrait<let N: u32, let MOD_BITS: u32> {
         rhs_terms: [[Self; RHS_N]; NUM_PRODUCTS],
         rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
         linear_terms: [Self; ADD_N],
-        linear_flags: [bool; ADD_N]
+        linear_flags: [bool; ADD_N],
     );
 
-    pub fn eq(lhs: Self, rhs: Self) -> bool { lhs == rhs }
+    pub fn eq(lhs: Self, rhs: Self) -> bool {
+        lhs == rhs
+    }
     pub fn assert_is_not_equal(self, other: Self);
     pub fn validate_in_field(self);
     pub fn validate_in_range(self);
     // pub fn validate_gt(self, lhs: Self, rhs: Self);
 
     pub fn neg(self) -> Self;
-    pub fn add(lhs: Self, rhs: Self) -> Self { lhs + rhs }
-    pub fn sub(lhs: Self, rhs: Self) -> Self { lhs - rhs }
-    pub fn mul(lhs: Self, rhs: Self) -> Self { lhs * rhs }
-    pub fn div(lhs: Self, rhs: Self) -> Self { lhs / rhs }
+    pub fn add(lhs: Self, rhs: Self) -> Self {
+        lhs + rhs
+    }
+    pub fn sub(lhs: Self, rhs: Self) -> Self {
+        lhs - rhs
+    }
+    pub fn mul(lhs: Self, rhs: Self) -> Self {
+        lhs * rhs
+    }
+    pub fn div(lhs: Self, rhs: Self) -> Self {
+        lhs / rhs
+    }
     pub fn udiv_mod(numerator: Self, divisor: Self) -> (Self, Self);
     pub fn udiv(numerator: Self, divisor: Self) -> Self;
     pub fn umod(numerator: Self, divisor: Self) -> Self;
@@ -122,18 +140,20 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeB
         result
     }
 
-    fn derive_from_seed<let SeedBytes: u32>(params: BigNumParams<N, MOD_BITS>, seed: [u8; SeedBytes]) -> Self {
-        let limbs = unsafe {
-            derive_from_seed::<_, MOD_BITS, _>(params, seed)
-        };
+    fn derive_from_seed<let SeedBytes: u32>(
+        params: BigNumParams<N, MOD_BITS>,
+        seed: [u8; SeedBytes],
+    ) -> Self {
+        let limbs = unsafe { derive_from_seed::<_, MOD_BITS, _>(params, seed) };
         Self { limbs, params }
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
-    fn __derive_from_seed<let SeedBytes: u32>(params: BigNumParams<N, MOD_BITS>, seed: [u8; SeedBytes]) -> Self {
-        let limbs = unsafe {
-            __derive_from_seed::<_, MOD_BITS, _>(params, seed)
-        };
+    fn __derive_from_seed<let SeedBytes: u32>(
+        params: BigNumParams<N, MOD_BITS>,
+        seed: [u8; SeedBytes],
+    ) -> Self {
+        let limbs = unsafe { __derive_from_seed::<_, MOD_BITS, _>(params, seed) };
         Self { limbs, params }
     }
 
@@ -193,54 +213,42 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeB
     // UNCONSTRAINED! (Hence `__` prefix).
     fn __neg(self) -> Self {
         let params = self.params;
-        let limbs = unsafe {
-            __neg(params, self.limbs)
-        };
+        let limbs = unsafe { __neg(params, self.limbs) };
         Self { params, limbs }
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
     fn __add(self, other: Self) -> Self {
         let params = self.params;
-        let limbs = unsafe {
-            __add(params, self.limbs, other.limbs)
-        };
+        let limbs = unsafe { __add(params, self.limbs, other.limbs) };
         Self { params, limbs }
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
     fn __sub(self, other: Self) -> Self {
         let params = self.params;
-        let limbs = unsafe {
-            __sub(params, self.limbs, other.limbs)
-        };
+        let limbs = unsafe { __sub(params, self.limbs, other.limbs) };
         Self { params, limbs }
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
     fn __mul(self, other: Self) -> Self {
         let params = self.params;
-        let limbs = unsafe {
-            __mul::<_, MOD_BITS>(params, self.limbs, other.limbs)
-        };
+        let limbs = unsafe { __mul::<_, MOD_BITS>(params, self.limbs, other.limbs) };
         Self { params, limbs }
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
     fn __div(self, divisor: Self) -> Self {
         let params = self.params;
-        let limbs = unsafe {
-            __div::<_, MOD_BITS>(params, self.limbs, divisor.limbs)
-        };
+        let limbs = unsafe { __div::<_, MOD_BITS>(params, self.limbs, divisor.limbs) };
         Self { params, limbs }
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
     fn __udiv_mod(self, divisor: Self) -> (Self, Self) {
         let params = self.params;
-        let (q, r) = unsafe {
-            __udiv_mod(self.limbs, divisor.limbs)
-        };
+        let (q, r) = unsafe { __udiv_mod(self.limbs, divisor.limbs) };
         (Self { limbs: q, params }, Self { limbs: r, params })
     }
 
@@ -248,18 +256,14 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeB
     fn __invmod(self) -> Self {
         let params = self.params;
         assert(params.has_multiplicative_inverse);
-        let limbs = unsafe {
-            __invmod::<_, MOD_BITS>(params, self.limbs)
-        };
+        let limbs = unsafe { __invmod::<_, MOD_BITS>(params, self.limbs) };
         Self { limbs, params }
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
     fn __pow(self, exponent: Self) -> Self {
         let params = self.params;
-        let limbs = unsafe {
-            __pow::<_, MOD_BITS>(params, self.limbs, exponent.limbs)
-        };
+        let limbs = unsafe { __pow::<_, MOD_BITS>(params, self.limbs, exponent.limbs) };
         Self { limbs, params }
     }
 
@@ -267,9 +271,8 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeB
     fn __batch_invert<let M: u32>(x: [Self; M]) -> [Self; M] {
         let params = x[0].params;
         assert(params.has_multiplicative_inverse);
-        let all_limbs = unsafe {
-            __batch_invert::<_, MOD_BITS, _>(params, x.map(|bn| Self::get_limbs(bn)))
-        };
+        let all_limbs =
+            unsafe { __batch_invert::<_, MOD_BITS, _>(params, x.map(|bn| Self::get_limbs(bn))) };
         all_limbs.map(|limbs| Self { limbs, params })
     }
 
@@ -278,7 +281,8 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeB
         let params = x[0].params;
         assert(params.has_multiplicative_inverse);
         let all_limbs = unsafe {
-            let inv_slice = __batch_invert_slice::<_, MOD_BITS>(params, x.map(|bn| Self::get_limbs(bn)));
+            let inv_slice =
+                __batch_invert_slice::<_, MOD_BITS>(params, x.map(|bn| Self::get_limbs(bn)));
             inv_slice.as_array()
         };
         all_limbs.map(|limbs| Self { limbs, params })
@@ -287,9 +291,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeB
     // UNCONSTRAINED! (Hence `__` prefix).
     fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self> {
         let params = self.params;
-        let maybe_limbs = unsafe {
-            __tonelli_shanks_sqrt(params, self.limbs)
-        };
+        let maybe_limbs = unsafe { __tonelli_shanks_sqrt(params, self.limbs) };
         maybe_limbs.map(|limbs| Self { limbs, params })
     }
 
@@ -301,7 +303,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeB
         rhs_terms: [[Self; RHS_N]; NUM_PRODUCTS],
         rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
         linear_terms: [Self; ADD_N],
-        linear_flags: [bool; ADD_N]
+        linear_flags: [bool; ADD_N],
     ) -> (Self, Self) {
         let (q_limbs, r_limbs) = unsafe {
             __compute_quadratic_expression::<_, MOD_BITS, _, _, _, _>(
@@ -311,7 +313,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeB
                 map(rhs_terms, |bns| map(bns, |bn| Self::get_limbs(bn))),
                 rhs_flags,
                 map(linear_terms, |bn| Self::get_limbs(bn)),
-                linear_flags
+                linear_flags,
             )
         };
         (Self { limbs: q_limbs, params }, Self { limbs: r_limbs, params })
@@ -324,7 +326,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeB
         rhs_terms: [[Self; RHS_N]; NUM_PRODUCTS],
         rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
         linear_terms: [Self; ADD_N],
-        linear_flags: [bool; ADD_N]
+        linear_flags: [bool; ADD_N],
     ) {
         evaluate_quadratic_expression::<_, MOD_BITS, _, _, _, _>(
             params,
@@ -333,7 +335,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeB
             map(rhs_terms, |bns| map(bns, |bn| Self::get_limbs(bn))),
             rhs_flags,
             map(linear_terms, |bn| Self::get_limbs(bn)),
-            linear_flags
+            linear_flags,
         )
     }
 

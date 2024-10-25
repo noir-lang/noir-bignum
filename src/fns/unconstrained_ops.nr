@@ -4,7 +4,7 @@ use crate::utils::split_bits;
 use crate::params::BigNumParams as P;
 use crate::fns::unconstrained_helpers::{
     __barrett_reduction, __primitive_root_log_size, __multiplicative_generator,
-    __tonelli_shanks_sqrt_inner_loop_check
+    __tonelli_shanks_sqrt_inner_loop_check,
 };
 
 /**
@@ -27,13 +27,16 @@ use crate::fns::unconstrained_helpers::{
  * __batch_invert_slice
  */
 
-unconstrained pub(crate) fn __one<let N: u32>() -> [Field; N] {
+pub(crate) unconstrained fn __one<let N: u32>() -> [Field; N] {
     let mut limbs: [Field; N] = [0; N];
     limbs[0] = 1;
     limbs
 }
 
-unconstrained pub(crate) fn __derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(params: P<N, MOD_BITS>, seed: [u8; SeedBytes]) -> [Field; N] {
+pub(crate) unconstrained fn __derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(
+    params: P<N, MOD_BITS>,
+    seed: [u8; SeedBytes],
+) -> [Field; N] {
     let mut rolling_hash_fields: [Field; (SeedBytes / 31) + 1] = [0; (SeedBytes / 31) + 1];
     let mut seed_ptr = 0;
     for i in 0..(SeedBytes / 31) + 1 {
@@ -47,13 +50,15 @@ unconstrained pub(crate) fn __derive_from_seed<let N: u32, let MOD_BITS: u32, le
         }
         rolling_hash_fields[i] = packed;
     }
-    let compressed = std::hash::poseidon2::Poseidon2::hash(rolling_hash_fields, (SeedBytes / 31) + 1);
+    let compressed =
+        std::hash::poseidon2::Poseidon2::hash(rolling_hash_fields, (SeedBytes / 31) + 1);
     let mut rolling_hash: [Field; 2] = [compressed, 0];
 
     let mut to_reduce: [Field; 2 * N] = [0; 2 * N];
 
     let mut double_modulus_bits = MOD_BITS * 2;
-    let mut double_modulus_bytes = (double_modulus_bits) / 8 + (double_modulus_bits % 8 != 0) as u32;
+    let mut double_modulus_bytes =
+        (double_modulus_bits) / 8 + (double_modulus_bits % 8 != 0) as u32;
 
     let mut last_limb_bytes = double_modulus_bytes % 15;
     if (last_limb_bytes == 0) {
@@ -66,7 +71,7 @@ unconstrained pub(crate) fn __derive_from_seed<let N: u32, let MOD_BITS: u32, le
 
     for i in 0..(N - 1) {
         let hash = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
-        let hash : [u8; 30] = hash.to_le_bytes();
+        let hash: [u8; 30] = hash.to_le_bytes();
         let mut lo: Field = 0;
         let mut hi: Field = 0;
         for j in 0..15 {
@@ -85,7 +90,7 @@ unconstrained pub(crate) fn __derive_from_seed<let N: u32, let MOD_BITS: u32, le
 
     {
         let hash = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
-        let hash : [u8; 30] = hash.to_le_bytes();
+        let hash: [u8; 30] = hash.to_le_bytes();
         let mut hi: Field = 0;
         for j in 0..(last_limb_bytes - 1) {
             hi *= 256;
@@ -104,17 +109,17 @@ unconstrained pub(crate) fn __derive_from_seed<let N: u32, let MOD_BITS: u32, le
         params.redc_param,
         MOD_BITS,
         params.modulus,
-        params.modulus_u60_x4
+        params.modulus_u60_x4,
     );
     let result = remainder;
     result
 }
 
-unconstrained pub(crate) fn __eq<let N: u32>(lhs: [Field; N], rhs: [Field; N]) -> bool {
+pub(crate) unconstrained fn __eq<let N: u32>(lhs: [Field; N], rhs: [Field; N]) -> bool {
     lhs == rhs
 }
 
-unconstrained pub(crate) fn __is_zero<let N: u32>(limbs: [Field; N]) -> bool {
+pub(crate) unconstrained fn __is_zero<let N: u32>(limbs: [Field; N]) -> bool {
     let mut result: bool = true;
     for i in 0..N {
         result = result & (limbs[i] == 0);
@@ -132,15 +137,22 @@ unconstrained pub(crate) fn __is_zero<let N: u32>(limbs: [Field; N]) -> bool {
 *              N.B. constrained BigNum operations do not fully constrain outputs to be in the range [0, p-1]
 *              because such a check is expensive and usually unneccesary.
 */
-unconstrained pub(crate) fn __neg<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, limbs: [Field; N]) -> [Field; N] {
+pub(crate) unconstrained fn __neg<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    limbs: [Field; N],
+) -> [Field; N] {
     let f: [Field; N] = limbs;
-    let x_u60 : U60Repr<N, 2> = U60Repr::from(f);
+    let x_u60: U60Repr<N, 2> = U60Repr::from(f);
     U60Repr::into(params.modulus_u60 - x_u60)
 }
 
-unconstrained pub(crate) fn __add<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, lhs: [Field; N], rhs: [Field; N]) -> [Field; N] {
-    let x_u60 : U60Repr<N, 2> = U60Repr::from(lhs);
-    let y_u60 : U60Repr<N, 2> = U60Repr::from(rhs);
+pub(crate) unconstrained fn __add<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    lhs: [Field; N],
+    rhs: [Field; N],
+) -> [Field; N] {
+    let x_u60: U60Repr<N, 2> = U60Repr::from(lhs);
+    let y_u60: U60Repr<N, 2> = U60Repr::from(rhs);
 
     let mut z_u60 = x_u60 + y_u60;
 
@@ -154,15 +166,19 @@ unconstrained pub(crate) fn __add<let N: u32, let MOD_BITS: u32>(params: P<N, MO
 * @brief given inputs `x, y` compute 2p + x - y (unconstrained)
 * @description see `__neg` for why we use 2p instead of p
 **/
-unconstrained pub(crate) fn __sub<let N: u32, let MOD_BITS: u32>(
+pub(crate) unconstrained fn __sub<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     lhs: [Field; N],
-    rhs: [Field; N]
+    rhs: [Field; N],
 ) -> [Field; N] {
     __add(params, lhs, __neg(params, rhs))
 }
 
-unconstrained pub(crate) fn __mul_with_quotient<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, lhs: [Field; N], rhs: [Field; N]) -> ([Field; N], [Field; N]) {
+pub(crate) unconstrained fn __mul_with_quotient<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    lhs: [Field; N],
+    rhs: [Field; N],
+) -> ([Field; N], [Field; N]) {
     let mut mul: [Field; 2 * N] = [0; 2 * N];
     for i in 0..N {
         for j in 0..N {
@@ -175,18 +191,26 @@ unconstrained pub(crate) fn __mul_with_quotient<let N: u32, let MOD_BITS: u32>(p
         params.redc_param,
         MOD_BITS,
         params.modulus,
-        params.modulus_u60_x4
+        params.modulus_u60_x4,
     );
 
     (q, r)
 }
 
-unconstrained pub(crate) fn __mul<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, lhs: [Field; N], rhs: [Field; N]) -> [Field; N] {
+pub(crate) unconstrained fn __mul<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    lhs: [Field; N],
+    rhs: [Field; N],
+) -> [Field; N] {
     let (_, b) = __mul_with_quotient::<_, MOD_BITS>(params, lhs, rhs);
     b
 }
 
-unconstrained pub(crate) fn __div<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, numerator: [Field; N], divisor: [Field; N]) -> [Field; N] {
+pub(crate) unconstrained fn __div<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    numerator: [Field; N],
+    divisor: [Field; N],
+) -> [Field; N] {
     let inv_divisor = __invmod::<_, MOD_BITS>(params, divisor);
     __mul::<_, MOD_BITS>(params, numerator, inv_divisor)
 }
@@ -198,7 +222,10 @@ unconstrained pub(crate) fn __div<let N: u32, let MOD_BITS: u32>(params: P<N, MO
 *      2. numerator % divisor = remainder
 *      3. divisor * quotient + remainder = numerator
 **/
-unconstrained pub(crate) fn __udiv_mod<let N: u32, let MOD_BITS: u32>(numerator: [Field; N], divisor: [Field; N]) -> ([Field; N], [Field; N]) {
+pub(crate) unconstrained fn __udiv_mod<let N: u32, let MOD_BITS: u32>(
+    numerator: [Field; N],
+    divisor: [Field; N],
+) -> ([Field; N], [Field; N]) {
     let mut quotient_u60: U60Repr<N, 2> = U60Repr::from([0; N]);
     let mut remainder_u60: U60Repr<N, 2> = U60Repr::from(numerator);
 
@@ -235,7 +262,10 @@ unconstrained pub(crate) fn __udiv_mod<let N: u32, let MOD_BITS: u32>(numerator:
     (U60Repr::into(quotient_u60), U60Repr::into(remainder_u60))
 }
 
-unconstrained pub(crate) fn __invmod<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, val: [Field; N]) -> [Field; N] {
+pub(crate) unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    val: [Field; N],
+) -> [Field; N] {
     let one: [Field; N] = __one::<N>();
     let one_u60: U60Repr<N, 2> = U60Repr::from(one);
     let exp_u60 = params.modulus_u60.sub(one_u60.add(one_u60));
@@ -243,7 +273,11 @@ unconstrained pub(crate) fn __invmod<let N: u32, let MOD_BITS: u32>(params: P<N,
     __pow::<_, MOD_BITS>(params, val, exp)
 }
 
-unconstrained pub(crate) fn __pow<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, val: [Field; N], exponent: [Field; N]) -> [Field; N] {
+pub(crate) unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    val: [Field; N],
+    exponent: [Field; N],
+) -> [Field; N] {
     let x: U60Repr<N, 2> = U60Repr::from(exponent);
 
     let num_bits = MOD_BITS + 1;
@@ -259,7 +293,10 @@ unconstrained pub(crate) fn __pow<let N: u32, let MOD_BITS: u32>(params: P<N, MO
     accumulator
 }
 
-unconstrained pub(crate) fn __batch_invert<let N: u32, let MOD_BITS: u32, let M: u32>(params: P<N, MOD_BITS>, x: [[Field; N]; M]) -> [[Field; N]; M] {
+pub(crate) unconstrained fn __batch_invert<let N: u32, let MOD_BITS: u32, let M: u32>(
+    params: P<N, MOD_BITS>,
+    x: [[Field; N]; M],
+) -> [[Field; N]; M] {
     // TODO: ugly! Will fail if input slice is empty
     let mut accumulator: [Field; N] = __one::<N>();
     let mut result: [[Field; N]; M] = [[0; N]; M];
@@ -284,7 +321,10 @@ unconstrained pub(crate) fn __batch_invert<let N: u32, let MOD_BITS: u32, let M:
     result
 }
 
-unconstrained pub(crate) fn __batch_invert_slice<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, x: [[Field; N]]) -> [[Field; N]] {
+pub(crate) unconstrained fn __batch_invert_slice<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    x: [[Field; N]],
+) -> [[Field; N]] {
     // TODO: ugly! Will fail if input slice is empty
     let mut accumulator: [Field; N] = __one::<N>();
     let mut result: [[Field; N]] = [[0; N]];
@@ -316,7 +356,10 @@ unconstrained pub(crate) fn __batch_invert_slice<let N: u32, let MOD_BITS: u32>(
 * @note this is unconstrained fn. To constrain a square root, validate that output^2 = self
 * TODO: create fn that constrains nonexistence of square root (i.e. find x where x^2 = -self)
 **/
-unconstrained pub(crate) fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, input: [Field; N]) -> std::option::Option<[Field; N]> {
+pub(crate) unconstrained fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    input: [Field; N],
+) -> std::option::Option<[Field; N]> {
     // Tonelli-shanks algorithm begins by finding a field element Q and integer S,
     // such that (p - 1) = Q.2^{s}
     // We can compute the square root of a, by considering a^{(Q + 1) / 2} = R
@@ -342,9 +385,7 @@ unconstrained pub(crate) fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>
     // We can iteratively transform t into ever smaller subgroups, until t = 1.
     // At each iteration, we need to find a new value for b, which we can obtain
     // by repeatedly squaring z^{Q}
-    let one_u60: U60Repr<N, 2> = unsafe {
-        U60Repr::one()
-    };
+    let one_u60: U60Repr<N, 2> = unsafe { U60Repr::one() };
     let primitive_root_log_size = __primitive_root_log_size::<_, MOD_BITS>(params);
     let mut Q = (params.modulus_u60 - one_u60).shr(primitive_root_log_size - 1);
     let Q_minus_one_over_two_u60 = (Q - one_u60).shr(2);
@@ -368,7 +409,6 @@ unconstrained pub(crate) fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>
         // (if t2m == 1) then skip
         // else increase i and square t2m and go again
         // algorithm runtime should only be max the number of bits in modulus
-
         for _ in 0..MOD_BITS {
             if (__eq(t, one)) {
                 found_root = true;
@@ -379,7 +419,8 @@ unconstrained pub(crate) fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>
             let i = __tonelli_shanks_sqrt_inner_loop_check::<_, MOD_BITS>(params, t2m, 0);
             let mut j = m - i - 1;
             b = c;
-            for _ in 0..j { // how big
+            for _ in 0..j {
+                // how big
                 if (j == 0) {
                     break;
                 }

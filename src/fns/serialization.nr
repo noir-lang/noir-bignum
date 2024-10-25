@@ -4,7 +4,9 @@
 *               is precisely large enough to cover MOD_BITS
 * @param x: input byte array
 **/
-pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32, let NBytes: u32>(x: [u8; NBytes]) -> [Field; N] {
+pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32, let NBytes: u32>(
+    x: [u8; NBytes],
+) -> [Field; N] {
     let num_bits = NBytes * 8;
     assert(num_bits >= MOD_BITS);
     assert(num_bits - MOD_BITS < 8);
@@ -37,7 +39,9 @@ pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32, let NBytes: u32>(x: [
     result
 }
 
-pub(crate) fn to_le_bytes<let N: u32, let MOD_BITS: u32, let NBytes: u32>(val: [Field; N]) -> [u8; NBytes] {
+pub(crate) fn to_le_bytes<let N: u32, let MOD_BITS: u32, let NBytes: u32>(
+    val: [Field; N],
+) -> [u8; NBytes] {
     let nbytes = (MOD_BITS / 8) + (MOD_BITS % 8 != 0) as u32;
     assert(nbytes <= NBytes);
 
@@ -51,7 +55,7 @@ pub(crate) fn to_le_bytes<let N: u32, let MOD_BITS: u32, let NBytes: u32>(val: [
     let last_limb_bytes: [u8; 15] = val[N - 1].to_le_bytes();
     let num_last_bytes = (NBytes - (N - 1) * 15);
     for i in 0..num_last_bytes {
-        result[(N-1) * 15 + i] = last_limb_bytes[i];
+        result[(N - 1) * 15 + i] = last_limb_bytes[i];
     }
     result
 }

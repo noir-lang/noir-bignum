@@ -21,7 +21,7 @@ use crate::params::BigNumParamsGetter;
 use crate::params::BigNumParams;
 use crate::utils::u60_representation::U60Repr;
 
-pub struct  BLS12_377_Fr_Params {}
+pub struct BLS12_377_Fr_Params {}
 
 impl BigNumParamsGetter<3, 253> for BLS12_377_Fr_Params {
     fn get_params() -> BigNumParams<3, 253> {
@@ -30,18 +30,38 @@ impl BigNumParamsGetter<3, 253> for BLS12_377_Fr_Params {
 }
 
 global BLS12_377_Fr_PARAMS: BigNumParams<3, 253> = BigNumParams {
-        has_multiplicative_inverse: true,
-        modulus: [
-            0xaa76fed00000010a11800000000001, 0x655e9a2ca55660b44d1e5c37b00159, 0x12ab
+    has_multiplicative_inverse: true,
+    modulus: [0xaa76fed00000010a11800000000001, 0x655e9a2ca55660b44d1e5c37b00159, 0x12ab],
+    double_modulus: [
+        0x0154edfda00000021423000000000002,
+        0x01cabd34594aacc1689a3cb86f6002b2,
+        0x2555,
+    ],
+    modulus_u60: U60Repr {
+        limbs: [
+            0x0a11800000000001,
+            0x0aa76fed00000010,
+            0x044d1e5c37b00159,
+            0x0655e9a2ca55660b,
+            0x12ab,
+            0x00,
         ],
-        double_modulus: [
-            0x0154edfda00000021423000000000002, 0x01cabd34594aacc1689a3cb86f6002b2, 0x2555
+    },
+    modulus_u60_x4: U60Repr {
+        limbs: [
+            0x0a11800000000001,
+            0x0aa76fed00000010,
+            0x044d1e5c37b00159,
+            0x0655e9a2ca55660b,
+            0x12ab,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
         ],
-        modulus_u60: U60Repr { limbs: [
-            0x0a11800000000001, 0x0aa76fed00000010, 0x044d1e5c37b00159, 0x0655e9a2ca55660b, 0x12ab, 0x00]},
-        modulus_u60_x4: U60Repr { limbs: [
-            0x0a11800000000001, 0x0aa76fed00000010, 0x044d1e5c37b00159, 0x0655e9a2ca55660b, 0x12ab, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
-        redc_param: [
-            0xa180b8d69e258f5204c21151e79ea1, 0x91ec40b2c9ee4e51e49faa80548fd0, 0x036d94
-        ]
+    },
+    redc_param: [0xa180b8d69e258f5204c21151e79ea1, 0x91ec40b2c9ee4e51e49faa80548fd0, 0x036d94],
 };

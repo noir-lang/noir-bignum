@@ -4,9 +4,7 @@ use crate::fns::{
     unconstrained_helpers::{
         __validate_in_field_compute_borrow_flags, __validate_gt_remainder, __neg_with_flags,
         __add_with_flags, __sub_with_flags,
-    },
-    unconstrained_ops::{__mul, __div, __udiv_mod},
-    expressions::evaluate_quadratic_expression,
+    }, unconstrained_ops::{__mul, __div, __udiv_mod}, expressions::evaluate_quadratic_expression,
 };
 
 /**
@@ -38,7 +36,7 @@ use crate::fns::{
 **/
 pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(
     params: P<N, MOD_BITS>,
-    seed: [u8; SeedBytes]
+    seed: [u8; SeedBytes],
 ) -> [Field; N] {
     let mut rolling_seed: [u8; SeedBytes + 1] = [0; SeedBytes + 1];
     for i in 0..SeedBytes {
@@ -62,7 +60,8 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
         rolling_hash_fields[i] = packed;
     }
 
-    let compressed = std::hash::poseidon2::Poseidon2::hash(rolling_hash_fields, (SeedBytes / 31) + 1);
+    let compressed =
+        std::hash::poseidon2::Poseidon2::hash(rolling_hash_fields, (SeedBytes / 31) + 1);
     let mut rolling_hash: [Field; 2] = [compressed, 0];
     let num_hashes = (30 * N) / 32 + (((30 * N) % 32) != 0) as u32;
     for i in 0..num_hashes - 1 {
@@ -99,13 +98,13 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
     // e.g. if N = 20, then we have 40 limbs we want to reduce, but each bigfield chunk is 19 limbs, so we need 3
     // if N = 2, we have 4 limbs we want to reduce but each bigfield chunk is only 1 limb, so we need 4
     // max possible number of chunks is therefore 4
-
     let mut bigfield_chunks: [[Field; N]; 4] = [[0; N]; 4];
     for k in 0..num_bigfield_chunks {
         let mut bigfield_limbs: [Field; N] = [0; N];
         let mut num_filled_bytes = (k * 30);
         let mut num_remaining_bytes = num_bytes - num_filled_bytes;
-        let mut num_remaining_limbs = (num_remaining_bytes / 15) + (num_remaining_bytes % 15 > 0) as u32;
+        let mut num_remaining_limbs =
+            (num_remaining_bytes / 15) + (num_remaining_bytes % 15 > 0) as u32;
         let mut more_than_N_minus_one_limbs = (num_remaining_limbs > (N - 1)) as u32;
         let mut num_limbs_in_bigfield = more_than_N_minus_one_limbs * (N - 1)
             + num_remaining_limbs * (1 - more_than_N_minus_one_limbs);
@@ -125,7 +124,7 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
     }
 
     let mut bigfield_rhs_limbs: [Field; N] = [0; N];
-    bigfield_rhs_limbs[N-1] = 1;
+    bigfield_rhs_limbs[N - 1] = 1;
     validate_in_range::<_, MOD_BITS>(bigfield_rhs_limbs);
 
     let mut result: [Field; N] = [0; N];
@@ -143,7 +142,11 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
 * @brief conditional_select given the value of `predicate` return either `self` (if 0) or `other` (if 1)
 * @description should be cheaper than using an IF statement (TODO: check!)
 **/
-pub(crate) fn conditional_select<let N: u32>(lhs: [Field; N], rhs: [Field; N], predicate: bool) -> [Field; N] {
+pub(crate) fn conditional_select<let N: u32>(
+    lhs: [Field; N],
+    rhs: [Field; N],
+    predicate: bool,
+) -> [Field; N] {
     let mut result: [Field; N] = lhs;
     for i in 0..N {
         result[i] = (lhs[i] - rhs[i]) * predicate as Field + rhs[i];
@@ -159,7 +162,11 @@ pub(crate) fn conditional_select<let N: u32>(lhs: [Field; N], rhs: [Field; N], p
     *          However the probability of an honest Prover being unable to satisfy this check is tiny!
     *          (todo: compute how tiny)
     **/
-pub(crate) fn assert_is_not_equal<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, lhs: [Field; N], rhs: [Field; N]) {
+pub(crate) fn assert_is_not_equal<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    lhs: [Field; N],
+    rhs: [Field; N],
+) {
     let mut l: Field = 0;
     let mut r: Field = 0;
     let mut modulus_mod_n: Field = 0;
@@ -170,7 +177,7 @@ pub(crate) fn assert_is_not_equal<let N: u32, let MOD_BITS: u32>(params: P<N, MO
         r *= two_pow_120;
         modulus_mod_n *= two_pow_120;
         l += lhs[N - i - 1];
-        r += rhs[N - i - 1] ;
+        r += rhs[N - i - 1];
         modulus_mod_n += modulus[N - i - 1];
     }
 
@@ -182,7 +189,11 @@ pub(crate) fn assert_is_not_equal<let N: u32, let MOD_BITS: u32>(params: P<N, MO
     assert(target != 0, "asssert_is_not_equal fail");
 }
 
-pub(crate) fn eq<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, lhs: [Field; N], rhs: [Field; N]) -> bool {
+pub(crate) fn eq<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    lhs: [Field; N],
+    rhs: [Field; N],
+) -> bool {
     let diff = sub::<_, MOD_BITS>(params, lhs, rhs);
     // if self == other, possible values of `diff` will be `p` or `0`
     // (the subtract operator constrains diff to be < ceil(log(p)))
@@ -196,20 +207,21 @@ pub(crate) fn eq<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, lhs: [Fi
     is_equal_modulus | is_equal_zero
 }
 
-pub(crate) fn validate_in_field<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, val: [Field; N]) {
+pub(crate) fn validate_in_field<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    val: [Field; N],
+) {
     // N.B. need to combine with validate_in_range if `self` limbs have not been range constrained
     let mut p_minus_self: [Field; N] = [0; N];
     let modulus: [Field; N] = params.modulus;
     for i in 0..N {
         p_minus_self[i] = modulus[i] - val[i];
     }
-    let borrow_flags = unsafe {
-        __validate_in_field_compute_borrow_flags(params, val)
-    };
+    let borrow_flags = unsafe { __validate_in_field_compute_borrow_flags(params, val) };
     let two_pow_120: Field = 0x1000000000000000000000000000000;
     p_minus_self[0] += borrow_flags[0] as Field * two_pow_120;
     for i in 1..N - 1 {
-        p_minus_self[i] += (borrow_flags[i] as Field * two_pow_120 - borrow_flags[i-1] as Field);
+        p_minus_self[i] += (borrow_flags[i] as Field * two_pow_120 - borrow_flags[i - 1] as Field);
     }
     p_minus_self[N - 1] -= borrow_flags[N - 2] as Field;
     let mut compare = val;
@@ -251,12 +263,9 @@ pub(crate) fn validate_quotient_in_range<let N: u32, let MOD_BITS: u32>(limbs: [
 // validate that lhs - rhs does not underflow i.e. lhs > rhs
 pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [Field; N], rhs: [Field; N]) {
     // so we do... p - x - r = 0 and there might be borrow flags
-
     // a - b = r
     // p + a - b - r = 0
-    let (result, carry_flags, borrow_flags) = unsafe {
-        __validate_gt_remainder(lhs, rhs)
-    };
+    let (result, carry_flags, borrow_flags) = unsafe { __validate_gt_remainder(lhs, rhs) };
 
     validate_in_range::<_, MOD_BITS>(result);
 
@@ -264,7 +273,8 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [Field; N], rhs: [
     let carry_shift = 0x1000000000000000000000000000000;
 
     let mut addend: [Field; N] = [0; N];
-    let result_limb = lhs[0] - rhs[0] + addend[0] - result[0] - 1 + (borrow_flags[0] as Field * borrow_shift)
+    let result_limb = lhs[0] - rhs[0] + addend[0] - result[0] - 1
+        + (borrow_flags[0] as Field * borrow_shift)
         - (carry_flags[0] as Field * carry_shift);
     assert(result_limb == 0);
     for i in 1..N - 1 {
@@ -273,16 +283,19 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [Field; N], rhs: [
             + ((borrow_flags[i] as Field - carry_flags[i] as Field) * borrow_shift);
         assert(result_limb == 0);
     }
-    let result_limb = lhs[N - 1] - rhs[N - 1] + addend[N - 1] - result[N - 1] - borrow_flags[N - 2] as Field
+    let result_limb = lhs[N - 1] - rhs[N - 1] + addend[N - 1]
+        - result[N - 1]
+        - borrow_flags[N - 2] as Field
         + carry_flags[N - 2] as Field;
     assert(result_limb == 0);
 }
 
-pub(crate) fn neg<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, val: [Field; N]) -> [Field; N] {
+pub(crate) fn neg<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    val: [Field; N],
+) -> [Field; N] {
     // so we do... p - x - r = 0 and there might be borrow flags
-    let (result, borrow_flags) = unsafe {
-        __neg_with_flags(params, val)
-    };
+    let (result, borrow_flags) = unsafe { __neg_with_flags(params, val) };
     validate_in_range::<_, MOD_BITS>(result);
     let modulus = params.modulus;
     let borrow_shift = 0x1000000000000000000000000000000;
@@ -298,11 +311,14 @@ pub(crate) fn neg<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, val: [F
     result
 }
 
-pub(crate) fn add<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, lhs: [Field; N], rhs: [Field; N]) -> [Field; N] {
+pub(crate) fn add<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    lhs: [Field; N],
+    rhs: [Field; N],
+) -> [Field; N] {
     // so we do... p - x - r = 0 and there might be borrow flags
-    let (result, carry_flags, borrow_flags, overflow_modulus) = unsafe {
-        __add_with_flags(params, lhs, rhs)
-    };
+    let (result, carry_flags, borrow_flags, overflow_modulus) =
+        unsafe { __add_with_flags(params, lhs, rhs) };
     validate_in_range::<_, MOD_BITS>(result);
     let modulus = params.modulus;
     let borrow_shift = 0x1000000000000000000000000000000;
@@ -312,7 +328,8 @@ pub(crate) fn add<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, lhs: [F
     if (overflow_modulus) {
         subtrahend = modulus;
     }
-    let result_limb = lhs[0] + rhs[0] - subtrahend[0] - result[0] + (borrow_flags[0] as Field * borrow_shift)
+    let result_limb = lhs[0] + rhs[0] - subtrahend[0] - result[0]
+        + (borrow_flags[0] as Field * borrow_shift)
         - (carry_flags[0] as Field * carry_shift);
     assert(result_limb == 0);
     for i in 1..N - 1 {
@@ -321,20 +338,25 @@ pub(crate) fn add<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, lhs: [F
             + ((borrow_flags[i] as Field - carry_flags[i] as Field) * borrow_shift);
         assert(result_limb == 0);
     }
-    let result_limb = lhs[N - 1] + rhs[N - 1] - subtrahend[N - 1] - result[N - 1] - borrow_flags[N - 2] as Field
+    let result_limb = lhs[N - 1] + rhs[N - 1]
+        - subtrahend[N - 1]
+        - result[N - 1]
+        - borrow_flags[N - 2] as Field
         + carry_flags[N - 2] as Field;
     assert(result_limb == 0);
     result
 }
 
-pub(crate) fn sub<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, lhs: [Field; N], rhs: [Field; N]) -> [Field; N] {
+pub(crate) fn sub<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    lhs: [Field; N],
+    rhs: [Field; N],
+) -> [Field; N] {
     // so we do... p - x - r = 0 and there might be borrow flags
-
     // a - b = r
     // p + a - b - r = 0
-    let (result, carry_flags, borrow_flags, underflow) = unsafe {
-        __sub_with_flags(params, lhs, rhs)
-    };
+    let (result, carry_flags, borrow_flags, underflow) =
+        unsafe { __sub_with_flags(params, lhs, rhs) };
     validate_in_range::<_, MOD_BITS>(result);
     let modulus = params.modulus;
     let borrow_shift = 0x1000000000000000000000000000000;
@@ -344,7 +366,8 @@ pub(crate) fn sub<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, lhs: [F
     if (underflow) {
         addend = modulus;
     }
-    let result_limb = lhs[0] - rhs[0] + addend[0] - result[0] + (borrow_flags[0] as Field * borrow_shift)
+    let result_limb = lhs[0] - rhs[0] + addend[0] - result[0]
+        + (borrow_flags[0] as Field * borrow_shift)
         - (carry_flags[0] as Field * carry_shift);
     assert(result_limb == 0);
     for i in 1..N - 1 {
@@ -353,7 +376,9 @@ pub(crate) fn sub<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, lhs: [F
             + ((borrow_flags[i] as Field - carry_flags[i] as Field) * borrow_shift);
         assert(result_limb == 0);
     }
-    let result_limb = lhs[N - 1] - rhs[N - 1] + addend[N - 1] - result[N - 1] - borrow_flags[N - 2] as Field
+    let result_limb = lhs[N - 1] - rhs[N - 1] + addend[N - 1]
+        - result[N - 1]
+        - borrow_flags[N - 2] as Field
         + carry_flags[N - 2] as Field;
     assert(result_limb == 0);
     result
@@ -363,23 +388,44 @@ pub(crate) fn sub<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, lhs: [F
 //       via evaluate_quadratic_expression
 // e.g. performing a sum of multiple multiplications and additions via `evaluate_quadratic_expression`
 //      will create much fewer constraints than calling `mul` and `add` directly
-pub(crate) fn mul<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, lhs: [Field; N], rhs: [Field; N]) -> [Field; N] {
-    let result = unsafe {
-        __mul::<_, MOD_BITS>(params, lhs, rhs)
-    };
-    evaluate_quadratic_expression(params, [[lhs]], [[false]], [[rhs]], [[false]], [result], [true]);
+pub(crate) fn mul<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    lhs: [Field; N],
+    rhs: [Field; N],
+) -> [Field; N] {
+    let result = unsafe { __mul::<_, MOD_BITS>(params, lhs, rhs) };
+    evaluate_quadratic_expression(
+        params,
+        [[lhs]],
+        [[false]],
+        [[rhs]],
+        [[false]],
+        [result],
+        [true],
+    );
     result
 }
 
 // Note: this method is expensive! Witness computation is extremely expensive as it requires modular exponentiation
-pub(crate) fn div<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, lhs: [Field; N], rhs: [Field; N]) -> [Field; N] {
+pub(crate) fn div<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    lhs: [Field; N],
+    rhs: [Field; N],
+) -> [Field; N] {
     assert(
-        params.has_multiplicative_inverse, "BigNum has no multiplicative inverse. Use udiv for unsigned integer division"
+        params.has_multiplicative_inverse,
+        "BigNum has no multiplicative inverse. Use udiv for unsigned integer division",
     );
-    let result = unsafe {
-        __div::<_, MOD_BITS>(params, lhs, rhs)
-    };
-    evaluate_quadratic_expression(params, [[result]], [[false]], [[rhs]], [[false]], [lhs], [true]);
+    let result = unsafe { __div::<_, MOD_BITS>(params, lhs, rhs) };
+    evaluate_quadratic_expression(
+        params,
+        [[result]],
+        [[false]],
+        [[rhs]],
+        [[false]],
+        [lhs],
+        [true],
+    );
     result
 }
 
@@ -393,11 +439,9 @@ pub(crate) fn div<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, lhs: [F
 pub(crate) fn udiv_mod<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     numerator: [Field; N],
-    divisor: [Field; N]
+    divisor: [Field; N],
 ) -> ([Field; N], [Field; N]) {
-    let (quotient, remainder) = unsafe {
-        __udiv_mod(numerator, divisor)
-    };
+    let (quotient, remainder) = unsafe { __udiv_mod(numerator, divisor) };
 
     // self / divisor = quotient rounded
     // quotient * divisor + remainder - self = 0
@@ -408,7 +452,7 @@ pub(crate) fn udiv_mod<let N: u32, let MOD_BITS: u32>(
         [[divisor]],
         [[false]],
         [numerator, remainder],
-        [true, false]
+        [true, false],
     );
     // we need (remainder < divisor)
     // implies (divisor - remainder > 0)
@@ -421,7 +465,11 @@ pub(crate) fn udiv_mod<let N: u32, let MOD_BITS: u32>(
 *
 * i.e. return param is floor(numerator / divisor)
 **/
-pub(crate) fn udiv<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, numerator: [Field; N], divisor: [Field; N]) -> [Field; N] {
+pub(crate) fn udiv<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    numerator: [Field; N],
+    divisor: [Field; N],
+) -> [Field; N] {
     udiv_mod::<_, MOD_BITS>(params, numerator, divisor).0
 }
 
@@ -433,7 +481,7 @@ pub(crate) fn udiv<let N: u32, let MOD_BITS: u32>(params: P<N, MOD_BITS>, numera
 pub(crate) fn umod<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     numerator: [Field; N],
-    divisor: [Field; N]
+    divisor: [Field; N],
 ) -> [Field; N] {
     udiv_mod::<_, MOD_BITS>(params, numerator, divisor).1
 }

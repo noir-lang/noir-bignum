@@ -32,19 +32,82 @@ impl BigNumParamsGetter<7, 753> for MNT4_753_Fq_Params {
 }
 
 global MNT4_753_Fq_PARAMS: BigNumParams<7, 753> = BigNumParams {
-        has_multiplicative_inverse: true,
-
-        modulus: [
-            0x9d54522cdd119f5e9063de245e8001, 0xcce9767254a4638810719ac425f0e3, 0x76f218059db80f0da5cb537e38685a, 0xe8a0ed8d99d124d9a15af79db117e7, 0x8fafed5eb7e8f96c97d87307fdb925, 0xc41110229022eee2cdadb7f997505b, 0x01c4c62d92
+    has_multiplicative_inverse: true,
+    modulus: [
+        0x9d54522cdd119f5e9063de245e8001,
+        0xcce9767254a4638810719ac425f0e3,
+        0x76f218059db80f0da5cb537e38685a,
+        0xe8a0ed8d99d124d9a15af79db117e7,
+        0x8fafed5eb7e8f96c97d87307fdb925,
+        0xc41110229022eee2cdadb7f997505b,
+        0x01c4c62d92,
+    ],
+    double_modulus: [
+        0x013aa8a459ba233ebd20c7bc48bd0002,
+        0x0199d2ece4a948c71020e335884be1c6,
+        0x01ede4300b3b701e1b4b96a6fc70d0b4,
+        0x01d141db1b33a249b342b5ef3b622fcd,
+        0x011f5fdabd6fd1f2d92fb0e60ffb724a,
+        0x01882220452045ddc59b5b6ff32ea0b6,
+        0x03898c5b24,
+    ],
+    modulus_u60: U60Repr {
+        limbs: [
+            0x0e9063de245e8001,
+            0x09d54522cdd119f5,
+            0x0810719ac425f0e3,
+            0x0cce9767254a4638,
+            0x0da5cb537e38685a,
+            0x076f218059db80f0,
+            0x09a15af79db117e7,
+            0x0e8a0ed8d99d124d,
+            0x0c97d87307fdb925,
+            0x08fafed5eb7e8f96,
+            0x02cdadb7f997505b,
+            0x0c41110229022eee,
+            0x01c4c62d92,
+            0x00,
         ],
-        double_modulus: [
-            0x013aa8a459ba233ebd20c7bc48bd0002, 0x0199d2ece4a948c71020e335884be1c6, 0x01ede4300b3b701e1b4b96a6fc70d0b4, 0x01d141db1b33a249b342b5ef3b622fcd, 0x011f5fdabd6fd1f2d92fb0e60ffb724a, 0x01882220452045ddc59b5b6ff32ea0b6, 0x03898c5b24
+    },
+    modulus_u60_x4: U60Repr {
+        limbs: [
+            0x0e9063de245e8001,
+            0x09d54522cdd119f5,
+            0x0810719ac425f0e3,
+            0x0cce9767254a4638,
+            0x0da5cb537e38685a,
+            0x076f218059db80f0,
+            0x09a15af79db117e7,
+            0x0e8a0ed8d99d124d,
+            0x0c97d87307fdb925,
+            0x08fafed5eb7e8f96,
+            0x02cdadb7f997505b,
+            0x0c41110229022eee,
+            0x01c4c62d92,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
         ],
-        modulus_u60: U60Repr { limbs: [
-            0x0e9063de245e8001, 0x09d54522cdd119f5, 0x0810719ac425f0e3, 0x0cce9767254a4638, 0x0da5cb537e38685a, 0x076f218059db80f0, 0x09a15af79db117e7, 0x0e8a0ed8d99d124d, 0x0c97d87307fdb925, 0x08fafed5eb7e8f96, 0x02cdadb7f997505b, 0x0c41110229022eee, 0x01c4c62d92, 0x00]},
-        modulus_u60_x4: U60Repr { limbs: [
-            0x0e9063de245e8001, 0x09d54522cdd119f5, 0x0810719ac425f0e3, 0x0cce9767254a4638, 0x0da5cb537e38685a, 0x076f218059db80f0, 0x09a15af79db117e7, 0x0e8a0ed8d99d124d, 0x0c97d87307fdb925, 0x08fafed5eb7e8f96, 0x02cdadb7f997505b, 0x0c41110229022eee, 0x01c4c62d92, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
-        redc_param: [
-            0x5dcc95da918349f4965a2aee8fd750, 0x82372b75580c27c4d1f1f57a96a114, 0x58326e3c0552419849e3c7171d8522, 0x300e0ede1965cbf72f0aa9bf03479d, 0x7fb932cae2aba9a5d17c1ff73538ba, 0x82727c6eaef38056aaa0aaedb05746, 0x242f916cfa
-        ]
+    },
+    redc_param: [
+        0x5dcc95da918349f4965a2aee8fd750,
+        0x82372b75580c27c4d1f1f57a96a114,
+        0x58326e3c0552419849e3c7171d8522,
+        0x300e0ede1965cbf72f0aa9bf03479d,
+        0x7fb932cae2aba9a5d17c1ff73538ba,
+        0x82727c6eaef38056aaa0aaedb05746,
+        0x242f916cfa,
+    ],
 };
