@@ -14,5 +14,9 @@ pub mod params;
 pub(crate) mod fns;
 pub(crate) mod utils;
 
+// Re-export the main structs so that users don't have to specify the paths
+pub use bignum::BigNum;
+pub use runtime_bignum::RuntimeBigNum;
+
 // Tests
 mod tests;

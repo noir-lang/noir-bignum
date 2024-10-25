@@ -16,7 +16,7 @@ TODO
 
 ## Dependencies
 
-- Noir ≥v0.35.0
+- Noir ≥v0.36.0
 - Barretenberg ≥v0.56.1
 
 Refer to [Noir's docs](https://noir-lang.org/docs/getting_started/installation/) and [Barretenberg's docs](https://github.com/AztecProtocol/aztec-packages/blob/master/barretenberg/cpp/src/barretenberg/bb/readme.md#installation) for installation steps.
@@ -144,13 +144,11 @@ User-facing structs:
 
 `RuntimeBigNum`: big numbers whose parameters are only known at runtime. (Note: the number of bits of the modulus of the bignum must be known at compile-time).
 
-
 If creating custom bignum params:
 
 `BigNumParams` is needed, to declare your params. These parameters (`modulus`, `redc_param`) can be provided at runtime via witnesses (e.g. RSA verification). The `redc_param` is only used in unconstrained functions and does not need to be derived from `modulus` in-circuit.
 
 `BigNumParamsGetter` is a convenient wrapper around params, which is needed if declaring a new type of `BigNum`.
-
 
 #### Methods
 
