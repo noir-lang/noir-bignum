@@ -9,7 +9,7 @@ use crate::utils::msb::get_msb64;
  * as well as when performing bit shifts.
  */
 pub struct U60Repr<let N: u32, let NumSegments: u32> {
-    limbs: [u64; N * NumSegments]
+    limbs: [u64; N * NumSegments],
 }
 
 impl<let N: u32, let NumSegments: u32> std::ops::Add for U60Repr<N, NumSegments> {
@@ -49,9 +49,7 @@ impl<let N: u32, let NumSegments: u32> std::convert::From<[Field; N]> for U60Rep
     fn from(input: [Field; N]) -> Self {
         let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
         for i in 0..(N) {
-            let (lo, hi) = unsafe {
-                split_bits::split_60_bits(input[i])
-            };
+            let (lo, hi) = unsafe { split_bits::split_60_bits(input[i]) };
             result.limbs[2 * i] = lo;
             result.limbs[2 * i + 1] = hi;
         }
@@ -98,7 +96,7 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
         let mut result: [Field; N * NumSegments / 2] = [0; N * NumSegments / 2];
         let two_pow_60: Field = 0x1000000000000000;
         for i in 0..(N * NumSegments / 2) {
-            result[i]= x.limbs[2 * i] as Field + (x.limbs[2 * i + 1] as Field * two_pow_60);
+            result[i] = x.limbs[2 * i] as Field + (x.limbs[2 * i + 1] as Field * two_pow_60);
         }
         result
     }
@@ -111,7 +109,9 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
                 result = true;
                 early_exit = true;
                 break;
-            } else if (b.limbs[(N * NumSegments) - 1 - i] != self.limbs[((N * NumSegments) - 1 - i)]) {
+            } else if (
+                b.limbs[(N * NumSegments) - 1 - i] != self.limbs[((N * NumSegments) - 1 - i)]
+            ) {
                 result = false;
                 early_exit = true;
                 break;
@@ -185,7 +185,6 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
         result.limbs[num_shifted_limbs] = (value << (limb_shift as u8)) & mask;
 
         // shift 84. num shifted = 1
-
         for i in 1..((N * NumSegments) - num_shifted_limbs) {
             let value = self.limbs[i];
             let upshift = ((value << (limb_shift as u8)) + remainder) & mask;

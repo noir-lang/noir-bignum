@@ -16,7 +16,7 @@ struct Test2048Params {}
 // See https://github.com/noir-lang/noir/issues/6172
 #[test]
 fn silence_warning() {
-    let _  = Test2048Params {};
+    let _ = Test2048Params {};
 }
 
 impl BigNumParamsTrait<18, 2048> for Test2048Params {
@@ -47,10 +47,27 @@ impl NotRuntimeBigNumParamsTrait<18, 2048> for Test2048Params {
             0x000000000000000000000000000000000058bc5eaff4b165e142bf9e2480eebb,
             0x0000000000000000000000000000000000667a3964f08e06df772ce64b229a72,
             0x00000000000000000000000000000000009c1fdb18907711bfe3e3c1cf918395,
-            0x00000000000000000000000000000000000000000000000000000000000000b8
+            0x00000000000000000000000000000000000000000000000000000000000000b8,
         ];
         let redc_param: [Field; 18] = [
-            0x1697def7100cd5cf8d890b4ef2ec3f, 0x765ba8304214dac764d3f4adc31859, 0x8404bd14d927ea230e60d4bebf9406, 0xc4d53a23bacc251ecbfc4b7ba5a0b4, 0x3eaf3499474a6f5b2fff83f1259c87, 0xbff4c737b97281f1a5f2384a8c16d9, 0x1b4cf2f55358476b53237829990555, 0xe7a804e8eacfe3a2a5673bc3885b86, 0xabadeae4282906c817adf70eab4ae1, 0x66f7df257fe2bf27f0809aceed9b0e, 0xd90fb7428901b8bed11f6b81e36bf1, 0x36e6ba885c60b7024c563605df7e07, 0x2b7c58d2fb5d2c8478963ae6d4a44f, 0x6ee761de26635f114ccc3f7d74f855, 0x3fb726a10cf2220897513f05243de3, 0x43a26bbd732496eb4d828591b8056e, 0xf4e42304e60fb3a54fca735499f2cf, 0x162f
+            0x1697def7100cd5cf8d890b4ef2ec3f,
+            0x765ba8304214dac764d3f4adc31859,
+            0x8404bd14d927ea230e60d4bebf9406,
+            0xc4d53a23bacc251ecbfc4b7ba5a0b4,
+            0x3eaf3499474a6f5b2fff83f1259c87,
+            0xbff4c737b97281f1a5f2384a8c16d9,
+            0x1b4cf2f55358476b53237829990555,
+            0xe7a804e8eacfe3a2a5673bc3885b86,
+            0xabadeae4282906c817adf70eab4ae1,
+            0x66f7df257fe2bf27f0809aceed9b0e,
+            0xd90fb7428901b8bed11f6b81e36bf1,
+            0x36e6ba885c60b7024c563605df7e07,
+            0x2b7c58d2fb5d2c8478963ae6d4a44f,
+            0x6ee761de26635f114ccc3f7d74f855,
+            0x3fb726a10cf2220897513f05243de3,
+            0x43a26bbd732496eb4d828591b8056e,
+            0xf4e42304e60fb3a54fca735499f2cf,
+            0x162f,
         ];
         BigNumInstance::new(modulus, redc_param)
     }
@@ -63,18 +80,21 @@ impl NotRuntimeBigNumParamsTrait<18, 2048> for Test2048Params {
 fn test_bls_reduction() {
     let X1: BigNum<4, 381, BLS12_381_Fq_Params> = BigNum {
         limbs: [
-            0x55e83ff97a1aeffb3af00adb22c6bb, 0x8c4f9774b905a14e3a3f171bac586c, 0xa73197d7942695638c4fa9ac0fc368, 0x17f1d3
-        ]
+            0x55e83ff97a1aeffb3af00adb22c6bb,
+            0x8c4f9774b905a14e3a3f171bac586c,
+            0xa73197d7942695638c4fa9ac0fc368,
+            0x17f1d3,
+        ],
     };
     X1.validate_in_field();
-    let mut (_, XX_mul_3): (BigNum<4, 381, BLS12_381_Fq_Params>, BigNum<4, 381, BLS12_381_Fq_Params> ) = unsafe {
+    let mut (_, XX_mul_3): (BigNum<4, 381, BLS12_381_Fq_Params>, BigNum<4, 381, BLS12_381_Fq_Params>) = unsafe {
         BigNum::__compute_quadratic_expression(
             [[X1, X1, X1]],
             [[false, false, false]],
             [[X1]],
             [[false]],
             [],
-            []
+            [],
         )
     };
     XX_mul_3.validate_in_field();
@@ -85,7 +105,7 @@ fn test_bls_reduction() {
  **/
 comptime fn make_test(f: StructDefinition, N: Quoted, NUM_BITS: Quoted, typ: Quoted) -> Quoted {
     let k = f.name();
-    quote{
+    quote {
 impl $k {
 #[test]
 fn test_add() {
@@ -341,23 +361,23 @@ fn test_eq() {
 }
 
 #[make_test(quote{3},quote{254},quote{BNParams})]
-pub struct BNTests{}
+pub struct BNTests {}
 #[make_test(quote{3},quote{256},quote{Secp256k1_Fq_Params})]
-pub struct Secp256K1FqTests{}
+pub struct Secp256K1FqTests {}
 #[make_test(quote{4},quote{381},quote{BLS12_381_Fq_Params})]
-pub struct BLS12_381FqTests{}
+pub struct BLS12_381FqTests {}
 
 #[make_test(quote{18},quote{2048},quote{Test2048Params})]
-pub struct Test2048Tests{}
+pub struct Test2048Tests {}
 
 #[make_test(quote{3},quote{255},quote{BLS12_381_Fr_Params})]
-pub struct BLS12_381_Fr_ParamsTests{}
+pub struct BLS12_381_Fr_ParamsTests {}
 
 #[make_test(quote{4},quote{377},quote{BLS12_377_Fq_Params})]
-pub struct BLS12_377_Fq_ParamsTests{}
+pub struct BLS12_377_Fq_ParamsTests {}
 
 #[make_test(quote{3},quote{253},quote{BLS12_377_Fr_Params})]
-pub struct BLS12_377_Fr_ParamsTests{}
+pub struct BLS12_377_Fr_ParamsTests {}
 
 type Fq = BigNum<3, 254, BNParams>;
 
@@ -365,29 +385,25 @@ type Fq = BigNum<3, 254, BNParams>;
 // 99689
 // 929 gates for a 2048 bit mul
 
-fn test_div<let N: u32, let MOD_BITS: u32, Params>(bn: BigNumInstance<N, MOD_BITS, Params>) where Params: BigNumParamsTrait<N, MOD_BITS> {
-    let a: BigNum<N, MOD_BITS, Params> = unsafe {
-        bn.__derive_from_seed([1, 2, 3, 4])
-    };
-    let b: BigNum<N, MOD_BITS, Params> = unsafe {
-        bn.__derive_from_seed([4, 5, 6, 7])
-    };
+fn test_div<let N: u32, let MOD_BITS: u32, Params>(bn: BigNumInstance<N, MOD_BITS, Params>)
+where
+    Params: BigNumParamsTrait<N, MOD_BITS>,
+{
+    let a: BigNum<N, MOD_BITS, Params> = unsafe { bn.__derive_from_seed([1, 2, 3, 4]) };
+    let b: BigNum<N, MOD_BITS, Params> = unsafe { bn.__derive_from_seed([4, 5, 6, 7]) };
 
     let c = bn.div(a, b);
     assert(bn.eq(bn.mul(b, c), a));
 }
 
-fn test_invmod<let N: u32, let MOD_BITS: u32, Params>(bn: BigNumInstance<N, MOD_BITS, Params>) where Params: BigNumParamsTrait<N, MOD_BITS> {
-    let u: BigNum<N, MOD_BITS, Params> = unsafe {
-        bn.__derive_from_seed([1, 2, 3, 4])
-    };
+fn test_invmod<let N: u32, let MOD_BITS: u32, Params>(bn: BigNumInstance<N, MOD_BITS, Params>)
+where
+    Params: BigNumParamsTrait<N, MOD_BITS>,
+{
+    let u: BigNum<N, MOD_BITS, Params> = unsafe { bn.__derive_from_seed([1, 2, 3, 4]) };
     for _ in 0..1 {
-        let v = unsafe {
-            bn.__invmod(u)
-        };
-        let result = unsafe {
-            bn.__mul(u, v)
-        };
+        let v = unsafe { bn.__invmod(u) };
+        let result = unsafe { bn.__mul(u, v) };
         let expected: BigNum<N, MOD_BITS, Params> = BigNum::one();
         assert(result.limbs == expected.limbs);
     }
@@ -440,7 +456,7 @@ fn test_2048_bit_quadratic_expression() {
         0x00000000000000000000000000000000001400e1f0a38695db66993fe042c48b,
         0x0000000000000000000000000000000000e1d829cb4fa8cabb7d0265efbd8527,
         0x000000000000000000000000000000000055f1a92a5dd099ef2bcd89ac175b52,
-        0x00000000000000000000000000000000000000000000000000000000000000fc
+        0x00000000000000000000000000000000000000000000000000000000000000fc,
     ];
     let b: [Field; 18] = [
         0x0000000000000000000000000000000000c5694493e9bcc76e68dfcf73e0fde1,
@@ -460,7 +476,7 @@ fn test_2048_bit_quadratic_expression() {
         0x00000000000000000000000000000000002a6850cce14a20463913002ddc0fa6,
         0x0000000000000000000000000000000000a97e3b06586bfa62325ef7557ab536,
         0x0000000000000000000000000000000000b942b0d26e5be2e08cd425107c59f7,
-        0x0000000000000000000000000000000000000000000000000000000000000031
+        0x0000000000000000000000000000000000000000000000000000000000000031,
     ];
     let c_expected: [Field; 18] = [
         0x00000000000000000000000000000000004518a874adebbcf963fed876dfcf78,
@@ -480,14 +496,12 @@ fn test_2048_bit_quadratic_expression() {
         0x00000000000000000000000000000000004432a79276f4375ff3ec2ced8b6cf6,
         0x0000000000000000000000000000000000a0922d75e96e3f9e31c0cbbcbd708a,
         0x00000000000000000000000000000000004013822c9e9aa5b5b1e9c33e4332b7,
-        0x0000000000000000000000000000000000000000000000000000000000000058
+        0x0000000000000000000000000000000000000000000000000000000000000058,
     ];
 
     let a_bn: BigNum<18, 2048, Test2048Params> = BigNum { limbs: a };
     let b_bn: BigNum<18, 2048, Test2048Params> = BigNum { limbs: b };
-    let c_bn = unsafe {
-        instance.__mul(a_bn, b_bn)
-    };
+    let c_bn = unsafe { instance.__mul(a_bn, b_bn) };
     assert(c_bn.limbs == c_expected);
 
     a_bn.validate_in_range();
@@ -499,27 +513,17 @@ fn test_2048_bit_quadratic_expression() {
 fn test_expressions() {
     let instance = BNParams::get_instance();
     let x: [Field; 6] = [
-        0x000000000000000000000000000000000083684820ff40795b8d9f1be2220cba, 0x0000000000000000000000000000000000d4924fbdc522b07b6cd0ef5508fd66, 0x0000000000000000000000000000000000d48f6c43c5930f3d70d6db09a48f4a,
-        0x0000000000000000000000000000000000e7f72b2c0756704bea85be38352b34, 0x00000000000000000000000000000000000000000000000000000000b05d5ac5, 0
+        0x000000000000000000000000000000000083684820ff40795b8d9f1be2220cba,
+        0x0000000000000000000000000000000000d4924fbdc522b07b6cd0ef5508fd66,
+        0x0000000000000000000000000000000000d48f6c43c5930f3d70d6db09a48f4a,
+        0x0000000000000000000000000000000000e7f72b2c0756704bea85be38352b34,
+        0x00000000000000000000000000000000000000000000000000000000b05d5ac5,
+        0,
     ];
 
-    let y: Fq = BigNum {
-        limbs: [
-            0x1,
-            0x1,
-            0x0
-        ]
-    };
-    let z: Fq = BigNum {
-        limbs: [
-            0x2,
-            0x2,
-            0x0
-        ]
-    };
-    let yy = unsafe {
-        instance.__add(y, y)
-    };
+    let y: Fq = BigNum { limbs: [0x1, 0x1, 0x0] };
+    let z: Fq = BigNum { limbs: [0x2, 0x2, 0x0] };
+    let yy = unsafe { instance.__add(y, y) };
 
     assert(yy.limbs == z.limbs);
 
@@ -527,42 +531,34 @@ fn test_expressions() {
         limbs: [
             0x0000000000000000000000000000000000b4a832748da6ad742a1fd81b787643,
             0x00000000000000000000000000000000009575f594e04080471712c1d7f18e89,
-            0x000000000000000000000000000000000000000000000000000000000000063
-        ]
+            0x000000000000000000000000000000000000000000000000000000000000063,
+        ],
     };
     let vv: Fq = BigNum {
         limbs: [
             0x0000000000000000000000000000000000b4aec2748da6ad742a1fd81b787643,
             0x00000000000000000000000000000000009575f594e0408047171a01d7f18e89,
-            0x0000000000000000000000000000000000000000000000000000000000000062
-        ]
+            0x0000000000000000000000000000000000000000000000000000000000000062,
+        ],
     };
     let w: Fq = BigNum {
         limbs: [
             0x0000000000000000000000000000000000b4a832748da6ad742a1fd81b787643,
             0x00000000000000000000000000000000009575f594e04080471712c1d7f18e89,
-            0x0000000000000000000000000000000000000000000000000000000000001f93
-        ]
+            0x0000000000000000000000000000000000000000000000000000000000001f93,
+        ],
     };
     let x: Fq = BigNum {
         limbs: [
             0x0000000000000000000000000000000000b4aec2748da6ad742a1fd81b787643,
             0x00000000000000000000000000000000009575f594e0408047171a01d7f18e89,
-            0x0000000000000000000000000000000000000000000000000000000000000f93
-        ]
+            0x0000000000000000000000000000000000000000000000000000000000000f93,
+        ],
     };
-    let wx = unsafe {
-        instance.__mul(w, x)
-    };
-    let uv = unsafe {
-        instance.__mul(uu, vv)
-    };
-    let y = unsafe {
-        instance.__neg(instance.__add(uv, wx))
-    };
-    let z = unsafe {
-        instance.__add(uv, wx)
-    };
+    let wx = unsafe { instance.__mul(w, x) };
+    let uv = unsafe { instance.__mul(uu, vv) };
+    let y = unsafe { instance.__neg(instance.__add(uv, wx)) };
+    let z = unsafe { instance.__add(uv, wx) };
 
     instance.evaluate_quadratic_expression(
         [[uu], [w]],
@@ -570,7 +566,7 @@ fn test_expressions() {
         [[vv], [x]],
         [[false], [false]],
         [z],
-        [true]
+        [true],
     );
     instance.evaluate_quadratic_expression(
         [[uu], [w]],
@@ -578,7 +574,7 @@ fn test_expressions() {
         [[vv], [x]],
         [[false], [false]],
         [y],
-        [false]
+        [false],
     );
 
     let wx_constrained = instance.mul(w, x);

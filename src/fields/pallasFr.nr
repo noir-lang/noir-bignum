@@ -32,17 +32,30 @@ impl BigNumParamsTrait<3, 255> for Pallas_Fr_Params {
     }
 }
 pub global Pallas_Fr_Instance: BigNumInstance<3, 255, Pallas_Fr_Params> = BigNumInstance {
-        modulus: [
-            0x4698fc0994a8dd8c46eb2100000001, 0x22, 0x4000
+    modulus: [0x4698fc0994a8dd8c46eb2100000001, 0x22, 0x4000],
+    double_modulus: [
+        0x018d31f8132951bb188dd64200000002,
+        0x01000000000000000000000000000043,
+        0x7fff,
+    ],
+    modulus_u60: U60Repr {
+        limbs: [0x0c46eb2100000001, 0x04698fc0994a8dd8, 0x22, 0x00, 0x4000, 0x00],
+    },
+    modulus_u60_x4: U60Repr {
+        limbs: [
+            0x0c46eb2100000001,
+            0x04698fc0994a8dd8,
+            0x22,
+            0x00,
+            0x4000,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
         ],
-        double_modulus: [
-            0x018d31f8132951bb188dd64200000002, 0x01000000000000000000000000000043, 0x7fff
-        ],
-        modulus_u60: U60Repr { limbs: [
-            0x0c46eb2100000001, 0x04698fc0994a8dd8, 0x22, 0x00, 0x4000, 0x00]},
-        modulus_u60_x4: U60Repr { limbs: [
-            0x0c46eb2100000001, 0x04698fc0994a8dd8, 0x22, 0x00, 0x4000, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
-        redc_param: [
-            0x59c0fd9ad5c89cee4537bfffffffc4, 0xfffffffffffffffffffffffffff76e, 0x0fffff
-        ]
+    },
+    redc_param: [0x59c0fd9ad5c89cee4537bfffffffc4, 0xfffffffffffffffffffffffffff76e, 0x0fffff],
 };

@@ -17,17 +17,15 @@ impl BigNumParamsTrait<3, 257> for U256Params {
     }
 }
 pub global U256_Instance: BigNumInstance<3, 257, U256Params> = BigNumInstance {
-        modulus: [
-            0x00, 0x00, 0x010000
-        ],
-        double_modulus: [
-            0x01000000000000000000000000000000, 0xffffffffffffffffffffffffffffff, 0x01ffff
-        ],
-        modulus_u60: U60Repr { limbs: [
-            0x00, 0x00, 0x00, 0x00, 0x010000, 0x00]},
-        modulus_u60_x4: U60Repr { limbs: [
-            0x00, 0x00, 0x00, 0x00, 0x010000, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
-        redc_param: [
-            0x00, 0x00, 0x400000
-        ]
+    modulus: [0x00, 0x00, 0x010000],
+    double_modulus: [
+        0x01000000000000000000000000000000,
+        0xffffffffffffffffffffffffffffff,
+        0x01ffff,
+    ],
+    modulus_u60: U60Repr { limbs: [0x00, 0x00, 0x00, 0x00, 0x010000, 0x00] },
+    modulus_u60_x4: U60Repr {
+        limbs: [0x00, 0x00, 0x00, 0x00, 0x010000, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+    },
+    redc_param: [0x00, 0x00, 0x400000],
 };

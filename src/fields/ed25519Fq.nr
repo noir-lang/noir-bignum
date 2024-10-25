@@ -17,17 +17,37 @@ impl BigNumParamsTrait<3, 255> for ED25519_Fq_Params {
     }
 }
 pub global ED25519_Fq_Instance: BigNumInstance<3, 255, ED25519_Fq_Params> = BigNumInstance {
-        modulus: [
-            0xffffffffffffffffffffffffffffed, 0xffffffffffffffffffffffffffffff, 0x7fff
+    modulus: [0xffffffffffffffffffffffffffffed, 0xffffffffffffffffffffffffffffff, 0x7fff],
+    double_modulus: [
+        0x01ffffffffffffffffffffffffffffda,
+        0x01fffffffffffffffffffffffffffffe,
+        0xfffe,
+    ],
+    modulus_u60: U60Repr {
+        limbs: [
+            0x0fffffffffffffed,
+            0x0fffffffffffffff,
+            0x0fffffffffffffff,
+            0x0fffffffffffffff,
+            0x7fff,
+            0x00,
         ],
-        double_modulus: [
-            0x01ffffffffffffffffffffffffffffda, 0x01fffffffffffffffffffffffffffffe, 0xfffe
+    },
+    modulus_u60_x4: U60Repr {
+        limbs: [
+            0x0fffffffffffffed,
+            0x0fffffffffffffff,
+            0x0fffffffffffffff,
+            0x0fffffffffffffff,
+            0x7fff,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
         ],
-        modulus_u60: U60Repr { limbs: [
-            0x0fffffffffffffed, 0x0fffffffffffffff, 0x0fffffffffffffff, 0x0fffffffffffffff, 0x7fff, 0x00]},
-        modulus_u60_x4: U60Repr { limbs: [
-            0x0fffffffffffffed, 0x0fffffffffffffff, 0x0fffffffffffffff, 0x0fffffffffffffff, 0x7fff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
-        redc_param: [
-            0x0130, 0x00, 0x080000
-        ]
+    },
+    redc_param: [0x0130, 0x00, 0x080000],
 };
