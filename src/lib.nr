@@ -4,11 +4,11 @@ pub mod fields;
 pub(crate) mod runtime_bignum;
 mod runtime_bignum_test;
 
-pub use crate::utils::u60_representation::U60Repr;
 pub use crate::runtime_bignum::BigNumInstance as RuntimeBigNumInstance;
 pub use crate::runtime_bignum::BigNumInstanceTrait as RuntimeBigNumInstanceTrait;
 pub use crate::runtime_bignum::BigNumParamsTrait as RuntimeBigNumParamsTrait;
 pub use crate::runtime_bignum::BigNumTrait as RuntimeBigNumTrait;
+pub use crate::utils::u60_representation::U60Repr;
 
 pub struct BigNum<let N: u32, let MOD_BITS: u32, Params> {
     limbs: [Field; N],
@@ -41,7 +41,7 @@ where
 
 pub trait BigNumTrait
 where
-    BigNumTrait: std::ops::Add + std::ops::Sub + std::ops::Mul + std::ops::Div + std::ops::Eq + RuntimeBigNumTrait,
+    Self: std::ops::Add + std::ops::Sub + std::ops::Mul + std::ops::Div + std::cmp::Eq + RuntimeBigNumTrait,
 {
     // TODO: this crashes the compiler? v0.32
     // fn default() -> Self { std::default::Default::default  () }
