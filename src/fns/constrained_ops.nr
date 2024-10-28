@@ -38,12 +38,13 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
     params: P<N, MOD_BITS>,
     seed: [u8; SeedBytes],
 ) -> [Field; N] {
+    // assert(params.MOD_BITS == MOD_BITS); 
     let mut rolling_seed: [u8; SeedBytes + 1] = [0; SeedBytes + 1];
     for i in 0..SeedBytes {
         rolling_seed[i] = seed[i];
         assert_eq(rolling_seed[i], seed[i]);
     }
-
+    //the seed is getting passed around ok I checked
     let mut hash_buffer: [u8; N * 2 * 15] = [0; N * 2 * 15];
 
     let mut rolling_hash_fields: [Field; (SeedBytes / 31) + 1] = [0; (SeedBytes / 31) + 1];
@@ -59,10 +60,11 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
         }
         rolling_hash_fields[i] = packed;
     }
-
+    //the rolling hash fields are getting passed around ok I checked
     let compressed =
         std::hash::poseidon2::Poseidon2::hash(rolling_hash_fields, (SeedBytes / 31) + 1);
     let mut rolling_hash: [Field; 2] = [compressed, 0];
+    //the rolling hash is getting passed around ok I checked
     let num_hashes = (30 * N) / 32 + (((30 * N) % 32) != 0) as u32;
     for i in 0..num_hashes - 1 {
         let hash: Field = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
@@ -72,6 +74,7 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
         }
         rolling_hash[1] += 1;
     }
+
     {
         let hash: Field = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
         let hash: [u8; 32] = hash.to_le_bytes();
@@ -135,6 +138,7 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
         result = mul(params, result, bigfield_rhs_limbs);
         result = add(params, result, bigfield_lhs_limbs);
     }
+    // println(result);
     result
 }
 
@@ -234,9 +238,21 @@ pub(crate) fn validate_in_field<let N: u32, let MOD_BITS: u32>(
 **/
 pub(crate) fn validate_in_range<let N: u32, let MOD_BITS: u32>(limbs: [Field; N]) {
     for i in 0..(N - 1) {
-        limbs[i].assert_max_bit_size::<120>();
+        // limbs[i].assert_max_bit_size::<120>();
+        assert(limbs[i].lt(2.pow_32(120)),"call to assert_max_bit_size 2");
     }
-    limbs[N - 1].assert_max_bit_size::<MOD_BITS - ((N - 1) * 120)>();
+    // println("the bit size in the constrained function is");
+    // println(MOD_BITS - ((N - 1) * 120)); 
+    // println("the limbs in the constrained function are");
+    // println(limbs); 
+    // assert_constant(limbs[N-1]); 
+    // limbs[N - 1].assert_max_bit_size::<MOD_BITS - ((N - 1) * 120)>();
+    // println("barabim barabum"); 
+    // println(limbs[N-1]); 
+    assert(limbs[N-1].lt(2.pow_32((MOD_BITS as Field) - ((N - 1) * 120) as Field) ),"call to assert_max_bit_size");
+    
+    // println("this should not show up");
+    
 }
 
 /**

@@ -49,11 +49,10 @@ pub(crate) unconstrained fn __derive_from_seed<let N: u32, let MOD_BITS: u32, le
             }
         }
         rolling_hash_fields[i] = packed;
-    }
+    } 
     let compressed =
         std::hash::poseidon2::Poseidon2::hash(rolling_hash_fields, (SeedBytes / 31) + 1);
     let mut rolling_hash: [Field; 2] = [compressed, 0];
-
     let mut to_reduce: [Field; 2 * N] = [0; 2 * N];
 
     let mut double_modulus_bits = MOD_BITS * 2;
@@ -103,7 +102,8 @@ pub(crate) unconstrained fn __derive_from_seed<let N: u32, let MOD_BITS: u32, le
         hi += last_bits as Field;
         to_reduce[2 * N - 2] = hi;
     }
-
+    println("the to reduce in the unconstrained function is");
+    println(to_reduce);
     let (_, remainder) = __barrett_reduction(
         to_reduce,
         params.redc_param,
@@ -112,6 +112,7 @@ pub(crate) unconstrained fn __derive_from_seed<let N: u32, let MOD_BITS: u32, le
         params.modulus_u60_x4,
     );
     let result = remainder;
+    // println(result); 
     result
 }
 

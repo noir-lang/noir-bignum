@@ -228,19 +228,29 @@ impl $k {
 #[test]
 fn $test_add() {
     let params = $typ ::get_params();
-
-    let a: RuntimeBigNum<$N, $MOD_BITS> = unsafe{ RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4]) };
-    let b: RuntimeBigNum<$N, $MOD_BITS> = unsafe{ RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7]) };
-
+    
+    // let a: RuntimeBigNum<$N, $MOD_BITS> = unsafe{ RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4]) };
+    // println("the derivation is happening"); 
+    // let b: RuntimeBigNum<$N, $MOD_BITS> = unsafe{ RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7]) };
+    // println("the derivation is happening here too"); 
+    let a: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::one(params);
+    let b: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::one(params);
+    // let one: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::one(params);
     let one: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::one(params);
-
+    
     a.validate_in_range();
+    println("a's range validation is working");
     a.validate_in_field();
+    println("a's field validation is working");
     b.validate_in_range();
+    println("b's range validation is working");
     b.validate_in_field();
-
+    println("b's field validation is working");
+    println("addition 1"); 
     let mut c = a + b;
+    println("addition 2"); 
     c = c + c;
+    println("addition 3"); 
     let d = (a + b) * (one + one);
     assert(c == d);
 
@@ -312,8 +322,10 @@ fn $test_add_modulus_limit() {
     let two_pow_modulus_bits_minus_one: U60Repr<$N, 2> = unsafe{ one.shl($MOD_BITS) - one };
 
     let b: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum { limbs: U60Repr::into(two_pow_modulus_bits_minus_one), params };
-
+    // println!("the test made it here{:?}", a); 
     let result = a + b;
+    // println("the last limb of b in the add test is");
+    // println(b.limbs); 
     assert(result == b);
 }
 
@@ -329,7 +341,6 @@ fn $test_add_modulus_overflow() {
     let mut two_pow_modulus_bits_minus_one: U60Repr<$N, 2> = unsafe{ one.shl($MOD_BITS) - one };
 
     let b: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum { limbs: U60Repr::into(two_pow_modulus_bits_minus_one), params };
-
     let result = a + b;
     assert(result == b);
 }
@@ -498,6 +509,10 @@ fn $test_derive()
     let b: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
         RuntimeBigNum::__derive_from_seed(params, "hello".as_bytes())
     };
+    // println("value of a {:?}"); 
+    // println(a.limbs); 
+    // println("value of b {:?}"); 
+    // println(b.limbs); 
     assert(a == b);
 }
 
