@@ -97,55 +97,72 @@ pub(crate) unconstrained fn __neg_with_flags<let N: u32, let MOD_BITS: u32>(
     (result, borrow_flags)
 }
 
+
+//this is the actual function that be changed to use oracles 
+#[oracle(add)]
+pub (crate) unconstrained fn oracle_add<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    lhs: [Field; N],
+    rhs: [Field; N],
+) -> ([Field; N], [bool; N], [bool; N], bool) {}
 pub(crate) unconstrained fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     lhs: [Field; N],
     rhs: [Field; N],
-) -> ([Field; N], [bool; N], [bool; N], bool) {
-    let a_u60: U60Repr<N, 2> = U60Repr::from(lhs);
-    let b_u60: U60Repr<N, 2> = U60Repr::from(rhs);
-    let add_u60 = a_u60 + b_u60;
-
-    let overflow = add_u60.gte(params.modulus_u60);
-
-    let mut subtrahend_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
-    let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
-
-    if overflow {
-        subtrahend_u60 = params.modulus_u60;
-    }
-
-    let mut carry: u64 = 0;
-    let mut carry_in: u64 = 0;
-    let mut borrow: u64 = 0;
-    let mut borrow_in: u64 = 0;
-    let mut borrow_flags: [bool; N] = [false; N];
-    let mut carry_flags: [bool; N] = [false; N];
-    for i in 0..2 * N {
-        let mut add_term: u64 = a_u60.limbs[i] + b_u60.limbs[i] + carry_in;
-        carry = (add_term >= 0x1000000000000000) as u64;
-        add_term -= (carry as u64 * 0x1000000000000000);
-        result_u60.limbs[i] = add_term;
-        carry_in = carry as u64;
-        borrow = ((subtrahend_u60.limbs[i] + borrow_in) > result_u60.limbs[i]) as u64;
-        let sub = (borrow << 60) + result_u60.limbs[i] - subtrahend_u60.limbs[i] - borrow_in;
-        result_u60.limbs[i] = sub;
-        borrow_in = borrow;
-
-        if ((i & 1) == 1) {
-            let idx = (i - 1) / 2;
-            if (carry & borrow == 1) {
-                carry = 0;
-                borrow = 0;
-            }
-            carry_flags[idx] = carry as bool;
-            borrow_flags[idx] = borrow as bool;
-        }
-    }
-    let result = U60Repr::into(result_u60);
-
-    (result, carry_flags, borrow_flags, overflow)
+) -> ([Field; N], [bool; N], [bool; N], bool){
+    oracle_add(params, lhs, rhs) 
 }
+
+
+// pub(crate) unconstrained fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
+//     params: P<N, MOD_BITS>,
+//     lhs: [Field; N],
+//     rhs: [Field; N],
+// ) -> ([Field; N], [bool; N], [bool; N], bool) {
+//     let a_u60: U60Repr<N, 2> = U60Repr::from(lhs);
+//     let b_u60: U60Repr<N, 2> = U60Repr::from(rhs);
+//     let add_u60 = a_u60 + b_u60;
+
+//     let overflow = add_u60.gte(params.modulus_u60);
+
+//     let mut subtrahend_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
+//     let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
+
+//     if overflow {
+//         subtrahend_u60 = params.modulus_u60;
+//     }
+
+//     let mut carry: u64 = 0;
+//     let mut carry_in: u64 = 0;
+//     let mut borrow: u64 = 0;
+//     let mut borrow_in: u64 = 0;
+//     let mut borrow_flags: [bool; N] = [false; N];
+//     let mut carry_flags: [bool; N] = [false; N];
+//     for i in 0..2 * N {
+//         let mut add_term: u64 = a_u60.limbs[i] + b_u60.limbs[i] + carry_in;
+//         carry = (add_term >= 0x1000000000000000) as u64;
+//         add_term -= (carry as u64 * 0x1000000000000000);
+//         result_u60.limbs[i] = add_term;
+//         carry_in = carry as u64;
+//         borrow = ((subtrahend_u60.limbs[i] + borrow_in) > result_u60.limbs[i]) as u64;
+//         let sub = (borrow << 60) + result_u60.limbs[i] - subtrahend_u60.limbs[i] - borrow_in;
+//         result_u60.limbs[i] = sub;
+//         borrow_in = borrow;
+
+//         if ((i & 1) == 1) {
+//             let idx = (i - 1) / 2;
+//             if (carry & borrow == 1) {
+//                 carry = 0;
+//                 borrow = 0;
+//             }
+//             carry_flags[idx] = carry as bool;
+//             borrow_flags[idx] = borrow as bool;
+//         }
+//     }
+//     let result = U60Repr::into(result_u60);
+
+//     (result, carry_flags, borrow_flags, overflow)
+// }
 
 pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
