@@ -82,10 +82,6 @@ fn main() {
 }
 ```
 
-#### Methods
-
-TODO: Document all available methods
-
 #### Moduli presets
 
 ##### Big Unsigned Integers
@@ -153,7 +149,9 @@ If creating custom bignum params:
 
 `BigNumParamsGetter` is a convenient wrapper around params, which is needed if declaring a new type of `BigNum`.
 
-#### Methods
+#### Methods Overview
+
+Reference: [Methods Reference](#methods-reference)
 
 ##### Arithmetics
 
@@ -283,4 +281,547 @@ fn example_ecc_double(Fq x, Fq y) -> (Fq, Fq) {
     );
     (x3, y3)
 }
+```
+
+## Methods Reference
+
+### `BigNum`
+
+#### `new`
+
+Constructs a new `BigNum`, defaulting all limbs to zero.
+
+```rust
+fn new() -> Self;
+```
+
+#### `one`
+
+Constructs a new `BigNum` representing the multiplicative unit (one).
+
+```rust
+fn one() -> Self;
+```
+
+#### `derive_from_seed`
+
+Constructs a new `BigNum` with a pseudorandom value based on a seed value.
+
+##### Type Parameters:
+
+- `SeedBytes`: bytes length for seed value
+
+Parameters:
+
+- `seed`: pseudorandom function seed value
+
+```rust
+fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
+```
+
+#### `__derive_from_seed`
+
+Constructs a new `BigNum` with a pseudorandom value based on a seed value in an unconstrained block.
+
+##### Type Parameters:
+
+- `SeedBytes`: bytes length for seed value
+
+##### Value Parameters:
+
+- `seed`: pseudorandom function seed value
+
+
+```rust
+unconstrained fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
+```
+
+#### `from_slice`
+
+Constructs a new `BigNum` from an array of `Field` elements.
+
+##### Value Parameters:
+
+- `limbs`: Limbs from which to construct the `BigNum`
+
+```rust
+fn from_slice(limbs: [Field]) -> Self;
+```
+
+#### `from_array`
+
+Constructs a new `BigNum` from an array of `Field` elements.
+
+##### Value Parameters:
+
+- `limbs`: Limbs from which to construct the `BigNum`
+
+```rust
+fn from_array(limbs: [Field; N]) -> Self;
+```
+
+#### `from_be_bytes`
+
+Constructs a new `BigNum` from a big-endian byte array.
+
+##### Type Parameters:
+
+- `NBytes`: bytes length
+
+##### Value Parameters:
+
+- `x`: byte array from which to construct the `BigNum`
+
+```rust
+fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> Self;
+```
+
+#### `to_le_bytes`
+
+Converts a `BigNum` to a little-endian byte array.
+
+##### Type Parameters:
+
+- `NBytes`: bytes length
+
+##### Value Parameters:
+
+- `self`: `BigNum` to convert
+
+```rust
+fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes];
+```
+
+#### `modulus`
+
+Returns the modulus of the `BigNum`.
+
+```rust
+fn modulus() -> Self;
+```
+
+#### `modulus_bits`
+
+Returns the number of bits in the modulus of the `BigNum`.
+
+```rust
+fn modulus_bits() -> u32;
+```
+
+#### `num_limbs`
+
+Returns the number of limbs in the `BigNum`.
+
+```rust
+fn num_limbs() -> u32;
+```
+
+#### `get_limbs`
+
+Returns the limbs of the `BigNum`.
+
+##### Value Parameters:
+
+- `self`: `BigNum` instance
+
+```rust
+fn get_limbs(self) -> [Field; N];
+```
+
+#### `get_limb`
+
+Returns the limb at the specified index.
+
+##### Value Parameters:
+
+- `self`: `BigNum` instance
+- `idx`: index of the limb to retrieve
+
+```rust
+fn get_limb(self, idx: u32) -> Field;
+```
+
+#### `set_limb`
+
+Sets the limb at the specified index.
+
+##### Value Parameters:
+
+- `self`: `BigNum` mutable reference
+- `idx`: index of the limb to set
+- `value`: value to set the limb to
+
+```rust
+fn set_limb(&mut self, idx: u32, value: Field);
+```
+
+#### `__eq`
+
+Checks if two `BigNum` instances are equal in an unconstrained function.
+
+##### Value Parameters:
+
+- `self`: `BigNum` instance
+- `other`: `BigNum` instance to compare
+
+```rust
+unconstrained fn __eq(self, other: Self) -> bool;
+```
+
+#### `__is_zero`
+
+Checks if a `BigNum` instance is zero in an unconstrained function.
+
+##### Value Parameters:
+
+- `self`: `BigNum` instance
+
+```rust
+unconstrained fn __is_zero(self) -> bool;
+```
+
+#### `__neg`
+
+Negates a `BigNum` instance in an unconstrained function.
+
+##### Value Parameters:
+
+- `self`: `BigNum` instance
+
+```rust
+unconstrained fn __neg(self) -> Self;
+```
+
+#### `__add`
+
+Adds two `BigNum` instances in an unconstrained function.
+
+##### Value Parameters:
+
+- `self`: `BigNum` instance
+- `other`: `BigNum` instance to add
+
+```rust
+unconstrained fn __add(self, other: Self) -> Self;
+```
+
+#### `__sub`
+
+Subtracts two `BigNum` instances in an unconstrained function.
+
+##### Value Parameters:
+
+- `self`: `BigNum` instance
+- `other`: `BigNum` instance to subtract
+
+```rust
+unconstrained fn __sub(self, other: Self) -> Self;
+```
+
+#### `__mul`
+
+Multiplies two `BigNum` instances in an unconstrained function.
+
+##### Value Parameters:
+
+- `self`: `BigNum` instance
+- `other`: `BigNum` instance to multiply
+
+```rust
+unconstrained fn __mul(self, other: Self) -> Self;
+```
+
+#### `__div`
+
+Divides two `BigNum` instances in an unconstrained function.
+
+##### Value Parameters:
+
+- `self`: `BigNum` instance
+- `other`: `BigNum` instance to divide
+
+```rust
+unconstrained fn __div(self, other: Self) -> Self;
+```
+
+#### `__udiv_mod`
+
+Divides two `BigNum` instances and returns the quotient and remainder in an unconstrained function.
+
+##### Value Parameters:
+
+- `self`: `BigNum` instance
+- `divisor`: `BigNum` instance to divide
+
+```rust
+unconstrained fn __udiv_mod(self, divisor: Self) -> (Self, Self);
+```
+
+#### `__invmod`
+
+Calculates the modular inverse of a `BigNum` instance in an unconstrained function.
+
+##### Value Parameters:
+
+- `self`: `BigNum` instance
+
+```rust
+unconstrained fn __invmod(self) -> Self;
+```
+
+#### `__pow`
+
+Raises a `BigNum` instance to the power of another `BigNum` instance in an unconstrained function.
+
+##### Value Parameters:
+
+- `self`: `BigNum` instance
+- `exponent`: `BigNum` instance to raise to
+
+```rust
+unconstrained fn __pow(self, exponent: Self) -> Self;
+```
+
+#### `__batch_invert`
+
+Constructs an array of `BigNum` instances that are the multiplicative inverses of the input array in an unconstrained function.
+
+##### Type Parameters:
+
+- `M`: number of elements in the input array
+
+##### Value Parameters:
+
+- `to_invert`: array of `BigNum` instances to invert
+
+```rust
+unconstrained fn __batch_invert<let M: u32>(to_invert: [Self; M]) -> [Self; M];
+```
+
+#### `__batch_invert_slice`
+
+Constructs a slice of `BigNum` instances that are the multiplicative inverses of the input slice in an unconstrained function.
+
+##### Type Parameters:
+
+- `M`: number of elements in the input slice
+
+##### Value Parameters:
+
+- `to_invert`: slice of `BigNum` instances to invert
+
+```rust
+unconstrained fn __batch_invert_slice<let M: u32>(to_invert: [Self]) -> [Self];
+```
+
+#### `__tonelli_shanks_sqrt`
+
+Returns an optional square root of a `BigNum` instance in an unconstrained function. If the square root does not exist, `None` is returned.
+
+> Note: The modulus of the `BigNum` instance MUST be a prime number, else the function may infinite loop.
+
+##### Value Parameters:
+
+- `self`: `BigNum` instance
+
+```rust
+unconstrained fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self>;
+```
+
+#### `__compute_quadratic_expression`
+
+TODO: revisit
+
+```rust
+unconstrained fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
+
+    lhs: [[Self; LHS_N]; NUM_PRODUCTS],
+    lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
+    rhs: [[Self; RHS_N]; NUM_PRODUCTS],
+    rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
+    add: [Self; ADD_N],
+    add_flags: [bool; ADD_N],
+) -> (Self, Self);
+```
+
+#### `evaluate_quadratic_expression`
+
+TODO: revisit
+
+```rust
+fn evaluate_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
+    lhs: [[Self; LHS_N]; NUM_PRODUCTS],
+    lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
+    rhs: [[Self; RHS_N]; NUM_PRODUCTS],
+    rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
+    add: [Self; ADD_N],
+    add_flags: [bool; ADD_N],
+);
+```
+
+#### `eq`
+
+Checks if two `BigNum` instances are equivalent.
+
+##### Value Parameters:
+
+- `self`: `BigNum` instance
+- `other`: `BigNum` instance
+
+```rust
+fn eq(self, other: Self) -> bool;
+```
+
+#### `assert_is_not_equal`
+
+Asserts that two `BigNum` instances are not equal.
+
+##### Value Parameters:
+
+- `self`: `BigNum` instance
+- `other`: `BigNum` instance
+
+```rust
+fn assert_is_not_equal(self, other: Self);
+```
+
+#### `validate_in_range`
+
+Asserts that a `BigNum` instance is within the `MOD_BITS` range.
+
+##### Value Parameters:
+
+- `self`: `BigNum` instance
+
+```rust
+fn validate_in_range(self);
+```
+
+#### `validate_in_field`
+
+Asserts that a `BigNum` instance is within the field.
+
+##### Value Parameters:
+
+- `self`: `BigNum` instance
+
+```rust
+fn validate_in_field(self);
+```
+
+#### `neg`
+
+Negates a `BigNum` instance.
+
+##### Value Parameters:
+
+- `self`: `BigNum` instance
+
+```rust
+fn neg(self) -> Self;
+```
+
+#### `add`
+
+Adds two `BigNum` instances.
+
+##### Value Parameters:
+
+- `self`: `BigNum` instance
+- `other`: `BigNum` instance
+
+```rust
+fn add(self, other: Self) -> Self;
+```
+
+#### `sub`
+
+Subtracts two `BigNum` instances.
+
+##### Value Parameters:
+
+- `self`: `BigNum` instance
+- `other`: `BigNum` instance
+
+```rust
+fn sub(self, other: Self) -> Self;
+```
+
+#### `mul`
+
+Multiplies two `BigNum` instances.
+
+##### Value Parameters:
+
+- `self`: `BigNum` instance
+- `other`: `BigNum` instance
+
+```rust
+fn mul(self, other: Self) -> Self;
+```
+
+#### `div`
+
+Divides two `BigNum` instances.
+
+##### Value Parameters:
+
+- `self`: `BigNum` instance
+- `other`: `BigNum` instance
+
+```rust
+fn div(self, other: Self) -> Self;
+```
+
+#### `udiv_mod`
+
+Divides two `BigNum` instances and returns the quotient and remainder.
+
+##### Value Parameters:
+
+- `self`: `BigNum` instance
+- `divisor`: `BigNum` instance
+
+```rust
+fn udiv_mod(self, divisor: Self) -> (Self, Self);
+```
+
+#### `udiv`
+
+Divides two `BigNum` instances and returns the quotient.
+
+##### Value Parameters:
+
+- `self`: `BigNum` instance
+- `divisor`: `BigNum` instance
+
+```rust
+fn udiv(self, divisor: Self) -> Self;
+```
+
+#### `umod`
+
+Divides two `BigNum` instances and returns the remainder.
+
+##### Value Parameters:
+
+- `self`: `BigNum` instance
+- `divisor`: `BigNum` instance
+
+```rust
+fn umod(self, divisor: Self) -> Self;
+```
+
+#### `conditional_select`
+
+Selects between two `BigNum` instances based on a predicate.
+
+##### Value Parameters:
+
+- `lhs`: `BigNum` instance
+- `rhs`: `BigNum` instance
+- `predicate`: boolean predicate
+
+```rust
+fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self;
 ```
