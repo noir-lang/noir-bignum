@@ -229,28 +229,21 @@ impl $k {
 fn $test_add() {
     let params = $typ ::get_params();
     
-    // let a: RuntimeBigNum<$N, $MOD_BITS> = unsafe{ RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4]) };
-    // println("the derivation is happening"); 
-    // let b: RuntimeBigNum<$N, $MOD_BITS> = unsafe{ RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7]) };
-    // println("the derivation is happening here too"); 
-    let a: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::one(params);
-    let b: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::one(params);
+    let a: RuntimeBigNum<$N, $MOD_BITS> = unsafe{ RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4]) };
+    let b: RuntimeBigNum<$N, $MOD_BITS> = unsafe{ RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7]) };
+    // let a: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::one(params);
+    // let b: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::one(params);
     // let one: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::one(params);
     let one: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::one(params);
-    
     a.validate_in_range();
-    println("a's range validation is working");
     a.validate_in_field();
-    println("a's field validation is working");
     b.validate_in_range();
-    println("b's range validation is working");
     b.validate_in_field();
-    println("b's field validation is working");
-    println("addition 1"); 
+    
     let mut c = a + b;
-    println("addition 2"); 
+    
     c = c + c;
-    println("addition 3"); 
+    
     let d = (a + b) * (one + one);
     assert(c == d);
 
@@ -505,14 +498,21 @@ fn $test_derive()
 {
     let params = $typ ::get_params();
 
-    let a: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::derive_from_seed(params, "hello".as_bytes());
+    // let a: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::derive_from_seed(params, "hello".as_bytes());
+    let a: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
+    
     let b: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, "hello".as_bytes())
+        // RuntimeBigNum::__derive_from_seed(params, "hello".as_bytes())
+        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4]) 
     };
-    // println("value of a {:?}"); 
-    // println(a.limbs); 
-    // println("value of b {:?}"); 
-    // println(b.limbs); 
+    // let one: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::one(params);
+    // println("the limbs of 1"); 
+    // println(one.limbs);
+    // println("the value of a is");
+    // println(a.limbs);
+    // println("the value of b is");
+    // println(b.limbs);
+    
     assert(a == b);
 }
 

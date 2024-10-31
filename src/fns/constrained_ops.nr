@@ -60,10 +60,13 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
         }
         rolling_hash_fields[i] = packed;
     }
+    
     //the rolling hash fields are getting passed around ok I checked
     let compressed =
         std::hash::poseidon2::Poseidon2::hash(rolling_hash_fields, (SeedBytes / 31) + 1);
     let mut rolling_hash: [Field; 2] = [compressed, 0];
+    // println("the rolling hash in the constrained function are");
+    // println(rolling_hash);
     //the rolling hash is getting passed around ok I checked
     let num_hashes = (30 * N) / 32 + (((30 * N) % 32) != 0) as u32;
     for i in 0..num_hashes - 1 {
@@ -128,6 +131,8 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
 
     let mut bigfield_rhs_limbs: [Field; N] = [0; N];
     bigfield_rhs_limbs[N - 1] = 1;
+    // println("the bigfield rhs limbs are");
+    // println(bigfield_rhs_limbs);
     validate_in_range::<_, MOD_BITS>(bigfield_rhs_limbs);
 
     let mut result: [Field; N] = [0; N];
@@ -138,7 +143,6 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
         result = mul(params, result, bigfield_rhs_limbs);
         result = add(params, result, bigfield_lhs_limbs);
     }
-    // println(result);
     result
 }
 
@@ -238,20 +242,14 @@ pub(crate) fn validate_in_field<let N: u32, let MOD_BITS: u32>(
 **/
 pub(crate) fn validate_in_range<let N: u32, let MOD_BITS: u32>(limbs: [Field; N]) {
     for i in 0..(N - 1) {
+        // this is a hack, the assert_max_bit_size is not working when limbs[i] is not a constant
         // limbs[i].assert_max_bit_size::<120>();
         assert(limbs[i].lt(2.pow_32(120)),"call to assert_max_bit_size 2");
     }
-    // println("the bit size in the constrained function is");
-    // println(MOD_BITS - ((N - 1) * 120)); 
-    // println("the limbs in the constrained function are");
-    // println(limbs); 
-    // assert_constant(limbs[N-1]); 
+     // this is a hack, the assert_max_bit_size is not working when limbs[i] is not a constant
     // limbs[N - 1].assert_max_bit_size::<MOD_BITS - ((N - 1) * 120)>();
-    // println("barabim barabum"); 
-    // println(limbs[N-1]); 
     assert(limbs[N-1].lt(2.pow_32((MOD_BITS as Field) - ((N - 1) * 120) as Field) ),"call to assert_max_bit_size");
     
-    // println("this should not show up");
     
 }
 
@@ -281,8 +279,13 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [Field; N], rhs: [
     // so we do... p - x - r = 0 and there might be borrow flags
     // a - b = r
     // p + a - b - r = 0
+    // for the test, with --force-brillig this outputs 
+    // the result is
+    // [0x00, 0x00, 0x800] 
+    // and without the flag
+    // [0x00, 0x00, 0x00]
+    // the issue is happening here. the result is not being set correctly when the --force-brillig flag is used
     let (result, carry_flags, borrow_flags) = unsafe { __validate_gt_remainder(lhs, rhs) };
-
     validate_in_range::<_, MOD_BITS>(result);
 
     let borrow_shift = 0x1000000000000000000000000000000;
@@ -293,16 +296,21 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [Field; N], rhs: [
         + (borrow_flags[0] as Field * borrow_shift)
         - (carry_flags[0] as Field * carry_shift);
     assert(result_limb == 0);
+    
     for i in 1..N - 1 {
         let result_limb = lhs[i] - rhs[i] + addend[i] - result[i] - borrow_flags[i - 1] as Field
             + carry_flags[i - 1] as Field
             + ((borrow_flags[i] as Field - carry_flags[i] as Field) * borrow_shift);
         assert(result_limb == 0);
+
     }
+    
     let result_limb = lhs[N - 1] - rhs[N - 1] + addend[N - 1]
         - result[N - 1]
         - borrow_flags[N - 2] as Field
         + carry_flags[N - 2] as Field;
+    // println("the result limb is");
+    // println(result_limb);
     assert(result_limb == 0);
 }
 
@@ -458,7 +466,11 @@ pub(crate) fn udiv_mod<let N: u32, let MOD_BITS: u32>(
     divisor: [Field; N],
 ) -> ([Field; N], [Field; N]) {
     let (quotient, remainder) = unsafe { __udiv_mod(numerator, divisor) };
-
+    
+    // println("the quotient is");
+    // println(quotient);
+    // println("the remainder is");
+    // println(remainder);
     // self / divisor = quotient rounded
     // quotient * divisor + remainder - self = 0
     evaluate_quadratic_expression(
@@ -472,6 +484,10 @@ pub(crate) fn udiv_mod<let N: u32, let MOD_BITS: u32>(
     );
     // we need (remainder < divisor)
     // implies (divisor - remainder > 0)
+    // println("the divisor is");
+    // println(divisor);
+    // // println("the remainder is");
+    // println(remainder); 
     validate_gt::<_, MOD_BITS>(divisor, remainder);
     (quotient, remainder)
 }
