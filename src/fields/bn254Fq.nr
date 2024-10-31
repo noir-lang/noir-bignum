@@ -1,5 +1,5 @@
-use crate::params::BigNumParamsGetter;
 use crate::params::BigNumParams;
+use crate::params::BigNumParamsGetter;
 use crate::utils::u60_representation::U60Repr;
 
 pub struct BN254_Fq_Params {}

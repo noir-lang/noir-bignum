@@ -1,11 +1,11 @@
-use crate::utils::u60_representation::U60Repr;
 use crate::utils::split_bits;
+use crate::utils::u60_representation::U60Repr;
 
-use crate::params::BigNumParams as P;
 use crate::fns::unconstrained_helpers::{
-    __barrett_reduction, __primitive_root_log_size, __multiplicative_generator,
+    __barrett_reduction, __multiplicative_generator, __primitive_root_log_size,
     __tonelli_shanks_sqrt_inner_loop_check,
 };
+use crate::params::BigNumParams as P;
 
 /**
  * In this file:

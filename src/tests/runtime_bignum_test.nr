@@ -1,13 +1,13 @@
-use crate::utils::u60_representation::U60Repr;
-use crate::runtime_bignum::RuntimeBigNum;
 use crate::params::{BigNumParams, BigNumParamsGetter};
+use crate::runtime_bignum::RuntimeBigNum;
+use crate::utils::u60_representation::U60Repr;
 
-use crate::fields::bn254Fq::BN254_Fq_Params;
-use crate::fields::secp256k1Fq::Secp256k1_Fq_Params;
-use crate::fields::bls12_381Fq::BLS12_381_Fq_Params;
-use crate::fields::bls12_381Fr::BLS12_381_Fr_Params;
 use crate::fields::bls12_377Fq::BLS12_377_Fq_Params;
 use crate::fields::bls12_377Fr::BLS12_377_Fr_Params;
+use crate::fields::bls12_381Fq::BLS12_381_Fq_Params;
+use crate::fields::bls12_381Fr::BLS12_381_Fr_Params;
+use crate::fields::bn254Fq::BN254_Fq_Params;
+use crate::fields::secp256k1Fq::Secp256k1_Fq_Params;
 
 global TEST_2048_PARAMS: BigNumParams<18, 2048> = BigNumParams {
     has_multiplicative_inverse: false,
