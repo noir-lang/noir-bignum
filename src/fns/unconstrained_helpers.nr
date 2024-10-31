@@ -1,8 +1,8 @@
-use crate::utils::u60_representation::U60Repr;
 use crate::utils::split_bits;
+use crate::utils::u60_representation::U60Repr;
 
+use crate::fns::unconstrained_ops::{__add, __eq, __mul, __neg, __one, __pow};
 use crate::params::BigNumParams as P;
-use crate::fns::unconstrained_ops::{__one, __eq, __neg, __add, __mul, __pow};
 
 /**
  * In this file:
@@ -235,8 +235,6 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     // NOTE: very niche edge case error that we need to be aware of:
     //       N must be large enough to cover the modulus *plus* BARRETT_REDUCTION_OVERFLOW_BITS
     //       i.e. a 359-bit prime needs (I think) 4 limbs to represent or we may overflow when calling __barrett_reduction
-
-    
     let mut quotient_u60 = mulout_u60.shr((k + k + BARRETT_REDUCTION_OVERFLOW_BITS));
 
     // N.B. we assume that the shifted quotient cannot exceed 2 times original bit size.
@@ -277,16 +275,15 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     if (remainder_u60.gte(modulus_u60)) {
         remainder_u60 = remainder_u60 - modulus_u60;
         quotient_u60.increment();
-        
     }
     if (remainder_u60.gte(modulus_u60)) {
         remainder_u60 = remainder_u60 - modulus_u60;
         quotient_u60.increment();
     }
-    
+
     let q: [Field; N] = U60Repr::into(quotient_u60);
     let r: [Field; N] = U60Repr::into(remainder_u60);
-    
+
     // assert(modulus[N-1].lt(r[N-1]), "barrett reduction failed");
     (q, r)
 }

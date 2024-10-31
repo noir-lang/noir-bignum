@@ -1,9 +1,9 @@
 use crate::utils::split_bits;
 
-use crate::params::BigNumParams as P;
 use crate::fns::{
     constrained_ops::validate_quotient_in_range, unconstrained_helpers::__barrett_reduction,
 };
+use crate::params::BigNumParams as P;
 
 /**
  * In this file:

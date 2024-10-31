@@ -6,9 +6,9 @@ use crate::bignum::BigNumTrait;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 
+use crate::fields::bls12_381Fq::BLS12_381_Fq_Params;
 use crate::fields::bn254Fq::BN254_Fq_Params;
 use crate::fields::U256::U256Params;
-use crate::fields::bls12_381Fq::BLS12_381_Fq_Params;
 
 struct Test2048Params {}
 
@@ -628,7 +628,6 @@ fn test_udiv_mod_U256() {
     // println(a.limbs);
     // println("b is ");
     // println(b.limbs);
-    
     let (q, r) = a.udiv_mod(b);
 
     // let qb = q.__mul(b);

@@ -1,11 +1,11 @@
-use crate::utils::u60_representation::U60Repr;
 use crate::utils::split_bits;
+use crate::utils::u60_representation::U60Repr;
 
-use crate::params::BigNumParams as P;
 use crate::fns::unconstrained_helpers::{
-    __barrett_reduction, __primitive_root_log_size, __multiplicative_generator,
+    __barrett_reduction, __multiplicative_generator, __primitive_root_log_size,
     __tonelli_shanks_sqrt_inner_loop_check,
 };
+use crate::params::BigNumParams as P;
 
 /**
  * In this file:
@@ -45,12 +45,11 @@ pub(crate) unconstrained fn __derive_from_seed<let N: u32, let MOD_BITS: u32, le
     params: P<N, MOD_BITS>,
     seed: [u8; SeedBytes],
 ) -> [Field; N] {
-    
     // Pack seed bytes into Field elements, 31 bytes at a time
     let mut rolling_hash_fields: [Field; (SeedBytes / 31) + 1] = [0; (SeedBytes / 31) + 1];
     let mut seed_ptr = 0;
     // creates rolling hash fields, it itterates through each 31 bytes of the seed
-    // and sums them up to create a single field element out of each 31 byte chunck 
+    // and sums them up to create a single field element out of each 31 byte chunck
     for i in 0..(SeedBytes / 31) + 1 {
         let mut packed: Field = 0;
         for _ in 0..31 {
@@ -61,22 +60,20 @@ pub(crate) unconstrained fn __derive_from_seed<let N: u32, let MOD_BITS: u32, le
             }
         }
         rolling_hash_fields[i] = packed;
-    } 
-    
-    // Get initial hash value using Poseidon2 and stores it  as the first coordinate of the rolling hash 
+    }
+
+    // Get initial hash value using Poseidon2 and stores it  as the first coordinate of the rolling hash
     let compressed =
         std::hash::poseidon2::Poseidon2::hash(rolling_hash_fields, (SeedBytes / 31) + 1);
     let mut rolling_hash: [Field; 2] = [compressed, 0];
-    
+
     // Array to store values before final reduction
     let mut to_reduce: [Field; 2 * N] = [0; 2 * N];
 
-    
     let mut double_modulus_bits = MOD_BITS * 2;
     let mut double_modulus_bytes =
         (double_modulus_bits) / 8 + (double_modulus_bits % 8 != 0) as u32;
-    
-    
+
     let mut last_limb_bytes = double_modulus_bytes % 15;
     if (last_limb_bytes == 0) {
         last_limb_bytes = 15;
@@ -87,7 +84,6 @@ pub(crate) unconstrained fn __derive_from_seed<let N: u32, let MOD_BITS: u32, le
     }
 
     // Generate randomness for all but last limb
-    
     for i in 0..(N - 1) {
         let hash = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
         let hash: [u8; 30] = hash.to_le_bytes();
@@ -105,10 +101,8 @@ pub(crate) unconstrained fn __derive_from_seed<let N: u32, let MOD_BITS: u32, le
         to_reduce[2 * i] = lo;
         to_reduce[2 * i + 1] = hi;
         rolling_hash[1] += 1;
-        
     }
-    
-    
+
     {
         let hash = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
         let hash: [u8; 30] = hash.to_le_bytes();
@@ -124,17 +118,16 @@ pub(crate) unconstrained fn __derive_from_seed<let N: u32, let MOD_BITS: u32, le
         hi += last_bits as Field;
         to_reduce[2 * N - 2] = hi;
     }
-    
-    
+
     // Perform Barrett reduction to get final result in correct range
     let (_, remainder) = __barrett_reduction(
         to_reduce,
         params.redc_param,
-        MOD_BITS, 
+        MOD_BITS,
         params.modulus,
         params.modulus_u60_x4,
     );
-    
+
     let result = remainder;
     result
 }

@@ -1,13 +1,13 @@
-use crate::utils::u60_representation::U60Repr;
-use crate::runtime_bignum::RuntimeBigNum;
 use crate::params::{BigNumParams, BigNumParamsGetter};
+use crate::runtime_bignum::RuntimeBigNum;
+use crate::utils::u60_representation::U60Repr;
 
-use crate::fields::bn254Fq::BN254_Fq_Params;
-use crate::fields::secp256k1Fq::Secp256k1_Fq_Params;
-use crate::fields::bls12_381Fq::BLS12_381_Fq_Params;
-use crate::fields::bls12_381Fr::BLS12_381_Fr_Params;
 use crate::fields::bls12_377Fq::BLS12_377_Fq_Params;
 use crate::fields::bls12_377Fr::BLS12_377_Fr_Params;
+use crate::fields::bls12_381Fq::BLS12_381_Fq_Params;
+use crate::fields::bls12_381Fr::BLS12_381_Fr_Params;
+use crate::fields::bn254Fq::BN254_Fq_Params;
+use crate::fields::secp256k1Fq::Secp256k1_Fq_Params;
 
 global TEST_2048_PARAMS: BigNumParams<18, 2048> = BigNumParams {
     has_multiplicative_inverse: false,
@@ -211,16 +211,23 @@ comptime fn make_test(f: StructDefinition, N: Quoted, MOD_BITS: Quoted, typ: Quo
     let test_add = f"{typ}_{N}_{MOD_BITS}_test_add".quoted_contents();
     let test_sub = f"{typ}_{N}_{MOD_BITS}_test_sub".quoted_contents();
     let test_sub_modulus_limit = f"{typ}_{N}_{MOD_BITS}_test_sub_modulus_limit".quoted_contents();
-    let test_sub_modulus_underflow = f"{typ}_{N}_{MOD_BITS}_test_sub_modulus_underflow".quoted_contents();
+    let test_sub_modulus_underflow =
+        f"{typ}_{N}_{MOD_BITS}_test_sub_modulus_underflow".quoted_contents();
     let test_add_modulus_limit = f"{typ}_{N}_{MOD_BITS}_test_add_modulus_limit".quoted_contents();
-    let test_add_modulus_overflow = f"{typ}_{N}_{MOD_BITS}_test_add_modulus_overflow".quoted_contents();
+    let test_add_modulus_overflow =
+        f"{typ}_{N}_{MOD_BITS}_test_add_modulus_overflow".quoted_contents();
     let test_mul = f"{typ}_{N}_{MOD_BITS}_test_mul".quoted_contents();
-    let test_quadratic_expression = f"{typ}_{N}_{MOD_BITS}_test_quadratic_expression".quoted_contents();
+    let test_quadratic_expression =
+        f"{typ}_{N}_{MOD_BITS}_test_quadratic_expression".quoted_contents();
     let assert_is_not_equal = f"{typ}_{N}_{MOD_BITS}_assert_is_not_equal".quoted_contents();
-    let assert_is_not_equal_fail = f"{typ}_{N}_{MOD_BITS}_assert_is_not_equal_fail".quoted_contents();
-    let assert_is_not_equal_overloaded_lhs_fail = f"{typ}_{N}_{MOD_BITS}_assert_is_not_equal_overloaded_lhs_fail".quoted_contents();
-    let assert_is_not_equal_overloaded_rhs_fail = f"{typ}_{N}_{MOD_BITS}_assert_is_not_equal_overloaded_rhs_fail".quoted_contents();
-    let assert_is_not_equal_overloaded_fail = f"{typ}_{N}_{MOD_BITS}_assert_is_not_equal_overloaded_fail".quoted_contents();
+    let assert_is_not_equal_fail =
+        f"{typ}_{N}_{MOD_BITS}_assert_is_not_equal_fail".quoted_contents();
+    let assert_is_not_equal_overloaded_lhs_fail =
+        f"{typ}_{N}_{MOD_BITS}_assert_is_not_equal_overloaded_lhs_fail".quoted_contents();
+    let assert_is_not_equal_overloaded_rhs_fail =
+        f"{typ}_{N}_{MOD_BITS}_assert_is_not_equal_overloaded_rhs_fail".quoted_contents();
+    let assert_is_not_equal_overloaded_fail =
+        f"{typ}_{N}_{MOD_BITS}_assert_is_not_equal_overloaded_fail".quoted_contents();
     let test_derive = f"{typ}_{N}_{MOD_BITS}_test_derive".quoted_contents();
     let test_eq = f"{typ}_{N}_{MOD_BITS}_test_eq".quoted_contents();
     quote {
