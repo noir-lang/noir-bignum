@@ -1,5 +1,5 @@
-use crate::utils::map::map;
 use crate::params::BigNumParams;
+use crate::utils::map::map;
 
 use crate::fns::{
     constrained_ops::{
