@@ -1,10 +1,11 @@
 use crate::params::BigNumParams as P;
 
 use crate::fns::{
+    expressions::evaluate_quadratic_expression,
     unconstrained_helpers::{
-        __validate_in_field_compute_borrow_flags, __validate_gt_remainder, __neg_with_flags,
-        __add_with_flags, __sub_with_flags,
-    }, unconstrained_ops::{__mul, __div, __udiv_mod}, expressions::evaluate_quadratic_expression,
+        __add_with_flags, __neg_with_flags, __sub_with_flags, __validate_gt_remainder,
+        __validate_in_field_compute_borrow_flags,
+    }, unconstrained_ops::{__div, __mul, __udiv_mod},
 };
 
 /**

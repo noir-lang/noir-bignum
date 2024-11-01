@@ -19,8 +19,8 @@
 //!    * B = Fq3(b * NON_RESIDUE, 0, 0)
 //!    * NON_RESIDUE = 11 is the cubic non-residue used to conpub struct  the
 //!      extension field Fq3
-use crate::params::BigNumParamsGetter;
 use crate::params::BigNumParams;
+use crate::params::BigNumParamsGetter;
 use crate::utils::u60_representation::U60Repr;
 
 pub struct MNT6_753_Fq_Params {}

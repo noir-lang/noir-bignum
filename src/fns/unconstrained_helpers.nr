@@ -1,8 +1,8 @@
-use crate::utils::u60_representation::U60Repr;
 use crate::utils::split_bits;
+use crate::utils::u60_representation::U60Repr;
 
+use crate::fns::unconstrained_ops::{__add, __eq, __mul, __neg, __one, __pow};
 use crate::params::BigNumParams as P;
-use crate::fns::unconstrained_ops::{__one, __eq, __neg, __add, __mul, __pow};
 
 /**
  * In this file:

@@ -14,8 +14,8 @@
 //! * valuation(r - 1, 2) = 32
 //! * G1 curve equation: y^2 = x^3 + 4
 //! * G2 curve equation: y^2 = x^3 + Fq2(4, 4)
-use crate::params::BigNumParamsGetter;
 use crate::params::BigNumParams;
+use crate::params::BigNumParamsGetter;
 use crate::utils::u60_representation::U60Repr;
 
 pub struct BLS12_381_Fq_Params {}
