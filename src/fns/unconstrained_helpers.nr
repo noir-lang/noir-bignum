@@ -29,7 +29,7 @@ pub(crate) unconstrained fn __validate_in_field_compute_borrow_flags<let N: u32,
     flags
 }
 
-pub(crate) unconstrained fn __validate_gt_remainder<let N: u32, let MOD_BITS: u32>(
+pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
     lhs: [Field; N],
     rhs: [Field; N],
 ) -> ([Field; N], [bool; N], [bool; N]) {
