@@ -222,7 +222,7 @@ pub(crate) unconstrained fn __div<let N: u32, let MOD_BITS: u32>(
 *      2. numerator % divisor = remainder
 *      3. divisor * quotient + remainder = numerator
 **/
-pub(crate) unconstrained fn __udiv_mod<let N: u32, let MOD_BITS: u32>(
+pub(crate) unconstrained fn __udiv_mod<let N: u32>(
     numerator: [Field; N],
     divisor: [Field; N],
 ) -> ([Field; N], [Field; N]) {
