@@ -18,7 +18,7 @@ pub struct BigNum<let N: u32, let MOD_BITS: u32, Params> {
     pub limbs: [Field; N],
 }
 
-pub(crate) trait BigNumTrait {
+pub trait BigNumTrait {
     // TODO: this crashes the compiler? v0.32
     // fn default() -> Self { std::default::Default::default  () }
     pub fn new() -> Self;
