@@ -16,6 +16,7 @@ pub(crate) mod utils;
 
 // Re-export the main structs so that users don't have to specify the paths
 pub use bignum::BigNum;
+pub use bignum::BigNumTrait; // So that external code can operate on a generic BigNum, `where BigNum: BigNumTrait`. 
 pub use runtime_bignum::RuntimeBigNum;
 
 // Tests
