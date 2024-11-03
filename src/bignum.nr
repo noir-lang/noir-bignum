@@ -18,7 +18,7 @@ pub struct BigNum<let N: u32, let MOD_BITS: u32, Params> {
     pub limbs: [Field; N],
 }
 
-pub(crate) trait BigNumTrait<let N: u32> {
+pub(crate) trait BigNumTrait {
     // TODO: this crashes the compiler? v0.32
     // fn default() -> Self { std::default::Default::default  () }
     pub fn new() -> Self;
@@ -26,15 +26,15 @@ pub(crate) trait BigNumTrait<let N: u32> {
     pub fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
     pub unconstrained fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
     pub fn from_slice(limbs: [Field]) -> Self;
-    pub fn from_array(limbs: [Field; N]) -> Self;
+    // pub fn from_array<let M: u32>(limbs: [Field; M]) -> Self;
     pub fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> Self;
     pub fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes];
 
     pub fn modulus() -> Self;
-    pub fn modulus_bits() -> u32;
-    pub fn num_limbs() -> u32;
-    // pub fn get(self) -> [Field];
-    pub fn get_limbs(self) -> [Field; N];
+    pub fn modulus_bits(self) -> u32;
+    pub fn num_limbs(self) -> u32;
+    pub fn get_limbs_slice(self) -> [Field];
+    // pub fn get_limbs<let M: u32>(self) -> [Field; M];
     pub fn get_limb(self, idx: u32) -> Field;
     pub fn set_limb(&mut self, idx: u32, value: Field);
 
@@ -100,7 +100,7 @@ pub(crate) trait BigNumTrait<let N: u32> {
     pub fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self;
 }
 
-impl<let N: u32, let MOD_BITS: u32, Params> BigNumTrait<N> for BigNum<N, MOD_BITS, Params>
+impl<let N: u32, let MOD_BITS: u32, Params> BigNumTrait for BigNum<N, MOD_BITS, Params>
 where
     Params: BigNumParamsGetter<N, MOD_BITS>,
 {
@@ -129,9 +129,12 @@ where
         Self { limbs: limbs.as_array() }
     }
 
-    fn from_array(limbs: [Field; N]) -> Self {
-        Self { limbs }
-    }
+    // We avoid passing an array, because that would require the array length to be expressed as a generic param of BigNumTrait, and we don't want BigNumTrait to have any generic params, so that when we use BigNum, we can cleanly say `where BigNum: BigNumTrait`, without any extra generics being used.
+    // fn from_array<let M: u32>(limbs: [Field; M]) -> Self {
+    //     // This static assertion doesn't trick the compiler.
+    //     std::static_assert(M == N, "");
+    //     Self { limbs }
+    // }
 
     fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> Self {
         Self { limbs: from_be_bytes::<_, MOD_BITS, _>(x) }
@@ -145,21 +148,24 @@ where
         Self { limbs: Params::get_params().modulus }
     }
 
-    fn modulus_bits() -> u32 {
+    fn modulus_bits(_: Self) -> u32 {
         MOD_BITS
     }
 
-    fn num_limbs() -> u32 {
+    fn num_limbs(_: Self) -> u32 {
         N
     }
 
-    // fn get(self) -> [Field] {
-    //     self.get_limbs()
-    // }
-
-    fn get_limbs(self) -> [Field; N] {
+    fn get_limbs_slice(self) -> [Field] {
         self.limbs
     }
+
+    // We avoid returning an array, because that would require the array length to be expressed as a generic param of BigNumTrait, and we don't want BigNumTrait to have any generic params, so that when we use BigNum, we can cleanly say `where BigNum: BigNumTrait`, without any extra generics being used.
+    // fn get_limbs<let M: u32>(self) -> [Field; M] {
+    //     // This static assertion doesn't trick the compiler.
+    //     std::static_assert(M == N, "");
+    //     self.limbs
+    // }
 
     fn get_limb(self, idx: u32) -> Field {
         self.limbs[idx]
@@ -179,27 +185,27 @@ where
 
     unconstrained fn __neg(self) -> Self {
         let params = Params::get_params();
-        Self::from_array(__neg(params, self.limbs))
+        Self::from_slice(__neg(params, self.limbs))
     }
 
     unconstrained fn __add(self, other: Self) -> Self {
         let params = Params::get_params();
-        Self::from_array(__add(params, self.limbs, other.limbs))
+        Self::from_slice(__add(params, self.limbs, other.limbs))
     }
 
     unconstrained fn __sub(self, other: Self) -> Self {
         let params = Params::get_params();
-        Self::from_array(__sub(params, self.limbs, other.limbs))
+        Self::from_slice(__sub(params, self.limbs, other.limbs))
     }
 
     unconstrained fn __mul(self, other: Self) -> Self {
         let params = Params::get_params();
-        Self::from_array(__mul::<_, MOD_BITS>(params, self.limbs, other.limbs))
+        Self::from_slice(__mul::<_, MOD_BITS>(params, self.limbs, other.limbs))
     }
 
     unconstrained fn __div(self, divisor: Self) -> Self {
         let params = Params::get_params();
-        Self::from_array(__div::<_, MOD_BITS>(params, self.limbs, divisor.limbs))
+        Self::from_slice(__div::<_, MOD_BITS>(params, self.limbs, divisor.limbs))
     }
 
     unconstrained fn __udiv_mod(self, divisor: Self) -> (Self, Self) {
@@ -221,7 +227,7 @@ where
     unconstrained fn __batch_invert<let M: u32>(x: [Self; M]) -> [Self; M] {
         let params = Params::get_params();
         assert(params.has_multiplicative_inverse);
-        __batch_invert::<_, MOD_BITS, _>(params, x.map(|bn| Self::get_limbs(bn))).map(|limbs| {
+        __batch_invert::<_, MOD_BITS, _>(params, x.map(|bn| Self::get_limbs_slice(bn).as_array())).map(|limbs| {
             Self { limbs }
         })
     }
@@ -229,7 +235,7 @@ where
     unconstrained fn __batch_invert_slice<let M: u32>(x: [Self]) -> [Self] {
         let params = Params::get_params();
         assert(params.has_multiplicative_inverse);
-        __batch_invert_slice::<_, MOD_BITS>(params, x.map(|bn| Self::get_limbs(bn))).map(|limbs| {
+        __batch_invert_slice::<_, MOD_BITS>(params, x.map(|bn| Self::get_limbs_slice(bn).as_array())).map(|limbs| {
             Self { limbs }
         })
     }
@@ -251,11 +257,11 @@ where
         let params = Params::get_params();
         let (q_limbs, r_limbs) = __compute_quadratic_expression::<_, MOD_BITS, _, _, _, _>(
             params,
-            map(lhs_terms, |bns| map(bns, |bn| Self::get_limbs(bn))),
+            map(lhs_terms, |bns| map(bns, |bn| Self::get_limbs_slice(bn).as_array())),
             lhs_flags,
-            map(rhs_terms, |bns| map(bns, |bn| Self::get_limbs(bn))),
+            map(rhs_terms, |bns| map(bns, |bn| Self::get_limbs_slice(bn).as_array())),
             rhs_flags,
-            map(linear_terms, |bn| Self::get_limbs(bn)),
+            map(linear_terms, |bn| Self::get_limbs_slice(bn).as_array()),
             linear_flags,
         );
         (Self { limbs: q_limbs }, Self { limbs: r_limbs })
@@ -272,11 +278,11 @@ where
         let params = Params::get_params();
         evaluate_quadratic_expression::<_, MOD_BITS, _, _, _, _>(
             params,
-            map(lhs_terms, |bns| map(bns, |bn| Self::get_limbs(bn))),
+            map(lhs_terms, |bns| map(bns, |bn| Self::get_limbs_slice(bn).as_array())),
             lhs_flags,
-            map(rhs_terms, |bns| map(bns, |bn| Self::get_limbs(bn))),
+            map(rhs_terms, |bns| map(bns, |bn| Self::get_limbs_slice(bn).as_array())),
             rhs_flags,
-            map(linear_terms, |bn| Self::get_limbs(bn)),
+            map(linear_terms, |bn| Self::get_limbs_slice(bn).as_array()),
             linear_flags,
         )
     }
