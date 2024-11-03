@@ -227,17 +227,18 @@ where
     unconstrained fn __batch_invert<let M: u32>(x: [Self; M]) -> [Self; M] {
         let params = Params::get_params();
         assert(params.has_multiplicative_inverse);
-        __batch_invert::<_, MOD_BITS, _>(params, x.map(|bn| Self::get_limbs_slice(bn).as_array())).map(|limbs| {
-            Self { limbs }
-        })
+        __batch_invert::<_, MOD_BITS, _>(params, x.map(|bn| Self::get_limbs_slice(bn).as_array()))
+            .map(|limbs| { Self { limbs } })
     }
 
     unconstrained fn __batch_invert_slice<let M: u32>(x: [Self]) -> [Self] {
         let params = Params::get_params();
         assert(params.has_multiplicative_inverse);
-        __batch_invert_slice::<_, MOD_BITS>(params, x.map(|bn| Self::get_limbs_slice(bn).as_array())).map(|limbs| {
-            Self { limbs }
-        })
+        __batch_invert_slice::<_, MOD_BITS>(
+            params,
+            x.map(|bn| Self::get_limbs_slice(bn).as_array()),
+        )
+            .map(|limbs| { Self { limbs } })
     }
 
     unconstrained fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self> {
@@ -257,9 +258,15 @@ where
         let params = Params::get_params();
         let (q_limbs, r_limbs) = __compute_quadratic_expression::<_, MOD_BITS, _, _, _, _>(
             params,
-            map(lhs_terms, |bns| map(bns, |bn| Self::get_limbs_slice(bn).as_array())),
+            map(
+                lhs_terms,
+                |bns| map(bns, |bn| Self::get_limbs_slice(bn).as_array()),
+            ),
             lhs_flags,
-            map(rhs_terms, |bns| map(bns, |bn| Self::get_limbs_slice(bn).as_array())),
+            map(
+                rhs_terms,
+                |bns| map(bns, |bn| Self::get_limbs_slice(bn).as_array()),
+            ),
             rhs_flags,
             map(linear_terms, |bn| Self::get_limbs_slice(bn).as_array()),
             linear_flags,
@@ -278,9 +285,15 @@ where
         let params = Params::get_params();
         evaluate_quadratic_expression::<_, MOD_BITS, _, _, _, _>(
             params,
-            map(lhs_terms, |bns| map(bns, |bn| Self::get_limbs_slice(bn).as_array())),
+            map(
+                lhs_terms,
+                |bns| map(bns, |bn| Self::get_limbs_slice(bn).as_array()),
+            ),
             lhs_flags,
-            map(rhs_terms, |bns| map(bns, |bn| Self::get_limbs_slice(bn).as_array())),
+            map(
+                rhs_terms,
+                |bns| map(bns, |bn| Self::get_limbs_slice(bn).as_array()),
+            ),
             rhs_flags,
             map(linear_terms, |bn| Self::get_limbs_slice(bn).as_array()),
             linear_flags,
