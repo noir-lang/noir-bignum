@@ -41,11 +41,11 @@ impl<let N: u32, let MOD_BITS: u32> BigNumParams<N, MOD_BITS> {
 
 impl<let N: u32, let MOD_BITS: u32> std::cmp::Eq for BigNumParams<N, MOD_BITS> {
     fn eq(self, other: Self) -> bool {
-        (self.has_multiplicative_inverse == other.has_multiplicative_inverse) &
-        (self.modulus == other.modulus) &
-        (self.modulus_u60 == other.modulus_u60) &
-        (self.modulus_u60_x4 == other.modulus_u60_x4) &
-        (self.redc_param == other.redc_param)
+        (self.has_multiplicative_inverse == other.has_multiplicative_inverse)
+            & (self.modulus == other.modulus)
+            & (self.modulus_u60 == other.modulus_u60)
+            & (self.modulus_u60_x4 == other.modulus_u60_x4)
+            & (self.redc_param == other.redc_param)
     }
 }
 

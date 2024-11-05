@@ -5,7 +5,8 @@ use crate::fns::{
     unconstrained_helpers::{
         __add_with_flags, __neg_with_flags, __sub_with_flags, __validate_gt_remainder,
         __validate_in_field_compute_borrow_flags,
-    }, unconstrained_ops::{__div, __mul, __udiv_mod},
+    },
+    unconstrained_ops::{__div, __mul, __udiv_mod},
 };
 
 /**
