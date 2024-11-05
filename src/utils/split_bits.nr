@@ -4,10 +4,10 @@ global TWO_POW_64: Field = 0x10000000000000000;
 
 // Decomposes a single field into two 120 bit fields
 pub unconstrained fn split_120_bits(mut x: Field) -> (Field, Field) {
-    // Here's we're taking advantage of truncating 64 bit limbs from the input field
-    // and then subtracting them from the input such the field division is equivalent to integer division.
+    // Here we're taking advantage of truncating 64 bit limbs from the input field
+    // and then subtracting them from the input such that the field division is equivalent to integer division.
     let low_lower_64 = (x as u64) as Field;
-    x = (x - low_lower_64) / TWO_POW_64 as Field;
+    x = (x - low_lower_64) / TWO_POW_64;
     let low_upper_56 = ((x as u64) % TWO_POW_56) as Field;
 
     let low = low_lower_64 + TWO_POW_64 * low_upper_56;
@@ -22,8 +22,8 @@ pub unconstrained fn split_120_bits(mut x: Field) -> (Field, Field) {
  * @description Expects the input limb to be in the range [0, ..., 2^{120 - 1}]
  **/
 pub unconstrained fn split_60_bits(x: Field) -> (u64, u64) {
-    // Here's we're taking advantage of truncating 64 bit limbs from the input field
-    // and then subtracting them from the input such the field division is equivalent to integer division.
+    // Here we're taking advantage of truncating 64 bit limbs from the input field
+    // and then subtracting them from the input such that the field division is equivalent to integer division.
     let x_lower_64 = (x as u64);
     let low = x_lower_64 % TWO_POW_60;
     let high = ((x - (low as Field)) / TWO_POW_60 as Field) as u64;
