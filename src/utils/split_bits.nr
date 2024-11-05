@@ -11,7 +11,7 @@ pub unconstrained fn split_120_bits(mut x: Field) -> (Field, Field) {
     let low_upper_56 = ((x as u64) % TWO_POW_56) as Field;
 
     let low = low_lower_64 + TWO_POW_64 * low_upper_56;
-    let high = (x - low_upper_56) / TWO_POW_56 as Field;   
+    let high = (x - low_upper_56) / TWO_POW_56 as Field;
 
     (low, high)
 }
