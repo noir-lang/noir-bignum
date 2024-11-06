@@ -55,7 +55,7 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
 
         let sub_term = b_u60.limbs[i] + borrow_in;
         let mut borrow = (sub_term > add_term) as u64;
-        result_u60.limbs[i] = (borrow << 60) + add_term - sub_term;
+        result_u60.limbs[i] = borrow * TWO_POW_60 + add_term - sub_term;
 
         borrow_in = borrow;
 
@@ -86,7 +86,7 @@ pub(crate) unconstrained fn __neg_with_flags<let N: u32, let MOD_BITS: u32>(
     for i in 0..2 * N {
         let sub_term = x_u60.limbs[i] + borrow_in;
         let borrow = (sub_term > params.modulus_u60.limbs[i]) as u64;
-        result_u60.limbs[i] = (borrow << 60) + params.modulus_u60.limbs[i] - sub_term;
+        result_u60.limbs[i] = borrow * TWO_POW_60 + params.modulus_u60.limbs[i] - sub_term;
 
         borrow_in = borrow;
         if ((i & 1) == 1) {
@@ -127,7 +127,7 @@ pub(crate) unconstrained fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
 
         let sub_term = subtrahend_u60.limbs[i] + borrow_in;
         let mut borrow = (sub_term > add_term) as u64;
-        result_u60.limbs[i] = (borrow << 60) + add_term - sub_term;
+        result_u60.limbs[i] = borrow * TWO_POW_60 + add_term - sub_term;
         borrow_in = borrow;
 
         if ((i & 1) == 1) {
@@ -174,7 +174,7 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
 
         let sub_term = b_u60.limbs[i] + borrow_in;
         let mut borrow = (sub_term > add_term) as u64;
-        result_u60.limbs[i] = (borrow << 60) + add_term - sub_term;
+        result_u60.limbs[i] = borrow * TWO_POW_60 + add_term - sub_term;
         borrow_in = borrow;
 
         if ((i & 1) == 1) {
