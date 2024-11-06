@@ -686,8 +686,7 @@ fn test_sqrt_BN() {
 
 #[test]
 fn test_barrett_reduction_fix() {
-    // let N: u32 = 9;
-    // let MOD_BITS: u32 = 1024;
+    // the parameters and input that the barrett reduction fails on in the RSA library 
     let params: BigNumParams<9, 1024> = BigNumParams::new(
         false,
         [
@@ -713,7 +712,6 @@ fn test_barrett_reduction_fix() {
             0x167968c0000761a273,
         ],
     );
-    // println(params.modulus_u60);
     let to_reduce: [Field; 18] = [
         0xc4b8aacb43f12eb7f3f356ca26fb91,
         0xfc57d87e81f39810ffb63957395499,
