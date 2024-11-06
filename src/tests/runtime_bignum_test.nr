@@ -684,13 +684,12 @@ fn test_sqrt_BN() {
     assert(sqrt_x * sqrt_x == x);
 }
 
-
 // N.B. this test is only here to check that the barrett reduction is working correctly
 //      a bug was introduced in 0.3.7 that caused issues with the RSA library
 //      this test is to check that the bug is fixed
 #[test]
 fn test_barrett_reduction_fix() {
-    // the parameters and input that the barrett reduction fails on in the RSA library 
+    // the parameters and input that the barrett reduction fails on in the RSA library
     let params: BigNumParams<9, 1024> = BigNumParams::new(
         false,
         [
