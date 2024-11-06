@@ -152,8 +152,6 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeB
         seed: [u8; SeedBytes],
     ) -> Self {
         let limbs = unsafe { __derive_from_seed::<_, MOD_BITS, _>(params, seed) };
-        // println("the unconstrained call to derive:");
-        // println(limbs);
         Self { limbs, params }
     }
 

@@ -48,8 +48,6 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
     let mut borrow_in: u64 = 0;
     let mut borrow_flags: [bool; N] = [false; N];
     let mut carry_flags: [bool; N] = [false; N];
-    // println("the addend limb is");
-    println(addend_u60.limbs);
     for i in 0..2 * N {
         let mut add_term: u64 = a_u60.limbs[i] + addend_u60.limbs[i] + carry_in;
         carry = (add_term >= 0x1000000000000000) as u64;
@@ -70,8 +68,6 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
             borrow_flags[i / 2] = borrow as bool;
         }
     }
-    // println("the result u60 is");
-    // println(result_u60);
     let result = U60Repr::into(result_u60);
     (result, carry_flags, borrow_flags)
 }
@@ -219,7 +215,7 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
         }
     }
 
-    mulout = split_bits::__normalize_limbs(mulout, 3 * N - 2);
+    mulout = split_bits::__normalize_limbs(mulout, 3 * N - 1);
     let mulout_u60: U60Repr<N, 6> = U60Repr::new(mulout);
 
     // When we apply the barrett reduction, the maximum value of the output will be

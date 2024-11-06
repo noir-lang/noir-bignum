@@ -322,10 +322,7 @@ fn $test_add_modulus_limit() {
     let two_pow_modulus_bits_minus_one: U60Repr<$N, 2> = unsafe{ one.shl($MOD_BITS) - one };
 
     let b: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum { limbs: U60Repr::into(two_pow_modulus_bits_minus_one), params };
-    // println!("the test made it here{:?}", a); 
     let result = a + b;
-    // println("the last limb of b in the add test is");
-    // println(b.limbs); 
     assert(result == b);
 }
 
@@ -507,18 +504,11 @@ fn $test_derive()
 
     // let a: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::derive_from_seed(params, "hello".as_bytes());
     let a: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
-    
     let b: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
         // RuntimeBigNum::__derive_from_seed(params, "hello".as_bytes())
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4]) 
     };
     // let one: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::one(params);
-    // println("the limbs of 1"); 
-    // println(one.limbs);
-    // println("the value of a is");
-    // println(a.limbs);
-    // println("the value of b is");
-    // println(b.limbs);
     
     assert(a == b);
 }

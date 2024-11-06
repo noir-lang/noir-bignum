@@ -66,10 +66,8 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
     let compressed =
         std::hash::poseidon2::Poseidon2::hash(rolling_hash_fields, (SeedBytes / 31) + 1);
     let mut rolling_hash: [Field; 2] = [compressed, 0];
-    // println("the rolling hash in the constrained function are");
-    // println(rolling_hash);
     //the rolling hash is getting passed around ok I checked
-    let num_hashes = (30 * N) / 32 + (((30 * N) % 32) != 0) as u32;
+    let num_hashes = (240 * N) / 254 + (((30 * N) % 32) != 0) as u32;
     for i in 0..num_hashes - 1 {
         let hash: Field = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
         let hash: [u8; 32] = hash.to_le_bytes();
@@ -132,8 +130,6 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
 
     let mut bigfield_rhs_limbs: [Field; N] = [0; N];
     bigfield_rhs_limbs[N - 1] = 1;
-    // println("the bigfield rhs limbs are");
-    // println(bigfield_rhs_limbs);
     validate_in_range::<_, MOD_BITS>(bigfield_rhs_limbs);
 
     let mut result: [Field; N] = [0; N];
@@ -310,8 +306,6 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [Field; N], rhs: [
         - result[N - 1]
         - borrow_flags[N - 2] as Field
         + carry_flags[N - 2] as Field;
-    // println("the result limb is");
-    // println(result_limb);
     assert(result_limb == 0);
 }
 
@@ -468,10 +462,7 @@ pub(crate) fn udiv_mod<let N: u32, let MOD_BITS: u32>(
 ) -> ([Field; N], [Field; N]) {
     let (quotient, remainder) = unsafe { __udiv_mod(numerator, divisor) };
 
-    // println("the quotient is");
-    // println(quotient);
-    // println("the remainder is");
-    // println(remainder);
+    
     // self / divisor = quotient rounded
     // quotient * divisor + remainder - self = 0
     evaluate_quadratic_expression(
@@ -485,10 +476,6 @@ pub(crate) fn udiv_mod<let N: u32, let MOD_BITS: u32>(
     );
     // we need (remainder < divisor)
     // implies (divisor - remainder > 0)
-    // println("the divisor is");
-    // println(divisor);
-    // // println("the remainder is");
-    // println(remainder);
     validate_gt::<_, MOD_BITS>(divisor, remainder);
     (quotient, remainder)
 }

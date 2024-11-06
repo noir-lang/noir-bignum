@@ -624,17 +624,9 @@ type U256 = BN256;
 fn test_udiv_mod_U256() {
     let a: U256 = unsafe { BigNum::__derive_from_seed([1, 2, 3, 4]) };
     let b: U256 = BigNum::from_array([12, 0, 0]);
-    // println("a is ");
-    // println(a.limbs);
-    // println("b is ");
-    // println(b.limbs);
     let (q, r) = a.udiv_mod(b);
 
     // let qb = q.__mul(b);
-    // println("q is ");
-    // println(q.limbs);
-    // println("r is ");
-    // println(r.limbs);
     let product = unsafe { q.__mul(b).__add(r) };
     assert(product == a);
 }
