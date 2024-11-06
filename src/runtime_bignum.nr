@@ -5,7 +5,8 @@ use crate::fns::{
     constrained_ops::{
         add, assert_is_not_equal, conditional_select, derive_from_seed, div, eq, mul, neg, sub,
         udiv, udiv_mod, umod, validate_in_field, validate_in_range,
-    }, expressions::{__compute_quadratic_expression, evaluate_quadratic_expression},
+    },
+    expressions::{__compute_quadratic_expression, evaluate_quadratic_expression},
     serialization::{from_be_bytes, to_le_bytes},
     unconstrained_ops::{
         __add, __batch_invert, __batch_invert_slice, __derive_from_seed, __div, __eq, __invmod,
