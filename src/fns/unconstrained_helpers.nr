@@ -39,23 +39,20 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
     let underflow = b_u60.gte(a_u60);
     b_u60 += U60Repr::one();
     assert(underflow == false, "BigNum::validate_gt check fails");
-    let mut addend_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
     let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
 
-    let mut carry: u64 = 0;
     let mut carry_in: u64 = 0;
-    let mut borrow: u64 = 0;
     let mut borrow_in: u64 = 0;
     let mut borrow_flags: [bool; N] = [false; N];
     let mut carry_flags: [bool; N] = [false; N];
     for i in 0..2 * N {
-        let mut add_term: u64 = a_u60.limbs[i] + addend_u60.limbs[i] + carry_in;
-        carry = (add_term >= 0x1000000000000000) as u64;
-        add_term -= (carry as u64 * 0x1000000000000000);
-        result_u60.limbs[i] = add_term;
-        carry_in = carry as u64;
-        borrow = ((b_u60.limbs[i] + borrow_in) > result_u60.limbs[i]) as u64;
-        let sub = (borrow << 60) + result_u60.limbs[i] - b_u60.limbs[i] - borrow_in;
+        let mut add_term: u64 = a_u60.limbs[i] + carry_in;
+        let mut carry = (add_term >= 0x1000000000000000) as u64;
+        add_term -= (carry * 0x1000000000000000);
+        carry_in = carry;
+
+        let mut borrow = ((b_u60.limbs[i] + borrow_in) > add_term) as u64;
+        let sub = (borrow << 60) + add_term - b_u60.limbs[i] - borrow_in;
         result_u60.limbs[i] = sub;
         borrow_in = borrow;
 
@@ -80,13 +77,13 @@ pub(crate) unconstrained fn __neg_with_flags<let N: u32, let MOD_BITS: u32>(
     let x_u60: U60Repr<N, 2> = U60Repr::from(val);
     let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
 
-    let mut borrow: u64 = 0;
     let mut borrow_in: u64 = 0;
 
     let mut borrow_flags: [bool; N] = [false; N];
     for i in 0..2 * N {
-        borrow = ((x_u60.limbs[i] + borrow_in) > params.modulus_u60.limbs[i]) as u64;
+        let borrow = ((x_u60.limbs[i] + borrow_in) > params.modulus_u60.limbs[i]) as u64;
         let sub = (borrow << 60) + params.modulus_u60.limbs[i] - x_u60.limbs[i] - borrow_in;
+
         result_u60.limbs[i] = sub;
         borrow_in = borrow;
         if ((i & 1) == 1) {
@@ -115,20 +112,18 @@ pub(crate) unconstrained fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
         subtrahend_u60 = params.modulus_u60;
     }
 
-    let mut carry: u64 = 0;
     let mut carry_in: u64 = 0;
-    let mut borrow: u64 = 0;
     let mut borrow_in: u64 = 0;
     let mut borrow_flags: [bool; N] = [false; N];
     let mut carry_flags: [bool; N] = [false; N];
     for i in 0..2 * N {
         let mut add_term: u64 = a_u60.limbs[i] + b_u60.limbs[i] + carry_in;
-        carry = (add_term >= 0x1000000000000000) as u64;
-        add_term -= (carry as u64 * 0x1000000000000000);
-        result_u60.limbs[i] = add_term;
-        carry_in = carry as u64;
-        borrow = ((subtrahend_u60.limbs[i] + borrow_in) > result_u60.limbs[i]) as u64;
-        let sub = (borrow << 60) + result_u60.limbs[i] - subtrahend_u60.limbs[i] - borrow_in;
+        let mut carry = (add_term >= 0x1000000000000000) as u64;
+        add_term -= (carry * 0x1000000000000000);
+        carry_in = carry;
+
+        let mut borrow = ((subtrahend_u60.limbs[i] + borrow_in) > add_term) as u64;
+        let sub = (borrow << 60) + add_term - subtrahend_u60.limbs[i] - borrow_in;
         result_u60.limbs[i] = sub;
         borrow_in = borrow;
 
@@ -157,27 +152,25 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
 
     let underflow = b_u60.gte(a_u60 + U60Repr::one());
 
-    let mut addend_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
+    let addend_u60: U60Repr<N, 2> = if underflow {
+        params.modulus_u60
+    } else {
+        U60Repr { limbs: [0; 2 * N] }
+    };
     let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
 
-    if underflow {
-        addend_u60 = params.modulus_u60;
-    }
-
-    let mut carry: u64 = 0;
     let mut carry_in: u64 = 0;
-    let mut borrow: u64 = 0;
     let mut borrow_in: u64 = 0;
     let mut borrow_flags: [bool; N] = [false; N];
     let mut carry_flags: [bool; N] = [false; N];
     for i in 0..2 * N {
         let mut add_term: u64 = a_u60.limbs[i] + addend_u60.limbs[i] + carry_in;
-        carry = (add_term >= 0x1000000000000000) as u64;
-        add_term -= (carry as u64 * 0x1000000000000000);
-        result_u60.limbs[i] = add_term;
-        carry_in = carry as u64;
-        borrow = ((b_u60.limbs[i] + borrow_in) > result_u60.limbs[i]) as u64;
-        let sub = (borrow << 60) + result_u60.limbs[i] - b_u60.limbs[i] - borrow_in;
+        let mut carry = (add_term >= 0x1000000000000000) as u64;
+        add_term -= (carry * 0x1000000000000000);
+        carry_in = carry;
+
+        let mut borrow = ((b_u60.limbs[i] + borrow_in) > add_term) as u64;
+        let sub = (borrow << 60) + add_term - b_u60.limbs[i] - borrow_in;
         result_u60.limbs[i] = sub;
         borrow_in = borrow;
 
