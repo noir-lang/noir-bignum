@@ -509,9 +509,7 @@ fn $test_derive()
         // RuntimeBigNum::__derive_from_seed(params, "hello".as_bytes())
         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4]) 
     };
-    // let one: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::one(params);
-    
-    assert(a == b);
+    assert_eq(a, b);
 }
 
 #[test]
