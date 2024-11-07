@@ -33,14 +33,19 @@ pub(crate) unconstrained fn __one<let N: u32>() -> [Field; N] {
     limbs
 }
 
-/**
- * @brief Deterministically derives a big_num from a seed value
- * 
- * @description Takes a seed byte array and generates a big_num in the range [0, modulus-1].
- * @param params The BigNum parameters containing modulus and reduction info
- * @param seed Input seed bytes to derive from
- * @returns [Field; N] An array of field elements derived from the seed (the limbs of the big_num)
- */
+
+/// Deterministically derives a big_num from a seed value.
+///
+/// Takes a seed byte array and generates a big_num in the range [0, modulus-1].
+///
+/// ## Value Parameters
+///
+/// - `params`: The BigNum parameters containing modulus and reduction info
+/// - `seed`:  Input seed bytes to derive from.
+///
+/// ## Returns
+///
+///  An array of field elements derived from the seed (the limbs of the big_num)
 pub(crate) unconstrained fn __derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(
     params: P<N, MOD_BITS>,
     seed: [u8; SeedBytes],
