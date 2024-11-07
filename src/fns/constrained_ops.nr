@@ -5,7 +5,8 @@ use crate::fns::{
     unconstrained_helpers::{
         __add_with_flags, __neg_with_flags, __sub_with_flags, __validate_gt_remainder,
         __validate_in_field_compute_borrow_flags,
-    }, unconstrained_ops::{__div, __mul, __udiv_mod},
+    },
+    unconstrained_ops::{__div, __mul, __udiv_mod},
 };
 
 /**
@@ -39,13 +40,12 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
     params: P<N, MOD_BITS>,
     seed: [u8; SeedBytes],
 ) -> [Field; N] {
-    // assert(params.MOD_BITS == MOD_BITS);
     let mut rolling_seed: [u8; SeedBytes + 1] = [0; SeedBytes + 1];
     for i in 0..SeedBytes {
         rolling_seed[i] = seed[i];
         assert_eq(rolling_seed[i], seed[i]);
     }
-    //the seed is getting passed around ok I checked
+
     let mut hash_buffer: [u8; N * 2 * 15] = [0; N * 2 * 15];
 
     let mut rolling_hash_fields: [Field; (SeedBytes / 31) + 1] = [0; (SeedBytes / 31) + 1];
@@ -62,11 +62,10 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
         rolling_hash_fields[i] = packed;
     }
 
-    //the rolling hash fields are getting passed around ok I checked
     let compressed =
         std::hash::poseidon2::Poseidon2::hash(rolling_hash_fields, (SeedBytes / 31) + 1);
     let mut rolling_hash: [Field; 2] = [compressed, 0];
-    //the rolling hash is getting passed around ok I checked
+
     let num_hashes = (240 * N) / 254 + (((30 * N) % 32) != 0) as u32;
     for i in 0..num_hashes - 1 {
         let hash: Field = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
@@ -277,12 +276,6 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [Field; N], rhs: [
     // so we do... p - x - r = 0 and there might be borrow flags
     // a - b = r
     // p + a - b - r = 0
-    // for the test, with --force-brillig this outputs
-    // the result is
-    // [0x00, 0x00, 0x800]
-    // and without the flag
-    // [0x00, 0x00, 0x00]
-    // the issue is happening here. the result is not being set correctly when the --force-brillig flag is used
     let (result, carry_flags, borrow_flags) = unsafe { __validate_gt_remainder(lhs, rhs) };
     validate_in_range::<_, MOD_BITS>(result);
 

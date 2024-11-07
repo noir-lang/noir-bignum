@@ -280,7 +280,6 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     let q: [Field; N] = U60Repr::into(quotient_u60);
     let r: [Field; N] = U60Repr::into(remainder_u60);
 
-    // assert(modulus[N-1].lt(r[N-1]), "barrett reduction failed");
     (q, r)
 }
 
