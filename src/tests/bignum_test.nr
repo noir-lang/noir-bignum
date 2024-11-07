@@ -624,7 +624,6 @@ type U256 = BN256;
 fn test_udiv_mod_U256() {
     let a: U256 = unsafe { BigNum::__derive_from_seed([1, 2, 3, 4]) };
     let b: U256 = BigNum::from_array([12, 0, 0]);
-
     let (q, r) = a.udiv_mod(b);
 
     // let qb = q.__mul(b);

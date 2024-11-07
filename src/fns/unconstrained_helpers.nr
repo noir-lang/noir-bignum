@@ -68,7 +68,6 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
             borrow_flags[i / 2] = borrow as bool;
         }
     }
-
     let result = U60Repr::into(result_u60);
     (result, carry_flags, borrow_flags)
 }
@@ -204,12 +203,14 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     modulus: [Field; N],
     modulus_u60: U60Repr<N, 4>,
 ) -> ([Field; N], [Field; N]) {
+    // for each i in 0..(N + N), adds x[i] * redc_param[j] to mulout[i + j] for each j in 0..N
     let mut mulout: [Field; 3 * N] = [0; 3 * N];
     for i in 0..(N + N) {
         for j in 0..N {
             mulout[i + j] += x[i] * redc_param[j];
         }
     }
+
     mulout = split_bits::__normalize_limbs(mulout, 3 * N - 1);
     let mulout_u60: U60Repr<N, 6> = U60Repr::new(mulout);
 
@@ -255,13 +256,22 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     }
     let quotient_mul_modulus_u60: U60Repr<N, 4> = U60Repr::new(quotient_mul_modulus_normalized);
 
+    // convert the input into U60Repr
     let x_u60: U60Repr<N, 4> = U60Repr::new(x);
     let mut remainder_u60 = x_u60 - quotient_mul_modulus_u60;
-
+    // barrett reduction is quircky so might need to remove a few modulus_u60 from the remainder
     if (remainder_u60.gte(modulus_u60)) {
         remainder_u60 = remainder_u60 - modulus_u60;
         quotient_u60.increment();
     } else {}
+    if (remainder_u60.gte(modulus_u60)) {
+        remainder_u60 = remainder_u60 - modulus_u60;
+        quotient_u60.increment();
+    }
+    if (remainder_u60.gte(modulus_u60)) {
+        remainder_u60 = remainder_u60 - modulus_u60;
+        quotient_u60.increment();
+    }
 
     let q: [Field; N] = U60Repr::into(quotient_u60);
     let r: [Field; N] = U60Repr::into(remainder_u60);
