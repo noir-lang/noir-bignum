@@ -1,11 +1,11 @@
-use crate::utils::split_bits;
-use crate::utils::u60_representation::U60Repr;
 use crate::fns::constrained_ops::derive_from_seed;
 use crate::fns::unconstrained_helpers::{
     __barrett_reduction, __multiplicative_generator, __primitive_root_log_size,
     __tonelli_shanks_sqrt_inner_loop_check,
 };
 use crate::params::BigNumParams as P;
+use crate::utils::split_bits;
+use crate::utils::u60_representation::U60Repr;
 
 /**
  * In this file:
@@ -32,7 +32,6 @@ pub(crate) unconstrained fn __one<let N: u32>() -> [Field; N] {
     limbs[0] = 1;
     limbs
 }
-
 
 /// Deterministically derives a big_num from a seed value.
 ///
