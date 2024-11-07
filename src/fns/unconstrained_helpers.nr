@@ -210,7 +210,7 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
             mulout[i + j] += x[i] * redc_param[j];
         }
     }
-    mulout = split_bits::__normalize_limbs(mulout, 3 * N - 2);
+    mulout = split_bits::__normalize_limbs(mulout, 3 * N - 1);
     let mulout_u60: U60Repr<N, 6> = U60Repr::new(mulout);
 
     // When we apply the barrett reduction, the maximum value of the output will be
