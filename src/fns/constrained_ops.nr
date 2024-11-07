@@ -462,7 +462,6 @@ pub(crate) fn udiv_mod<let N: u32, let MOD_BITS: u32>(
 ) -> ([Field; N], [Field; N]) {
     let (quotient, remainder) = unsafe { __udiv_mod(numerator, divisor) };
 
-    
     // self / divisor = quotient rounded
     // quotient * divisor + remainder - self = 0
     evaluate_quadratic_expression(

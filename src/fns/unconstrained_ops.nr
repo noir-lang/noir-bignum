@@ -1,6 +1,6 @@
 use crate::utils::split_bits;
 use crate::utils::u60_representation::U60Repr;
-use crate::fns::constrained_ops::derive_from_seed; 
+use crate::fns::constrained_ops::derive_from_seed;
 use crate::fns::unconstrained_helpers::{
     __barrett_reduction, __multiplicative_generator, __primitive_root_log_size,
     __tonelli_shanks_sqrt_inner_loop_check,
@@ -42,11 +42,11 @@ pub(crate) unconstrained fn __one<let N: u32>() -> [Field; N] {
  * @returns [Field; N] An array of field elements derived from the seed (the limbs of the big_num)
  */
 pub(crate) unconstrained fn __derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(
-        params: P<N, MOD_BITS>,
-        seed: [u8; SeedBytes],
-    ) -> [Field; N] {
-    let out = derive_from_seed::<N, MOD_BITS, SeedBytes>(params, seed); 
-    out 
+    params: P<N, MOD_BITS>,
+    seed: [u8; SeedBytes],
+) -> [Field; N] {
+    let out = derive_from_seed::<N, MOD_BITS, SeedBytes>(params, seed);
+    out
 }
 
 pub(crate) unconstrained fn __eq<let N: u32>(lhs: [Field; N], rhs: [Field; N]) -> bool {
