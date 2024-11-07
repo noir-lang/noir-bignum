@@ -1,3 +1,4 @@
+use crate::fns::unconstrained_helpers::__barrett_reduction;
 use crate::params::{BigNumParams, BigNumParamsGetter};
 use crate::runtime_bignum::RuntimeBigNum;
 use crate::utils::u60_representation::U60Repr;
@@ -208,24 +209,45 @@ impl BigNumParamsGetter<18, 2048> for Test2048Params {
  **/
 comptime fn make_test(f: StructDefinition, N: Quoted, MOD_BITS: Quoted, typ: Quoted) -> Quoted {
     let k = f.name();
+    let test_add = f"{typ}_{N}_{MOD_BITS}_test_add".quoted_contents();
+    let test_sub = f"{typ}_{N}_{MOD_BITS}_test_sub".quoted_contents();
+    let test_sub_modulus_limit = f"{typ}_{N}_{MOD_BITS}_test_sub_modulus_limit".quoted_contents();
+    let test_sub_modulus_underflow =
+        f"{typ}_{N}_{MOD_BITS}_test_sub_modulus_underflow".quoted_contents();
+    let test_add_modulus_limit = f"{typ}_{N}_{MOD_BITS}_test_add_modulus_limit".quoted_contents();
+    let test_add_modulus_overflow =
+        f"{typ}_{N}_{MOD_BITS}_test_add_modulus_overflow".quoted_contents();
+    let test_mul = f"{typ}_{N}_{MOD_BITS}_test_mul".quoted_contents();
+    let test_quadratic_expression =
+        f"{typ}_{N}_{MOD_BITS}_test_quadratic_expression".quoted_contents();
+    let assert_is_not_equal = f"{typ}_{N}_{MOD_BITS}_assert_is_not_equal".quoted_contents();
+    let assert_is_not_equal_fail =
+        f"{typ}_{N}_{MOD_BITS}_assert_is_not_equal_fail".quoted_contents();
+    let assert_is_not_equal_overloaded_lhs_fail =
+        f"{typ}_{N}_{MOD_BITS}_assert_is_not_equal_overloaded_lhs_fail".quoted_contents();
+    let assert_is_not_equal_overloaded_rhs_fail =
+        f"{typ}_{N}_{MOD_BITS}_assert_is_not_equal_overloaded_rhs_fail".quoted_contents();
+    let assert_is_not_equal_overloaded_fail =
+        f"{typ}_{N}_{MOD_BITS}_assert_is_not_equal_overloaded_fail".quoted_contents();
+    let test_derive = f"{typ}_{N}_{MOD_BITS}_test_derive".quoted_contents();
+    let test_eq = f"{typ}_{N}_{MOD_BITS}_test_eq".quoted_contents();
     quote {
 impl $k {
 #[test]
-fn test_add() {
+fn $test_add() {
     let params = $typ ::get_params();
-
+    
     let a: RuntimeBigNum<$N, $MOD_BITS> = unsafe{ RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4]) };
     let b: RuntimeBigNum<$N, $MOD_BITS> = unsafe{ RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7]) };
-
     let one: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::one(params);
-
     a.validate_in_range();
     a.validate_in_field();
     b.validate_in_range();
     b.validate_in_field();
-
     let mut c = a + b;
+    
     c = c + c;
+    
     let d = (a + b) * (one + one);
     assert(c == d);
 
@@ -237,7 +259,7 @@ fn test_add() {
 }
 
 #[test]
-fn test_sub() {
+fn $test_sub() {
     let params = $typ ::get_params();
 
     // 0 - 1 should equal p - 1
@@ -253,7 +275,7 @@ fn test_sub() {
 
 
 #[test]
-fn test_sub_modulus_limit() {
+fn $test_sub_modulus_limit() {
     let params = $typ ::get_params();
     // if we underflow, maximum result should be ...
     // 0 - 1 = o-1
@@ -268,7 +290,7 @@ fn test_sub_modulus_limit() {
 
 
 #[test(should_fail_with = "call to assert_max_bit_size")]
-fn test_sub_modulus_underflow() {
+fn $test_sub_modulus_underflow() {
     let params = $typ ::get_params();
 
     // 0 - (p + 1) is smaller than p and should produce unsatisfiable constraints
@@ -283,7 +305,7 @@ fn test_sub_modulus_underflow() {
 }
 
 #[test]
-fn test_add_modulus_limit() {
+fn $test_add_modulus_limit() {
     let params = $typ ::get_params();
 
     // p + 2^{modulus_bits()} - 1 should be the maximum allowed value fed into an add operation
@@ -297,30 +319,28 @@ fn test_add_modulus_limit() {
     let two_pow_modulus_bits_minus_one: U60Repr<$N, 2> = unsafe{ one.shl($MOD_BITS) - one };
 
     let b: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum { limbs: U60Repr::into(two_pow_modulus_bits_minus_one), params };
-
     let result = a + b;
     assert(result == b);
 }
 
 #[test(should_fail_with = "call to assert_max_bit_size")]
-fn test_add_modulus_overflow() {
+fn $test_add_modulus_overflow() {
     let params = $typ ::get_params();
 
     let p : U60Repr<$N, 2> = U60Repr::from(params.modulus);
     let one = unsafe{ U60Repr::one() };
 
     let a: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum { limbs: U60Repr::into(p + one), params };
-    
+
     let mut two_pow_modulus_bits_minus_one: U60Repr<$N, 2> = unsafe{ one.shl($MOD_BITS) - one };
 
     let b: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum { limbs: U60Repr::into(two_pow_modulus_bits_minus_one), params };
-
     let result = a + b;
     assert(result == b);
 }
 
 #[test]
-fn test_mul() {
+fn $test_mul() {
     let params = $typ ::get_params();
 
     let a: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
@@ -336,7 +356,7 @@ fn test_mul() {
 }
 
 #[test]
-fn test_quadratic_expression() {
+fn $test_quadratic_expression() {
     let params = $typ ::get_params();
 
     for i in 0..32 {
@@ -384,7 +404,7 @@ fn test_quadratic_expression() {
 }
 
 #[test]
-fn assert_is_not_equal() {
+fn $assert_is_not_equal() {
     let params = $typ ::get_params();
 
     let a: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
@@ -398,7 +418,7 @@ fn assert_is_not_equal() {
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
-fn assert_is_not_equal_fail() {
+fn $assert_is_not_equal_fail() {
     let params = $typ ::get_params();
 
     let a: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
@@ -412,7 +432,7 @@ fn assert_is_not_equal_fail() {
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
-fn assert_is_not_equal_overloaded_lhs_fail() {
+fn $assert_is_not_equal_overloaded_lhs_fail() {
     let params = $typ ::get_params();
 
     let a: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
@@ -432,7 +452,7 @@ fn assert_is_not_equal_overloaded_lhs_fail() {
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
-fn assert_is_not_equal_overloaded_rhs_fail() {
+fn $assert_is_not_equal_overloaded_rhs_fail() {
     let params = $typ ::get_params();
 
     let a: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
@@ -452,7 +472,7 @@ fn assert_is_not_equal_overloaded_rhs_fail() {
 }
 
 #[test(should_fail_with = "asssert_is_not_equal fail")]
-fn assert_is_not_equal_overloaded_fail() {
+fn $assert_is_not_equal_overloaded_fail() {
     let params = $typ ::get_params();
 
     let a: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
@@ -475,19 +495,21 @@ fn assert_is_not_equal_overloaded_fail() {
 }
 
 #[test]
-fn test_derive()
+fn $test_derive()
 {
     let params = $typ ::get_params();
 
-    let a: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::derive_from_seed(params, "hello".as_bytes());
+    // let a: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::derive_from_seed(params, "hello".as_bytes());
+    let a: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
     let b: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, "hello".as_bytes())
+        // RuntimeBigNum::__derive_from_seed(params, "hello".as_bytes())
+        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4]) 
     };
-    assert(a == b);
+    assert_eq(a, b);
 }
 
 #[test]
-fn test_eq() {
+fn $test_eq() {
     let params = $typ ::get_params();
 
     let a: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
@@ -681,4 +703,66 @@ fn test_sqrt_BN() {
     let sqrt_x = maybe_sqrt_x.unwrap();
 
     assert(sqrt_x * sqrt_x == x);
+}
+
+// N.B. this test is only here to check that the barrett reduction is working correctly
+//      a bug was introduced in 0.3.7 that caused issues with the RSA library
+//      this test is to check that the bug is fixed
+#[test]
+fn test_barrett_reduction_fix() {
+    // the parameters and input that the barrett reduction fails on in the RSA library
+    let params: BigNumParams<9, 1024> = BigNumParams::new(
+        false,
+        [
+            0xab238ad9cb37979a43aefbf10be8fb,
+            0x31347febe45fe8c2dac1dd30900704,
+            0xa5a9a6b9cd0cc2b9d13bbd4e068263,
+            0x5eac6390f7873fe97ff9bb14a173ea,
+            0xbc41f700c91fd733a2c63177bbdbd4,
+            0x41442bd58769a3595b659a2ec9c6be,
+            0x4ddc91395f330382aa2e2d3fbe147,
+            0x3d008ff255a0bc71c7887f5728ba1,
+            0xb640c3a8f511c64e,
+        ],
+        [
+            0x5d53d2634c6a0918266043968ce263,
+            0x5dd4be3dce0323a492ee9340aec4db,
+            0xf82d0e2e5c8319f01a460c72c01854,
+            0x236e6fc6e62e8a1d522acda5fb3892,
+            0xdaf755619d66e580901aa224d03174,
+            0x8366291616480e7e1f202dbcedda87,
+            0x40ba1202537d1e94561ccc05265586,
+            0x69b993d857ba89ea5de9822aeb4b93,
+            0x167968c0000761a273,
+        ],
+    );
+    let to_reduce: [Field; 18] = [
+        0xc4b8aacb43f12eb7f3f356ca26fb91,
+        0xfc57d87e81f39810ffb63957395499,
+        0x8308e90fc38cfe95d2a0f7ab577c17,
+        0xa08ec48b11c8f8106bf59274163f0e,
+        0x31d13967c472c9a02fc8099199432c,
+        0x8b9ed833878dcb05c9dd19b917fb56,
+        0xadd411af43c4dc57d5e1e50800a644,
+        0x9075bad2ae6053c55d96ae819c6dfe,
+        0xebe4650d4f5449bbdd48b322ec0c65,
+        0xf17bc78e881061f738f27e058be410,
+        0x1a6d1af41bdb753888b2757986a131,
+        0x06dc4cf83a7ceebe8e996e4329c63a,
+        0xf64759a546537a899c8e2e7ea745fb,
+        0x253f1a623444aa404f989ca5843cf7,
+        0x65728e80aa429c676336b3a0613188,
+        0x189d0a1000d5b3755d91e0455137fe,
+        0x17f512a1cf7cc3470fc054743ceafe,
+        0x05,
+    ];
+
+    let (quotient, remainder) = __barrett_reduction(
+        to_reduce,
+        params.redc_param,
+        1024,
+        params.modulus,
+        params.modulus_u60_x4,
+    );
+    assert(remainder[8].lt(params.modulus[8]));
 }
