@@ -237,16 +237,9 @@ pub(crate) fn validate_in_field<let N: u32, let MOD_BITS: u32>(
 **/
 pub(crate) fn validate_in_range<let N: u32, let MOD_BITS: u32>(limbs: [Field; N]) {
     for i in 0..(N - 1) {
-        // this is a hack, the assert_max_bit_size is not working when limbs[i] is not a constant
-        // limbs[i].assert_max_bit_size::<120>();
-        assert(limbs[i].lt(2.pow_32(120)), "call to assert_max_bit_size 2");
+        limbs[i].assert_max_bit_size::<120>();
     }
-    // this is a hack, the assert_max_bit_size is not working when limbs[i] is not a constant
-    // limbs[N - 1].assert_max_bit_size::<MOD_BITS - ((N - 1) * 120)>();
-    assert(
-        limbs[N - 1].lt(2.pow_32((MOD_BITS as Field) - ((N - 1) * 120) as Field)),
-        "call to assert_max_bit_size",
-    );
+    limbs[N - 1].assert_max_bit_size::<MOD_BITS - ((N - 1) * 120)>();
 }
 
 /**
