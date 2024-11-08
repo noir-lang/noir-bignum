@@ -238,16 +238,16 @@ fn test_bls_reduction() {
 
 fn test_eq<let N: u32, BN>()
 where
-    BN: BigNumTrait<N>,
+    BN: BigNumTrait,
 {
     let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
     let b = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
     let c = unsafe { BN::__derive_from_seed([2, 2, 3, 4]) };
 
     let modulus = BN::modulus();
-    let t0: U60Repr<N, 2> = (U60Repr::from(modulus.get_limbs()));
-    let t1: U60Repr<N, 2> = (U60Repr::from(b.get_limbs()));
-    let b_plus_modulus = BN::from_array(U60Repr::into(t0 + t1));
+    let t0: U60Repr<N, 2> = (U60Repr::from(modulus.get_limbs_slice().as_array()));
+    let t1: U60Repr<N, 2> = (U60Repr::from(b.get_limbs_slice().as_array()));
+    let b_plus_modulus = BN::from_slice(U60Repr::into(t0 + t1));
     assert(a.eq(b) == true);
     assert(a.eq(b_plus_modulus) == true);
     assert(c.eq(b) == false);
@@ -275,7 +275,7 @@ where
 // // // 929 gates for a 2048 bit mul
 fn test_mul<let N: u32, BN>()
 where
-    BN: BigNumTrait<N> + std::ops::Mul + std::ops::Add,
+    BN: BigNumTrait + std::ops::Mul + std::ops::Add,
 {
     let a: BN = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
     let b: BN = unsafe { BN::__derive_from_seed([4, 5, 6, 7]) };
@@ -287,7 +287,7 @@ where
 
 fn test_add<let N: u32, BN>()
 where
-    BN: BigNumTrait<N> + std::ops::Add + std::ops::Mul + std::cmp::Eq,
+    BN: BigNumTrait + std::ops::Add + std::ops::Mul + std::cmp::Eq,
 {
     let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
     let b: BN = unsafe { BN::__derive_from_seed([4, 5, 6, 7]) };
@@ -301,7 +301,7 @@ where
     let d = (a + b) * (one + one);
     assert(c == (d));
     let e = one + one;
-    let limbs = e.get_limbs();
+    let limbs: [Field; N] = e.get_limbs_slice().as_array();
     let mut first: bool = true;
     for limb in limbs {
         if first {
@@ -315,7 +315,7 @@ where
 
 fn test_div<let N: u32, BN>()
 where
-    BN: BigNumTrait<N> + std::ops::Div + std::ops::Mul + std::ops::Add + std::cmp::Eq,
+    BN: BigNumTrait + std::ops::Div + std::ops::Mul + std::ops::Add + std::cmp::Eq,
 {
     let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
     let b = unsafe { BN::__derive_from_seed([4, 5, 6, 7]) };
@@ -326,7 +326,7 @@ where
 
 fn test_invmod<let N: u32, BN>()
 where
-    BN: BigNumTrait<N> + std::cmp::Eq,
+    BN: BigNumTrait + std::cmp::Eq,
 {
     let u = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
     for _ in 0..1 {
@@ -339,7 +339,7 @@ where
 
 fn assert_is_not_equal<let N: u32, BN>()
 where
-    BN: BigNumTrait<N>,
+    BN: BigNumTrait,
 {
     let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
     let b = unsafe { BN::__derive_from_seed([4, 5, 6, 7]) };
@@ -349,7 +349,7 @@ where
 
 fn assert_is_not_equal_fail<let N: u32, BN>()
 where
-    BN: BigNumTrait<N>,
+    BN: BigNumTrait,
 {
     let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
     let b = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
@@ -359,48 +359,48 @@ where
 
 fn assert_is_not_equal_overloaded_lhs_fail<let N: u32, BN>()
 where
-    BN: BigNumTrait<N>,
+    BN: BigNumTrait,
 {
     let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
     let b = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
 
     let modulus = BN::modulus();
 
-    let t0: U60Repr<N, 2> = U60Repr::from(a.get_limbs());
-    let t1: U60Repr<N, 2> = U60Repr::from(modulus.get_limbs());
-    let a_plus_modulus = BN::from_array(U60Repr::into(t0 + t1));
+    let t0: U60Repr<N, 2> = U60Repr::from(a.get_limbs_slice().as_array());
+    let t1: U60Repr<N, 2> = U60Repr::from(modulus.get_limbs_slice().as_array());
+    let a_plus_modulus = BN::from_slice(U60Repr::into(t0 + t1));
     a_plus_modulus.assert_is_not_equal(b);
 }
 
 fn assert_is_not_equal_overloaded_rhs_fail<let N: u32, BN>()
 where
-    BN: BigNumTrait<N>,
+    BN: BigNumTrait,
 {
     let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
     let b = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
 
     let modulus = BN::modulus();
 
-    let t0: U60Repr<N, 2> = U60Repr::from(b.get_limbs());
-    let t1: U60Repr<N, 2> = U60Repr::from(modulus.get_limbs());
-    let b_plus_modulus = BN::from_array(U60Repr::into(t0 + t1));
+    let t0: U60Repr<N, 2> = U60Repr::from(b.get_limbs_slice().as_array());
+    let t1: U60Repr<N, 2> = U60Repr::from(modulus.get_limbs_slice().as_array());
+    let b_plus_modulus = BN::from_slice(U60Repr::into(t0 + t1));
     a.assert_is_not_equal(b_plus_modulus);
 }
 
 fn assert_is_not_equal_overloaded_fail<let N: u32, BN>()
 where
-    BN: BigNumTrait<N>,
+    BN: BigNumTrait,
 {
     let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
     let b = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
 
     let modulus = BN::modulus();
 
-    let t0: U60Repr<N, 2> = U60Repr::from(a.get_limbs());
-    let t1: U60Repr<N, 2> = U60Repr::from(b.get_limbs());
-    let t2: U60Repr<N, 2> = U60Repr::from(modulus.get_limbs());
-    let a_plus_modulus: BN = BN::from_array(U60Repr::into(t0 + t2));
-    let b_plus_modulus: BN = BN::from_array(U60Repr::into(t1 + t2));
+    let t0: U60Repr<N, 2> = U60Repr::from(a.get_limbs_slice().as_array());
+    let t1: U60Repr<N, 2> = U60Repr::from(b.get_limbs_slice().as_array());
+    let t2: U60Repr<N, 2> = U60Repr::from(modulus.get_limbs_slice().as_array());
+    let a_plus_modulus: BN = BN::from_slice(U60Repr::into(t0 + t2));
+    let b_plus_modulus: BN = BN::from_slice(U60Repr::into(t1 + t2));
     a_plus_modulus.assert_is_not_equal(b_plus_modulus);
 }
 
@@ -623,7 +623,8 @@ type U256 = BN256;
 #[test]
 fn test_udiv_mod_U256() {
     let a: U256 = unsafe { BigNum::__derive_from_seed([1, 2, 3, 4]) };
-    let b: U256 = BigNum::from_array([12, 0, 0]);
+    let b: U256 = BigNum::from_slice([12, 0, 0]);
+
     let (q, r) = a.udiv_mod(b);
 
     // let qb = q.__mul(b);
