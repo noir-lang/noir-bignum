@@ -1,38 +1,18 @@
-// Decomposes a single field into two 120 bit fields and a carry
-pub unconstrained fn split_120_bits(x: Field) -> (Field, Field) {
-    let x_bytes: [u8; 32] = x.to_le_bytes();
+global TWO_POW_56: u64 = 0x100000000000000;
+global TWO_POW_60: u64 = 0x1000000000000000;
+global TWO_POW_64: Field = 0x10000000000000000;
 
-    let mut low: Field = 0;
-    let mut high: Field = 0;
+// Decomposes a single field into two 120 bit fields
+pub unconstrained fn split_120_bits(mut x: Field) -> (Field, Field) {
+    // Here we're taking advantage of truncating 64 bit limbs from the input field
+    // and then subtracting them from the input such that the field division is equivalent to integer division.
+    let low_lower_64 = (x as u64) as Field;
+    x = (x - low_lower_64) / TWO_POW_64;
+    let low_upper_56 = ((x as u64) % TWO_POW_56) as Field;
 
-    let offsets: [Field; 17] = [
-        1,
-        0x100,
-        0x10000,
-        0x1000000,
-        0x100000000,
-        0x10000000000,
-        0x1000000000000,
-        0x100000000000000,
-        0x10000000000000000,
-        0x1000000000000000000,
-        0x100000000000000000000,
-        0x10000000000000000000000,
-        0x1000000000000000000000000,
-        0x100000000000000000000000000,
-        0x10000000000000000000000000000,
-        0x1000000000000000000000000000000,
-        0x100000000000000000000000000000000,
-    ];
+    let low = low_lower_64 + TWO_POW_64 * low_upper_56;
+    let high = (x - low_upper_56) / TWO_POW_56 as Field;
 
-    for i in 0..15 {
-        low += (x_bytes[i] as Field) * offsets[i];
-        high += (x_bytes[i + 15] as Field) * offsets[i];
-    }
-    high += (x_bytes[30] as Field) * offsets[15];
-    high += (x_bytes[31] as Field) * offsets[16];
-    // TDOO: investigate why this is triggered in BigCurve crate? it shouldn't be?
-    //   assert(x_bytes[31] == 0);
     (low, high)
 }
 
@@ -42,29 +22,12 @@ pub unconstrained fn split_120_bits(x: Field) -> (Field, Field) {
  * @description Expects the input limb to be in the range [0, ..., 2^{120 - 1}]
  **/
 pub unconstrained fn split_60_bits(x: Field) -> (u64, u64) {
-    let x_bytes: [u8; 32] = x.to_le_bytes();
+    // Here we're taking advantage of truncating 64 bit limbs from the input field
+    // and then subtracting them from the input such that the field division is equivalent to integer division.
+    let x_lower_64 = (x as u64);
+    let low = x_lower_64 % TWO_POW_60;
+    let high = ((x - (low as Field)) / TWO_POW_60 as Field) as u64;
 
-    let mut low: u64 = 0;
-    let mut high: u64 = 0;
-
-    let offsets: [u64; 8] = [
-        1,
-        0x100,
-        0x10000,
-        0x1000000,
-        0x100000000,
-        0x10000000000,
-        0x1000000000000,
-        0x100000000000000,
-    ];
-    for i in 0..8 {
-        low += (x_bytes[i] as u64) * offsets[i];
-        high += (x_bytes[i + 8] as u64) * offsets[i];
-    }
-    let t1 = low >> 60;
-    let mask = ((1 as u64) << 60 as u8) - 1;
-    low = low & mask;
-    high = (high << 4) | t1;
     (low, high)
 }
 
