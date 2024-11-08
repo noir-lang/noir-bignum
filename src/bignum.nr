@@ -128,7 +128,6 @@ where
         Self { limbs: limbs.as_array() }
     }
 
-
     fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> Self {
         Self { limbs: from_be_bytes::<_, MOD_BITS, _>(x) }
     }
@@ -214,7 +213,7 @@ where
         let params = Params::get_params();
         assert(params.has_multiplicative_inverse);
         __batch_invert::<_, MOD_BITS, _>(params, x.map(|bn| Self::get_limbs_slice(bn).as_array()))
-            .map(|limbs| { Self { limbs } })
+            .map(|limbs| Self { limbs })
     }
 
     unconstrained fn __batch_invert_slice<let M: u32>(x: [Self]) -> [Self] {
@@ -224,7 +223,7 @@ where
             params,
             x.map(|bn| Self::get_limbs_slice(bn).as_array()),
         )
-            .map(|limbs| { Self { limbs } })
+            .map(|limbs| Self { limbs })
     }
 
     unconstrained fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self> {
