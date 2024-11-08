@@ -17,7 +17,8 @@ use crate::fns::{
 pub struct BigNum<let N: u32, let MOD_BITS: u32, Params> {
     pub limbs: [Field; N],
 }
-
+// We aim to avoid needing to add a generic parameter to this trait, for this reason we do not allow
+// accessing the limbs of the bignum except through slices.
 pub trait BigNumTrait {
     // TODO: this crashes the compiler? v0.32
     // fn default() -> Self { std::default::Default::default  () }
@@ -26,7 +27,6 @@ pub trait BigNumTrait {
     pub fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
     pub unconstrained fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
     pub fn from_slice(limbs: [Field]) -> Self;
-    // pub fn from_array<let M: u32>(limbs: [Field; M]) -> Self;
     pub fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> Self;
     pub fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes];
 
@@ -34,7 +34,6 @@ pub trait BigNumTrait {
     pub fn modulus_bits(self) -> u32;
     pub fn num_limbs(self) -> u32;
     pub fn get_limbs_slice(self) -> [Field];
-    // pub fn get_limbs<let M: u32>(self) -> [Field; M];
     pub fn get_limb(self, idx: u32) -> Field;
     pub fn set_limb(&mut self, idx: u32, value: Field);
 
@@ -129,12 +128,6 @@ where
         Self { limbs: limbs.as_array() }
     }
 
-    // We avoid passing an array, because that would require the array length to be expressed as a generic param of BigNumTrait, and we don't want BigNumTrait to have any generic params, so that when we use BigNum, we can cleanly say `where BigNum: BigNumTrait`, without any extra generics being used.
-    // fn from_array<let M: u32>(limbs: [Field; M]) -> Self {
-    //     // This static assertion doesn't trick the compiler.
-    //     std::static_assert(M == N, "");
-    //     Self { limbs }
-    // }
 
     fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> Self {
         Self { limbs: from_be_bytes::<_, MOD_BITS, _>(x) }
@@ -159,13 +152,6 @@ where
     fn get_limbs_slice(self) -> [Field] {
         self.limbs
     }
-
-    // We avoid returning an array, because that would require the array length to be expressed as a generic param of BigNumTrait, and we don't want BigNumTrait to have any generic params, so that when we use BigNum, we can cleanly say `where BigNum: BigNumTrait`, without any extra generics being used.
-    // fn get_limbs<let M: u32>(self) -> [Field; M] {
-    //     // This static assertion doesn't trick the compiler.
-    //     std::static_assert(M == N, "");
-    //     self.limbs
-    // }
 
     fn get_limb(self, idx: u32) -> Field {
         self.limbs[idx]
