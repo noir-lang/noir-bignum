@@ -45,6 +45,7 @@ impl<let N: u32, let MOD_BITS: u32> std::cmp::Eq for BigNumParams<N, MOD_BITS> {
             & (self.modulus == other.modulus)
             & (self.modulus_u60 == other.modulus_u60)
             & (self.modulus_u60_x4 == other.modulus_u60_x4)
+            & (self.double_modulus == other.double_modulus)
             & (self.redc_param == other.redc_param)
     }
 }
