@@ -202,7 +202,7 @@ impl BigNumParamsGetter<18, 2048> for Test2048Params {
 /**
  * @brief experimenting with macro madness and code generation to make some tests that apply to multiple BigNum parametrisations!
  **/
-comptime fn make_test(_m: Module, N: Quoted, MOD_BITS: Quoted, typ: Quoted) -> Quoted {
+comptime fn make_test(_m: Module, N: u32, MOD_BITS: u32, typ: Quoted) -> Quoted {
     let RuntimeBigNum = quote { crate::RuntimeBigNum };
     let U60Repr = quote { crate::utils::u60_representation::U60Repr };
 
@@ -512,25 +512,25 @@ fn test_eq() {
 }
 }
 
-#[make_test(quote {3}, quote {254}, quote {crate::fields::bn254Fq::BN254_Fq_Params})]
+#[make_test(3, 254, quote {crate::fields::bn254Fq::BN254_Fq_Params})]
 pub mod BNTests {}
 
-#[make_test(quote {3}, quote {256}, quote {crate::fields::secp256k1Fq::Secp256k1_Fq_Params})]
+#[make_test(3, 256, quote {crate::fields::secp256k1Fq::Secp256k1_Fq_Params})]
 pub mod Secp256K1FqTests {}
 
-#[make_test(quote {4}, quote {381}, quote {crate::fields::bls12_381Fq::BLS12_381_Fq_Params})]
+#[make_test(4, 381, quote {crate::fields::bls12_381Fq::BLS12_381_Fq_Params})]
 pub mod BLS12_381FqTests {}
 
-#[make_test(quote {18}, quote {2048}, quote {super::Test2048Params})]
+#[make_test(18, 2048, quote {super::Test2048Params})]
 pub mod Test2048Tests {}
 
-#[make_test(quote {3}, quote {255}, quote {crate::fields::bls12_381Fr::BLS12_381_Fr_Params})]
+#[make_test(3, 255, quote {crate::fields::bls12_381Fr::BLS12_381_Fr_Params})]
 pub mod BLS12_381_Fr_ParamsTests {}
 
-#[make_test(quote {4}, quote {377}, quote {crate::fields::bls12_377Fq::BLS12_377_Fq_Params})]
+#[make_test(4, 377, quote {crate::fields::bls12_377Fq::BLS12_377_Fq_Params})]
 pub mod BLS12_377_Fq_ParamsTests {}
 
-#[make_test(quote {3}, quote {253}, quote {crate::fields::bls12_377Fr::BLS12_377_Fr_Params})]
+#[make_test(3, 253, quote {crate::fields::bls12_377Fr::BLS12_377_Fr_Params})]
 pub mod BLS12_377_Fr_ParamsTests {}
 
 // 98760
