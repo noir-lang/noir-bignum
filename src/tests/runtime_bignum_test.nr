@@ -730,12 +730,14 @@ fn test_barrett_reduction_fix() {
         0x05,
     ];
 
-    let (quotient, remainder) = __barrett_reduction(
-        to_reduce,
-        params.redc_param,
-        1024,
-        params.modulus,
-        params.modulus_u60_x4,
-    );
+    let (_quotient, remainder) = unsafe {
+        __barrett_reduction(
+            to_reduce,
+            params.redc_param,
+            1024,
+            params.modulus,
+            params.modulus_u60_x4,
+        )
+    };
     assert(remainder[8].lt(params.modulus[8]));
 }
