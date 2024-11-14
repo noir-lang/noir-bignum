@@ -212,7 +212,7 @@ where
     unconstrained fn __batch_invert<let M: u32>(x: [Self; M]) -> [Self; M] {
         let params = Params::get_params();
         assert(params.has_multiplicative_inverse);
-        __batch_invert::<_, MOD_BITS, _>(params, x.map(|bn| Self::get_limbs_slice(bn).as_array()))
+        __batch_invert::<_, MOD_BITS, _>(params, x.map(|bn: Self| bn.limbs))
             .map(|limbs| Self { limbs })
     }
 
@@ -221,7 +221,7 @@ where
         assert(params.has_multiplicative_inverse);
         __batch_invert_slice::<_, MOD_BITS>(
             params,
-            x.map(|bn| Self::get_limbs_slice(bn).as_array()),
+            x.map(|bn: Self| bn.limbs),
         )
             .map(|limbs| Self { limbs })
     }
@@ -245,15 +245,15 @@ where
             params,
             map(
                 lhs_terms,
-                |bns| map(bns, |bn| Self::get_limbs_slice(bn).as_array()),
+                |bns| map(bns, |bn: Self| bn.limbs),
             ),
             lhs_flags,
             map(
                 rhs_terms,
-                |bns| map(bns, |bn| Self::get_limbs_slice(bn).as_array()),
+                |bns| map(bns, |bn: Self| bn.limbs),
             ),
             rhs_flags,
-            map(linear_terms, |bn| Self::get_limbs_slice(bn).as_array()),
+            map(linear_terms, |bn: Self| bn.limbs),
             linear_flags,
         );
         (Self { limbs: q_limbs }, Self { limbs: r_limbs })
@@ -272,15 +272,15 @@ where
             params,
             map(
                 lhs_terms,
-                |bns| map(bns, |bn| Self::get_limbs_slice(bn).as_array()),
+                |bns| map(bns, |bn: Self| bn.limbs),
             ),
             lhs_flags,
             map(
                 rhs_terms,
-                |bns| map(bns, |bn| Self::get_limbs_slice(bn).as_array()),
+                |bns| map(bns, |bn: Self| bn.limbs),
             ),
             rhs_flags,
-            map(linear_terms, |bn| Self::get_limbs_slice(bn).as_array()),
+            map(linear_terms, |bn: Self| bn.limbs),
             linear_flags,
         )
     }
