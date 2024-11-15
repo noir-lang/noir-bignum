@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2](https://github.com/noir-lang/noir-bignum/compare/v0.4.1...v0.4.2) (2024-11-15)
+
+
+### Bug Fixes
+
+* Constraint count regression introduced in commit 53f652b  ([#53](https://github.com/noir-lang/noir-bignum/issues/53)) ([d81d5fa](https://github.com/noir-lang/noir-bignum/commit/d81d5fac5e2ea919bd93e513644d0edc5630261c))
+
 ## [0.4.1](https://github.com/noir-lang/noir-bignum/compare/v0.4.0...v0.4.1) (2024-11-08)
 
 
