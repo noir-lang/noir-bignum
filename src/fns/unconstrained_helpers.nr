@@ -230,32 +230,33 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     let mut quotient_u60 = mulout_u60.shr((k + k + BARRETT_REDUCTION_OVERFLOW_BITS));
 
     // N.B. we assume that the shifted quotient cannot exceed 2 times original bit size.
-    //      (partial_quotient should be just slightly larger than the modulus, we could probably represent with a size N+1 array)
+    //      (partial_quotient_full should be just slightly larger than the modulus, we could probably represent with a size N+1 array)
     let partial_quotient_full: [Field; 3 * N] = quotient_u60.into_field_array();
-    let mut partial_quotient: [Field; 2 * N] = [0; 2 * N];
-    for i in 0..2 * N {
-        partial_quotient[i] = partial_quotient_full[i];
-    }
-    // quotient_mul_modulus can never exceed input value `x` so can fit into size-2 array
-    let mut quotient_mul_modulus: [Field; 2 * N] = [0; 2 * N];
+
+    // quotient_mul_modulus_normalized can never exceed input value `x` so can fit into size-2 array
     let mut quotient_mul_modulus_normalized: [Field; 2 * N] = [0; 2 * N];
+
+    // First, accumulate the products into quotient_mul_modulus_normalized
     for j in 0..N {
         for i in 0..(N + N - j) {
-            quotient_mul_modulus[i + j] += partial_quotient[i] * modulus[j];
+            quotient_mul_modulus_normalized[i + j] += partial_quotient_full[i] * modulus[j];
         }
     }
 
+    // Then, split the accumulated values and propagate higher bits
     for i in 0..(N + N) {
-        let (lo, hi) = split_bits::split_120_bits(quotient_mul_modulus[i]);
+        let (lo, hi) = split_bits::split_120_bits(quotient_mul_modulus_normalized[i]);
         quotient_mul_modulus_normalized[i] = lo;
+
+        // Propagate higher bits to the next index
         // TODO: what is faster, leaving this if statement in or out?
         // (array is size-1 too large so we can tolerate adding 0 into max element)
         if (i + 1 < N + N) {
-            quotient_mul_modulus[i + 1] += hi;
+            quotient_mul_modulus_normalized[i + 1] += hi;
         }
     }
-    let quotient_mul_modulus_u60: U60Repr<N, 4> = U60Repr::new(quotient_mul_modulus_normalized);
 
+    let quotient_mul_modulus_u60: U60Repr<N, 4> = U60Repr::new(quotient_mul_modulus_normalized);
     // convert the input into U60Repr
     let x_u60: U60Repr<N, 4> = U60Repr::new(x);
     let mut remainder_u60 = x_u60 - quotient_mul_modulus_u60;
