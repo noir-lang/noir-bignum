@@ -4,6 +4,8 @@ use crate::utils::u60_representation::U60Repr;
 use crate::fns::unconstrained_ops::{__add, __eq, __mul, __neg, __one, __pow};
 use crate::params::BigNumParams as P;
 
+global TWO_POW_60: u64 = 0x1000000000000000;
+
 /**
  * In this file:
  *
@@ -39,24 +41,22 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
     let underflow = b_u60.gte(a_u60);
     b_u60 += U60Repr::one();
     assert(underflow == false, "BigNum::validate_gt check fails");
-    let mut addend_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
     let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
 
-    let mut carry: u64 = 0;
     let mut carry_in: u64 = 0;
-    let mut borrow: u64 = 0;
     let mut borrow_in: u64 = 0;
     let mut borrow_flags: [bool; N] = [false; N];
     let mut carry_flags: [bool; N] = [false; N];
     for i in 0..2 * N {
-        let mut add_term: u64 = a_u60.limbs[i] + addend_u60.limbs[i] + carry_in;
-        carry = (add_term >= 0x1000000000000000) as u64;
-        add_term -= (carry as u64 * 0x1000000000000000);
-        result_u60.limbs[i] = add_term;
-        carry_in = carry as u64;
-        borrow = ((b_u60.limbs[i] + borrow_in) > result_u60.limbs[i]) as u64;
-        let sub = (borrow << 60) + result_u60.limbs[i] - b_u60.limbs[i] - borrow_in;
-        result_u60.limbs[i] = sub;
+        let mut add_term: u64 = a_u60.limbs[i] + carry_in;
+        let mut carry = (add_term >= TWO_POW_60) as u64;
+        add_term -= carry * TWO_POW_60;
+        carry_in = carry;
+
+        let sub_term = b_u60.limbs[i] + borrow_in;
+        let mut borrow = (sub_term > add_term) as u64;
+        result_u60.limbs[i] = borrow * TWO_POW_60 + add_term - sub_term;
+
         borrow_in = borrow;
 
         if ((i & 1) == 1) {
@@ -68,7 +68,6 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
             borrow_flags[i / 2] = borrow as bool;
         }
     }
-
     let result = U60Repr::into(result_u60);
     (result, carry_flags, borrow_flags)
 }
@@ -80,14 +79,14 @@ pub(crate) unconstrained fn __neg_with_flags<let N: u32, let MOD_BITS: u32>(
     let x_u60: U60Repr<N, 2> = U60Repr::from(val);
     let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
 
-    let mut borrow: u64 = 0;
     let mut borrow_in: u64 = 0;
 
     let mut borrow_flags: [bool; N] = [false; N];
     for i in 0..2 * N {
-        borrow = ((x_u60.limbs[i] + borrow_in) > params.modulus_u60.limbs[i]) as u64;
-        let sub = (borrow << 60) + params.modulus_u60.limbs[i] - x_u60.limbs[i] - borrow_in;
-        result_u60.limbs[i] = sub;
+        let sub_term = x_u60.limbs[i] + borrow_in;
+        let borrow = (sub_term > params.modulus_u60.limbs[i]) as u64;
+        result_u60.limbs[i] = borrow * TWO_POW_60 + params.modulus_u60.limbs[i] - sub_term;
+
         borrow_in = borrow;
         if ((i & 1) == 1) {
             borrow_flags[i / 2] = borrow as bool;
@@ -115,21 +114,19 @@ pub(crate) unconstrained fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
         subtrahend_u60 = params.modulus_u60;
     }
 
-    let mut carry: u64 = 0;
     let mut carry_in: u64 = 0;
-    let mut borrow: u64 = 0;
     let mut borrow_in: u64 = 0;
     let mut borrow_flags: [bool; N] = [false; N];
     let mut carry_flags: [bool; N] = [false; N];
     for i in 0..2 * N {
         let mut add_term: u64 = a_u60.limbs[i] + b_u60.limbs[i] + carry_in;
-        carry = (add_term >= 0x1000000000000000) as u64;
-        add_term -= (carry as u64 * 0x1000000000000000);
-        result_u60.limbs[i] = add_term;
-        carry_in = carry as u64;
-        borrow = ((subtrahend_u60.limbs[i] + borrow_in) > result_u60.limbs[i]) as u64;
-        let sub = (borrow << 60) + result_u60.limbs[i] - subtrahend_u60.limbs[i] - borrow_in;
-        result_u60.limbs[i] = sub;
+        let mut carry = (add_term >= TWO_POW_60) as u64;
+        add_term -= carry * TWO_POW_60;
+        carry_in = carry;
+
+        let sub_term = subtrahend_u60.limbs[i] + borrow_in;
+        let mut borrow = (sub_term > add_term) as u64;
+        result_u60.limbs[i] = borrow * TWO_POW_60 + add_term - sub_term;
         borrow_in = borrow;
 
         if ((i & 1) == 1) {
@@ -157,28 +154,26 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
 
     let underflow = b_u60.gte(a_u60 + U60Repr::one());
 
-    let mut addend_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
+    let addend_u60: U60Repr<N, 2> = if underflow {
+        params.modulus_u60
+    } else {
+        U60Repr { limbs: [0; 2 * N] }
+    };
     let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
 
-    if underflow {
-        addend_u60 = params.modulus_u60;
-    }
-
-    let mut carry: u64 = 0;
     let mut carry_in: u64 = 0;
-    let mut borrow: u64 = 0;
     let mut borrow_in: u64 = 0;
     let mut borrow_flags: [bool; N] = [false; N];
     let mut carry_flags: [bool; N] = [false; N];
     for i in 0..2 * N {
         let mut add_term: u64 = a_u60.limbs[i] + addend_u60.limbs[i] + carry_in;
-        carry = (add_term >= 0x1000000000000000) as u64;
-        add_term -= (carry as u64 * 0x1000000000000000);
-        result_u60.limbs[i] = add_term;
-        carry_in = carry as u64;
-        borrow = ((b_u60.limbs[i] + borrow_in) > result_u60.limbs[i]) as u64;
-        let sub = (borrow << 60) + result_u60.limbs[i] - b_u60.limbs[i] - borrow_in;
-        result_u60.limbs[i] = sub;
+        let mut carry = (add_term >= TWO_POW_60) as u64;
+        add_term -= carry * TWO_POW_60;
+        carry_in = carry;
+
+        let sub_term = b_u60.limbs[i] + borrow_in;
+        let mut borrow = (sub_term > add_term) as u64;
+        result_u60.limbs[i] = borrow * TWO_POW_60 + add_term - sub_term;
         borrow_in = borrow;
 
         if ((i & 1) == 1) {
@@ -208,12 +203,14 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     modulus: [Field; N],
     modulus_u60: U60Repr<N, 4>,
 ) -> ([Field; N], [Field; N]) {
+    // for each i in 0..(N + N), adds x[i] * redc_param[j] to mulout[i + j] for each j in 0..N
     let mut mulout: [Field; 3 * N] = [0; 3 * N];
     for i in 0..(N + N) {
         for j in 0..N {
             mulout[i + j] += x[i] * redc_param[j];
         }
     }
+
     mulout = split_bits::__normalize_limbs(mulout, 3 * N - 1);
     let mulout_u60: U60Repr<N, 6> = U60Repr::new(mulout);
 
@@ -233,39 +230,49 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     let mut quotient_u60 = mulout_u60.shr((k + k + BARRETT_REDUCTION_OVERFLOW_BITS));
 
     // N.B. we assume that the shifted quotient cannot exceed 2 times original bit size.
-    //      (partial_quotient should be just slightly larger than the modulus, we could probably represent with a size N+1 array)
+    //      (partial_quotient_full should be just slightly larger than the modulus, we could probably represent with a size N+1 array)
     let partial_quotient_full: [Field; 3 * N] = quotient_u60.into_field_array();
-    let mut partial_quotient: [Field; 2 * N] = [0; 2 * N];
-    for i in 0..2 * N {
-        partial_quotient[i] = partial_quotient_full[i];
-    }
-    // quotient_mul_modulus can never exceed input value `x` so can fit into size-2 array
-    let mut quotient_mul_modulus: [Field; 2 * N] = [0; 2 * N];
+
+    // quotient_mul_modulus_normalized can never exceed input value `x` so can fit into size-2 array
     let mut quotient_mul_modulus_normalized: [Field; 2 * N] = [0; 2 * N];
+
+    // First, accumulate the products into quotient_mul_modulus_normalized
     for j in 0..N {
         for i in 0..(N + N - j) {
-            quotient_mul_modulus[i + j] += partial_quotient[i] * modulus[j];
+            quotient_mul_modulus_normalized[i + j] += partial_quotient_full[i] * modulus[j];
         }
     }
 
+    // Then, split the accumulated values and propagate higher bits
     for i in 0..(N + N) {
-        let (lo, hi) = split_bits::split_120_bits(quotient_mul_modulus[i]);
+        let (lo, hi) = split_bits::split_120_bits(quotient_mul_modulus_normalized[i]);
         quotient_mul_modulus_normalized[i] = lo;
+
+        // Propagate higher bits to the next index
         // TODO: what is faster, leaving this if statement in or out?
         // (array is size-1 too large so we can tolerate adding 0 into max element)
         if (i + 1 < N + N) {
-            quotient_mul_modulus[i + 1] += hi;
+            quotient_mul_modulus_normalized[i + 1] += hi;
         }
     }
-    let quotient_mul_modulus_u60: U60Repr<N, 4> = U60Repr::new(quotient_mul_modulus_normalized);
 
+    let quotient_mul_modulus_u60: U60Repr<N, 4> = U60Repr::new(quotient_mul_modulus_normalized);
+    // convert the input into U60Repr
     let x_u60: U60Repr<N, 4> = U60Repr::new(x);
     let mut remainder_u60 = x_u60 - quotient_mul_modulus_u60;
-
+    // barrett reduction is quircky so might need to remove a few modulus_u60 from the remainder
     if (remainder_u60.gte(modulus_u60)) {
         remainder_u60 = remainder_u60 - modulus_u60;
         quotient_u60.increment();
     } else {}
+    if (remainder_u60.gte(modulus_u60)) {
+        remainder_u60 = remainder_u60 - modulus_u60;
+        quotient_u60.increment();
+    }
+    if (remainder_u60.gte(modulus_u60)) {
+        remainder_u60 = remainder_u60 - modulus_u60;
+        quotient_u60.increment();
+    }
 
     let q: [Field; N] = U60Repr::into(quotient_u60);
     let r: [Field; N] = U60Repr::into(remainder_u60);

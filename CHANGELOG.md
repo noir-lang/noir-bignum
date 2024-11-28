@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.4.2](https://github.com/noir-lang/noir-bignum/compare/v0.4.1...v0.4.2) (2024-11-15)
+
+
+### Bug Fixes
+
+* Constraint count regression introduced in commit 53f652b  ([#53](https://github.com/noir-lang/noir-bignum/issues/53)) ([d81d5fa](https://github.com/noir-lang/noir-bignum/commit/d81d5fac5e2ea919bd93e513644d0edc5630261c))
+
+## [0.4.1](https://github.com/noir-lang/noir-bignum/compare/v0.4.0...v0.4.1) (2024-11-08)
+
+
+### Features
+
+* Optimize brillig execution of `split_X_bits` functions ([#47](https://github.com/noir-lang/noir-bignum/issues/47)) ([31ebc7c](https://github.com/noir-lang/noir-bignum/commit/31ebc7cc03a7d8be4aef90a632515f79e3405c7a))
+* Remove a bunch of unnecessary bytecode from unconstrained ops ([#50](https://github.com/noir-lang/noir-bignum/issues/50)) ([08c4151](https://github.com/noir-lang/noir-bignum/commit/08c4151f12cc4fe1831da2eba6c854948a17c3d8))
+* Remove generic parameter from the `BigNum` trait ([#44](https://github.com/noir-lang/noir-bignum/issues/44)) ([53f652b](https://github.com/noir-lang/noir-bignum/commit/53f652b443967b589ae5ee3b3c9bdba5d3606806))
+
+
+### Bug Fixes
+
+* Check that `RuntimeBigNum`s have the same `BigNumParams` on operations ([#46](https://github.com/noir-lang/noir-bignum/issues/46)) ([729dd24](https://github.com/noir-lang/noir-bignum/commit/729dd244e07a17b4c5f4d24fcd63caae91e8d645))
+* Fix barrett reduction bug ([#51](https://github.com/noir-lang/noir-bignum/issues/51)) ([c61a621](https://github.com/noir-lang/noir-bignum/commit/c61a621745fb6a6c3778fbee35344bc7cf79f6a9))
+* Fix broken tests in `runtime_bignum_test.nr` ([#39](https://github.com/noir-lang/noir-bignum/issues/39)) ([63e6c85](https://github.com/noir-lang/noir-bignum/commit/63e6c851712ff3492d0b538437d3ddb0c6aacc1e))
+
 ## [0.4.0](https://github.com/noir-lang/noir-bignum/compare/v0.3.5...v0.4.0) (2024-11-01)
 
 
