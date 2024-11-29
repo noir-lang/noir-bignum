@@ -632,6 +632,7 @@ fn test_udiv_mod_U256() {
     assert(product == a);
 }
 
+
 // // N.B. witness generation times make these tests take ~15 minutes each! Uncomment at your peril
 // #[test]
 // fn test_div_2048() {
@@ -789,4 +790,36 @@ fn test_expressions() {
     let wx_constrained = w * x;
     assert(wx_constrained.limbs == wx.limbs);
 }
+
+
+
+
+#[test]
+fn test_oracle_add() {
+    // type Fq = BigNum <3,254, BN254_Fq_Params> ; 
+    let a: Fq = BigNum{limbs : [
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000003
+    ]};
+    let b: Fq = BigNum{limbs : [ 
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000001
+    ]};
+    let c : Fq = BigNum{limbs : [
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000002
+    ]} ; 
+
+    let result: Fq = a + b;
+    assert(result == c);
+
+    // let b: Fq = BigNum::one();
+    // let result = a + b;
+    assert(result == c) ;
+}
+
+// type Fq = BigNum<3, 254, BN254_Fq_Params>;
 

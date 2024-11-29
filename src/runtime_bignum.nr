@@ -224,7 +224,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeB
 
     // UNCONSTRAINED! (Hence `__` prefix).
     fn __sub(self, other: Self) -> Self {
-        let params = self.params;
+        let params: BigNumParams<N, MOD_BITS> = self.params;
         let limbs = unsafe { __sub(params, self.limbs, other.limbs) };
         Self { params, limbs }
     }
