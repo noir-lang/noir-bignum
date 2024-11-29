@@ -1,5 +1,6 @@
 use ark_bn254::Fr;
 use ark_ff::Field;
+use ark_ff::Zero;
 
 pub(crate) fn sqrt(x: Fr) -> Option<Fr> {
     let sqrt: Option<Fr> = if x.legendre().is_qr() {
@@ -19,4 +20,12 @@ pub(crate) fn sqrt(x: Fr) -> Option<Fr> {
     }
 
     sqrt
+}
+
+pub(crate) fn is_zero(limbs: Vec<Fr>) -> bool {
+    let mut result: bool = true;
+    for limb in limbs {
+        result = result & (limb == Fr::zero());
+    }
+    result
 }
