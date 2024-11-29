@@ -105,6 +105,16 @@ pub (crate) unconstrained fn oracle_add<let N: u32, let MOD_BITS: u32>(
     lhs: [Field; N],
     rhs: [Field; N],
 ) -> ([Field; N], [bool; N], [bool; N], bool) {}
+
+
+
+//this is the actual function that be changed to use oracles 
+#[oracle(add)]
+pub (crate) unconstrained fn oracle_add<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    lhs: [Field; N],
+    rhs: [Field; N],
+) -> ([Field; N], [bool; N], [bool; N], bool) {}
 pub(crate) unconstrained fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     lhs: [Field; N],

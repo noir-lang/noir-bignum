@@ -130,6 +130,17 @@ pub(crate) unconstrained fn __eq<let N: u32>(lhs: [Field; N], rhs: [Field; N]) -
 // }
  #[oracle(is_zero)]
 pub (crate) unconstrained fn __is_zero<let N: u32>(limbs: [Field; N]) -> bool {}
+
+//switching this function to use oracles instead 
+// pub(crate) unconstrained fn __is_zero<let N: u32>(limbs: [Field; N]) -> bool {
+//     let mut result: bool = true;
+//     for i in 0..N {
+//         result = result & (limbs[i] == 0);
+//     }
+//     result
+// }
+ #[oracle(is_zero)]
+pub (crate) unconstrained fn __is_zero<let N: u32>(limbs: [Field; N]) -> bool {}
 /**
 * @brief given an input `x`, compute `2p - x` (unconstrained)
 *
@@ -149,6 +160,31 @@ pub(crate) unconstrained fn __neg<let N: u32, let MOD_BITS: u32>(
     U60Repr::into(params.modulus_u60 - x_u60)
 }
 
+// switching this function to use oracles instead 
+// pub(crate) unconstrained fn __add<let N: u32, let MOD_BITS: u32>(
+//     params: P<N, MOD_BITS>,
+//     lhs: [Field; N],
+//     rhs: [Field; N],
+// ) -> [Field; N] {
+//     let x_u60: U60Repr<N, 2> = U60Repr::from(lhs);
+//     let y_u60: U60Repr<N, 2> = U60Repr::from(rhs);
+
+//     let mut z_u60 = x_u60 + y_u60;
+
+//     if z_u60.gte(params.modulus_u60) {
+//         z_u60 = z_u60 - params.modulus_u60;
+//     }
+//     U60Repr::into(z_u60)
+// }
+// the oracle function to get the add result
+ #[oracle(add)]
+ pub (crate) unconstrained fn add_oracle<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    lhs: [Field; N],
+    rhs: [Field; N],
+) -> [Field; N] {}
+
+pub (crate) unconstrained fn __add<let N: u32, let MOD_BITS: u32>(
 // switching this function to use oracles instead 
 // pub(crate) unconstrained fn __add<let N: u32, let MOD_BITS: u32>(
 //     params: P<N, MOD_BITS>,

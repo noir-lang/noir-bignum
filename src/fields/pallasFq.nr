@@ -13,8 +13,8 @@
 //! * Curve equation: y^2 = x^3 + 5
 //! * Valuation(q - 1, 2) = 32
 //! * Valuation(r - 1, 2) = 32
-use crate::params::BigNumParamsGetter;
 use crate::params::BigNumParams;
+use crate::params::BigNumParamsGetter;
 use crate::utils::u60_representation::U60Repr;
 
 pub struct Pallas_Fq_Params {}

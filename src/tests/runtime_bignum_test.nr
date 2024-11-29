@@ -1,13 +1,9 @@
-use crate::utils::u60_representation::U60Repr;
-use crate::runtime_bignum::RuntimeBigNum;
+use crate::fns::unconstrained_helpers::__barrett_reduction;
 use crate::params::{BigNumParams, BigNumParamsGetter};
+use crate::runtime_bignum::RuntimeBigNum;
+use crate::utils::u60_representation::U60Repr;
 
 use crate::fields::bn254Fq::BN254_Fq_Params;
-use crate::fields::secp256k1Fq::Secp256k1_Fq_Params;
-use crate::fields::bls12_381Fq::BLS12_381_Fq_Params;
-use crate::fields::bls12_381Fr::BLS12_381_Fr_Params;
-use crate::fields::bls12_377Fq::BLS12_377_Fq_Params;
-use crate::fields::bls12_377Fr::BLS12_377_Fr_Params;
 
 global TEST_2048_PARAMS: BigNumParams<18, 2048> = BigNumParams {
     has_multiplicative_inverse: false,
@@ -189,7 +185,7 @@ global TEST_2048_PARAMS: BigNumParams<18, 2048> = BigNumParams {
     ],
 };
 
-struct Test2048Params {}
+pub(crate) struct Test2048Params {}
 
 // See https://github.com/noir-lang/noir/issues/6172
 #[test]
@@ -206,26 +202,26 @@ impl BigNumParamsGetter<18, 2048> for Test2048Params {
 /**
  * @brief experimenting with macro madness and code generation to make some tests that apply to multiple BigNum parametrisations!
  **/
-comptime fn make_test(f: StructDefinition, N: Quoted, MOD_BITS: Quoted, typ: Quoted) -> Quoted {
-    let k = f.name();
+comptime fn make_test(_m: Module, N: u32, MOD_BITS: u32, typ: Quoted) -> Quoted {
+    let RuntimeBigNum = quote { crate::RuntimeBigNum };
+    let U60Repr = quote { crate::utils::u60_representation::U60Repr };
+
     quote {
-impl $k {
 #[test]
 fn test_add() {
     let params = $typ ::get_params();
-
-    let a: RuntimeBigNum<$N, $MOD_BITS> = unsafe{ RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4]) };
-    let b: RuntimeBigNum<$N, $MOD_BITS> = unsafe{ RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7]) };
-
-    let one: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::one(params);
-
+    
+    let a: $RuntimeBigNum<$N, $MOD_BITS> = unsafe{ $RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4]) };
+    let b: $RuntimeBigNum<$N, $MOD_BITS> = unsafe{ $RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7]) };
+    let one: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::one(params);
     a.validate_in_range();
     a.validate_in_field();
     b.validate_in_range();
     b.validate_in_field();
-
     let mut c = a + b;
+    
     c = c + c;
+    
     let d = (a + b) * (one + one);
     assert(c == d);
 
@@ -241,9 +237,9 @@ fn test_sub() {
     let params = $typ ::get_params();
 
     // 0 - 1 should equal p - 1
-    let mut a: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::new(params);
-    let mut b: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::one(params);
-    let mut expected: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum { limbs: params.modulus, params };
+    let mut a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::new(params);
+    let mut b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::one(params);
+    let mut expected: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: params.modulus, params };
 
     expected.limbs[0] -= 1; // p - 1
 
@@ -258,9 +254,9 @@ fn test_sub_modulus_limit() {
     // if we underflow, maximum result should be ...
     // 0 - 1 = o-1
     // 0 - p = 0
-    let mut a: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::new(params);
-    let mut b: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum { limbs: params.modulus, params };
-    let mut expected: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::new(params);
+    let mut a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::new(params);
+    let mut b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: params.modulus, params };
+    let mut expected: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::new(params);
 
     let result = a - b;
     assert(result == expected);
@@ -272,10 +268,10 @@ fn test_sub_modulus_underflow() {
     let params = $typ ::get_params();
 
     // 0 - (p + 1) is smaller than p and should produce unsatisfiable constraints
-    let mut a: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::new(params);
-    let mut b: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum { limbs: params.modulus, params };
+    let mut a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::new(params);
+    let mut b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: params.modulus, params };
     b.limbs[0] += 1;
-    let mut expected: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::one(params);
+    let mut expected: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::one(params);
 
     let result = a - b;
 
@@ -289,15 +285,14 @@ fn test_add_modulus_limit() {
     // p + 2^{modulus_bits()} - 1 should be the maximum allowed value fed into an add operation
     // when adding, if the result overflows the modulus, we conditionally subtract the modulus, producing 2^{254} -  1
     // this is the largest value that will satisfy the range check applied when constructing a bignum
-    let p: U60Repr<$N, 2> = U60Repr::from(params.modulus);
-    let one = unsafe{ U60Repr::one() };
+    let p: $U60Repr<$N, 2> = $U60Repr::from(params.modulus);
+    let one = unsafe{ $U60Repr::one() };
 
-    let a: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum { limbs: U60Repr::into(p), params };
+    let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: $U60Repr::into(p), params };
 
-    let two_pow_modulus_bits_minus_one: U60Repr<$N, 2> = unsafe{ one.shl($MOD_BITS) - one };
+    let two_pow_modulus_bits_minus_one: $U60Repr<$N, 2> = unsafe{ one.shl($MOD_BITS) - one };
 
-    let b: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum { limbs: U60Repr::into(two_pow_modulus_bits_minus_one), params };
-
+    let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: $U60Repr::into(two_pow_modulus_bits_minus_one), params };
     let result = a + b;
     assert(result == b);
 }
@@ -306,15 +301,14 @@ fn test_add_modulus_limit() {
 fn test_add_modulus_overflow() {
     let params = $typ ::get_params();
 
-    let p : U60Repr<$N, 2> = U60Repr::from(params.modulus);
-    let one = unsafe{ U60Repr::one() };
+    let p : $U60Repr<$N, 2> = $U60Repr::from(params.modulus);
+    let one = unsafe{ $U60Repr::one() };
 
-    let a: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum { limbs: U60Repr::into(p + one), params };
-    
-    let mut two_pow_modulus_bits_minus_one: U60Repr<$N, 2> = unsafe{ one.shl($MOD_BITS) - one };
+    let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: $U60Repr::into(p + one), params };
 
-    let b: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum { limbs: U60Repr::into(two_pow_modulus_bits_minus_one), params };
+    let mut two_pow_modulus_bits_minus_one: $U60Repr<$N, 2> = unsafe{ one.shl($MOD_BITS) - one };
 
+    let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: $U60Repr::into(two_pow_modulus_bits_minus_one), params };
     let result = a + b;
     assert(result == b);
 }
@@ -323,11 +317,11 @@ fn test_add_modulus_overflow() {
 fn test_mul() {
     let params = $typ ::get_params();
 
-    let a: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
+    let a: $RuntimeBigNum<$N, $MOD_BITS> = unsafe {
+        $RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let b: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7])
+    let b: $RuntimeBigNum<$N, $MOD_BITS> = unsafe {
+        $RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7])
     };
 
     let c = (a + b) * (a + b);
@@ -340,12 +334,12 @@ fn test_quadratic_expression() {
     let params = $typ ::get_params();
 
     for i in 0..32 {
-        let X1: RuntimeBigNum<$N, $MOD_BITS> = unsafe{ RuntimeBigNum::__derive_from_seed(params, [i as u8, 2, 3, 4]) };
-        let Y1: RuntimeBigNum<$N, $MOD_BITS> = unsafe{ RuntimeBigNum::__derive_from_seed(params, [i as u8, i as u8, 6, 7]) };
-        let Z1: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::one(params);
+        let X1: $RuntimeBigNum<$N, $MOD_BITS> = unsafe{ $RuntimeBigNum::__derive_from_seed(params, [i as u8, 2, 3, 4]) };
+        let Y1: $RuntimeBigNum<$N, $MOD_BITS> = unsafe{ $RuntimeBigNum::__derive_from_seed(params, [i as u8, i as u8, 6, 7]) };
+        let Z1: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::one(params);
 
-        let (_, YY_mul_2): (RuntimeBigNum<$N, $MOD_BITS>, RuntimeBigNum<$N, $MOD_BITS>) = unsafe{ RuntimeBigNum::__compute_quadratic_expression(params, [[Y1]], [[false]], [[Y1, Y1]], [[false, false]], [], []) };
-        let mut (_, XX_mul_3): (RuntimeBigNum<$N, $MOD_BITS>, RuntimeBigNum<$N, $MOD_BITS>) = unsafe{ RuntimeBigNum::__compute_quadratic_expression(
+        let (_, YY_mul_2): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = unsafe{ $RuntimeBigNum::__compute_quadratic_expression(params, [[Y1]], [[false]], [[Y1, Y1]], [[false, false]], [], []) };
+        let mut (_, XX_mul_3): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = unsafe{ $RuntimeBigNum::__compute_quadratic_expression(
             params,
             [[X1]],
             [[false]],
@@ -354,8 +348,8 @@ fn test_quadratic_expression() {
             [],
             []
         ) };
-        let (_, D): (RuntimeBigNum<$N, $MOD_BITS>, RuntimeBigNum<$N, $MOD_BITS>) = unsafe{ RuntimeBigNum::__compute_quadratic_expression(params, [[X1, X1]], [[false, false]], [[YY_mul_2]], [[false]], [], []) };
-        let mut (_, X3) = unsafe{ RuntimeBigNum::__compute_quadratic_expression(
+        let (_, D): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = unsafe{ $RuntimeBigNum::__compute_quadratic_expression(params, [[X1, X1]], [[false, false]], [[YY_mul_2]], [[false]], [], []) };
+        let mut (_, X3) = unsafe{ $RuntimeBigNum::__compute_quadratic_expression(
             params,
             [[XX_mul_3]],
             [[false]],
@@ -364,7 +358,7 @@ fn test_quadratic_expression() {
             [D, D],
             [true, true]
         ) };
-        let (_, Y3): (RuntimeBigNum<$N, $MOD_BITS>, RuntimeBigNum<$N, $MOD_BITS>) = unsafe{ RuntimeBigNum::__compute_quadratic_expression(
+        let (_, Y3): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = unsafe{ $RuntimeBigNum::__compute_quadratic_expression(
             params,
             [[XX_mul_3], [YY_mul_2]],
             [[false], [true]],
@@ -375,7 +369,7 @@ fn test_quadratic_expression() {
         ) };
         // 3XX * (D - X3) - 8YYYY
 
-        let (_, Z3): (RuntimeBigNum<$N, $MOD_BITS>, RuntimeBigNum<$N, $MOD_BITS>) = unsafe{ RuntimeBigNum::__compute_quadratic_expression(params, [[Y1]], [[false]], [[Z1, Z1]], [[false, false]], [], []) };
+        let (_, Z3): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = unsafe{ $RuntimeBigNum::__compute_quadratic_expression(params, [[Y1]], [[false]], [[Z1, Z1]], [[false, false]], [], []) };
 
         X3.validate_in_field();
         Y3.validate_in_field();
@@ -387,11 +381,11 @@ fn test_quadratic_expression() {
 fn assert_is_not_equal() {
     let params = $typ ::get_params();
 
-    let a: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
+    let a: $RuntimeBigNum<$N, $MOD_BITS> = unsafe {
+        $RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let b: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7])
+    let b: $RuntimeBigNum<$N, $MOD_BITS> = unsafe {
+        $RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7])
     };
 
     a.assert_is_not_equal(b);
@@ -401,11 +395,11 @@ fn assert_is_not_equal() {
 fn assert_is_not_equal_fail() {
     let params = $typ ::get_params();
 
-    let a: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
+    let a: $RuntimeBigNum<$N, $MOD_BITS> = unsafe {
+        $RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let b: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
+    let b: $RuntimeBigNum<$N, $MOD_BITS> = unsafe {
+        $RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
 
     a.assert_is_not_equal(b);
@@ -415,18 +409,18 @@ fn assert_is_not_equal_fail() {
 fn assert_is_not_equal_overloaded_lhs_fail() {
     let params = $typ ::get_params();
 
-    let a: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
+    let a: $RuntimeBigNum<$N, $MOD_BITS> = unsafe {
+        $RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let b: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
+    let b: $RuntimeBigNum<$N, $MOD_BITS> = unsafe {
+        $RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
 
     let modulus = params.modulus;
 
-    let t0: U60Repr<$N, 2> = U60Repr::from(a.limbs);
-    let t1: U60Repr<$N, 2> = U60Repr::from(modulus);
-    let a_plus_modulus: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum { limbs: U60Repr::into(t0 + t1), params };
+    let t0: $U60Repr<$N, 2> = $U60Repr::from(a.limbs);
+    let t1: $U60Repr<$N, 2> = $U60Repr::from(modulus);
+    let a_plus_modulus: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: $U60Repr::into(t0 + t1), params };
 
     a_plus_modulus.assert_is_not_equal(b);
 }
@@ -435,18 +429,18 @@ fn assert_is_not_equal_overloaded_lhs_fail() {
 fn assert_is_not_equal_overloaded_rhs_fail() {
     let params = $typ ::get_params();
 
-    let a: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
+    let a: $RuntimeBigNum<$N, $MOD_BITS> = unsafe {
+        $RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let b: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
+    let b: $RuntimeBigNum<$N, $MOD_BITS> = unsafe {
+        $RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
 
     let modulus = params.modulus;
 
-    let t0: U60Repr<$N, 2> = U60Repr::from(b.limbs);
-    let t1: U60Repr<$N, 2> = U60Repr::from(modulus);
-    let b_plus_modulus: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum { limbs: U60Repr::into(t0 + t1), params };
+    let t0: $U60Repr<$N, 2> = $U60Repr::from(b.limbs);
+    let t1: $U60Repr<$N, 2> = $U60Repr::from(modulus);
+    let b_plus_modulus: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: $U60Repr::into(t0 + t1), params };
 
     a.assert_is_not_equal(b_plus_modulus);
 }
@@ -455,21 +449,21 @@ fn assert_is_not_equal_overloaded_rhs_fail() {
 fn assert_is_not_equal_overloaded_fail() {
     let params = $typ ::get_params();
 
-    let a: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
+    let a: $RuntimeBigNum<$N, $MOD_BITS> = unsafe {
+        $RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let b: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
+    let b: $RuntimeBigNum<$N, $MOD_BITS> = unsafe {
+        $RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
 
     let modulus = params.modulus;
 
-    let t0: U60Repr<$N, 2> = U60Repr::from(a.limbs);
-    let t1: U60Repr<$N, 2> = U60Repr::from(b.limbs);
-    let t2: U60Repr<$N, 2> = U60Repr::from(modulus);
+    let t0: $U60Repr<$N, 2> = $U60Repr::from(a.limbs);
+    let t1: $U60Repr<$N, 2> = $U60Repr::from(b.limbs);
+    let t2: $U60Repr<$N, 2> = $U60Repr::from(modulus);
 
-    let a_plus_modulus: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum { limbs: U60Repr::into(t0 + t2), params };
-    let b_plus_modulus: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum { limbs: U60Repr::into(t1 + t2), params };
+    let a_plus_modulus: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: $U60Repr::into(t0 + t2), params };
+    let b_plus_modulus: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: $U60Repr::into(t1 + t2), params };
 
     a_plus_modulus.assert_is_not_equal(b_plus_modulus);
 }
@@ -479,33 +473,35 @@ fn test_derive()
 {
     let params = $typ ::get_params();
 
-    let a: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum::derive_from_seed(params, "hello".as_bytes());
-    let b: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, "hello".as_bytes())
+    // let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, "hello".as_bytes());
+    let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
+    let b: $RuntimeBigNum<$N, $MOD_BITS> = unsafe {
+        // $RuntimeBigNum::__derive_from_seed(params, "hello".as_bytes())
+        $RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4]) 
     };
-    assert(a == b);
+    assert_eq(a, b);
 }
 
 #[test]
 fn test_eq() {
     let params = $typ ::get_params();
 
-    let a: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
+    let a: $RuntimeBigNum<$N, $MOD_BITS> = unsafe {
+        $RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let b: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
+    let b: $RuntimeBigNum<$N, $MOD_BITS> = unsafe {
+        $RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
     };
-    let c: RuntimeBigNum<$N, $MOD_BITS> = unsafe {
-        RuntimeBigNum::__derive_from_seed(params, [2, 2, 3, 4])
+    let c: $RuntimeBigNum<$N, $MOD_BITS> = unsafe {
+        $RuntimeBigNum::__derive_from_seed(params, [2, 2, 3, 4])
     };
 
     let modulus = a.modulus();
 
-    let t0: U60Repr<$N, 2> = (U60Repr::from(modulus.limbs));
-    let t1: U60Repr<$N, 2> = (U60Repr::from(b.limbs));
+    let t0: $U60Repr<$N, 2> = ($U60Repr::from(modulus.limbs));
+    let t1: $U60Repr<$N, 2> = ($U60Repr::from(b.limbs));
 
-    let b_plus_modulus: RuntimeBigNum<$N, $MOD_BITS> = RuntimeBigNum { limbs: U60Repr::into(t0 + t1), params };
+    let b_plus_modulus: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: $U60Repr::into(t0 + t1), params };
 
     assert((a == b) == true);
     assert((a == b_plus_modulus) == true);
@@ -515,28 +511,27 @@ fn test_eq() {
 
 }
 }
-}
 
-#[make_test(quote{3}, quote{254}, quote{BN254_Fq_Params})]
-pub struct BNTests {}
+#[make_test(3, 254, quote {crate::fields::bn254Fq::BN254_Fq_Params})]
+pub mod BNTests {}
 
-#[make_test(quote{3}, quote{256}, quote{Secp256k1_Fq_Params})]
-pub struct Secp256K1FqTests {}
+#[make_test(3, 256, quote {crate::fields::secp256k1Fq::Secp256k1_Fq_Params})]
+pub mod Secp256K1FqTests {}
 
-#[make_test(quote{4}, quote{381} ,quote{BLS12_381_Fq_Params})]
-pub struct BLS12_381FqTests {}
+#[make_test(4, 381, quote {crate::fields::bls12_381Fq::BLS12_381_Fq_Params})]
+pub mod BLS12_381FqTests {}
 
-#[make_test(quote{18}, quote{2048}, quote{Test2048Params})]
-pub struct Test2048Tests {}
+#[make_test(18, 2048, quote {super::Test2048Params})]
+pub mod Test2048Tests {}
 
-#[make_test(quote{3}, quote{255}, quote{BLS12_381_Fr_Params})]
-pub struct BLS12_381_Fr_ParamsTests {}
+#[make_test(3, 255, quote {crate::fields::bls12_381Fr::BLS12_381_Fr_Params})]
+pub mod BLS12_381_Fr_ParamsTests {}
 
-#[make_test(quote{4}, quote{377}, quote{BLS12_377_Fq_Params})]
-pub struct BLS12_377_Fq_ParamsTests {}
+#[make_test(4, 377, quote {crate::fields::bls12_377Fq::BLS12_377_Fq_Params})]
+pub mod BLS12_377_Fq_ParamsTests {}
 
-#[make_test(quote{3}, quote{253}, quote{BLS12_377_Fr_Params})]
-pub struct BLS12_377_Fr_ParamsTests {}
+#[make_test(3, 253, quote {crate::fields::bls12_377Fr::BLS12_377_Fr_Params})]
+pub mod BLS12_377_Fr_ParamsTests {}
 
 // 98760
 // 99689
@@ -681,4 +676,68 @@ fn test_sqrt_BN() {
     let sqrt_x = maybe_sqrt_x.unwrap();
 
     assert(sqrt_x * sqrt_x == x);
+}
+
+// N.B. this test is only here to check that the barrett reduction is working correctly
+//      a bug was introduced in 0.3.7 that caused issues with the RSA library
+//      this test is to check that the bug is fixed
+#[test]
+fn test_barrett_reduction_fix() {
+    // the parameters and input that the barrett reduction fails on in the RSA library
+    let params: BigNumParams<9, 1024> = BigNumParams::new(
+        false,
+        [
+            0xab238ad9cb37979a43aefbf10be8fb,
+            0x31347febe45fe8c2dac1dd30900704,
+            0xa5a9a6b9cd0cc2b9d13bbd4e068263,
+            0x5eac6390f7873fe97ff9bb14a173ea,
+            0xbc41f700c91fd733a2c63177bbdbd4,
+            0x41442bd58769a3595b659a2ec9c6be,
+            0x4ddc91395f330382aa2e2d3fbe147,
+            0x3d008ff255a0bc71c7887f5728ba1,
+            0xb640c3a8f511c64e,
+        ],
+        [
+            0x5d53d2634c6a0918266043968ce263,
+            0x5dd4be3dce0323a492ee9340aec4db,
+            0xf82d0e2e5c8319f01a460c72c01854,
+            0x236e6fc6e62e8a1d522acda5fb3892,
+            0xdaf755619d66e580901aa224d03174,
+            0x8366291616480e7e1f202dbcedda87,
+            0x40ba1202537d1e94561ccc05265586,
+            0x69b993d857ba89ea5de9822aeb4b93,
+            0x167968c0000761a273,
+        ],
+    );
+    let to_reduce: [Field; 18] = [
+        0xc4b8aacb43f12eb7f3f356ca26fb91,
+        0xfc57d87e81f39810ffb63957395499,
+        0x8308e90fc38cfe95d2a0f7ab577c17,
+        0xa08ec48b11c8f8106bf59274163f0e,
+        0x31d13967c472c9a02fc8099199432c,
+        0x8b9ed833878dcb05c9dd19b917fb56,
+        0xadd411af43c4dc57d5e1e50800a644,
+        0x9075bad2ae6053c55d96ae819c6dfe,
+        0xebe4650d4f5449bbdd48b322ec0c65,
+        0xf17bc78e881061f738f27e058be410,
+        0x1a6d1af41bdb753888b2757986a131,
+        0x06dc4cf83a7ceebe8e996e4329c63a,
+        0xf64759a546537a899c8e2e7ea745fb,
+        0x253f1a623444aa404f989ca5843cf7,
+        0x65728e80aa429c676336b3a0613188,
+        0x189d0a1000d5b3755d91e0455137fe,
+        0x17f512a1cf7cc3470fc054743ceafe,
+        0x05,
+    ];
+
+    let (_quotient, remainder) = unsafe {
+        __barrett_reduction(
+            to_reduce,
+            params.redc_param,
+            1024,
+            params.modulus,
+            params.modulus_u60_x4,
+        )
+    };
+    assert(remainder[8].lt(params.modulus[8]));
 }

@@ -1,5 +1,5 @@
-use crate::utils::split_bits;
 use crate::utils::msb::get_msb64;
+use crate::utils::split_bits;
 
 /**
  * @brief U60Repr represents a BigNum element as a sequence of 60-bit unsigned integers.

@@ -1,10 +1,11 @@
 use crate::params::BigNumParams as P;
 
 use crate::fns::{
+    expressions::evaluate_quadratic_expression,
     unconstrained_helpers::{
-        __validate_in_field_compute_borrow_flags, __validate_gt_remainder, __neg_with_flags,
-        __add_with_flags, __sub_with_flags,
-    }, unconstrained_ops::{__mul, __div, __udiv_mod}, expressions::evaluate_quadratic_expression,
+        __add_with_flags, __neg_with_flags, __sub_with_flags, __validate_gt_remainder,
+        __validate_in_field_compute_borrow_flags,
+    }, unconstrained_ops::{__div, __mul, __udiv_mod},
 };
 
 /**
@@ -63,7 +64,8 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
     let compressed =
         std::hash::poseidon2::Poseidon2::hash(rolling_hash_fields, (SeedBytes / 31) + 1);
     let mut rolling_hash: [Field; 2] = [compressed, 0];
-    let num_hashes = (30 * N) / 32 + (((30 * N) % 32) != 0) as u32;
+
+    let num_hashes = (240 * N) / 254 + (((30 * N) % 32) != 0) as u32;
     for i in 0..num_hashes - 1 {
         let hash: Field = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
         let hash: [u8; 32] = hash.to_le_bytes();
@@ -72,6 +74,7 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
         }
         rolling_hash[1] += 1;
     }
+
     {
         let hash: Field = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
         let hash: [u8; 32] = hash.to_le_bytes();
@@ -266,7 +269,6 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [Field; N], rhs: [
     // a - b = r
     // p + a - b - r = 0
     let (result, carry_flags, borrow_flags) = unsafe { __validate_gt_remainder(lhs, rhs) };
-
     validate_in_range::<_, MOD_BITS>(result);
 
     let borrow_shift = 0x1000000000000000000000000000000;
@@ -277,12 +279,14 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [Field; N], rhs: [
         + (borrow_flags[0] as Field * borrow_shift)
         - (carry_flags[0] as Field * carry_shift);
     assert(result_limb == 0);
+
     for i in 1..N - 1 {
         let result_limb = lhs[i] - rhs[i] + addend[i] - result[i] - borrow_flags[i - 1] as Field
             + carry_flags[i - 1] as Field
             + ((borrow_flags[i] as Field - carry_flags[i] as Field) * borrow_shift);
         assert(result_limb == 0);
     }
+
     let result_limb = lhs[N - 1] - rhs[N - 1] + addend[N - 1]
         - result[N - 1]
         - borrow_flags[N - 2] as Field
