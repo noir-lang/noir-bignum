@@ -174,6 +174,7 @@ pub(crate) unconstrained fn __neg<let N: u32, let MOD_BITS: u32>(
 //     U60Repr::into(z_u60)
 // }
 // the oracle function to get the add result
+
  #[oracle(add)]
  pub (crate) unconstrained fn add_oracle<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
@@ -181,42 +182,40 @@ pub(crate) unconstrained fn __neg<let N: u32, let MOD_BITS: u32>(
     rhs: [Field; N],
     num_limbs: u32,
     mod_bits: u32,
-) -> [Field; N] {}
+) -> [Field; N] {} 
 
+//this is the actual function that be changed to use oracles 
 // pub (crate) unconstrained fn __add<let N: u32, let MOD_BITS: u32>(
 // switching this function to use oracles instead 
-// pub(crate) unconstrained fn __add<let N: u32, let MOD_BITS: u32>(
-//     params: P<N, MOD_BITS>,
-//     lhs: [Field; N],
-//     rhs: [Field; N],
-// ) -> [Field; N] {
-//     let x_u60: U60Repr<N, 2> = U60Repr::from(lhs);
-//     let y_u60: U60Repr<N, 2> = U60Repr::from(rhs);
-
-//     let mut z_u60 = x_u60 + y_u60;
-
-//     if z_u60.gte(params.modulus_u60) {
-//         z_u60 = z_u60 - params.modulus_u60;
-//     }
-//     U60Repr::into(z_u60)
-// }
-// the oracle function to get the add result
-
-
-pub (crate) unconstrained fn __add<let N: u32, let MOD_BITS: u32>(
+pub(crate) unconstrained fn __add<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     lhs: [Field; N],
     rhs: [Field; N],
 ) -> [Field; N] {
-    let modulus = params.modulus;
-    let redc_param = params.redc_param;
-    let has_multiplicative_inverse = params.has_multiplicative_inverse;
-    println("the parameters are");
-    println(modulus); 
-    println(redc_param);
-    println(has_multiplicative_inverse);
-    add_oracle(params, lhs, rhs, N, MOD_BITS)
+    let x_u60: U60Repr<N, 2> = U60Repr::from(lhs);
+    let y_u60: U60Repr<N, 2> = U60Repr::from(rhs);
+
+    let mut z_u60 = x_u60 + y_u60;
+
+    if z_u60.gte(params.modulus_u60) {
+        z_u60 = z_u60 - params.modulus_u60;
+    }
+    U60Repr::into(z_u60)
 }
+// the oracle function to get the add result
+
+
+// pub (crate) unconstrained fn __add<let N: u32, let MOD_BITS: u32>(
+//     params: P<N, MOD_BITS>,
+//     lhs: [Field; N],
+//     rhs: [Field; N],
+// ) -> [Field; N] {
+//     println("N is: "); 
+//     println(N); 
+//     let res = add_oracle(params, lhs, rhs, N, MOD_BITS); 
+//     println(res); 
+//     res 
+// }
 
 /**
 * @brief given inputs `x, y` compute 2p + x - y (unconstrained)
