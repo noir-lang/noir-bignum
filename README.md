@@ -22,7 +22,7 @@ TODO
 - Noir >=1.0.0
 - Barretenberg ≥v0.56.1
 
-Refer to [Noir's docs](https://noir-lang.org/docs/getting_started/installation/) and [Barretenberg's docs](https://github.com/AztecProtocol/aztec-packages/blob/master/barretenberg/cpp/src/barretenberg/bb/readme.md#installation) for installation steps.
+Refer to [Noir's docs](https://noir-lang.org/docs/getting_started/quick_start) and [Barretenberg's docs](https://github.com/AztecProtocol/aztec-packages/blob/master/barretenberg/cpp/src/barretenberg/bb/readme.md#installation) for installation steps.
 
 ## Installation
 
