@@ -56,64 +56,19 @@ pub(crate) unconstrained fn __derive_from_seed<let N: u32, let MOD_BITS: u32, le
 
     let mut to_reduce: [Field; 2 * N] = [0; 2 * N];
 
-    let mut double_modulus_bits = MOD_BITS * 2;
-    let mut double_modulus_bytes =
-        (double_modulus_bits) / 8 + (double_modulus_bits % 8 != 0) as u32;
 
-    let mut last_limb_bytes = double_modulus_bytes % 15;
-    if (last_limb_bytes == 0) {
-        last_limb_bytes = 15;
-    }
-    let mut last_limb_bits = double_modulus_bits % 8;
-    if (last_limb_bits == 0) {
-        last_limb_bits = 8;
-    }
+// pub(crate) unconstrained fn __is_zero<let N: u32>(limbs: [Field; N]) -> bool {
+//     let mut result: bool = true;
+//     for i in 0..N {
+//         result = result & (limbs[i] == 0);
+//     }
 
-    for i in 0..(N - 1) {
-        let hash = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
-        let hash: [u8; 30] = hash.to_le_bytes();
-        let mut lo: Field = 0;
-        let mut hi: Field = 0;
-        for j in 0..15 {
-            hi *= 256;
-            lo *= 256;
+//     result
+// }
 
-            if (i < 2 * N - 2) {
-                lo += hash[j + 15] as Field;
-                hi += hash[j] as Field;
-            }
-        }
-        to_reduce[2 * i] = lo;
-        to_reduce[2 * i + 1] = hi;
-        rolling_hash[1] += 1;
-    }
+#[oracle(is_zero)]
+pub(crate) unconstrained fn __is_zero<let N: u32>(limbs: [Field; N]) -> bool {}
 
-    {
-        let hash = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
-        let hash: [u8; 30] = hash.to_le_bytes();
-        let mut hi: Field = 0;
-        for j in 0..(last_limb_bytes - 1) {
-            hi *= 256;
-            hi += hash[j] as Field;
-        }
-        hi *= 256;
-        let last_byte = hash[last_limb_bytes - 1];
-        let mask = (1 as u64 << (last_limb_bits) as u8) - 1;
-        let last_bits = last_byte as u64 & mask;
-        hi += last_bits as Field;
-        to_reduce[2 * N - 2] = hi;
-    }
-
-    let (_, remainder) = __barrett_reduction(
-        to_reduce,
-        params.redc_param,
-        MOD_BITS,
-        params.modulus,
-        params.modulus_u60_x4,
-    );
-    let result = remainder;
-    result
-}
 
 pub(crate) unconstrained fn __eq<let N: u32>(lhs: [Field; N], rhs: [Field; N]) -> bool {
     lhs == rhs
@@ -156,6 +111,15 @@ pub (crate) unconstrained fn __is_zero<let N: u32>(limbs: [Field; N]) -> bool {}
 //     let x_u60: U60Repr<N, 2> = U60Repr::from(f);
 //     U60Repr::into(params.modulus_u60 - x_u60)
 // }
+
+pub(crate) unconstrained fn __neg<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    limbs: [Field; N],
+) -> [Field; N] {
+    neg_oracle(params, limbs, N, MOD_BITS)
+}
+
+#[oracle(neg)]
 pub (crate) unconstrained fn __neg<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     limbs: [Field; N],
@@ -170,9 +134,8 @@ unconstrained fn neg_oracle<let N: u32, let MOD_BITS: u32>(
     limbs: [Field; N],
     num_limbs: u32,
     mod_bits: u32,
- ) -> [Field; N] {} 
+) -> [Field; N] {}
 
-// switching this function to use oracles instead 
 // pub(crate) unconstrained fn __add<let N: u32, let MOD_BITS: u32>(
 //     params: P<N, MOD_BITS>,
 //     lhs: [Field; N],
@@ -188,6 +151,9 @@ unconstrained fn neg_oracle<let N: u32, let MOD_BITS: u32>(
 //     }
 //     U60Repr::into(z_u60)
 // }
+
+
+
 // the oracle function to get the add result
 
  #[oracle(add)]
@@ -197,25 +163,18 @@ unconstrained fn neg_oracle<let N: u32, let MOD_BITS: u32>(
     rhs: [Field; N],
     num_limbs: u32,
     mod_bits: u32,
+
 ) -> [Field; N] {} 
 
 //this is the actual function that be changed to use oracles 
 // pub (crate) unconstrained fn __add<let N: u32, let MOD_BITS: u32>(
 // switching this function to use oracles instead 
+
 pub(crate) unconstrained fn __add<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     lhs: [Field; N],
     rhs: [Field; N],
 ) -> [Field; N] {
-    // let x_u60: U60Repr<N, 2> = U60Repr::from(lhs);
-    // let y_u60: U60Repr<N, 2> = U60Repr::from(rhs);
-
-    // let mut z_u60 = x_u60 + y_u60;
-
-    // if z_u60.gte(params.modulus_u60) {
-    //     z_u60 = z_u60 - params.modulus_u60;
-    // }
-    // U60Repr::into(z_u60)
     add_oracle(params, lhs, rhs, N, MOD_BITS)
 }
 // the oracle function to get the add result
@@ -244,6 +203,29 @@ pub(crate) unconstrained fn __sub<let N: u32, let MOD_BITS: u32>(
 ) -> [Field; N] {
     __add(params, lhs, __neg(params, rhs))
 }
+
+// pub(crate) unconstrained fn __mul_with_quotient<let N: u32, let MOD_BITS: u32>(
+//     params: P<N, MOD_BITS>,
+//     lhs: [Field; N],
+//     rhs: [Field; N],
+// ) -> ([Field; N], [Field; N]) {
+//     let mut mul: [Field; 2 * N] = [0; 2 * N];
+//     for i in 0..N {
+//         for j in 0..N {
+//             mul[i + j] += lhs[i] * rhs[j];
+//         }
+//     }
+//     let to_reduce = split_bits::__normalize_limbs(mul, 2 * N);
+//     let (q, r) = __barrett_reduction(
+//         to_reduce,
+//         params.redc_param,
+//         MOD_BITS,
+//         params.modulus,
+//         params.modulus_u60_x4,
+//     );
+
+//     (q, r)
+// }
 
 pub(crate) unconstrained fn __mul_with_quotient<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
@@ -281,6 +263,15 @@ pub(crate) unconstrained fn __mul_with_quotient<let N: u32, let MOD_BITS: u32>(
     mod_bits: u32,
  ) -> ([Field; N], [Field; N]) {} 
 
+#[oracle(mul_with_quotient)]
+pub(crate) unconstrained fn mul_with_quotient_oracle<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    lhs: [Field; N],
+    rhs: [Field; N],
+    num_limbs: u32,
+    mod_bits: u32,
+) -> ([Field; N], [Field; N]) {}
+
 pub(crate) unconstrained fn __mul<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     lhs: [Field; N],
@@ -299,7 +290,9 @@ pub(crate) unconstrained fn __mul<let N: u32, let MOD_BITS: u32>(
 //     __mul::<_, MOD_BITS>(params, numerator, inv_divisor)
 // }
 
-pub (crate) unconstrained fn __div<let N: u32, let MOD_BITS: u32>(
+
+pub(crate) unconstrained fn __div<let N: u32, let MOD_BITS: u32>(
+
     params: P<N, MOD_BITS>,
     numerator: [Field; N],
     divisor: [Field; N],
@@ -307,14 +300,17 @@ pub (crate) unconstrained fn __div<let N: u32, let MOD_BITS: u32>(
     div_oracle(params, numerator, divisor, N, MOD_BITS)
 }
 
+
  #[oracle(div)]
  pub (crate) unconstrained fn div_oracle<let N: u32, let MOD_BITS: u32>(
+
     params: P<N, MOD_BITS>,
     numerator: [Field; N],
     divisor: [Field; N],
     num_limbs: u32,
     mod_bits: u32,
  ) -> [Field; N] {} 
+
 
 /**
 * @brief __udiv_mod performs *unconstrained* integer division between numerator, divisor 
@@ -323,6 +319,7 @@ pub (crate) unconstrained fn __div<let N: u32, let MOD_BITS: u32>(
 *      2. numerator % divisor = remainder
 *      3. divisor * quotient + remainder = numerator
 **/
+
 // pub(crate) unconstrained fn __udiv_mod<let N: u32, let MOD_BITS: u32>(
 //     numerator: [Field; N],
 //     divisor: [Field; N],
@@ -367,6 +364,31 @@ pub(crate) unconstrained fn __udiv_mod<let N: u32, let MOD_BITS: u32>(
     numerator: [Field; N],
     divisor: [Field; N],
 ) -> ([Field; N], [Field; N]) {
+    let res: ([Field; N], [Field; N]) =
+        udiv_mod_oracle::<N, MOD_BITS>(numerator, divisor, N, MOD_BITS);
+    res
+}
+
+#[oracle(udiv_mod)]
+pub(crate) unconstrained fn udiv_mod_oracle<let N: u32, let MOD_BITS: u32>(
+    numerator: [Field; N],
+    divisor: [Field; N],
+    num_limbs: u32,
+    mod_bits: u32,
+) -> ([Field; N], [Field; N]) {}
+
+// pub(crate) unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
+//     params: P<N, MOD_BITS>,
+//     val: [Field; N],
+// ) -> [Field; N] {
+//     let one: [Field; N] = __one::<N>();
+//     let one_u60: U60Repr<N, 2> = U60Repr::from(one);
+//     let exp_u60 = params.modulus_u60.sub(one_u60.add(one_u60));
+//     let exp = U60Repr::into(exp_u60);
+//     __pow::<_, MOD_BITS>(params, val, exp)
+// }
+
+pub(crate) unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
     let res: ([Field; N], [Field; N]) = udiv_mod_oracle::<N, MOD_BITS>(numerator, divisor, N, MOD_BITS); 
     res
 }
@@ -435,19 +457,19 @@ pub (crate) unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
     val: [Field; N],
     exponent: [Field; N],
 ) -> [Field; N] {
-    pow_oracle(params, val, exponent, N, MOD_BITS)
+    let res = invmod_oracle::<N, MOD_BITS>(params, val, N, MOD_BITS);
+    res
 }
 
- #[oracle(pow)]
- pub (crate) unconstrained fn pow_oracle<let N: u32, let MOD_BITS: u32>(
+
+#[oracle(pow)]
+pub(crate) unconstrained fn pow_oracle<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     val: [Field; N],
     exponent: [Field; N],
     num_limbs: u32,
     mod_bits: u32,
- ) -> [Field; N] {}
- 
-  
+) -> [Field; N] {}
 
 pub(crate) unconstrained fn __batch_invert<let N: u32, let MOD_BITS: u32, let M: u32>(
     params: P<N, MOD_BITS>,
