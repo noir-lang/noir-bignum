@@ -1,3 +1,5 @@
+use core::fmt;
+
 use ark_bn254::Fr;
 use ark_ff::Field;
 use ark_ff::Zero as ZeroField;
@@ -70,6 +72,23 @@ pub(crate) fn invert(a: &BigUint , modulus: &BigUint) -> BigInt {
 }
 
 
+pub (crate) fn pow_bn(base: &BigUint, exponent: &BigUint, modulus: &BigUint) -> BigUint {
+    // cast the exponent into bytes 
+    let exponent_bytes = exponent.to_bytes_be();
+    // do a square and multiply type algorithm 
+    let mut result = BigUint::from(1u64); 
+    for exponent_byte in exponent_bytes {
+        // this will be potentially horribly slow 
+        result = result.pow(256);
+        result = result % modulus;
+        result = result * base.pow(exponent_byte as u32);
+        result = result % modulus;
+    }
+    result
+}
+
+
+
 // some tests to check the behaviour of the extended gcd
 #[test]
 fn test_extended_euclidean() {
@@ -85,6 +104,16 @@ fn test_invert() {
     let modulus_bigint = BigInt::from(modulus.clone());
     let a_bigint = BigInt::from(a.clone());
     assert_eq!((r * a_bigint) % modulus_bigint , BigInt::from(1u64));
+}
+
+
+#[test]
+fn test_pow_bn() {
+    let base = BigUint::from(3u64);
+    let exponent = BigUint::from(10u64);
+    let modulus = BigUint::from(1000000000u64);
+    let result = pow_bn(&base, &exponent, &modulus);
+    assert_eq!(result, BigUint::from(59049u64));
 }
 
 // #[test]
