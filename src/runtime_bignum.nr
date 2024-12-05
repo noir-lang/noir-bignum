@@ -5,13 +5,12 @@ use crate::params::BigNumParams;
 
 use crate::fns::{
     constrained_ops::{
-        derive_from_seed, conditional_select, assert_is_not_equal, eq, validate_in_field,
-        validate_in_range, neg, add, sub, mul, div, udiv_mod, udiv, umod,
+
+        add, assert_is_not_equal, conditional_select, derive_from_seed, div, eq, mul, neg, sub,
+        udiv, udiv_mod, umod, validate_in_field, validate_in_range,
     },
-    unconstrained_ops::{
-        __derive_from_seed, __eq, __is_zero, __neg, __add, __sub, __mul, __div, __udiv_mod,
-        __invmod, __pow, __batch_invert, __batch_invert_slice, __tonelli_shanks_sqrt,
-    }, expressions::{__compute_quadratic_expression, evaluate_quadratic_expression},
+    expressions::{__compute_quadratic_expression, evaluate_quadratic_expression},
+
     serialization::{from_be_bytes, to_le_bytes},
 };
 
