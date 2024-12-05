@@ -332,6 +332,27 @@ pub (crate) fn handle_div(inputs: &Vec<ForeignCallParam<String>>) -> Value {
 
 
 
+pub (crate) fn handle_barrett_reduction(inputs: &Vec<ForeignCallParam<String>>) -> Value {
+    // return an empty json response for now 
+    // the inputs are x , modulus 
+    let x_fc = &inputs[0];
+    let x_str = callparam_to_string(x_fc);
+    let modulus_fc = &inputs[1];
+    let modulus_str = callparam_to_string(modulus_fc);
+    let x = cast_to_biguint(x_str);
+    let modulus = cast_to_biguint(modulus_str);
+    let num_limbs = modulus_fc.len();
+    let quotient = &x / &modulus; 
+    let remainder = &x % &modulus;  
+    //cast the quotient and the remainder to limbs 
+    let quotient_limbs = cast_biguint_to_bignum_limbs(&quotient, num_limbs as u32);
+    let remainder_limbs = cast_biguint_to_bignum_limbs(&remainder, num_limbs as u32);
+    let return_vec:Vec<Vec<String>> = vec![quotient_limbs, remainder_limbs];
+    let json_response = json!({"values" : return_vec});
+    json_response
+}
+
+
 
 
 
@@ -369,6 +390,7 @@ pub (crate) fn cast_to_biguint(input_strings: Vec<&str>) -> BigUint {
     res
 
 }
+
 
 // helper function to get limbs of a big num and pack them into a vector of Fr elements
 pub (crate) fn gets_limbs(input_strings: Vec<&str>) -> Vec<Fr> {
