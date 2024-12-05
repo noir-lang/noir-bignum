@@ -30,6 +30,7 @@ mod foreign_call;
 mod handlers;
 mod ops;
 
+
 use jsonrpsee::server::{RpcModule, Server};
 use std::net::SocketAddr;
 use tracing_subscriber::util::SubscriberInitExt;
@@ -38,7 +39,7 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 
 use crate::foreign_call::ForeignCallParam;
-use crate::handlers::{handle_get_sqrt, handle_get_sqrts, handle_is_zero, handle_add};
+use crate::handlers::{handle_get_sqrt, handle_get_sqrts, handle_is_zero, handle_add, handle_mul_with_quotient, handle_neg, handle_udiv_mod, handle_invmod, handle_pow, handle_divmod};
 
 // SPIN UP THE SERVER
 #[tokio::main]
@@ -103,6 +104,12 @@ async fn run_server() -> anyhow::Result<SocketAddr> {
                 "get_sqrts" => handle_get_sqrts(&request.inputs), // the inputs to this are effectively a Vec<Vec<String>>
                 "is_zero" => handle_is_zero(&request.inputs), // the inputs to this are effectively a Vec<String>
                 "add" => handle_add(&request.inputs), // the inputs to this are effectively a Vec<String>
+                "neg" => handle_neg(&request.inputs), // the inputs to this are effectively a Vec<String>
+                "mul_with_quotient" => handle_mul_with_quotient(&request.inputs), // the inputs to this are effectively a Vec<String>
+                "udiv_mod" => handle_udiv_mod(&request.inputs), // the inputs to this are effectively a Vec<String>
+                "invmod" => handle_invmod(&request.inputs), // the inputs to this are effectively a Vec<String>
+                "pow" => handle_pow(&request.inputs), // the inputs to this are effectively a Vec<String>
+                "divmod" => handle_divmod(&request.inputs), // the inputs to this are effectively a Vec<String>
                 _ => handle_unknown_function(&request),
             };
 

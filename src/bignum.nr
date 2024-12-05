@@ -166,8 +166,6 @@ where
 
     unconstrained fn __is_zero(self) -> bool {
         let a = __is_zero(self.limbs); 
-        println("the oracle return value is");
-        println(a);
         a
     }
 

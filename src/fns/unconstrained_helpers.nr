@@ -218,6 +218,10 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
     (result, carry_flags, borrow_flags, underflow)
 }
 
+
+// instead of using barrett reduction, we use the oracle to do the reduction 
+
+
 /**
  * @brief BARRETT_REDUCTION_OVERFLOW_BITS defines how large an input to barrett reduction can be
  * @details maximum value = modulus^2 <<BARRETT_REDUCTION_OVERFLOW_BITS

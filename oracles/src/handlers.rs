@@ -1,6 +1,8 @@
 use ark_bn254::Fr;
 use ark_ff::Zero;
-use num_bigint::BigUint; use num_traits::ConstZero;
+use num_bigint::BigUint; 
+use num_bigint::BigInt; 
+use num_traits::ConstZero;
 // It's pretty disgusting that I've introduced this library, just to convert to/from radix 16. I wonder if there's a better way with arkworks?
 use num_traits::Num; // It's pretty disgusting that I've introduced this library, just to convert to/from radix 16. I wonder if there's a better way with arkworks?
 use serde_json::{json, Value};
@@ -9,8 +11,8 @@ use serde_json::{json, Value};
 use crate::foreign_call::ForeignCallParam;
 use crate::ops::is_zero;
 use crate::ops::sqrt;
-
-
+use crate::ops::extended_gcd;
+use crate::ops::invert;
 
 // a struct that emulates the bignum Params params from the params.nr file
 struct Params {
@@ -146,6 +148,44 @@ pub(crate) fn handle_is_zero(inputs: &Vec<ForeignCallParam<String>>) -> Value {
     json_response      
 }
 
+
+
+
+// ==============================
+// ==============================
+// ==============================
+// call handler for add
+pub(crate) fn handle_mul_with_quotient(inputs: &Vec<ForeignCallParam<String>>) -> Value {
+    // parse the input, the last 2 elements of the input are the modulus bits and the number of limbs
+    let num_limbs_fc = &inputs[inputs.len()-2];
+    let num_limbs = get_u32_from_callparam(&num_limbs_fc);  
+    // create the params struct
+    let params: Params = Params::from_foreign_call_params(&inputs);
+    // get the lhs and rhs
+    let lhs_fc = &inputs[inputs.len()-3];
+    let lhs_str = callparam_to_string(lhs_fc);
+    let lhs_biguint = cast_to_biguint(lhs_str);
+    let rhs_fc = &inputs[inputs.len()-4];
+    let rhs_str = callparam_to_string(rhs_fc);
+    let rhs_biguint = cast_to_biguint(rhs_str);
+    let mul_res = lhs_biguint * rhs_biguint; 
+    let modulus = params.modulus;
+    let q = &mul_res / &modulus;
+    let r = &mul_res % &modulus;
+    // cast the q and r to limbs
+    let q_limbs = cast_biguint_to_bignum_limbs(&q, num_limbs);
+    let r_limbs = cast_biguint_to_bignum_limbs(&r, num_limbs);
+    // call the mul_with_quotient function from the ops.rs file
+    let return_vec: Vec<Vec<String>> = vec![q_limbs, r_limbs];
+    let json_response = json!({"values" : return_vec});
+    json_response  
+}
+
+
+
+
+
+
 // ==============================
 // ==============================
 // ==============================
@@ -156,19 +196,13 @@ pub(crate) fn handle_is_zero(inputs: &Vec<ForeignCallParam<String>>) -> Value {
 // the input is 8 elements
 pub(crate) fn handle_add(inputs: &Vec<ForeignCallParam<String>>) -> Value {
     // parse the input, the last 2 elements of the input are the modulus bits and the number of limbs
-    // let modulus_bits_fc = &inputs[inputs.len()-1];
-    // let modulus_bits = get_u32_from_callparam(&modulus_bits_fc);
     // get the number of limbs from the input 
-    println!("length of inputs: {:?}", inputs.len());
-    for input in inputs {
-        println!("input: {:?}", input);
-    }
     // let num_limbs_fc = &inputs[inputs.len()-2];
     // let num_limbs = get_u32_from_callparam(&num_limbs_fc);  
-    let num_limbs = 4; 
     // convert the lhs and rhs to biguints 
     let lhs_fc = &inputs[inputs.len()-3];
     let lhs_str = callparam_to_string(lhs_fc);
+    let num_limbs = lhs_str.len();
     let lhs_biguint = cast_to_biguint(lhs_str);
     let rhs_fc = &inputs[inputs.len()-4];
     let rhs_str = callparam_to_string(rhs_fc);
@@ -180,7 +214,7 @@ pub(crate) fn handle_add(inputs: &Vec<ForeignCallParam<String>>) -> Value {
     let result = lhs_biguint + rhs_biguint;
     let result_mod = result % modulus;
     // cast the result to limbs
-    let limbs = cast_biguint_to_bignum_limbs(&result_mod, num_limbs);
+    let limbs = cast_biguint_to_bignum_limbs(&result_mod, num_limbs as u32);
     // pack it in a json response
     let return_vec:Vec<Vec<String>> = vec![limbs];
     let json_response = json!({"values" : return_vec});
@@ -188,6 +222,99 @@ pub(crate) fn handle_add(inputs: &Vec<ForeignCallParam<String>>) -> Value {
     json_response
 
 }
+
+pub (crate) fn handle_neg(inputs: &Vec<ForeignCallParam<String>>) -> Value {
+    // parse the input, the last 2 elements of the input are the modulus bits and the number of limbs
+    // create the params struct
+
+    let params: Params = Params::from_foreign_call_params(&inputs);
+    let modulus = params.modulus; 
+    let limbs_fc = &inputs[inputs.len()-3];
+    let num_limbs = limbs_fc.len();
+    let mut limbs_biguint = cast_to_biguint(callparam_to_string(limbs_fc));
+    if limbs_biguint > modulus {
+        limbs_biguint = limbs_biguint % &modulus;
+    }
+    let neg = &modulus - &limbs_biguint; 
+    let neg_limbs = cast_biguint_to_bignum_limbs(&neg, num_limbs as u32);
+    let return_vec:Vec<Vec<String>> = vec![neg_limbs];
+    let json_response = json!({"values" : return_vec});
+    json_response
+}
+
+
+pub (crate) fn handle_udiv_mod(inputs: &Vec<ForeignCallParam<String>>) -> Value {
+    // get the numerator and the divisor
+    let numerator_fc = &inputs[0];
+    let numerator_str = callparam_to_string(&numerator_fc);
+    let numerator = cast_to_biguint(numerator_str);
+    let divisor_fc = &inputs[1];
+    let divisor_str = callparam_to_string(divisor_fc);
+    let divisor = cast_to_biguint(divisor_str);
+    // get the number of limbs
+    let num_limbs = numerator_fc.len();
+
+    // divide the numerator by the divisor
+    let quotient = &numerator / &divisor; 
+    let remainder = &numerator % &divisor;  
+    
+    // cast the quotient and the remainder to limbs
+    let quotient_limbs = cast_biguint_to_bignum_limbs(&quotient, num_limbs as u32);
+    let remainder_limbs = cast_biguint_to_bignum_limbs(&remainder, num_limbs as u32);
+
+    let return_vec:Vec<Vec<String>> = vec![quotient_limbs, remainder_limbs];
+    let json_response = json!({"values" : return_vec});
+    json_response
+}
+
+// a handler for modular inversion  
+pub (crate) fn handle_invmod(inputs: &Vec<ForeignCallParam<String>>) -> Value {
+    // get the params 
+    let params: Params = Params::from_foreign_call_params(&inputs);
+    // get the value to be inverted 
+    let val_fc = &inputs[inputs.len()-1];
+    let val_str = callparam_to_string(val_fc);
+    let val = cast_to_biguint(val_str);
+    let num_limbs = val_fc.len();
+    // invert the value 
+    println!("modulus: {:?}", params.modulus);
+    println!("val: {:?}", val);
+    let inv = invert(&val, &params.modulus);
+    // cast the inverse to limbs
+    let limbs = cast_bigint_to_bignum_limbs(&inv, num_limbs as u32);
+    // return an empty json response for now 
+    let return_vec:Vec<Vec<String>> = vec![limbs];
+    let json_response = json!({"values" : return_vec});
+    json_response
+}
+
+// a handler for modular exponentiation  
+pub (crate) fn handle_pow(inputs: &Vec<ForeignCallParam<String>>) -> Value {
+    // return an empty json response for now 
+    let return_vec:Vec<Vec<String>> = vec![];
+    let json_response = json!({"values" : return_vec});
+    json_response
+}
+
+// a handler for modular division 
+pub (crate) fn handle_divmod(inputs: &Vec<ForeignCallParam<String>>) -> Value {
+    // return an empty json response for now 
+    let return_vec:Vec<Vec<String>> = vec![];
+    let json_response = json!({"values" : return_vec});
+    json_response
+}
+
+
+
+
+
+
+
+// ==============================
+// ==============================
+// ==============================
+// helper functions
+
 
 
 
@@ -248,16 +375,22 @@ pub (crate) fn callparam_to_string(input: &ForeignCallParam<String>) -> Vec<&str
 
 pub (crate) fn get_u32_from_callparam(input: &ForeignCallParam<String>) -> u32 {
     let input_string = callparam_to_string(input)[0];
-    println!(""); 
-    println!("input_string: {:?}", input_string);
     u32::from_str_radix(input_string, 16).unwrap()
 }
 
 pub (crate) fn get_bool_from_callparam(input: &ForeignCallParam<String>) -> bool {
-    let input_string = callparam_to_string(input)[0];
+    // println!("the bool oracle was called"); 
+    // println!("input: {:?}", input);
+    let mut input_string = callparam_to_string(input)[0];
+    if input_string == "" {
+        input_string = "0";
+    }
+    // println!("input_string: {:?}", input_string);
     let res = u32::from_str_radix(input_string, 16).unwrap(); 
     res == 1
 }
+
+
 
 pub (crate) fn cast_biguint_to_bignum_limbs(input: &BigUint, num_limbs: u32) -> Vec<String> {
     // a constant 2^120 as biguint  
@@ -275,6 +408,25 @@ pub (crate) fn cast_biguint_to_bignum_limbs(input: &BigUint, num_limbs: u32) -> 
     }
     limbs_hex
 }
+
+
+pub (crate) fn cast_bigint_to_bignum_limbs(input: &BigInt, num_limbs: u32) -> Vec<String> {
+    // a constant 2^120 as biguint  
+    let base: BigInt = BigInt::from(2u32);
+    let exp = 120u32;
+    let shift_constant = base.pow(exp);
+    let mut input_copy = input.clone();
+    // an empty array of size num_limbs of type hex limbs
+    let mut limbs_hex: Vec<String> = vec![];
+    for i in 0..num_limbs {
+        let remainder = &input_copy % &shift_constant; 
+        limbs_hex.push(remainder.to_str_radix(16)); 
+        let quetient: BigInt = input_copy / &shift_constant;
+        input_copy = quetient.clone();
+    }
+    limbs_hex
+}
+
 
 
 impl  Params  {

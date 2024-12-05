@@ -268,7 +268,7 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [Field; N], rhs: [
     // so we do... p - x - r = 0 and there might be borrow flags
     // a - b = r
     // p + a - b - r = 0
-    let (result, carry_flags, borrow_flags) = unsafe { __validate_gt_remainder(lhs, rhs) };
+    let (result, carry_flags, borrow_flags) = unsafe { __validate_gt_remainder::<N, MOD_BITS>(lhs, rhs) };
     validate_in_range::<_, MOD_BITS>(result);
 
     let borrow_shift = 0x1000000000000000000000000000000;
@@ -445,7 +445,7 @@ pub(crate) fn udiv_mod<let N: u32, let MOD_BITS: u32>(
     numerator: [Field; N],
     divisor: [Field; N],
 ) -> ([Field; N], [Field; N]) {
-    let (quotient, remainder) = unsafe { __udiv_mod(numerator, divisor) };
+    let (quotient, remainder) = unsafe { __udiv_mod::<N, MOD_BITS>(numerator, divisor) };
 
     // self / divisor = quotient rounded
     // quotient * divisor + remainder - self = 0

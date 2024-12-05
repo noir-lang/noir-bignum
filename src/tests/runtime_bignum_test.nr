@@ -214,15 +214,10 @@ fn test_add() {
     let a: $RuntimeBigNum<$N, $MOD_BITS> = unsafe{ $RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4]) };
     let b: $RuntimeBigNum<$N, $MOD_BITS> = unsafe{ $RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7]) };
     let one: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::one(params);
-    println("we got here");
     a.validate_in_range();
-    println("we got here 2");
     a.validate_in_field();
-    println("we got here 3");
     b.validate_in_range();
-    println("we got here 4");
     b.validate_in_field();
-    println("we got here 5");
     let mut c = a + b;
     
     c = c + c;
