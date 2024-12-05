@@ -290,14 +290,31 @@ pub(crate) unconstrained fn __mul<let N: u32, let MOD_BITS: u32>(
     b
 }
 
-pub(crate) unconstrained fn __div<let N: u32, let MOD_BITS: u32>(
+// pub(crate) unconstrained fn __div<let N: u32, let MOD_BITS: u32>(
+//     params: P<N, MOD_BITS>,
+//     numerator: [Field; N],
+//     divisor: [Field; N],
+// ) -> [Field; N] {
+//     let inv_divisor = __invmod::<_, MOD_BITS>(params, divisor);
+//     __mul::<_, MOD_BITS>(params, numerator, inv_divisor)
+// }
+
+pub (crate) unconstrained fn __div<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     numerator: [Field; N],
     divisor: [Field; N],
 ) -> [Field; N] {
-    let inv_divisor = __invmod::<_, MOD_BITS>(params, divisor);
-    __mul::<_, MOD_BITS>(params, numerator, inv_divisor)
+    div_oracle(params, numerator, divisor, N, MOD_BITS)
 }
+
+ #[oracle(div)]
+ pub (crate) unconstrained fn div_oracle<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    numerator: [Field; N],
+    divisor: [Field; N],
+    num_limbs: u32,
+    mod_bits: u32,
+ ) -> [Field; N] {} 
 
 /**
 * @brief __udiv_mod performs *unconstrained* integer division between numerator, divisor 
@@ -393,25 +410,44 @@ pub (crate) unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
 
  
 
-pub(crate) unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
+// pub(crate) unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
+//     params: P<N, MOD_BITS>,
+//     val: [Field; N],
+//     exponent: [Field; N],
+// ) -> [Field; N] {
+//     let x: U60Repr<N, 2> = U60Repr::from(exponent);
+
+//     let num_bits = MOD_BITS + 1;
+
+//     let mut accumulator: [Field; N] = __one::<N>();
+
+//     for i in 0..num_bits {
+//         accumulator = __mul::<_, MOD_BITS>(params, accumulator, accumulator);
+//         if x.get_bit(num_bits - i - 1) {
+//             accumulator = __mul::<_, MOD_BITS>(params, accumulator, val);
+//         }
+//     }
+//     accumulator
+// }
+
+pub (crate) unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     val: [Field; N],
     exponent: [Field; N],
 ) -> [Field; N] {
-    let x: U60Repr<N, 2> = U60Repr::from(exponent);
-
-    let num_bits = MOD_BITS + 1;
-
-    let mut accumulator: [Field; N] = __one::<N>();
-
-    for i in 0..num_bits {
-        accumulator = __mul::<_, MOD_BITS>(params, accumulator, accumulator);
-        if x.get_bit(num_bits - i - 1) {
-            accumulator = __mul::<_, MOD_BITS>(params, accumulator, val);
-        }
-    }
-    accumulator
+    pow_oracle(params, val, exponent, N, MOD_BITS)
 }
+
+ #[oracle(pow)]
+ pub (crate) unconstrained fn pow_oracle<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    val: [Field; N],
+    exponent: [Field; N],
+    num_limbs: u32,
+    mod_bits: u32,
+ ) -> [Field; N] {}
+ 
+  
 
 pub(crate) unconstrained fn __batch_invert<let N: u32, let MOD_BITS: u32, let M: u32>(
     params: P<N, MOD_BITS>,

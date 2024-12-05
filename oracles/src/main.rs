@@ -39,7 +39,7 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 
 use crate::foreign_call::ForeignCallParam;
-use crate::handlers::{handle_get_sqrt, handle_get_sqrts, handle_is_zero, handle_add, handle_mul_with_quotient, handle_neg, handle_udiv_mod, handle_invmod, handle_pow, handle_divmod};
+use crate::handlers::{handle_get_sqrt, handle_get_sqrts, handle_is_zero, handle_add, handle_mul_with_quotient, handle_neg, handle_udiv_mod, handle_invmod, handle_pow, handle_div};
 
 // SPIN UP THE SERVER
 #[tokio::main]
@@ -109,7 +109,7 @@ async fn run_server() -> anyhow::Result<SocketAddr> {
                 "udiv_mod" => handle_udiv_mod(&request.inputs), // the inputs to this are effectively a Vec<String>
                 "invmod" => handle_invmod(&request.inputs), // the inputs to this are effectively a Vec<String>
                 "pow" => handle_pow(&request.inputs), // the inputs to this are effectively a Vec<String>
-                "divmod" => handle_divmod(&request.inputs), // the inputs to this are effectively a Vec<String>
+                "div" => handle_div(&request.inputs), // the inputs to this are effectively a Vec<String>
                 _ => handle_unknown_function(&request),
             };
 

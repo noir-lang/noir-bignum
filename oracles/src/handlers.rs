@@ -1,5 +1,6 @@
 use ark_bn254::Fr;
 use ark_ff::Zero;
+use jsonrpsee::core::params;
 use num_bigint::BigUint; 
 use num_bigint::BigInt; 
 use num_traits::ConstZero;
@@ -13,6 +14,7 @@ use crate::ops::is_zero;
 use crate::ops::sqrt;
 use crate::ops::extended_gcd;
 use crate::ops::invert;
+use crate::ops::pow_bn;
 
 // a struct that emulates the bignum Params params from the params.nr file
 struct Params {
@@ -272,17 +274,15 @@ pub (crate) fn handle_invmod(inputs: &Vec<ForeignCallParam<String>>) -> Value {
     // get the params 
     let params: Params = Params::from_foreign_call_params(&inputs);
     // get the value to be inverted 
-    let val_fc = &inputs[inputs.len()-1];
+    let val_fc = &inputs[inputs.len()-3];
     let val_str = callparam_to_string(val_fc);
     let val = cast_to_biguint(val_str);
     let num_limbs = val_fc.len();
     // invert the value 
-    println!("modulus: {:?}", params.modulus);
-    println!("val: {:?}", val);
     let inv = invert(&val, &params.modulus);
     // cast the inverse to limbs
     let limbs = cast_bigint_to_bignum_limbs(&inv, num_limbs as u32);
-    // return an empty json response for now 
+    // return the json response for now 
     let return_vec:Vec<Vec<String>> = vec![limbs];
     let json_response = json!({"values" : return_vec});
     json_response
@@ -291,19 +291,44 @@ pub (crate) fn handle_invmod(inputs: &Vec<ForeignCallParam<String>>) -> Value {
 // a handler for modular exponentiation  
 pub (crate) fn handle_pow(inputs: &Vec<ForeignCallParam<String>>) -> Value {
     // return an empty json response for now 
-    let return_vec:Vec<Vec<String>> = vec![];
+    let params: Params = Params::from_foreign_call_params(&inputs);
+    let exponent_fc = &inputs[inputs.len()-3];
+    let exponent_str = callparam_to_string(exponent_fc);
+    let exponent = cast_to_biguint(exponent_str);
+    let num_limbs = exponent_fc.len();
+    let val_fc = &inputs[inputs.len()-4];
+    let val_str = callparam_to_string(val_fc);
+    let val = cast_to_biguint(val_str);
+
+    let res = pow_bn(&val ,&exponent, &params.modulus);
+    let limbs = cast_biguint_to_bignum_limbs(&res, num_limbs as u32);
+    let return_vec:Vec<Vec<String>> = vec![limbs];
     let json_response = json!({"values" : return_vec});
     json_response
 }
 
 // a handler for modular division 
-pub (crate) fn handle_divmod(inputs: &Vec<ForeignCallParam<String>>) -> Value {
-    // return an empty json response for now 
-    let return_vec:Vec<Vec<String>> = vec![];
+pub (crate) fn handle_div(inputs: &Vec<ForeignCallParam<String>>) -> Value {
+    let params: Params = Params::from_foreign_call_params(&inputs);    
+    let numerator_fc = &inputs[inputs.len()-4];
+    let numerator_str = callparam_to_string(numerator_fc);
+    let numerator = cast_to_biguint(numerator_str);
+    let divisor_fc = &inputs[inputs.len()-3];
+    let divisor_str = callparam_to_string(divisor_fc);
+    let divisor = cast_to_biguint(divisor_str);
+    let num_limbs = numerator_fc.len(); 
+
+    // compute the inverse of the divisor with respect to the modulus 
+    let inv = invert(&divisor, &params.modulus);
+    // multiply the numerator by the inverse 
+    let result = (BigInt::from(numerator.clone())) * &inv; 
+    let reduced = result % BigInt::from(params.modulus.clone());  
+    // cast the result to limbs
+    let limbs = cast_bigint_to_bignum_limbs(&reduced, num_limbs as u32);
+    let return_vec:Vec<Vec<String>> = vec![limbs];
     let json_response = json!({"values" : return_vec});
     json_response
 }
-
 
 
 
@@ -379,13 +404,10 @@ pub (crate) fn get_u32_from_callparam(input: &ForeignCallParam<String>) -> u32 {
 }
 
 pub (crate) fn get_bool_from_callparam(input: &ForeignCallParam<String>) -> bool {
-    // println!("the bool oracle was called"); 
-    // println!("input: {:?}", input);
     let mut input_string = callparam_to_string(input)[0];
     if input_string == "" {
         input_string = "0";
     }
-    // println!("input_string: {:?}", input_string);
     let res = u32::from_str_radix(input_string, 16).unwrap(); 
     res == 1
 }
@@ -457,7 +479,6 @@ impl std::fmt::Debug for Params {
         write!(f, "Params {{ has_multiplicative_inverse: {:?}, modulus: {:?}, double_modulus: {:?}, redc_param: {:?}", self.has_multiplicative_inverse, self.modulus, self.double_modulus, self.redc_param)
     }
 }
-
 
 
 
