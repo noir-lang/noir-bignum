@@ -1,10 +1,8 @@
-use crate::utils::split_bits;
 use crate::utils::u60_representation::U60Repr;
+use crate::utils::split_bits;
 
-use crate::fns::unconstrained_ops::{__add, __eq, __mul, __neg, __one, __pow};
 use crate::params::BigNumParams as P;
-
-global TWO_POW_60: u64 = 0x1000000000000000;
+use crate::fns::unconstrained_ops::{__one, __eq, __neg, __add, __mul, __pow};
 
 /**
  * In this file:
@@ -31,7 +29,7 @@ pub(crate) unconstrained fn __validate_in_field_compute_borrow_flags<let N: u32,
     flags
 }
 
-pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
+pub(crate) unconstrained fn __validate_gt_remainder<let N: u32, let MOD_BITS: u32>(
     lhs: [Field; N],
     rhs: [Field; N],
 ) -> ([Field; N], [bool; N], [bool; N]) {
@@ -41,22 +39,24 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
     let underflow = b_u60.gte(a_u60);
     b_u60 += U60Repr::one();
     assert(underflow == false, "BigNum::validate_gt check fails");
+    let mut addend_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
     let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
 
+    let mut carry: u64 = 0;
     let mut carry_in: u64 = 0;
+    let mut borrow: u64 = 0;
     let mut borrow_in: u64 = 0;
     let mut borrow_flags: [bool; N] = [false; N];
     let mut carry_flags: [bool; N] = [false; N];
     for i in 0..2 * N {
-        let mut add_term: u64 = a_u60.limbs[i] + carry_in;
-        let mut carry = (add_term >= TWO_POW_60) as u64;
-        add_term -= carry * TWO_POW_60;
-        carry_in = carry;
-
-        let sub_term = b_u60.limbs[i] + borrow_in;
-        let mut borrow = (sub_term > add_term) as u64;
-        result_u60.limbs[i] = borrow * TWO_POW_60 + add_term - sub_term;
-
+        let mut add_term: u64 = a_u60.limbs[i] + addend_u60.limbs[i] + carry_in;
+        carry = (add_term >= 0x1000000000000000) as u64;
+        add_term -= (carry as u64 * 0x1000000000000000);
+        result_u60.limbs[i] = add_term;
+        carry_in = carry as u64;
+        borrow = ((b_u60.limbs[i] + borrow_in) > result_u60.limbs[i]) as u64;
+        let sub = (borrow << 60) + result_u60.limbs[i] - b_u60.limbs[i] - borrow_in;
+        result_u60.limbs[i] = sub;
         borrow_in = borrow;
 
         if ((i & 1) == 1) {
@@ -68,6 +68,7 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
             borrow_flags[i / 2] = borrow as bool;
         }
     }
+
     let result = U60Repr::into(result_u60);
     (result, carry_flags, borrow_flags)
 }
@@ -79,14 +80,14 @@ pub(crate) unconstrained fn __neg_with_flags<let N: u32, let MOD_BITS: u32>(
     let x_u60: U60Repr<N, 2> = U60Repr::from(val);
     let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
 
+    let mut borrow: u64 = 0;
     let mut borrow_in: u64 = 0;
 
     let mut borrow_flags: [bool; N] = [false; N];
     for i in 0..2 * N {
-        let sub_term = x_u60.limbs[i] + borrow_in;
-        let borrow = (sub_term > params.modulus_u60.limbs[i]) as u64;
-        result_u60.limbs[i] = borrow * TWO_POW_60 + params.modulus_u60.limbs[i] - sub_term;
-
+        borrow = ((x_u60.limbs[i] + borrow_in) > params.modulus_u60.limbs[i]) as u64;
+        let sub = (borrow << 60) + params.modulus_u60.limbs[i] - x_u60.limbs[i] - borrow_in;
+        result_u60.limbs[i] = sub;
         borrow_in = borrow;
         if ((i & 1) == 1) {
             borrow_flags[i / 2] = borrow as bool;
@@ -95,6 +96,30 @@ pub(crate) unconstrained fn __neg_with_flags<let N: u32, let MOD_BITS: u32>(
     let result = U60Repr::into(result_u60);
     (result, borrow_flags)
 }
+
+
+
+
+
+//this is the actual function that be changed to use oracles 
+ #[oracle(add)]
+ pub (crate) unconstrained fn add_oracle<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    lhs: [Field; N],
+    rhs: [Field; N],
+    num_limbs: u32,
+    mod_bits: u32,
+) -> [Field; N] {} 
+
+
+// pub(crate) unconstrained fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
+//     params: P<N, MOD_BITS>,
+//     lhs: [Field; N],
+//     rhs: [Field; N],
+// ) -> ([Field; N], [bool; N], [bool; N], bool){
+//     let limbs = add_oracle(params, lhs, rhs, N, MOD_BITS); 
+// }
+
 
 pub(crate) unconstrained fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
@@ -114,19 +139,21 @@ pub(crate) unconstrained fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
         subtrahend_u60 = params.modulus_u60;
     }
 
+    let mut carry: u64 = 0;
     let mut carry_in: u64 = 0;
+    let mut borrow: u64 = 0;
     let mut borrow_in: u64 = 0;
     let mut borrow_flags: [bool; N] = [false; N];
     let mut carry_flags: [bool; N] = [false; N];
     for i in 0..2 * N {
         let mut add_term: u64 = a_u60.limbs[i] + b_u60.limbs[i] + carry_in;
-        let mut carry = (add_term >= TWO_POW_60) as u64;
-        add_term -= carry * TWO_POW_60;
-        carry_in = carry;
-
-        let sub_term = subtrahend_u60.limbs[i] + borrow_in;
-        let mut borrow = (sub_term > add_term) as u64;
-        result_u60.limbs[i] = borrow * TWO_POW_60 + add_term - sub_term;
+        carry = (add_term >= 0x1000000000000000) as u64;
+        add_term -= (carry as u64 * 0x1000000000000000);
+        result_u60.limbs[i] = add_term;
+        carry_in = carry as u64;
+        borrow = ((subtrahend_u60.limbs[i] + borrow_in) > result_u60.limbs[i]) as u64;
+        let sub = (borrow << 60) + result_u60.limbs[i] - subtrahend_u60.limbs[i] - borrow_in;
+        result_u60.limbs[i] = sub;
         borrow_in = borrow;
 
         if ((i & 1) == 1) {
@@ -154,26 +181,28 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
 
     let underflow = b_u60.gte(a_u60 + U60Repr::one());
 
-    let addend_u60: U60Repr<N, 2> = if underflow {
-        params.modulus_u60
-    } else {
-        U60Repr { limbs: [0; 2 * N] }
-    };
+    let mut addend_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
     let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
 
+    if underflow {
+        addend_u60 = params.modulus_u60;
+    }
+
+    let mut carry: u64 = 0;
     let mut carry_in: u64 = 0;
+    let mut borrow: u64 = 0;
     let mut borrow_in: u64 = 0;
     let mut borrow_flags: [bool; N] = [false; N];
     let mut carry_flags: [bool; N] = [false; N];
     for i in 0..2 * N {
         let mut add_term: u64 = a_u60.limbs[i] + addend_u60.limbs[i] + carry_in;
-        let mut carry = (add_term >= TWO_POW_60) as u64;
-        add_term -= carry * TWO_POW_60;
-        carry_in = carry;
-
-        let sub_term = b_u60.limbs[i] + borrow_in;
-        let mut borrow = (sub_term > add_term) as u64;
-        result_u60.limbs[i] = borrow * TWO_POW_60 + add_term - sub_term;
+        carry = (add_term >= 0x1000000000000000) as u64;
+        add_term -= (carry as u64 * 0x1000000000000000);
+        result_u60.limbs[i] = add_term;
+        carry_in = carry as u64;
+        borrow = ((b_u60.limbs[i] + borrow_in) > result_u60.limbs[i]) as u64;
+        let sub = (borrow << 60) + result_u60.limbs[i] - b_u60.limbs[i] - borrow_in;
+        result_u60.limbs[i] = sub;
         borrow_in = borrow;
 
         if ((i & 1) == 1) {
@@ -188,6 +217,10 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
     let result = U60Repr::into(result_u60);
     (result, carry_flags, borrow_flags, underflow)
 }
+
+
+// instead of using barrett reduction, we use the oracle to do the reduction 
+
 
 /**
  * @brief BARRETT_REDUCTION_OVERFLOW_BITS defines how large an input to barrett reduction can be
