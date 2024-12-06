@@ -368,7 +368,6 @@ pub(crate) unconstrained fn pow_oracle<let N: u32, let MOD_BITS: u32>(
     mod_bits: u32,
 ) -> [Field; N] {}
 
-
 // pub(crate) unconstrained fn __batch_invert<let N: u32, let MOD_BITS: u32, let M: u32>(
 //     params: P<N, MOD_BITS>,
 //     x: [[Field; N]; M],

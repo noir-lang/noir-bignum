@@ -1,6 +1,5 @@
-
+use crate::fns::unconstrained_helpers::__barrett_reduction;
 use crate::fns::unconstrained_ops::__batch_invert;
-use crate::fns::unconstrained_helpers::__barrett_reduction; 
 use crate::params::{BigNumParams, BigNumParamsGetter};
 use crate::runtime_bignum::RuntimeBigNum;
 use crate::utils::u60_representation::U60Repr;
