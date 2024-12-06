@@ -36,7 +36,7 @@ jobs:
       - name: run the PRC server 
         run: cd oracles && cargo build && RUST_LOG=info cargo run &
       - name: Run Noir tests with oracle resolver. 
-        run: nargo test --oracle-resolver http://127.0.0.1:3000
+        run: cd .. && nargo test --oracle-resolver http://127.0.0.1:3000
 
   format:
     runs-on: ubuntu-latest
