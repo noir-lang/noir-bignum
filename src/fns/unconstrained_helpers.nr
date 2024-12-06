@@ -189,9 +189,7 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
     (result, carry_flags, borrow_flags, underflow)
 }
 
-
-// instead of using barrett reduction, we use the oracle to do the reduction 
-
+// instead of using barrett reduction, we use the oracle to do the reduction
 
 /**
  * @brief BARRETT_REDUCTION_OVERFLOW_BITS defines how large an input to barrett reduction can be
@@ -265,7 +263,7 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
 //         remainder_u60 = remainder_u60 - modulus_u60;
 //         quotient_u60.increment();
 //     } else {}
-    
+
 //     if (remainder_u60.gte(modulus_u60)) {
 //         remainder_u60 = remainder_u60 - modulus_u60;
 //         quotient_u60.increment();
@@ -282,7 +280,6 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
 //     (q, r)
 // }
 
-
 pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     x: [Field; 2 * N],
     redc_param: [Field; N],
@@ -293,18 +290,13 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     barrett_reduction_oracle(x, modulus)
 }
 
-
 #[oracle(barrett_reduction)]
 pub(crate) unconstrained fn barrett_reduction_oracle<let N: u32>(
     x: [Field; 2 * N],
     modulus: [Field; N],
 ) -> ([Field; N], [Field; N]) {
-    // return an empty array for now 
+    // return an empty array for now
 }
-
-
-
-
 
 /**
 * @brief compute the log of the size of the primitive root
