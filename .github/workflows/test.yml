@@ -33,8 +33,14 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
       # run the PRC server in the oracles directory in the background
-      - name: run the PRC server 
-        run: cd oracles && cargo build && RUST_LOG=info cargo run &
+      - name: run the PRC server
+        run: |
+          cd oracles && cargo build
+          RUST_LOG=info cargo run & 
+          echo "Waiting for server to start..."
+          # Wait for port 3000 to become available
+          timeout 30 bash -c 'until nc -z localhost 3000; do sleep 1; done'
+          echo "Server is ready!"
       - name: Run Noir tests with oracle resolver. 
         run:  nargo test --oracle-resolver http://127.0.0.1:3000
 
