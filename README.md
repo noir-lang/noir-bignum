@@ -17,6 +17,10 @@ bignum can evaluate large integer arithmetic by defining a modulus() that is a p
 
 TODO
 
+## Noir Version Compatibility
+
+This library is tested with all stable releases since 0.36.0 as well as nightly.
+
 ## Dependencies
 
 - Noir ≥v0.36.0
