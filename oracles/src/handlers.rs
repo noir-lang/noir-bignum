@@ -353,6 +353,21 @@ pub (crate) fn handle_barrett_reduction(inputs: &Vec<ForeignCallParam<String>>) 
 }
 
 
+pub (crate) fn handle_batch_invert(inputs: &Vec<ForeignCallParam<String>>) -> Value {
+    // get the params 
+    let params: Params = Params::from_foreign_call_params(&inputs);
+    // get the number of input bignums
+    let m_fc = &inputs[inputs.len()-1];
+    let m = get_u32_from_callparam(&m_fc);
+    // get the array of bignums 
+    let xs = &inputs[inputs.len()-4]; 
+    println!("xs: {:?}", xs);
+    // return an empty json response for now 
+    let return_vec:Vec<Vec<String>> = vec![];
+    let json_response = json!({"values" : return_vec});
+    json_response
+}
+
 
 
 

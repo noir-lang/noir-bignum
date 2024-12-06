@@ -368,33 +368,50 @@ pub(crate) unconstrained fn pow_oracle<let N: u32, let MOD_BITS: u32>(
     mod_bits: u32,
 ) -> [Field; N] {}
 
+
+// pub(crate) unconstrained fn __batch_invert<let N: u32, let MOD_BITS: u32, let M: u32>(
+//     params: P<N, MOD_BITS>,
+//     x: [[Field; N]; M],
+// ) -> [[Field; N]; M] {
+//     // TODO: ugly! Will fail if input slice is empty
+//     let mut accumulator: [Field; N] = __one::<N>();
+//     let mut result: [[Field; N]; M] = [[0; N]; M];
+//     let mut temporaries: [[Field; N]] = &[];
+//     for i in 0..x.len() {
+//         temporaries = temporaries.push_back(accumulator);
+//         if (__is_zero(x[i]) == false) {
+//             accumulator = __mul::<_, MOD_BITS>(params, accumulator, x[i]);
+//         }
+//     }
+
+//     accumulator = __invmod::<_, MOD_BITS>(params, accumulator);
+//     let mut T0: [Field; N] = [0; N];
+//     for i in 0..x.len() {
+//         let idx = x.len() - 1 - i;
+//         if (__is_zero(x[idx]) == false) {
+//             T0 = __mul::<_, MOD_BITS>(params, accumulator, temporaries[idx]);
+//             accumulator = __mul::<_, MOD_BITS>(params, accumulator, x[idx]);
+//             result[idx] = T0;
+//         }
+//     }
+//     result
+// }
+
 pub(crate) unconstrained fn __batch_invert<let N: u32, let MOD_BITS: u32, let M: u32>(
     params: P<N, MOD_BITS>,
     x: [[Field; N]; M],
 ) -> [[Field; N]; M] {
-    // TODO: ugly! Will fail if input slice is empty
-    let mut accumulator: [Field; N] = __one::<N>();
-    let mut result: [[Field; N]; M] = [[0; N]; M];
-    let mut temporaries: [[Field; N]] = &[];
-    for i in 0..x.len() {
-        temporaries = temporaries.push_back(accumulator);
-        if (__is_zero(x[i]) == false) {
-            accumulator = __mul::<_, MOD_BITS>(params, accumulator, x[i]);
-        }
-    }
-
-    accumulator = __invmod::<_, MOD_BITS>(params, accumulator);
-    let mut T0: [Field; N] = [0; N];
-    for i in 0..x.len() {
-        let idx = x.len() - 1 - i;
-        if (__is_zero(x[idx]) == false) {
-            T0 = __mul::<_, MOD_BITS>(params, accumulator, temporaries[idx]);
-            accumulator = __mul::<_, MOD_BITS>(params, accumulator, x[idx]);
-            result[idx] = T0;
-        }
-    }
-    result
+    batch_invert_oracle(params, x, N, MOD_BITS, M)
 }
+
+#[oracle(batch_invert)]
+pub(crate) unconstrained fn batch_invert_oracle<let N: u32, let MOD_BITS: u32, let M: u32>(
+    params: P<N, MOD_BITS>,
+    x: [[Field; N]; M],
+    num_limbs: u32,
+    mod_bits: u32,
+    m: u32,
+) -> [[Field; N]; M] {}
 
 pub(crate) unconstrained fn __batch_invert_slice<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,

@@ -20,14 +20,23 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
+      # install rust 
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
 
       - name: Install Nargo
         uses: noir-lang/noirup@v0.1.3
         with:
           toolchain: ${{ matrix.toolchain }}
-
-      - name: Run Noir tests
-        run: nargo test
+      # run the PRC server in the oracles directory in the background
+      - name: run the PRC server 
+        run: cd oracles && cargo build && RUST_LOG=info cargo run &
+      - name: Run Noir tests with oracle resolver. 
+        run: nargo test --oracle-resolver http://127.0.0.1:3000
 
   format:
     runs-on: ubuntu-latest
