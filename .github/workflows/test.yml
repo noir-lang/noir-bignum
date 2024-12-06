@@ -21,7 +21,7 @@ jobs:
         id: get_versions
         run: |
           # gh returns the Noir releases in reverse chronological order so we keep all releases published after the minimum supported version.
-          VERSIONS=$(gh release list -R noir-lang/noir --exclude-pre-releases --json tagName -q 'map(.tagName) | index(env.MINIMUM_NOIR_VERSION) as $index then .[0:$index+1] else [env.MINIMUM_NOIR_VERSION] END')
+          VERSIONS=$(gh release list -R noir-lang/noir --exclude-pre-releases --json tagName -q 'map(.tagName) | index(env.MINIMUM_NOIR_VERSION) as $index | if $index then .[0:$index+1] else [env.MINIMUM_NOIR_VERSION] end')
           echo "versions=$VERSIONS"
           echo "versions=$VERSIONS" >> $GITHUB_OUTPUT
         env:
