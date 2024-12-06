@@ -1,11 +1,11 @@
-use crate::utils::u60_representation::U60Repr;
-use crate::utils::split_bits;
-
-use crate::params::BigNumParams as P;
+use crate::fns::constrained_ops::derive_from_seed;
 use crate::fns::unconstrained_helpers::{
-    __barrett_reduction, __primitive_root_log_size, __multiplicative_generator,
+    __barrett_reduction, __multiplicative_generator, __primitive_root_log_size,
     __tonelli_shanks_sqrt_inner_loop_check,
 };
+use crate::params::BigNumParams as P;
+use crate::utils::split_bits;
+use crate::utils::u60_representation::U60Repr;
 
 /**
  * In this file:
@@ -33,86 +33,13 @@ pub(crate) unconstrained fn __one<let N: u32>() -> [Field; N] {
     limbs
 }
 
+///  An array of field elements derived from the seed (the limbs of the big_num)
 pub(crate) unconstrained fn __derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(
     params: P<N, MOD_BITS>,
     seed: [u8; SeedBytes],
 ) -> [Field; N] {
-    let mut rolling_hash_fields: [Field; (SeedBytes / 31) + 1] = [0; (SeedBytes / 31) + 1];
-    let mut seed_ptr = 0;
-    for i in 0..(SeedBytes / 31) + 1 {
-        let mut packed: Field = 0;
-        for _ in 0..31 {
-            if (seed_ptr < SeedBytes) {
-                packed *= 256;
-                packed += seed[seed_ptr] as Field;
-                seed_ptr += 1;
-            }
-        }
-        rolling_hash_fields[i] = packed;
-    }
-    let compressed =
-        std::hash::poseidon2::Poseidon2::hash(rolling_hash_fields, (SeedBytes / 31) + 1);
-    let mut rolling_hash: [Field; 2] = [compressed, 0];
-
-    let mut to_reduce: [Field; 2 * N] = [0; 2 * N];
-
-    let mut double_modulus_bits = MOD_BITS * 2;
-    let mut double_modulus_bytes =
-        (double_modulus_bits) / 8 + (double_modulus_bits % 8 != 0) as u32;
-
-    let mut last_limb_bytes = double_modulus_bytes % 15;
-    if (last_limb_bytes == 0) {
-        last_limb_bytes = 15;
-    }
-    let mut last_limb_bits = double_modulus_bits % 8;
-    if (last_limb_bits == 0) {
-        last_limb_bits = 8;
-    }
-
-    for i in 0..(N - 1) {
-        let hash = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
-        let hash: [u8; 30] = hash.to_le_bytes();
-        let mut lo: Field = 0;
-        let mut hi: Field = 0;
-        for j in 0..15 {
-            hi *= 256;
-            lo *= 256;
-
-            if (i < 2 * N - 2) {
-                lo += hash[j + 15] as Field;
-                hi += hash[j] as Field;
-            }
-        }
-        to_reduce[2 * i] = lo;
-        to_reduce[2 * i + 1] = hi;
-        rolling_hash[1] += 1;
-    }
-
-    {
-        let hash = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
-        let hash: [u8; 30] = hash.to_le_bytes();
-        let mut hi: Field = 0;
-        for j in 0..(last_limb_bytes - 1) {
-            hi *= 256;
-            hi += hash[j] as Field;
-        }
-        hi *= 256;
-        let last_byte = hash[last_limb_bytes - 1];
-        let mask = (1 as u64 << (last_limb_bits) as u8) - 1;
-        let last_bits = last_byte as u64 & mask;
-        hi += last_bits as Field;
-        to_reduce[2 * N - 2] = hi;
-    }
-
-    let (_, remainder) = __barrett_reduction(
-        to_reduce,
-        params.redc_param,
-        MOD_BITS,
-        params.modulus,
-        params.modulus_u60_x4,
-    );
-    let result = remainder;
-    result
+    let out = derive_from_seed::<N, MOD_BITS, SeedBytes>(params, seed);
+    out
 }
 
 pub(crate) unconstrained fn __eq<let N: u32>(lhs: [Field; N], rhs: [Field; N]) -> bool {
