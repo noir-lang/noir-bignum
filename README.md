@@ -19,7 +19,7 @@ TODO
 
 ## Noir Version Compatibility
 
-We have tested this library with Noir nightly, 0.36.0, and 1.0.0-beta.0
+This library is tested with all stable releases since 0.36.0 inlcuding nightly.
 
 ## Dependencies
 
