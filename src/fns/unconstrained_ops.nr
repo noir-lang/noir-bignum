@@ -134,9 +134,7 @@ pub(crate) unconstrained fn __add<let N: u32, let MOD_BITS: u32>(
 ) -> [Field; N] {
     // let x_u60: U60Repr<N, 2> = U60Repr::from(lhs);
     // let y_u60: U60Repr<N, 2> = U60Repr::from(rhs);
-
     // let mut z_u60 = x_u60 + y_u60;
-
     // if z_u60.gte(params.modulus_u60) {
     //     z_u60 = z_u60 - params.modulus_u60;
     // }
