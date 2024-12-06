@@ -22,7 +22,10 @@ impl<F> From<Vec<F>> for ForeignCallParam<F> {
     }
 }
 
-impl<F> ForeignCallParam<F> where F: Clone {
+impl<F> ForeignCallParam<F>
+where
+    F: Clone,
+{
     pub fn len(&self) -> usize {
         match self {
             ForeignCallParam::Single(_) => 1,
@@ -36,9 +39,7 @@ impl<F> ForeignCallParam<F> where F: Clone {
             ForeignCallParam::Array(values) => values.clone(),
         }
     }
-
 }
-
 
 // impl<F> len<Vec<F>> for ForeignCallParam<F> {
 //     fn len(&self) -> usize {

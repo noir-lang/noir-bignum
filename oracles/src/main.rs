@@ -30,7 +30,6 @@ mod foreign_call;
 mod handlers;
 mod ops;
 
-
 use jsonrpsee::server::{RpcModule, Server};
 use std::net::SocketAddr;
 use tracing_subscriber::util::SubscriberInitExt;
@@ -39,7 +38,11 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 
 use crate::foreign_call::ForeignCallParam;
-use crate::handlers::{handle_get_sqrt, handle_get_sqrts, handle_is_zero, handle_add, handle_mul_with_quotient, handle_neg, handle_udiv_mod, handle_invmod, handle_pow, handle_div, handle_barrett_reduction , handle_batch_invert};
+use crate::handlers::{
+    handle_add, handle_barrett_reduction, handle_batch_invert, handle_div, handle_get_sqrt,
+    handle_get_sqrts, handle_invmod, handle_is_zero, handle_mul_with_quotient, handle_neg,
+    handle_pow, handle_udiv_mod,
+};
 
 // SPIN UP THE SERVER
 #[tokio::main]
