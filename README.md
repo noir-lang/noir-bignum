@@ -19,11 +19,7 @@ TODO
 
 ## Noir Version Compatibility
 
-Workflows include tests for the following Noir versions.
-
-- 0.36.0
-- 1.0.0-beta.0
-- nightly
+This library is tested with all stable releases since 0.36.0 as well as nightly.
 
 ## Dependencies
 
