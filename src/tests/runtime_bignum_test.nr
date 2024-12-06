@@ -1,4 +1,5 @@
 use crate::fns::unconstrained_helpers::__barrett_reduction;
+use crate::fns::unconstrained_ops::__batch_invert;
 use crate::params::{BigNumParams, BigNumParamsGetter};
 use crate::runtime_bignum::RuntimeBigNum;
 use crate::utils::u60_representation::U60Repr;
@@ -567,6 +568,20 @@ fn test_div_BN() {
 fn test_invmod_BN() {
     let params = BN254_Fq_Params::get_params();
     unsafe { test_invmod(params) };
+}
+
+#[test]
+fn test_batch_invert() {
+    let params = BN254_Fq_Params::get_params();
+    let N = 3;
+    let MOD_BITS = 254;
+    let u: RuntimeBigNum<3, 254> = RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4]);
+    let v: RuntimeBigNum<3, 254> = RuntimeBigNum::__derive_from_seed(params, [2, 3, 4, 5]);
+    let w: RuntimeBigNum<3, 254> = RuntimeBigNum::__derive_from_seed(params, [3, 4, 5, 6]);
+    let batch = unsafe { __batch_invert::<3, 254, 3>(params, [u.limbs, v.limbs, w.limbs]) };
+    assert(batch[0] == u.__invmod().limbs);
+    assert(batch[1] == v.__invmod().limbs);
+    assert(batch[2] == w.__invmod().limbs);
 }
 
 // N.B. witness generation times make these tests take ~15 minutes each! Uncomment at your peril
