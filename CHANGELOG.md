@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.3](https://github.com/noir-lang/noir-bignum/compare/v0.4.2...v0.4.3) (2024-12-06)
+
+
+### Features
+
+* Noir 1.0.0 ([#66](https://github.com/noir-lang/noir-bignum/issues/66)) ([af8d54e](https://github.com/noir-lang/noir-bignum/commit/af8d54e83a96ca4c75432677cdce37901602ef78))
+
+
+### Bug Fixes
+
+* Noir 1.0.0-beta.0 ([#74](https://github.com/noir-lang/noir-bignum/issues/74)) ([4081673](https://github.com/noir-lang/noir-bignum/commit/40816731a636dbb19bea211de72de25394cd0e5c))
+
 ## [0.4.2](https://github.com/noir-lang/noir-bignum/compare/v0.4.1...v0.4.2) (2024-11-15)
 
 
