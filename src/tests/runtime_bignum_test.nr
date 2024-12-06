@@ -579,7 +579,6 @@ fn test_batch_invert() {
     let v: RuntimeBigNum<3, 254> = RuntimeBigNum::__derive_from_seed(params, [2, 3, 4, 5]);
     let w: RuntimeBigNum<3, 254> = RuntimeBigNum::__derive_from_seed(params, [3, 4, 5, 6]);
     let batch = unsafe { __batch_invert::<3, 254, 3>(params, [u.limbs, v.limbs, w.limbs]) };
-    println(params.modulus);
     assert(batch[0] == u.__invmod().limbs);
     assert(batch[1] == v.__invmod().limbs);
     assert(batch[2] == w.__invmod().limbs);
