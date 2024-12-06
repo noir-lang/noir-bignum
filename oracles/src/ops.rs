@@ -5,6 +5,7 @@ use ark_ff::Field;
 use ark_ff::Zero as ZeroField;
 use num_bigint::BigUint;
 use num_bigint::BigInt;
+use num_bigint::ToBigInt;
 use num_traits::{Zero, One};
 
 pub(crate) fn sqrt(x: Fr) -> Option<Fr> {
@@ -85,6 +86,32 @@ pub (crate) fn pow_bn(base: &BigUint, exponent: &BigUint, modulus: &BigUint) -> 
         result = result % modulus;
     }
     result
+}
+
+
+pub(crate) fn batch_invert(xs: &Vec<BigUint>, modulus: &BigUint) -> Vec<BigInt> {
+    // start with an array with 1 at position 0 
+    let mut intermediates: Vec<BigUint> = vec![BigUint::from(1u32)];
+    let m = xs.len(); 
+    let mut temp: BigUint =  BigUint::from(1u64); 
+    for i in 0..m {
+        // the intermediates array will hold the multiplication of the first i elements in position i 
+        temp = (&temp * &xs[i])% modulus ; 
+        intermediates.push(temp.clone()); 
+    }
+    
+    // invert the final multiplication 
+    let mut mul_inv = invert(&intermediates[m], modulus); 
+    // set up a vector of responses that will hold the results 
+    let mut inverses: Vec<BigInt> = vec![BigInt::zero() ; m]; 
+    // loop over m and compute the inverses 
+    for i in 0..m {
+        inverses[m-i-1] = (&mul_inv * &BigInt::from(intermediates[m-i-1].clone()))% BigInt::from(modulus.clone()); 
+        mul_inv = &mul_inv * &BigInt::from(xs[m-i-1].clone());    
+    }
+
+    assert_eq!((BigInt::from(xs[0].clone()) * &inverses[0]) % BigInt::from(modulus.clone()) , BigInt::from(1u32)); 
+    inverses
 }
 
 

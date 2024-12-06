@@ -15,6 +15,7 @@ use crate::ops::sqrt;
 use crate::ops::extended_gcd;
 use crate::ops::invert;
 use crate::ops::pow_bn;
+use crate::ops::batch_invert;
 
 // a struct that emulates the bignum Params params from the params.nr file
 struct Params {
@@ -359,11 +360,41 @@ pub (crate) fn handle_batch_invert(inputs: &Vec<ForeignCallParam<String>>) -> Va
     // get the number of input bignums
     let m_fc = &inputs[inputs.len()-1];
     let m = get_u32_from_callparam(&m_fc);
+    // get the number of limbs  
+    let num_limbs_fc = &inputs[inputs.len()-3];
+    let num_limbs = get_u32_from_callparam(&num_limbs_fc);
     // get the array of bignums 
     let xs = &inputs[inputs.len()-4]; 
-    println!("xs: {:?}", xs);
-    // return an empty json response for now 
-    let return_vec:Vec<Vec<String>> = vec![];
+    let xs_vec = xs.get_values();  
+    // cast the xs_vec into a vector of &str 
+    // this is gross but we have to switch back to &str 
+    // and then we push them into a vector of bignum elements 
+    let mut x_str: Vec<&str> = vec![]; 
+    let mut inputs_bns: Vec<BigUint> = vec![]; 
+    for i in 0..xs_vec.len() {
+        let y = xs_vec[i].as_str();
+        x_str.push(y);
+        if x_str.len() as u32 % num_limbs == 0 {
+            let bn = cast_to_biguint(x_str); 
+            x_str = vec![]; 
+            inputs_bns.push(bn);
+        }
+    }
+    let results = batch_invert(&inputs_bns, &params.modulus); 
+    // cast BigInt to bignum limbs 
+    let mut results_formatted: Vec<String> = vec![]; 
+    for result in results{
+        let limbs = cast_bigint_to_bignum_limbs(&result, num_limbs);
+        for limb in limbs{
+            results_formatted.push(limb); 
+        }
+    }
+
+    // println!("xs_str: {:?}", x_str);
+    // split the xs_vec into arrays of size num_limbs
+    
+    // let res = batch_invert(&chunks, &params.modulus); 
+    let return_vec:Vec<Vec<String>> = vec![results_formatted];
     let json_response = json!({"values" : return_vec});
     json_response
 }
