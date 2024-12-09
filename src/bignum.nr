@@ -165,7 +165,8 @@ where
     }
 
     unconstrained fn __is_zero(self) -> bool {
-        __is_zero(self.limbs)
+        let a = __is_zero(self.limbs);
+        a
     }
 
     unconstrained fn __neg(self) -> Self {

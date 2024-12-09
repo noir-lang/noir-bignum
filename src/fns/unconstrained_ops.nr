@@ -33,17 +33,6 @@ pub(crate) unconstrained fn __one<let N: u32>() -> [Field; N] {
     limbs
 }
 
-/// Deterministically derives a big_num from a seed value.
-///
-/// Takes a seed byte array and generates a big_num in the range [0, modulus-1].
-///
-/// ## Value Parameters
-///
-/// - `params`: The BigNum parameters containing modulus and reduction info
-/// - `seed`:  Input seed bytes to derive from.
-///
-/// ## Returns
-///
 ///  An array of field elements derived from the seed (the limbs of the big_num)
 pub(crate) unconstrained fn __derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(
     params: P<N, MOD_BITS>,
@@ -57,15 +46,24 @@ pub(crate) unconstrained fn __eq<let N: u32>(lhs: [Field; N], rhs: [Field; N]) -
     lhs == rhs
 }
 
-pub(crate) unconstrained fn __is_zero<let N: u32>(limbs: [Field; N]) -> bool {
-    let mut result: bool = true;
-    for i in 0..N {
-        result = result & (limbs[i] == 0);
-    }
-
-    result
-}
-
+//switching this function to use oracles instead
+// pub(crate) unconstrained fn __is_zero<let N: u32>(limbs: [Field; N]) -> bool {
+//     let mut result: bool = true;
+//     for i in 0..N {
+//         result = result & (limbs[i] == 0);
+//     }
+//     result
+// }
+//switching this function to use oracles instead
+// pub(crate) unconstrained fn __is_zero<let N: u32>(limbs: [Field; N]) -> bool {
+//     let mut result: bool = true;
+//     for i in 0..N {
+//         result = result & (limbs[i] == 0);
+//     }
+//     result
+// }
+#[oracle(is_zero)]
+pub(crate) unconstrained fn __is_zero<let N: u32>(limbs: [Field; N]) -> bool {}
 /**
 * @brief given an input `x`, compute `2p - x` (unconstrained)
 *
@@ -76,30 +74,86 @@ pub(crate) unconstrained fn __is_zero<let N: u32>(limbs: [Field; N]) -> bool {
 *              N.B. constrained BigNum operations do not fully constrain outputs to be in the range [0, p-1]
 *              because such a check is expensive and usually unneccesary.
 */
+// pub(crate) unconstrained fn __neg<let N: u32, let MOD_BITS: u32>(
+//     params: P<N, MOD_BITS>,
+//     limbs: [Field; N],
+// ) -> [Field; N] {
+//     let f: [Field; N] = limbs;
+//     let x_u60: U60Repr<N, 2> = U60Repr::from(f);
+//     U60Repr::into(params.modulus_u60 - x_u60)
+// }
 pub(crate) unconstrained fn __neg<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     limbs: [Field; N],
 ) -> [Field; N] {
-    let f: [Field; N] = limbs;
-    let x_u60: U60Repr<N, 2> = U60Repr::from(f);
-    U60Repr::into(params.modulus_u60 - x_u60)
+    neg_oracle(params, limbs, N, MOD_BITS)
 }
 
+#[oracle(neg)]
+unconstrained fn neg_oracle<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    limbs: [Field; N],
+    num_limbs: u32,
+    mod_bits: u32,
+) -> [Field; N] {}
+
+// switching this function to use oracles instead
+// pub(crate) unconstrained fn __add<let N: u32, let MOD_BITS: u32>(
+//     params: P<N, MOD_BITS>,
+//     lhs: [Field; N],
+//     rhs: [Field; N],
+// ) -> [Field; N] {
+//     let x_u60: U60Repr<N, 2> = U60Repr::from(lhs);
+//     let y_u60: U60Repr<N, 2> = U60Repr::from(rhs);
+
+//     let mut z_u60 = x_u60 + y_u60;
+
+//     if z_u60.gte(params.modulus_u60) {
+//         z_u60 = z_u60 - params.modulus_u60;
+//     }
+//     U60Repr::into(z_u60)
+// }
+// the oracle function to get the add result
+
+#[oracle(add)]
+pub(crate) unconstrained fn add_oracle<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    lhs: [Field; N],
+    rhs: [Field; N],
+    num_limbs: u32,
+    mod_bits: u32,
+) -> [Field; N] {}
+
+//this is the actual function that be changed to use oracles
+// pub (crate) unconstrained fn __add<let N: u32, let MOD_BITS: u32>(
+// switching this function to use oracles instead
 pub(crate) unconstrained fn __add<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     lhs: [Field; N],
     rhs: [Field; N],
 ) -> [Field; N] {
-    let x_u60: U60Repr<N, 2> = U60Repr::from(lhs);
-    let y_u60: U60Repr<N, 2> = U60Repr::from(rhs);
-
-    let mut z_u60 = x_u60 + y_u60;
-
-    if z_u60.gte(params.modulus_u60) {
-        z_u60 = z_u60 - params.modulus_u60;
-    }
-    U60Repr::into(z_u60)
+    // let x_u60: U60Repr<N, 2> = U60Repr::from(lhs);
+    // let y_u60: U60Repr<N, 2> = U60Repr::from(rhs);
+    // let mut z_u60 = x_u60 + y_u60;
+    // if z_u60.gte(params.modulus_u60) {
+    //     z_u60 = z_u60 - params.modulus_u60;
+    // }
+    // U60Repr::into(z_u60)
+    add_oracle(params, lhs, rhs, N, MOD_BITS)
 }
+// the oracle function to get the add result
+
+// pub (crate) unconstrained fn __add<let N: u32, let MOD_BITS: u32>(
+//     params: P<N, MOD_BITS>,
+//     lhs: [Field; N],
+//     rhs: [Field; N],
+// ) -> [Field; N] {
+//     println("N is: ");
+//     println(N);
+//     let res = add_oracle(params, lhs, rhs, N, MOD_BITS);
+//     println(res);
+//     res
+// }
 
 /**
 * @brief given inputs `x, y` compute 2p + x - y (unconstrained)
@@ -118,23 +172,35 @@ pub(crate) unconstrained fn __mul_with_quotient<let N: u32, let MOD_BITS: u32>(
     lhs: [Field; N],
     rhs: [Field; N],
 ) -> ([Field; N], [Field; N]) {
-    let mut mul: [Field; 2 * N] = [0; 2 * N];
-    for i in 0..N {
-        for j in 0..N {
-            mul[i + j] += lhs[i] * rhs[j];
-        }
-    }
-    let to_reduce = split_bits::__normalize_limbs(mul, 2 * N);
-    let (q, r) = __barrett_reduction(
-        to_reduce,
-        params.redc_param,
-        MOD_BITS,
-        params.modulus,
-        params.modulus_u60_x4,
-    );
-
-    (q, r)
+    let res = mul_with_quotient_oracle(params, lhs, rhs, N, MOD_BITS);
+    res
 }
+//     let mut mul: [Field; 2 * N] = [0; 2 * N];
+//     for i in 0..N {
+//         for j in 0..N {
+//             mul[i + j] += lhs[i] * rhs[j];
+//         }
+//     }
+//     let to_reduce = split_bits::__normalize_limbs(mul, 2 * N);
+//     let (q, r) = __barrett_reduction(
+//         to_reduce,
+//         params.redc_param,
+//         MOD_BITS,
+//         params.modulus,
+//         params.modulus_u60_x4,
+//     );
+
+//     (q, r)
+// }
+
+#[oracle(mul_with_quotient)]
+pub(crate) unconstrained fn mul_with_quotient_oracle<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    lhs: [Field; N],
+    rhs: [Field; N],
+    num_limbs: u32,
+    mod_bits: u32,
+) -> ([Field; N], [Field; N]) {}
 
 pub(crate) unconstrained fn __mul<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
@@ -145,14 +211,31 @@ pub(crate) unconstrained fn __mul<let N: u32, let MOD_BITS: u32>(
     b
 }
 
+// pub(crate) unconstrained fn __div<let N: u32, let MOD_BITS: u32>(
+//     params: P<N, MOD_BITS>,
+//     numerator: [Field; N],
+//     divisor: [Field; N],
+// ) -> [Field; N] {
+//     let inv_divisor = __invmod::<_, MOD_BITS>(params, divisor);
+//     __mul::<_, MOD_BITS>(params, numerator, inv_divisor)
+// }
+
 pub(crate) unconstrained fn __div<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     numerator: [Field; N],
     divisor: [Field; N],
 ) -> [Field; N] {
-    let inv_divisor = __invmod::<_, MOD_BITS>(params, divisor);
-    __mul::<_, MOD_BITS>(params, numerator, inv_divisor)
+    div_oracle(params, numerator, divisor, N, MOD_BITS)
 }
+
+#[oracle(div)]
+pub(crate) unconstrained fn div_oracle<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    numerator: [Field; N],
+    divisor: [Field; N],
+    num_limbs: u32,
+    mod_bits: u32,
+) -> [Field; N] {}
 
 /**
 * @brief __udiv_mod performs *unconstrained* integer division between numerator, divisor 
@@ -161,104 +244,171 @@ pub(crate) unconstrained fn __div<let N: u32, let MOD_BITS: u32>(
 *      2. numerator % divisor = remainder
 *      3. divisor * quotient + remainder = numerator
 **/
-pub(crate) unconstrained fn __udiv_mod<let N: u32>(
+// pub(crate) unconstrained fn __udiv_mod<let N: u32, let MOD_BITS: u32>(
+//     numerator: [Field; N],
+//     divisor: [Field; N],
+// ) -> ([Field; N], [Field; N]) {
+//     let mut quotient_u60: U60Repr<N, 2> = U60Repr::from([0; N]);
+//     let mut remainder_u60: U60Repr<N, 2> = U60Repr::from(numerator);
+
+//     let mut divisor_u60: U60Repr<N, 2> = U60Repr::from(divisor);
+//     let b = divisor_u60;
+
+//     let mut bit_difference = remainder_u60.get_msb() - divisor_u60.get_msb();
+
+//     let mut accumulator_u60: U60Repr<N, 2> = U60Repr::one();
+//     divisor_u60 = divisor_u60.shl(bit_difference);
+//     accumulator_u60 = accumulator_u60.shl(bit_difference);
+
+//     if (divisor_u60.gte(remainder_u60 + U60Repr::one())) {
+//         divisor_u60.shr1();
+//         accumulator_u60.shr1();
+//     }
+//     for _ in 0..(N * 120) {
+//         if (remainder_u60.gte(b) == false) {
+//             break;
+//         }
+
+//         // we've shunted 'divisor' up to have the same bit length as our remainder.
+//         // If remainder >= divisor, then a is at least '1 << bit_difference' multiples of b
+//         if (remainder_u60.gte(divisor_u60)) {
+//             remainder_u60 -= divisor_u60;
+//             // we can use OR here instead of +, as
+//             // accumulator is always a nice power of two
+//             quotient_u60 = quotient_u60 + accumulator_u60;
+//         }
+//         divisor_u60.shr1(); // >>= 1;
+//         accumulator_u60.shr1(); //  >>= 1;
+//     }
+
+//     (U60Repr::into(quotient_u60), U60Repr::into(remainder_u60))
+// }
+
+pub(crate) unconstrained fn __udiv_mod<let N: u32, let MOD_BITS: u32>(
     numerator: [Field; N],
     divisor: [Field; N],
 ) -> ([Field; N], [Field; N]) {
-    let mut quotient_u60: U60Repr<N, 2> = U60Repr::from([0; N]);
-    let mut remainder_u60: U60Repr<N, 2> = U60Repr::from(numerator);
-
-    let mut divisor_u60: U60Repr<N, 2> = U60Repr::from(divisor);
-    let b = divisor_u60;
-
-    let mut bit_difference = remainder_u60.get_msb() - divisor_u60.get_msb();
-
-    let mut accumulator_u60: U60Repr<N, 2> = U60Repr::one();
-    divisor_u60 = divisor_u60.shl(bit_difference);
-    accumulator_u60 = accumulator_u60.shl(bit_difference);
-
-    if (divisor_u60.gte(remainder_u60 + U60Repr::one())) {
-        divisor_u60.shr1();
-        accumulator_u60.shr1();
-    }
-    for _ in 0..(N * 120) {
-        if (remainder_u60.gte(b) == false) {
-            break;
-        }
-
-        // we've shunted 'divisor' up to have the same bit length as our remainder.
-        // If remainder >= divisor, then a is at least '1 << bit_difference' multiples of b
-        if (remainder_u60.gte(divisor_u60)) {
-            remainder_u60 -= divisor_u60;
-            // we can use OR here instead of +, as
-            // accumulator is always a nice power of two
-            quotient_u60 = quotient_u60 + accumulator_u60;
-        }
-        divisor_u60.shr1(); // >>= 1;
-        accumulator_u60.shr1(); //  >>= 1;
-    }
-
-    (U60Repr::into(quotient_u60), U60Repr::into(remainder_u60))
+    let res: ([Field; N], [Field; N]) =
+        udiv_mod_oracle::<N, MOD_BITS>(numerator, divisor, N, MOD_BITS);
+    res
 }
 
+#[oracle(udiv_mod)]
+pub(crate) unconstrained fn udiv_mod_oracle<let N: u32, let MOD_BITS: u32>(
+    numerator: [Field; N],
+    divisor: [Field; N],
+    num_limbs: u32,
+    mod_bits: u32,
+) -> ([Field; N], [Field; N]) {}
+
+// current implementation of invmod only works for prime fields
+// we could use xgcd to extend this to all fields
+// pub(crate) unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
+//     params: P<N, MOD_BITS>,
+//     val: [Field; N],
+// ) -> [Field; N] {
+//     let one: [Field; N] = __one::<N>();
+//     let one_u60: U60Repr<N, 2> = U60Repr::from(one);
+//     let exp_u60 = params.modulus_u60.sub(one_u60.add(one_u60));
+//     let exp = U60Repr::into(exp_u60);
+//     __pow::<_, MOD_BITS>(params, val, exp)
+// }
 pub(crate) unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     val: [Field; N],
 ) -> [Field; N] {
-    let one: [Field; N] = __one::<N>();
-    let one_u60: U60Repr<N, 2> = U60Repr::from(one);
-    let exp_u60 = params.modulus_u60.sub(one_u60.add(one_u60));
-    let exp = U60Repr::into(exp_u60);
-    __pow::<_, MOD_BITS>(params, val, exp)
+    let res = invmod_oracle::<N, MOD_BITS>(params, val, N, MOD_BITS);
+    res
 }
+
+#[oracle(invmod)]
+pub(crate) unconstrained fn invmod_oracle<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    val: [Field; N],
+    num_limbs: u32,
+    mod_bits: u32,
+) -> [Field; N] {}
+
+// pub(crate) unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
+//     params: P<N, MOD_BITS>,
+//     val: [Field; N],
+//     exponent: [Field; N],
+// ) -> [Field; N] {
+//     let x: U60Repr<N, 2> = U60Repr::from(exponent);
+
+//     let num_bits = MOD_BITS + 1;
+
+//     let mut accumulator: [Field; N] = __one::<N>();
+
+//     for i in 0..num_bits {
+//         accumulator = __mul::<_, MOD_BITS>(params, accumulator, accumulator);
+//         if x.get_bit(num_bits - i - 1) {
+//             accumulator = __mul::<_, MOD_BITS>(params, accumulator, val);
+//         }
+//     }
+//     accumulator
+// }
 
 pub(crate) unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     val: [Field; N],
     exponent: [Field; N],
 ) -> [Field; N] {
-    let x: U60Repr<N, 2> = U60Repr::from(exponent);
-
-    let num_bits = MOD_BITS + 1;
-
-    let mut accumulator: [Field; N] = __one::<N>();
-
-    for i in 0..num_bits {
-        accumulator = __mul::<_, MOD_BITS>(params, accumulator, accumulator);
-        if x.get_bit(num_bits - i - 1) {
-            accumulator = __mul::<_, MOD_BITS>(params, accumulator, val);
-        }
-    }
-    accumulator
+    pow_oracle(params, val, exponent, N, MOD_BITS)
 }
+
+#[oracle(pow)]
+pub(crate) unconstrained fn pow_oracle<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    val: [Field; N],
+    exponent: [Field; N],
+    num_limbs: u32,
+    mod_bits: u32,
+) -> [Field; N] {}
+
+// pub(crate) unconstrained fn __batch_invert<let N: u32, let MOD_BITS: u32, let M: u32>(
+//     params: P<N, MOD_BITS>,
+//     x: [[Field; N]; M],
+// ) -> [[Field; N]; M] {
+//     // TODO: ugly! Will fail if input slice is empty
+//     let mut accumulator: [Field; N] = __one::<N>();
+//     let mut result: [[Field; N]; M] = [[0; N]; M];
+//     let mut temporaries: [[Field; N]] = &[];
+//     for i in 0..x.len() {
+//         temporaries = temporaries.push_back(accumulator);
+//         if (__is_zero(x[i]) == false) {
+//             accumulator = __mul::<_, MOD_BITS>(params, accumulator, x[i]);
+//         }
+//     }
+
+//     accumulator = __invmod::<_, MOD_BITS>(params, accumulator);
+//     let mut T0: [Field; N] = [0; N];
+//     for i in 0..x.len() {
+//         let idx = x.len() - 1 - i;
+//         if (__is_zero(x[idx]) == false) {
+//             T0 = __mul::<_, MOD_BITS>(params, accumulator, temporaries[idx]);
+//             accumulator = __mul::<_, MOD_BITS>(params, accumulator, x[idx]);
+//             result[idx] = T0;
+//         }
+//     }
+//     result
+// }
 
 pub(crate) unconstrained fn __batch_invert<let N: u32, let MOD_BITS: u32, let M: u32>(
     params: P<N, MOD_BITS>,
     x: [[Field; N]; M],
 ) -> [[Field; N]; M] {
-    // TODO: ugly! Will fail if input slice is empty
-    let mut accumulator: [Field; N] = __one::<N>();
-    let mut result: [[Field; N]; M] = [[0; N]; M];
-    let mut temporaries: [[Field; N]] = &[];
-    for i in 0..x.len() {
-        temporaries = temporaries.push_back(accumulator);
-        if (__is_zero(x[i]) == false) {
-            accumulator = __mul::<_, MOD_BITS>(params, accumulator, x[i]);
-        }
-    }
-
-    accumulator = __invmod::<_, MOD_BITS>(params, accumulator);
-    let mut T0: [Field; N] = [0; N];
-    for i in 0..x.len() {
-        let idx = x.len() - 1 - i;
-        if (__is_zero(x[idx]) == false) {
-            T0 = __mul::<_, MOD_BITS>(params, accumulator, temporaries[idx]);
-            accumulator = __mul::<_, MOD_BITS>(params, accumulator, x[idx]);
-            result[idx] = T0;
-        }
-    }
-    result
+    batch_invert_oracle(params, x, N, MOD_BITS, M)
 }
+
+#[oracle(batch_invert)]
+pub(crate) unconstrained fn batch_invert_oracle<let N: u32, let MOD_BITS: u32, let M: u32>(
+    params: P<N, MOD_BITS>,
+    x: [[Field; N]; M],
+    num_limbs: u32,
+    mod_bits: u32,
+    m: u32,
+) -> [[Field; N]; M] {}
 
 pub(crate) unconstrained fn __batch_invert_slice<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
