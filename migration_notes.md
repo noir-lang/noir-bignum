@@ -2,7 +2,7 @@
 
 This lib got a big refactor for release 0.4.0.
 
-Here's a summary of changes that will hopefull help you update.
+Here's a summary of changes that will hopefully help you update.
 
 For a quick overview, see the updated [README](./README.md).
 
@@ -12,7 +12,7 @@ Previously, a BigNum type was declared as:
 
 `type MyBigNum = BigNum<3, MyParams>;`
 
-where `3` was the number of limbs of your bignum, and `MyParams` is either a prebuild struct of `Params` from the `fields/` dir of this library, or your own custom set of params.
+where `3` was the number of limbs of your bignum, and `MyParams` is either a pre-built struct of `Params` from the `fields/` dir of this library, or your own custom set of params.
 
 Now, we need to also specify an extra param: the number of bits in the modulus.
 
