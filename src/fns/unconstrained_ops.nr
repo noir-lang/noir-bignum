@@ -171,6 +171,9 @@ pub(crate) unconstrained fn __udiv_mod<let N: u32>(
     let mut divisor_u60: U60Repr<N, 2> = U60Repr::from(divisor);
     let b = divisor_u60;
 
+    if !remainder_u60.gte(divisor_u60) {
+        ([0; N], numerator)
+    } else {
     let mut bit_difference = remainder_u60.get_msb() - divisor_u60.get_msb();
 
     let mut accumulator_u60: U60Repr<N, 2> = U60Repr::one();
@@ -199,6 +202,7 @@ pub(crate) unconstrained fn __udiv_mod<let N: u32>(
     }
 
     (U60Repr::into(quotient_u60), U60Repr::into(remainder_u60))
+    }
 }
 
 pub(crate) unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
