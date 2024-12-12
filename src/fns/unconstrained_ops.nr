@@ -174,34 +174,34 @@ pub(crate) unconstrained fn __udiv_mod<let N: u32>(
     if !remainder_u60.gte(divisor_u60) {
         ([0; N], numerator)
     } else {
-    let mut bit_difference = remainder_u60.get_msb() - divisor_u60.get_msb();
+        let mut bit_difference = remainder_u60.get_msb() - divisor_u60.get_msb();
 
-    let mut accumulator_u60: U60Repr<N, 2> = U60Repr::one();
-    divisor_u60 = divisor_u60.shl(bit_difference);
-    accumulator_u60 = accumulator_u60.shl(bit_difference);
+        let mut accumulator_u60: U60Repr<N, 2> = U60Repr::one();
+        divisor_u60 = divisor_u60.shl(bit_difference);
+        accumulator_u60 = accumulator_u60.shl(bit_difference);
 
-    if (divisor_u60.gte(remainder_u60 + U60Repr::one())) {
-        divisor_u60.shr1();
-        accumulator_u60.shr1();
-    }
-    for _ in 0..(N * 120) {
-        if (remainder_u60.gte(b) == false) {
-            break;
+        if (divisor_u60.gte(remainder_u60 + U60Repr::one())) {
+            divisor_u60.shr1();
+            accumulator_u60.shr1();
+        }
+        for _ in 0..(N * 120) {
+            if (remainder_u60.gte(b) == false) {
+                break;
+            }
+
+            // we've shunted 'divisor' up to have the same bit length as our remainder.
+            // If remainder >= divisor, then a is at least '1 << bit_difference' multiples of b
+            if (remainder_u60.gte(divisor_u60)) {
+                remainder_u60 -= divisor_u60;
+                // we can use OR here instead of +, as
+                // accumulator is always a nice power of two
+                quotient_u60 = quotient_u60 + accumulator_u60;
+            }
+            divisor_u60.shr1(); // >>= 1;
+            accumulator_u60.shr1(); //  >>= 1;
         }
 
-        // we've shunted 'divisor' up to have the same bit length as our remainder.
-        // If remainder >= divisor, then a is at least '1 << bit_difference' multiples of b
-        if (remainder_u60.gte(divisor_u60)) {
-            remainder_u60 -= divisor_u60;
-            // we can use OR here instead of +, as
-            // accumulator is always a nice power of two
-            quotient_u60 = quotient_u60 + accumulator_u60;
-        }
-        divisor_u60.shr1(); // >>= 1;
-        accumulator_u60.shr1(); //  >>= 1;
-    }
-
-    (U60Repr::into(quotient_u60), U60Repr::into(remainder_u60))
+        (U60Repr::into(quotient_u60), U60Repr::into(remainder_u60))
     }
 }
 
