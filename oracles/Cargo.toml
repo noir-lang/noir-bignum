@@ -3,22 +3,35 @@ name = "oracle"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+crate-type = ["cdylib"]
+
 [dependencies]
 # For the server
 anyhow = "1"
 # hyper = "1.5.0"
-jsonrpsee = { version = "0.24.7", features = ["server", "http-client", "ws-client", "macros", "client-ws-transport-tls"] }
-serde = "1.0.213"
-serde_json = "1.0.132"
-tokio = "1.41.0"
-tokio-stream = { version = "0.1.16", features = ["sync"] }
 # tower = { version = "0.4.13", features= ["full"]} 
 # tower-http = { version = "0.6.1", features = ["full"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-
+getrandom = { version = "*", features = ["js"] }
+serde = {version = "1.0.213", features = ["derive"]} 
+serde_json = "1.0.132"
 # For the example ops
 ark-bn254 = "0.4.0"
 ark-ff = "0.4.2"
 num-bigint = "0.4.6" # todo: find a way to remove this dep
 num-traits = "0.2.19" # todo: find a way to remove this dep
+wasm-bindgen = { version = "=0.2.86", features = ["serde-serialize"] }
+gloo-utils = { version = "0.1", features = ["serde"] }
+js-sys = "0.3.62"
+
+
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+
+jsonrpsee = { version = "0.24.7", features = ["server", "http-client", "ws-client", "macros", "client-ws-transport-tls"] }
+tokio = "1.41.0"
+tokio-stream = { version = "0.1.16", features = ["sync"] }
+
+
