@@ -1,32 +1,28 @@
-use core::fmt;
-
 use ark_bn254::Fr;
-use ark_ff::Field;
+// use ark_ff::Field;
 use ark_ff::Zero as ZeroField;
-use num_bigint::BigInt;
 use num_bigint::BigUint;
-use num_bigint::ToBigInt;
-use num_traits::{One, Zero};
+use num_bigint::BigInt;
 
-pub(crate) fn sqrt(x: Fr) -> Option<Fr> {
-    let sqrt: Option<Fr> = if x.legendre().is_qr() {
-        let sqrt = x.sqrt().unwrap();
-        assert_eq!(sqrt.square(), x);
+// pub(crate) fn sqrt(x: Fr) -> Option<Fr> {
+//     let sqrt: Option<Fr> = if x.legendre().is_qr() {
+//         let sqrt = x.sqrt().unwrap();
+//         assert_eq!(sqrt.square(), x);
 
-        Some(sqrt)
-    } else {
-        assert_eq!(x.sqrt(), None);
+//         Some(sqrt)
+//     } else {
+//         assert_eq!(x.sqrt(), None);
 
-        None
-    };
+//         None
+//     };
 
-    if sqrt == None {
-        // I can't be bothered figuring out how to serialise an `Option::None` back to Noir-land, so I'm panicking in this case, instead.
-        panic!("NO SQUARE ROOT EXISTS");
-    }
+//     if sqrt == None {
+//         // I can't be bothered figuring out how to serialise an `Option::None` back to Noir-land, so I'm panicking in this case, instead.
+//         panic!("NO SQUARE ROOT EXISTS");
+//     }
 
-    sqrt
-}
+//     sqrt
+// }
 
 pub(crate) fn is_zero(limbs: Vec<Fr>) -> bool {
     let mut result: bool = true;

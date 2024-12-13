@@ -1,6 +1,6 @@
 // This is basically a copy of noir/acvm-repo/brillig/src/foreign_call.rs
 
-use serde::{de::value, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 /// Single output of a [foreign call][crate::Opcode::ForeignCall].
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]

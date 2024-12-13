@@ -39,9 +39,9 @@ use serde_json::{json, Value};
 
 use crate::foreign_call::ForeignCallParam;
 use crate::handlers::{
-    handle_add, handle_barrett_reduction, handle_batch_invert, handle_div, handle_get_sqrt,
-    handle_get_sqrts, handle_invmod, handle_is_zero, handle_mul_with_quotient, handle_neg,
-    handle_pow, handle_udiv_mod, pack_in_json
+    handle_add, handle_barrett_reduction, handle_batch_invert, handle_div, handle_invmod,
+    handle_is_zero, handle_mul_with_quotient, handle_neg, handle_pow, handle_udiv_mod,
+    pack_in_json,
 };
 
 // SPIN UP THE SERVER
@@ -59,9 +59,9 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn print_type<T>(_: &T) {
-    println!("{:?}", std::any::type_name::<T>());
-}
+// fn print_type<T>(_: &T) {
+//     println!("{:?}", std::any::type_name::<T>());
+// }
 
 #[derive(Debug, Deserialize)]
 struct RequestData {
