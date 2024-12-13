@@ -1,11 +1,12 @@
 use ark_bn254::Fr;
 use ark_ff::Zero;
-use jsonrpsee::core::params;
+// use jsonrpsee::core::params;
 use num_bigint::BigInt;
 use num_bigint::BigUint;
 use num_traits::ConstZero;
 // It's pretty disgusting that I've introduced this library, just to convert to/from radix 16. I wonder if there's a better way with arkworks?
-use num_traits::Num; // It's pretty disgusting that I've introduced this library, just to convert to/from radix 16. I wonder if there's a better way with arkworks?
+use num_traits::Num; use serde::Serialize;
+// It's pretty disgusting that I've introduced this library, just to convert to/from radix 16. I wonder if there's a better way with arkworks?
 use serde_json::{json, Value};
 // use std::str::FromStr;
 
@@ -28,6 +29,10 @@ struct Params {
 /**** THERE'S A LOT OF BOILERPLATE INSIDE THESE "HANDLERS", THAT WE CAN PROBABLY PUT INTO COMMON HELPER FUNCTIONS ****/
 
 /** Note: I _think_ the type `Vec<ForeignCallParam<String>>` will be generically applicable to _any_ oracle call arguments, so I've made _all_ handlers receive this type. */
+pub (crate) fn pack_in_json<T:Serialize>(return_vec :T) -> Value{
+    let json_response = json!({"values" : return_vec});
+    json_response
+} 
 pub(crate) fn handle_get_sqrt(inputs: &Vec<ForeignCallParam<String>>) -> Value {
     /**** EXTRACT INPUT STRING(S) ****/
     println!("inputs: {:?}", inputs);
@@ -120,7 +125,7 @@ pub(crate) fn handle_get_sqrts(inputs: &Vec<ForeignCallParam<String>>) -> Value 
 // ==============================
 // ==============================
 // call handler for is_zero
-pub(crate) fn handle_is_zero(inputs: &Vec<ForeignCallParam<String>>) -> Value {
+pub(crate) fn handle_is_zero(inputs: &Vec<ForeignCallParam<String>>) -> Vec<String> {
     // Create a vector with a single boolean value (true) as the result
     let input_param = &inputs[0];
     // parse the input into strings
@@ -141,16 +146,16 @@ pub(crate) fn handle_is_zero(inputs: &Vec<ForeignCallParam<String>>) -> Value {
 
     /**** FORMAT RESULT FOR NOIR CONSUMPTION, AND CONVERT RESULT TO JSON `Value` TYPE ****/
     let return_vec = oracle_return_data_the_noir_program_expects; // Notice! This is a different type from the singular handle_get_sqrt function! Hence why the `Value` is being computed inside this function, instead in the calling function.
-
-    let json_response = json!({"values" : return_vec});
-    json_response
+    return_vec
+    // let json_response = json!({"values" : return_vec});
+    // json_response
 }
 
 // ==============================
 // ==============================
 // ==============================
 // call handler for add
-pub(crate) fn handle_mul_with_quotient(inputs: &Vec<ForeignCallParam<String>>) -> Value {
+pub(crate) fn handle_mul_with_quotient(inputs: &Vec<ForeignCallParam<String>>) -> Vec<Vec<String>> {
     // parse the input, the last 2 elements of the input are the modulus bits and the number of limbs
     let num_limbs_fc = &inputs[inputs.len() - 2];
     let num_limbs = get_u32_from_callparam(&num_limbs_fc);
@@ -172,8 +177,9 @@ pub(crate) fn handle_mul_with_quotient(inputs: &Vec<ForeignCallParam<String>>) -
     let r_limbs = cast_biguint_to_bignum_limbs(&r, num_limbs);
     // call the mul_with_quotient function from the ops.rs file
     let return_vec: Vec<Vec<String>> = vec![q_limbs, r_limbs];
-    let json_response = json!({"values" : return_vec});
-    json_response
+    // let json_response = json!({"values" : return_vec});
+    // json_response
+    return_vec
 }
 
 // ==============================
@@ -184,7 +190,7 @@ pub(crate) fn handle_mul_with_quotient(inputs: &Vec<ForeignCallParam<String>>) -
 // params are of form
 // lhs and rhs are vector of limbs
 // the input is 8 elements
-pub(crate) fn handle_add(inputs: &Vec<ForeignCallParam<String>>) -> Value {
+pub(crate) fn handle_add(inputs: &Vec<ForeignCallParam<String>>) -> Vec<Vec<String>> {
     // parse the input, the last 2 elements of the input are the modulus bits and the number of limbs
     // get the number of limbs from the input
     // let num_limbs_fc = &inputs[inputs.len()-2];
@@ -207,12 +213,13 @@ pub(crate) fn handle_add(inputs: &Vec<ForeignCallParam<String>>) -> Value {
     let limbs = cast_biguint_to_bignum_limbs(&result_mod, num_limbs as u32);
     // pack it in a json response
     let return_vec: Vec<Vec<String>> = vec![limbs];
-    let json_response = json!({"values" : return_vec});
+    // let json_response = json!({"values" : return_vec});
 
-    json_response
+    // json_response
+    return_vec
 }
 
-pub(crate) fn handle_neg(inputs: &Vec<ForeignCallParam<String>>) -> Value {
+pub(crate) fn handle_neg(inputs: &Vec<ForeignCallParam<String>>) -> Vec<Vec<String>> {
     // parse the input, the last 2 elements of the input are the modulus bits and the number of limbs
     // create the params struct
 
@@ -227,11 +234,12 @@ pub(crate) fn handle_neg(inputs: &Vec<ForeignCallParam<String>>) -> Value {
     let neg = &modulus - &limbs_biguint;
     let neg_limbs = cast_biguint_to_bignum_limbs(&neg, num_limbs as u32);
     let return_vec: Vec<Vec<String>> = vec![neg_limbs];
-    let json_response = json!({"values" : return_vec});
-    json_response
+    return_vec 
+    // let json_response = json!({"values" : return_vec});
+    // json_response
 }
 
-pub(crate) fn handle_udiv_mod(inputs: &Vec<ForeignCallParam<String>>) -> Value {
+pub(crate) fn handle_udiv_mod(inputs: &Vec<ForeignCallParam<String>>) -> Vec<Vec<String>> {
     // get the numerator and the divisor
     let numerator_fc = &inputs[0];
     let numerator_str = callparam_to_string(&numerator_fc);
@@ -251,12 +259,13 @@ pub(crate) fn handle_udiv_mod(inputs: &Vec<ForeignCallParam<String>>) -> Value {
     let remainder_limbs = cast_biguint_to_bignum_limbs(&remainder, num_limbs as u32);
 
     let return_vec: Vec<Vec<String>> = vec![quotient_limbs, remainder_limbs];
-    let json_response = json!({"values" : return_vec});
-    json_response
+    return_vec
+    // let json_response = json!({"values" : return_vec});
+    // json_response
 }
 
 // a handler for modular inversion
-pub(crate) fn handle_invmod(inputs: &Vec<ForeignCallParam<String>>) -> Value {
+pub(crate) fn handle_invmod(inputs: &Vec<ForeignCallParam<String>>) -> Vec<Vec<String>> {
     // get the params
     let params: Params = Params::from_foreign_call_params(&inputs);
     // get the value to be inverted
@@ -270,12 +279,13 @@ pub(crate) fn handle_invmod(inputs: &Vec<ForeignCallParam<String>>) -> Value {
     let limbs = cast_bigint_to_bignum_limbs(&inv, num_limbs as u32);
     // return the json response for now
     let return_vec: Vec<Vec<String>> = vec![limbs];
-    let json_response = json!({"values" : return_vec});
-    json_response
+    return_vec
+    // let json_response = json!({"values" : return_vec});
+    // json_response
 }
 
 // a handler for modular exponentiation
-pub(crate) fn handle_pow(inputs: &Vec<ForeignCallParam<String>>) -> Value {
+pub(crate) fn handle_pow(inputs: &Vec<ForeignCallParam<String>>) -> Vec<Vec<String>> {
     // return an empty json response for now
     let params: Params = Params::from_foreign_call_params(&inputs);
     let exponent_fc = &inputs[inputs.len() - 3];
@@ -289,12 +299,13 @@ pub(crate) fn handle_pow(inputs: &Vec<ForeignCallParam<String>>) -> Value {
     let res = pow_bn(&val, &exponent, &params.modulus);
     let limbs = cast_biguint_to_bignum_limbs(&res, num_limbs as u32);
     let return_vec: Vec<Vec<String>> = vec![limbs];
-    let json_response = json!({"values" : return_vec});
-    json_response
+    return_vec
+    // let json_response = json!({"values" : return_vec});
+    // json_response
 }
 
 // a handler for modular division
-pub(crate) fn handle_div(inputs: &Vec<ForeignCallParam<String>>) -> Value {
+pub(crate) fn handle_div(inputs: &Vec<ForeignCallParam<String>>) -> Vec<Vec<String>> {
     let params: Params = Params::from_foreign_call_params(&inputs);
     let numerator_fc = &inputs[inputs.len() - 4];
     let numerator_str = callparam_to_string(numerator_fc);
@@ -312,11 +323,12 @@ pub(crate) fn handle_div(inputs: &Vec<ForeignCallParam<String>>) -> Value {
     // cast the result to limbs
     let limbs = cast_bigint_to_bignum_limbs(&reduced, num_limbs as u32);
     let return_vec: Vec<Vec<String>> = vec![limbs];
-    let json_response = json!({"values" : return_vec});
-    json_response
+    return_vec
+    // let json_response = json!({"values" : return_vec});
+    // json_response
 }
 
-pub(crate) fn handle_barrett_reduction(inputs: &Vec<ForeignCallParam<String>>) -> Value {
+pub(crate) fn handle_barrett_reduction(inputs: &Vec<ForeignCallParam<String>>) -> Vec<Vec<String>> {
     // return an empty json response for now
     // the inputs are x , modulus
     let x_fc = &inputs[0];
@@ -332,11 +344,12 @@ pub(crate) fn handle_barrett_reduction(inputs: &Vec<ForeignCallParam<String>>) -
     let quotient_limbs = cast_biguint_to_bignum_limbs(&quotient, num_limbs as u32);
     let remainder_limbs = cast_biguint_to_bignum_limbs(&remainder, num_limbs as u32);
     let return_vec: Vec<Vec<String>> = vec![quotient_limbs, remainder_limbs];
-    let json_response = json!({"values" : return_vec});
-    json_response
+    return_vec
+    // let json_response = json!({"values" : return_vec});
+    // json_response
 }
 
-pub(crate) fn handle_batch_invert(inputs: &Vec<ForeignCallParam<String>>) -> Value {
+pub(crate) fn handle_batch_invert(inputs: &Vec<ForeignCallParam<String>>) -> Vec<Vec<String>> {
     // get the params
     let params: Params = Params::from_foreign_call_params(&inputs);
     // get the number of input bignums
@@ -377,8 +390,9 @@ pub(crate) fn handle_batch_invert(inputs: &Vec<ForeignCallParam<String>>) -> Val
 
     // let res = batch_invert(&chunks, &params.modulus);
     let return_vec: Vec<Vec<String>> = vec![results_formatted];
-    let json_response = json!({"values" : return_vec});
-    json_response
+    // let json_response = json!({"values" : return_vec});
+    // json_response
+    return_vec
 }
 
 // ==============================

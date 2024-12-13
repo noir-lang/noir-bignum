@@ -41,7 +41,7 @@ use crate::foreign_call::ForeignCallParam;
 use crate::handlers::{
     handle_add, handle_barrett_reduction, handle_batch_invert, handle_div, handle_get_sqrt,
     handle_get_sqrts, handle_invmod, handle_is_zero, handle_mul_with_quotient, handle_neg,
-    handle_pow, handle_udiv_mod,
+    handle_pow, handle_udiv_mod, pack_in_json
 };
 
 // SPIN UP THE SERVER
@@ -103,18 +103,18 @@ async fn run_server() -> anyhow::Result<SocketAddr> {
             // println!("Request function{:?}", request.function);
 
             let result: Value = match request.function.as_str() {
-                "get_sqrt" => handle_get_sqrt(&request.inputs), // the inputs to this are effectively a Vec<String>
-                "get_sqrts" => handle_get_sqrts(&request.inputs), // the inputs to this are effectively a Vec<Vec<String>>
-                "is_zero" => handle_is_zero(&request.inputs), // the inputs to this are effectively a Vec<String>
-                "add" => handle_add(&request.inputs), // the inputs to this are effectively a Vec<String>
-                "neg" => handle_neg(&request.inputs), // the inputs to this are effectively a Vec<String>
-                "mul_with_quotient" => handle_mul_with_quotient(&request.inputs), // the inputs to this are effectively a Vec<String>
-                "udiv_mod" => handle_udiv_mod(&request.inputs), // the inputs to this are effectively a Vec<String>
-                "invmod" => handle_invmod(&request.inputs), // the inputs to this are effectively a Vec<String>
-                "pow" => handle_pow(&request.inputs), // the inputs to this are effectively a Vec<String>
-                "div" => handle_div(&request.inputs), // the inputs to this are effectively a Vec<String>
-                "barrett_reduction" => handle_barrett_reduction(&request.inputs), // the inputs to this are effectively a Vec<String>
-                "batch_invert" => handle_batch_invert(&request.inputs), // the inputs to this are effectively a Vec<String>
+                // "get_sqrt" => handle_get_sqrt(&request.inputs), // the inputs to this are effectively a Vec<String>
+                // "get_sqrts" => handle_get_sqrts(&request.inputs), // the inputs to this are effectively a Vec<Vec<String>>
+                "is_zero" => pack_in_json(handle_is_zero(&request.inputs)), // the inputs to this are effectively a Vec<String>
+                "add" => pack_in_json(handle_add(&request.inputs)), // the inputs to this are effectively a Vec<String>
+                "neg" => pack_in_json(handle_neg(&request.inputs)), // the inputs to this are effectively a Vec<String>
+                "mul_with_quotient" => pack_in_json(handle_mul_with_quotient(&request.inputs)), // the inputs to this are effectively a Vec<String>
+                "udiv_mod" => pack_in_json(handle_udiv_mod(&request.inputs)), // the inputs to this are effectively a Vec<String>
+                "invmod" => pack_in_json(handle_invmod(&request.inputs)), // the inputs to this are effectively a Vec<String>
+                "pow" => pack_in_json(handle_pow(&request.inputs)), // the inputs to this are effectively a Vec<String>
+                "div" => pack_in_json(handle_div(&request.inputs)), // the inputs to this are effectively a Vec<String>
+                "barrett_reduction" => pack_in_json(handle_barrett_reduction(&request.inputs)), // the inputs to this are effectively a Vec<String>
+                "batch_invert" => pack_in_json(handle_batch_invert(&request.inputs)), // the inputs to this are effectively a Vec<String>
                 _ => handle_unknown_function(&request),
             };
 
