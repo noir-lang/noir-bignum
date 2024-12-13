@@ -1,0 +1,56 @@
+{
+  "name": "@esm-bundle/chai",
+  "version": "4.3.4-fix.0",
+  "description": "BDD/TDD assertion library for node.js and the browser. Test framework agnostic.",
+  "main": "esm/chai.js",
+  "module": "esm/chai.js",
+  "type": "module",
+  "types": "chai.d.ts",
+  "files": [
+    "esm",
+    "system",
+    "chai.d.ts"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/esm-bundle/chai.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/esm-bundle/chai/issues"
+  },
+  "homepage": "https://github.com/esm-bundle/chai#readme",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "20.0.0",
+    "@rollup/plugin-node-resolve": "13.0.4",
+    "chai": "4.3.4",
+    "concurrently": "6.2.0",
+    "husky": "7.0.1",
+    "karma": "6.3.4",
+    "karma-firefox-launcher": "2.1.1",
+    "karma-jasmine": "4.0.1",
+    "mocha": "9.0.3",
+    "pinst": "2.1.6",
+    "prettier": "2.3.2",
+    "pretty-quick": "3.1.1",
+    "release-it": "14.10.1",
+    "release-it-plugin-esm-bundle": "2.1.0",
+    "rollup": "2.55.1",
+    "rollup-plugin-terser": "7.0.2"
+  },
+  "dependencies": {
+    "@types/chai": "^4.2.12"
+  },
+  "scripts": {
+    "test": "pnpm build && concurrently -n w: 'pnpm:test:*'",
+    "test:browser": "karma start karma.conf.cjs --single-run",
+    "debug:test:browser": "karma start karma.conf.cjs",
+    "test:unit": "mocha -r chai/register-expect 'node-test/**/*.*'",
+    "test:formatting": "prettier --check .",
+    "build": "rollup -c",
+    "format": "prettier --write .",
+    "release": "release-it",
+    "_postinstall": "husky install"
+  }
+}

@@ -1,0 +1,21 @@
+import { Plugin } from '@web/dev-server-core';
+import { Loader } from 'esbuild';
+export interface EsBuildPluginArgs {
+    target?: string | string[];
+    js?: boolean;
+    ts?: boolean;
+    json?: boolean;
+    jsx?: boolean;
+    tsx?: boolean;
+    jsxFactory?: string;
+    jsxFragment?: string;
+    loaders?: Record<string, Loader>;
+    define?: {
+        [key: string]: string;
+    };
+    tsconfig?: string;
+    banner?: string;
+    footer?: string;
+}
+export declare function esbuildPlugin(args?: EsBuildPluginArgs): Plugin;
+//# sourceMappingURL=esbuildPluginFactory.d.ts.map

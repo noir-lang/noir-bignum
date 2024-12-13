@@ -1,0 +1,8 @@
+import type { Reporter } from '@web/test-runner-core';
+interface Options {
+    flatten?: boolean;
+}
+/** Test reporter that summarizes all test for a given run */
+export declare function summaryReporter(opts: Options): Reporter;
+export {};
+//# sourceMappingURL=summaryReporter.d.ts.map

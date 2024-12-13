@@ -1,0 +1,30 @@
+{
+    "name": "@types/babel__code-frame",
+    "version": "7.0.6",
+    "description": "TypeScript definitions for @babel/code-frame",
+    "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/babel__code-frame",
+    "license": "MIT",
+    "contributors": [
+        {
+            "name": "Mohsen Azimi",
+            "githubUsername": "mohsen1",
+            "url": "https://github.com/mohsen1"
+        },
+        {
+            "name": "Forbes Lindesay",
+            "githubUsername": "ForbesLindesay",
+            "url": "https://github.com/ForbesLindesay"
+        }
+    ],
+    "main": "",
+    "types": "index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "directory": "types/babel__code-frame"
+    },
+    "scripts": {},
+    "dependencies": {},
+    "typesPublisherContentHash": "a7c50ce38e091a636e921f03f97acd10e18751e3b31a2c052935506af945ee55",
+    "typeScriptVersion": "4.5"
+}
