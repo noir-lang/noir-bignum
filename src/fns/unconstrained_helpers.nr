@@ -296,7 +296,7 @@ pub(crate) unconstrained fn __primitive_root_log_size<let N: u32, let MOD_BITS: 
             break;
         }
         result += 1;
-            target.shr1();
+        target.shr1();
     }
     result
 }

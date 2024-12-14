@@ -36,15 +36,15 @@ pub(crate) unconstrained fn __normalize_limbs<let N: u32>(
     range: u32,
 ) -> [Field; N] {
     let mut normalized: [Field; N] = [0; N];
-    let mut inp: _ = input;
+    let mut next: Field = input[0];
     for i in 0..(range - 1) {
-        let (lo, hi) = split_120_bits(inp[i]);
+        let (lo, hi) = split_120_bits(next);
 
         normalized[i] = lo;
-        inp[i + 1] += hi;
+        next = input[i + 1] + hi;
     }
     {
-        let (lo, hi) = split_120_bits(inp[range - 1]);
+        let (lo, hi) = split_120_bits(next);
         normalized[range - 1] = lo;
         assert(hi == 0);
     }
