@@ -1,0 +1,16 @@
+import { expect } from 'chai';  // Change this line
+import { handle_is_zero } from '../../web/oracle.js';
+
+describe('is_zero oracle function', () => {
+  it('should correctly identify zero inputs', () => {
+    const inputs = ['0', '0', '0'];
+    const result = handle_is_zero(inputs);
+    expect(result).to.deep.equal(['1']);
+  });
+
+  it('should correctly identify non-zero inputs', () => {
+    const inputs = ['1', '2', '3']; 
+    const result = handle_is_zero(inputs);
+    expect(result).to.deep.equal(['0']);
+  });
+});
