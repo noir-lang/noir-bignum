@@ -1,48 +1,50 @@
 {
     "name": "@noir-lang/oracles",
     "contributors": [
-      "The Noir Team <team@noir-lang.org>"
+        "The Noir Team <team@noir-lang.org>"
     ],
     "version": "1.0.0-beta.0",
     "license": "(MIT OR Apache-2.0)",
     "homepage": "https://noir-lang.org/",
     "repository": {
-      "url": "https://github.com/noir-lang/noir.git",
-      "directory": "tooling/noirc_abi_wasm",
-      "type": "git"
+        "url": "https://github.com/noir-lang/noir_bignum.git",
+        "directory": "tooling/noirc_abi_wasm",
+        "type": "git"
     },
     "bugs": {
-      "url": "https://github.com/noir-lang/noir/issues"
+        "url": "https://github.com/noir-lang/noir/issues"
     },
     "files": [
-      "nodejs",
-      "web",
-      "package.json"
+        "nodejs",
+        "web",
+        "package.json"
     ],
     "publishConfig": {
-      "access": "public"
+        "access": "public"
     },
     "main": "./nodejs/oracles.js",
     "types": "./web/oracles.d.ts",
     "module": "./web/oracles.js",
     "sideEffects": false,
     "scripts": {
-      "build": "bash ./build.sh",
-      "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha",
-      "test:browser": "web-test-runner",
-      "clean": "chmod u+w web nodejs || true && rm -rf ./nodejs ./web ./target ./result",
-      "nightly:version": "jq --arg new_version \"-$(git rev-parse --short HEAD)$1\" '.version = .version + $new_version' package.json > package-tmp.json && mv package-tmp.json package.json",
-      "publish": "echo 📡 publishing `$npm_package_name` && yarn npm publish",
-      "lint": "NODE_NO_WARNINGS=1 eslint . --ext .ts --ignore-path ./.eslintignore  --max-warnings 0"
-    },
-    "dependencies": {
+        "build": "bash ./build.sh",
+        "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha",
+        "test:browser": "web-test-runner",
+        "clean": "chmod u+w web nodejs || true && rm -rf ./nodejs ./web ./target ./result",
+        "nightly:version": "jq --arg new_version \"-$(git rev-parse --short HEAD)$1\" '.version = .version + $new_version' package.json > package-tmp.json && mv package-tmp.json package.json",
+        "publish": "echo 📡 publishing `$npm_package_name` && yarn npm publish",
+        "lint": "NODE_NO_WARNINGS=1 eslint . --ext .ts --ignore-path ./.eslintignore  --max-warnings 0"
     },
     "devDependencies": {
-      "@esm-bundle/chai": "^4.3.4-fix.0",
-      "@web/dev-server-esbuild": "^0.3.6",
-      "@web/test-runner": "^0.18.1",
-      "@web/test-runner-playwright": "^0.11.0",
-      "eslint": "^8.57.0",
-      "mocha": "^10.2.0"
+        "@esm-bundle/chai": "^4.3.4-fix.0",
+        "@types/jest": "^29.5.14",
+        "@types/mocha": "^10.0.10",
+        "@web/dev-server-esbuild": "^0.3.6",
+        "@web/test-runner": "^0.18.1",
+        "@web/test-runner-playwright": "^0.11.0",
+        "eslint": "^8.57.0",
+        "jest": "^29.7.0",
+        "mocha": "^11.0.1",
+        "ts-node": "^10.9.2"
     }
-  }
+}
