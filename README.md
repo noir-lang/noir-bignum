@@ -42,8 +42,8 @@ bignum = { tag = "v0.2.2", git = "https://github.com/noir-lang/noir-bignum" }
 Add imports at the top of your Noir code, for example:
 
 ```rust
-use dep::bignum::fields::U256::U256Params;
-use dep::bignum::BigNum;
+use bignum::fields::U256::U256Params;
+use bignum::BigNum;
 ```
 
 ## `bignum`
@@ -73,8 +73,8 @@ struct BigNum<let N: u32, let MOD_BITS: u32, Params> {
 A simple 1 + 2 = 3 check in 256-bit unsigned integers:
 
 ```rust
-use dep::bignum::fields::U256::U256Params;
-use dep::bignum::BigNum;
+use bignum::fields::U256::U256Params;
+use bignum::BigNum;
 
 type U256 = BigNum<3, 257, U256Params>;
 
@@ -101,8 +101,8 @@ All arithmetic operations are supported including integer div and mod functions 
 e.g.
 
 ```rust
-use dep::bignum::fields::U256::U256Params;
-use dep::bignum::BigNum;
+use bignum::fields::U256::U256Params;
+use bignum::BigNum;
 
 type U256 = BigNum<3, 257, U256Params>;
 
@@ -124,7 +124,7 @@ TODO: Document existing field presets (e.g. bls, ed25519, secp256k1)
 If your field moduli is _not_ known at compile-time (e.g. RSA verification), use the `RuntimeBigNum` struct defined in `runtime_bignum.nr`: `runtime_bignum::RuntimeBigNum`.
 
 ```rust
-use dep::bignum::fields::bn254Fq::BN254_Fq_Params;
+use bignum::fields::bn254Fq::BN254_Fq_Params;
 
 // Notice how we don't provide the params here, because we're pretending they're
 // not known at compile-time, for illustration purposes.
@@ -235,9 +235,9 @@ BigNumParams parameters can be derived from a known modulus using the rust crate
 ## Additional usage examples
 
 ```rust
-use dep::bignum::fields::bn254Fq::BN254_Fq_Params;
+use bignum::fields::bn254Fq::BN254_Fq_Params;
 
-use dep::bignum::BigNum;
+use bignum::BigNum;
 
 type Fq = BigNum<3, 254, BN254_Fq_Params>;
 
