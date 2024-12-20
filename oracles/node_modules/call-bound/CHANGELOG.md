@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.0.3](https://github.com/ljharb/call-bound/compare/v1.0.2...v1.0.3) - 2024-12-15
+
+### Commits
+
+- [Refactor] use `call-bind-apply-helpers` instead of `call-bind` [`5e0b134`](https://github.com/ljharb/call-bound/commit/5e0b13496df14fb7d05dae9412f088da8d3f75be)
+- [Deps] update `get-intrinsic` [`41fc967`](https://github.com/ljharb/call-bound/commit/41fc96732a22c7b7e8f381f93ccc54bb6293be2e)
+- [readme] fix example [`79a0137`](https://github.com/ljharb/call-bound/commit/79a0137723f7c6d09c9c05452bbf8d5efb5d6e49)
+- [meta] add `sideEffects` flag [`08b07be`](https://github.com/ljharb/call-bound/commit/08b07be7f1c03f67dc6f3cdaf0906259771859f7)
+
 ## [v1.0.2](https://github.com/ljharb/call-bound/compare/v1.0.1...v1.0.2) - 2024-12-10
 
 ### Commits

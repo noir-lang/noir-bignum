@@ -21,7 +21,7 @@ npm install --save call-bound
 
 ```js
 const assert = require('assert');
-const callBound = require('call-bind/callBound');
+const callBound = require('call-bound');
 
 const slice = callBound('Array.prototype.slice');
 

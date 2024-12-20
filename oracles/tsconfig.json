@@ -1,14 +1,18 @@
 {
-    "compilerOptions": {
-      "target": "es2018",
-      "module": "commonjs",
-      "strict": true,
-      "esModuleInterop": true,
-      "skipLibCheck": true,
-      "forceConsistentCasingInFileNames": true
-    },
-    "include": [
-      "test/**/*.test.ts",
-      "web/**/*.ts"
-    ]
-  }
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "outDir": "lib",
+    "target": "ESNext",
+    "module": "ESNext",
+    "strict": true,
+    "experimentalDecorators": true,
+    "esModuleInterop": true,
+    "noImplicitAny": true,
+    "removeComments": false,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "importHelpers": true
+  },
+  "include": ["test/**/*.ts", "web/**/*.ts"]
+}

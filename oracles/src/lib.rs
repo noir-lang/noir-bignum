@@ -2,6 +2,7 @@ mod foreign_call;
 mod handlers;
 mod ops;
 
+use anyhow::Result;
 use foreign_call::ForeignCallParam;
 // use serde_json::{json, Value};
 use wasm_bindgen::prelude::wasm_bindgen;
@@ -14,24 +15,30 @@ pub(crate) fn js_value_to_foreign_call_param(js_value: Array) -> Result<Vec<Fore
     // let array = Array::from(&js_value);
     let array = js_value; 
     // Convert outer array to Vec
-    let result: Vec<Vec<String>> = array
+    let result: Vec<ForeignCallParam<String>> = array
         .iter()
         .map(|inner_js_value| {
+            // checks if the inner_js_value is an array
+            if inner_js_value.is_array() {
             let inner_array = Array::from(&inner_js_value);
             
-            inner_array
+            let changed_array = inner_array
                 .iter()
                 .map(|js_str| {
                     js_str
                         .as_string()
                         .ok_or("Failed to convert to string")
                 })
-                .collect::<Result<Vec<String>, &str>>()
+                .collect::<Result<Vec<String>, &str>>();
+                ForeignCallParam::from(changed_array.unwrap())
+            }    
+            else{
+                ForeignCallParam::from(inner_js_value.as_string().ok_or("failed to convert this to string").unwrap())
+            }
         })
-        .collect::<Result<Vec<Vec<String>>, &str>>()
-        .map_err(|e| JsString::from(e))?;
+        .collect::<Vec<ForeignCallParam<String>>>();
     // change these to foreign call params 
-    let result = result.into_iter().map(|inner| ForeignCallParam::from(inner)).collect();
+    // let result = result.into_iter().map(|inner| ForeignCallParam::from(inner)).collect();
 
     Ok(result)
 }
@@ -55,6 +62,7 @@ macro_rules! create_handler {
     ($name:ident) => {
         #[wasm_bindgen]
         pub fn $name(inputs: Array) -> Array {
+            console_error_panic_hook::set_once();
             let inputs = js_value_to_foreign_call_param(inputs).unwrap();
             
             let result = handlers::$name(&inputs);

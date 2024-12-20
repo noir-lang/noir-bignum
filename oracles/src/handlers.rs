@@ -194,6 +194,7 @@ pub(crate) fn handle_add(inputs: &Vec<ForeignCallParam<String>>) -> Vec<Vec<Stri
     // let num_limbs_fc = &inputs[inputs.len()-2];
     // let num_limbs = get_u32_from_callparam(&num_limbs_fc);
     // convert the lhs and rhs to biguints
+    // panic!("input: {:?}", inputs);
     let lhs_fc = &inputs[inputs.len() - 3];
     let lhs_str = callparam_to_string(lhs_fc);
     let num_limbs = lhs_str.len();
@@ -400,6 +401,7 @@ pub(crate) fn handle_batch_invert(inputs: &Vec<ForeignCallParam<String>>) -> Vec
 
 pub(crate) fn cast_to_biguint(input_strings: Vec<&str>) -> BigUint {
     // split the limbs
+    // panic!("input_strings: {:?}", input_strings);
     let mut limbs: Vec<BigUint> = vec![];
     for input_string in input_strings {
         // handle the case of a zero input
@@ -442,12 +444,12 @@ pub(crate) fn gets_limbs(input_strings: Vec<&str>) -> Vec<Fr> {
 
 pub(crate) fn callparam_to_string(input: &ForeignCallParam<String>) -> Vec<&str> {
     match input {
-        ForeignCallParam::Single(value) => vec![value.trim_start_matches('0')],
+        ForeignCallParam::Single(value) => vec![value],
         ForeignCallParam::Array(values) => values
             .into_iter()
-            .map(|v| v.trim_start_matches('0'))
+            .map(|v| v.as_str())
             .collect(),
-    }
+    } 
 }
 
 pub(crate) fn get_u32_from_callparam(input: &ForeignCallParam<String>) -> u32 {
@@ -504,7 +506,6 @@ impl Params {
         let has_multiplicative_inverse_fc = &inputs[0];
         let has_multiplicative_inverse = get_bool_from_callparam(&has_multiplicative_inverse_fc);
         let modulus_fc = &inputs[1];
-        // let modulus = gets_limbs(callparam_to_string(modulus_fc));
         let modulus_str = callparam_to_string(modulus_fc);
         let modulus = cast_to_biguint(modulus_str);
         let double_modulus_fc = &inputs[4];

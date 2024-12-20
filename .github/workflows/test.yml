@@ -41,6 +41,20 @@ jobs:
           # Wait for port 3000 to become available
           timeout 30 bash -c 'until nc -z localhost 3000; do sleep 1; done'
           echo "Server is ready!"
+      # install node and yarn 
+      - name: Install Node and Yarn
+        run: |
+          curl -fsSL https://get.pnpm.io/install.sh | bash
+          pnpm install -g yarn
+      # run build.sh in the oracles directory
+      - name: Run build.sh
+        run: |
+          cd oracles && ./build.sh
+      # run the yarn test script
+      - name: Run yarn test
+        run: |
+          cd oracles && yarn test
+      # run the noir tests with the oracle resolver
       - name: Run Noir tests with oracle resolver. 
         run:  nargo test --oracle-resolver http://127.0.0.1:3000
 
