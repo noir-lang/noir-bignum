@@ -36,6 +36,9 @@ jobs:
       # run build.sh in the oracles directory
       - name: Install wasm-bindgen-cli
         run: cargo install wasm-bindgen-cli
+      - name: Install wasm32 target
+        run: rustup target add wasm32-unknown-unknown
+
       - name: Run build.sh
         run: |
           cd oracles && ./build.sh
