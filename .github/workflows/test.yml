@@ -32,7 +32,35 @@ jobs:
         uses: noir-lang/noirup@v0.1.3
         with:
           toolchain: ${{ matrix.toolchain }}
-      # run the PRC server in the oracles directory in the background
+      # install pnpm
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      # install Node.js
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+
+      # install dependencies
+      - name: Install dependencies
+        run: |
+          cd oracles
+          pnpm install
+
+      # run build.sh in the oracles directory
+      - name: Run build.sh
+        run: |
+          cd oracles && ./build.sh
+
+      # run the tests
+      - name: Run tests
+        run: |
+          cd oracles && pnpm test
+      # run the PRC server
       - name: run the PRC server
         run: |
           cd oracles && cargo build
@@ -42,23 +70,6 @@ jobs:
           timeout 30 bash -c 'until nc -z localhost 3000; do sleep 1; done'
           echo "Server is ready!"
       
-      # install pnpm
-      - name: Install pnpm
-        run: |
-          curl -fsSL https://get.pnpm.io/install.sh | bash
-      # install node and yarn 
-      - name: Install Node and Yarn
-        run: |
-          curl -fsSL https://get.pnpm.io/install.sh | bash
-          pnpm install -g yarn
-      # run build.sh in the oracles directory
-      - name: Run build.sh
-        run: |
-          cd oracles && ./build.sh
-      # run the yarn test script
-      - name: Run yarn test
-        run: |
-          cd oracles && yarn test
       # run the noir tests with the oracle resolver
       - name: Run Noir tests with oracle resolver. 
         run:  nargo test --oracle-resolver http://127.0.0.1:3000
