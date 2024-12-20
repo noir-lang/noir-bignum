@@ -56,11 +56,13 @@ jobs:
         uses: borales/actions-yarn@v4
         with:
           cmd: install
+          dir: oracles
       # run the tests
       - name: Run tests
         uses: borales/actions-yarn@v4
         with:
           cmd: test
+          dir: oracles
       # run the PRC server
       - name: run the PRC server
         run: |
