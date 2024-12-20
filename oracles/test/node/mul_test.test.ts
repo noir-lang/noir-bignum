@@ -36,7 +36,6 @@ describe("mul_with_quotient oracle function", () => {
     ];
 
     const result = handle_mul_with_quotient(input);
-    console.log(result);
     expect(result[0]).to.deep.equal(expected_quotient);
     expect(result[1]).to.deep.equal(expected_remainder);
   });

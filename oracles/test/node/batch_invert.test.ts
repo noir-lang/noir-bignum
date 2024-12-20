@@ -55,9 +55,7 @@ describe("invmod oracle function", () => {
     // split this array into 3 arrays of length 3
     const result1 = result[0].slice(0, 3);
     const result2 = result[0].slice(3, 6);
-    const result3 = result[0].slice(6, 9);
-    console.log("this is the result");
-    console.log(result);
+    const result3 = result[0].slice(6, 9);   
     
     const mul_input2 = [
         has_multiplicative_inverse, 
