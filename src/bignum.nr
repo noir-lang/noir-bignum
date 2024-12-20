@@ -6,20 +6,22 @@ use crate::fns::{
     constrained_ops::{
         add, assert_is_not_equal, conditional_select, derive_from_seed, div, eq, mul, neg, sub,
         udiv, udiv_mod, umod, validate_in_field, validate_in_range,
-    }, expressions::{__compute_quadratic_expression, evaluate_quadratic_expression},
+    },
+    expressions::{__compute_quadratic_expression, evaluate_quadratic_expression},
     serialization::{from_be_bytes, to_le_bytes},
     unconstrained_ops::{
         __add, __batch_invert, __batch_invert_slice, __derive_from_seed, __div, __eq, __invmod,
         __is_zero, __mul, __neg, __pow, __sub, __tonelli_shanks_sqrt, __udiv_mod,
     },
 };
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 pub struct BigNum<let N: u32, let MOD_BITS: u32, Params> {
     pub limbs: [Field; N],
 }
 // We aim to avoid needing to add a generic parameter to this trait, for this reason we do not allow
 // accessing the limbs of the bignum except through slices.
-pub trait BigNumTrait {
+pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
     // TODO: this crashes the compiler? v0.32
     // fn default() -> Self { std::default::Default::default  () }
     pub fn new() -> Self;
@@ -79,24 +81,21 @@ pub trait BigNumTrait {
     pub fn validate_in_range(self);
     pub fn validate_in_field(self);
 
-    pub fn neg(self) -> Self;
-    pub fn add(self, other: Self) -> Self {
-        self + other
-    }
-    pub fn sub(self, other: Self) -> Self {
-        self - other
-    }
-    pub fn mul(self, other: Self) -> Self {
-        self * other
-    }
-    pub fn div(self, other: Self) -> Self {
-        self / other
-    }
     pub fn udiv_mod(self, divisor: Self) -> (Self, Self);
     pub fn udiv(self, divisor: Self) -> Self;
     pub fn umod(self, divisor: Self) -> Self;
 
     pub fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self;
+}
+
+impl<let N: u32, let MOD_BITS: u32, Params> Neg for BigNum<N, MOD_BITS, Params>
+where
+    Params: BigNumParamsGetter<N, MOD_BITS>,
+{
+    fn neg(self) -> Self {
+        let params = Params::get_params();
+        Self { limbs: neg::<_, MOD_BITS>(params, self.limbs) }
+    }
 }
 
 impl<let N: u32, let MOD_BITS: u32, Params> BigNumTrait for BigNum<N, MOD_BITS, Params>
@@ -284,11 +283,6 @@ where
     fn assert_is_not_equal(self, other: Self) {
         let params = Params::get_params();
         assert_is_not_equal(params, self.limbs, other.limbs);
-    }
-
-    fn neg(self) -> Self {
-        let params = Params::get_params();
-        Self { limbs: neg::<_, MOD_BITS>(params, self.limbs) }
     }
 
     fn udiv_mod(self, divisor: Self) -> (Self, Self) {
