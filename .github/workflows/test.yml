@@ -45,6 +45,9 @@ jobs:
       #   run: rustup target add wasm32-unknown-unknown
       # run the build.sh script in the oracles directory
       # cargo build
+      # or alternatively as a simple command:
+      - name: Add wasm target
+        run: rustup target add wasm32-unknown-unknown
       - name: Run build.sh
         run: |
           cd oracles && ./build.sh
