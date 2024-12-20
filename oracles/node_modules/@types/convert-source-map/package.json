@@ -1,0 +1,35 @@
+{
+    "name": "@types/convert-source-map",
+    "version": "2.0.3",
+    "description": "TypeScript definitions for convert-source-map",
+    "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/convert-source-map",
+    "license": "MIT",
+    "contributors": [
+        {
+            "name": "Andrew Gaspar",
+            "githubUsername": "AndrewGaspar",
+            "url": "https://github.com/AndrewGaspar"
+        },
+        {
+            "name": "Melvin Groenhoff",
+            "githubUsername": "mgroenhoff",
+            "url": "https://github.com/mgroenhoff"
+        },
+        {
+            "name": "TeamworkGuy2",
+            "githubUsername": "TeamworkGuy2",
+            "url": "https://github.com/TeamworkGuy2"
+        }
+    ],
+    "main": "",
+    "types": "index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "directory": "types/convert-source-map"
+    },
+    "scripts": {},
+    "dependencies": {},
+    "typesPublisherContentHash": "bc0c9a132cd265dbe66fef0dadffa9fe975a122644eac3bda752231afb451335",
+    "typeScriptVersion": "4.5"
+}
