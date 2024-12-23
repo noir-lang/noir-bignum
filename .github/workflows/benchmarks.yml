@@ -3,7 +3,7 @@ name: Benchmarks
 on:
   push:
    branches:
-    - master
+    - main
   pull_request:
 
 jobs:
@@ -26,6 +26,9 @@ jobs:
 
       - name: Build Noir benchmark programs
         run: nargo export
+      
+      - name: create the export directory
+        run: mkdir -p export
 
       - name: Generate gates report
         run: ./scripts/build-gates-report.sh
