@@ -3,7 +3,7 @@ name: Benchmarks
 on:
   push:
    branches:
-    - kb/add_benchmark_tooling
+    - main 
   pull_request:
 
 jobs:
