@@ -37,38 +37,11 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
 ) -> ([Field; N], [bool; N], [bool; N]) {
     let a_u60: U60Repr<N, 2> = U60Repr::from(lhs);
     let mut b_u60: U60Repr<N, 2> = U60Repr::from(rhs);
-
-    let underflow = b_u60.gte(a_u60);
     b_u60 += U60Repr::one();
+    let underflow = b_u60.gte(a_u60);
     assert(underflow == false, "BigNum::validate_gt check fails");
-    let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
-
-    let mut carry_in: u64 = 0;
-    let mut borrow_in: u64 = 0;
-    let mut borrow_flags: [bool; N] = [false; N];
-    let mut carry_flags: [bool; N] = [false; N];
-    for i in 0..2 * N {
-        let mut add_term: u64 = a_u60.limbs[i] + carry_in;
-        let mut carry = (add_term >= TWO_POW_60) as u64;
-        add_term -= carry * TWO_POW_60;
-        carry_in = carry;
-
-        let sub_term = b_u60.limbs[i] + borrow_in;
-        let mut borrow = (sub_term > add_term) as u64;
-        result_u60.limbs[i] = borrow * TWO_POW_60 + add_term - sub_term;
-
-        borrow_in = borrow;
-
-        if ((i & 1) == 1) {
-            if (carry & borrow == 1) {
-                carry = 0;
-                borrow = 0;
-            }
-            carry_flags[i / 2] = carry as bool;
-            borrow_flags[i / 2] = borrow as bool;
-        }
-    }
-    let result = U60Repr::into(result_u60);
+    // calls a function that calcuates the lhs - rhs and the carry/borrow flags derived from it
+    let (result, carry_flags, borrow_flags) = __compute_carry_and_borrow::<N>(a_u60, b_u60);
     (result, carry_flags, borrow_flags)
 }
 
@@ -78,45 +51,14 @@ pub(crate) unconstrained fn __cmp_remainder<let N: u32>(
 ) -> (bool, [Field; N], [bool; N], [bool; N]) {
     let mut a_u60: U60Repr<N, 2> = U60Repr::from(lhs);
     let mut b_u60: U60Repr<N, 2> = U60Repr::from(rhs);
-    let mut temp_u60: U60Repr<N, 2> = U60Repr::one();
     let underflow = b_u60.gte(a_u60);
+    let (a_u60, b_u60) = if underflow {
+        (b_u60, a_u60)
+    } else {
+        (a_u60, b_u60)
+    };
 
-    if underflow {
-        temp_u60 = a_u60;
-        a_u60 = b_u60;
-        b_u60 = temp_u60;
-    }
-    b_u60 += U60Repr::one();
-
-    let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
-
-    let mut carry_in: u64 = 0;
-    let mut borrow_in: u64 = 0;
-    let mut borrow_flags: [bool; N] = [false; N];
-    let mut carry_flags: [bool; N] = [false; N];
-    for i in 0..2 * N {
-        let mut add_term: u64 = a_u60.limbs[i] + carry_in;
-        let mut carry = (add_term >= TWO_POW_60) as u64;
-        add_term -= carry * TWO_POW_60;
-        carry_in = carry;
-
-        let sub_term = b_u60.limbs[i] + borrow_in;
-        let mut borrow = (sub_term > add_term) as u64;
-        result_u60.limbs[i] = borrow * TWO_POW_60 + add_term - sub_term;
-
-        borrow_in = borrow;
-
-        if ((i & 1) == 1) {
-            if (carry & borrow == 1) {
-                carry = 0;
-                borrow = 0;
-            }
-            carry_flags[i / 2] = carry as bool;
-            borrow_flags[i / 2] = borrow as bool;
-        }
-    }
-    let result = U60Repr::into(result_u60);
-    println(underflow);
+    let (result, carry_flags, borrow_flags) = __compute_carry_and_borrow::<N>(a_u60, b_u60);
     (underflow, result, carry_flags, borrow_flags)
 }
 
@@ -232,7 +174,7 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
             carry_flags[i / 2] = carry as bool;
             borrow_flags[i / 2] = borrow as bool;
         }
-    }
+    } 
     let result = U60Repr::into(result_u60);
     (result, carry_flags, borrow_flags, underflow)
 }
@@ -408,4 +350,39 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt_inner_loop_check<let N: u32, l
         result = __tonelli_shanks_sqrt_inner_loop_check::<_, MOD_BITS>(params, t2m, i);
     }
     result
+}
+
+
+//brief: compute the carry and borrow flags for a_u60 - b_u60
+// this is used in the __cmp_remainder function and __validate_gt_remainder function
+unconstrained fn __compute_carry_and_borrow<let N: u32> (a_u60: U60Repr<N, 2>, mut b_u60: U60Repr<N, 2>) -> ([Field; N], [bool; N], [bool; N]) {
+    b_u60 += U60Repr::one();
+    let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
+    let mut carry_in: u64 = 0;
+    let mut borrow_in: u64 = 0;
+    let mut borrow_flags: [bool; N] = [false; N];
+    let mut carry_flags: [bool; N] = [false; N];
+    for i in 0..2 * N {
+        let mut add_term: u64 = a_u60.limbs[i] + carry_in;
+        let mut carry = (add_term >= TWO_POW_60) as u64;
+        add_term -= carry * TWO_POW_60;
+        carry_in = carry;
+
+        let sub_term = b_u60.limbs[i] + borrow_in;
+        let mut borrow = (sub_term > add_term) as u64;
+        result_u60.limbs[i] = borrow * TWO_POW_60 + add_term - sub_term;
+
+        borrow_in = borrow;
+
+        if ((i & 1) == 1) {
+            if (carry & borrow == 1) {
+                carry = 0;
+                borrow = 0;
+            }
+            carry_flags[i / 2] = carry as bool;
+            borrow_flags[i / 2] = borrow as bool;
+        }
+    }
+    let result = U60Repr::into(result_u60);
+    (result, carry_flags, borrow_flags)
 }
