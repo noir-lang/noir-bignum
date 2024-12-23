@@ -22,7 +22,7 @@ jobs:
       - name: Install bb
         run: |
           npm install -g bbup
-          bbup -nv v1.0.0-beta.0
+          bbup -nv 1.0.0-beta.0
 
       - name: Build Noir benchmark programs
         run: nargo export
