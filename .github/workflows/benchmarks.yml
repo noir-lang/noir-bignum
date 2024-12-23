@@ -3,7 +3,7 @@ name: Benchmarks
 on:
   push:
    branches:
-    - main 
+    - main
   pull_request:
 
 jobs:
@@ -17,12 +17,12 @@ jobs:
       - name: Install Nargo
         uses: noir-lang/noirup@v0.1.3
         with:
-          toolchain: 0.36.0
+          toolchain: 1.0.0-beta.0
 
       - name: Install bb
         run: |
           npm install -g bbup
-          bbup -nv 0.36.0
+          bbup -nv v1.0.0-beta.0
 
       - name: Build Noir benchmark programs
         run: nargo export
@@ -34,10 +34,6 @@ jobs:
         run: ./scripts/build-gates-report.sh
         env:
           BACKEND: /home/runner/.bb/bb
-      - name: add gate count sticky comment
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          message: ${{ steps.gates_diff.outputs.markdown }}
 
       - name: Compare gates reports
         id: gates_diff
