@@ -19,8 +19,6 @@ type BN256 = BigNum<3, 257, U256Params>;
 type BN381 = BigNum<4, 381, BLS12_381_Fq_Params>;
 type BN2048 = BigNum<18, 2048, Test2048Params>;
 
-
-
 #[export]
 fn test_add_BN() {
     let mut a: Fq = BigNum::modulus();
