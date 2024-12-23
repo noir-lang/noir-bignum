@@ -4,7 +4,7 @@ use crate::fns::{
     expressions::evaluate_quadratic_expression,
     unconstrained_helpers::{
         __add_with_flags, __neg_with_flags, __sub_with_flags, __validate_gt_remainder,
-        __validate_in_field_compute_borrow_flags,
+        __validate_in_field_compute_borrow_flags, __cmp_remainder,
     }, unconstrained_ops::{__div, __mul, __udiv_mod},
 };
 
@@ -292,6 +292,58 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [Field; N], rhs: [
         - borrow_flags[N - 2] as Field
         + carry_flags[N - 2] as Field;
     assert(result_limb == 0);
+}
+
+pub(crate) fn cmp<let N: u32, let MOD_BITS: u32>(lhs: [Field; N], rhs: [Field; N]) -> bool {
+    // so we do... p - x - r = 0 and there might be borrow flags
+    // a - b = r
+    // p + a - b - r = 0
+    let (comp_result, result, carry_flags, borrow_flags) = unsafe { __cmp_remainder(lhs, rhs) };
+    validate_in_range::<_, MOD_BITS>(result);
+
+    let borrow_shift = 0x1000000000000000000000000000000;
+    let carry_shift = 0x1000000000000000000000000000000;
+
+    let mut addend: [Field; N] = [0; N];
+    if comp_result == true {
+        let result_limb = rhs[0] - lhs[0] + addend[0] - result[0] - 1
+            + (borrow_flags[0] as Field * borrow_shift)
+            - (carry_flags[0] as Field * carry_shift);
+        assert(result_limb == 0);
+
+        for i in 1..N - 1 {
+            let result_limb = rhs[i] - lhs[i] + addend[i] - result[i] - borrow_flags[i - 1] as Field
+                + carry_flags[i - 1] as Field
+                + ((borrow_flags[i] as Field - carry_flags[i] as Field) * borrow_shift);
+            assert(result_limb == 0);
+        }
+
+        let result_limb = rhs[N - 1] - lhs[N - 1] + addend[N - 1]
+            - result[N - 1]
+            - borrow_flags[N - 2] as Field
+            + carry_flags[N - 2] as Field;
+        assert(result_limb == 0);
+        true
+    } else {
+        let result_limb = lhs[0] - rhs[0] + addend[0] - result[0] - 1
+            + (borrow_flags[0] as Field * borrow_shift)
+            - (carry_flags[0] as Field * carry_shift);
+        assert(result_limb == 0);
+
+        for i in 1..N - 1 {
+            let result_limb = lhs[i] - rhs[i] + addend[i] - result[i] - borrow_flags[i - 1] as Field
+                + carry_flags[i - 1] as Field
+                + ((borrow_flags[i] as Field - carry_flags[i] as Field) * borrow_shift);
+            assert(result_limb == 0);
+        }
+
+        let result_limb = lhs[N - 1] - rhs[N - 1] + addend[N - 1]
+            - result[N - 1]
+            - borrow_flags[N - 2] as Field
+            + carry_flags[N - 2] as Field;
+        assert(result_limb == 0);
+        false
+    }
 }
 
 pub(crate) fn neg<let N: u32, let MOD_BITS: u32>(

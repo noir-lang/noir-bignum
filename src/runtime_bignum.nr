@@ -1,10 +1,11 @@
 use crate::params::BigNumParams;
 use crate::utils::map::map;
+use std::cmp::Ordering;
 
 use crate::fns::{
     constrained_ops::{
         add, assert_is_not_equal, conditional_select, derive_from_seed, div, eq, mul, neg, sub,
-        udiv, udiv_mod, umod, validate_in_field, validate_in_range,
+        udiv, udiv_mod, umod, validate_in_field, validate_in_range, cmp,
     }, expressions::{__compute_quadratic_expression, evaluate_quadratic_expression},
     serialization::{from_be_bytes, to_le_bytes},
     unconstrained_ops::{
@@ -436,5 +437,22 @@ impl<let N: u32, let MOD_BITS: u32> std::cmp::Eq for RuntimeBigNum<N, MOD_BITS> 
         let params = self.params;
         assert(params == other.params);
         eq::<_, MOD_BITS>(params, self.limbs, other.limbs)
+    }
+}
+
+impl<let N: u32, let MOD_BITS: u32> Ord for RuntimeBigNum<N, MOD_BITS> {
+    fn cmp(self, other: Self) -> std::cmp::Ordering {
+        let params = self.params;
+        assert(params == other.params);
+        let comp_result: bool = cmp::<_, MOD_BITS>(self.limbs, other.limbs);
+        if self.limbs == other.limbs {
+            Ordering::equal()
+        } else if comp_result {
+            // there was an underflow
+            Ordering::less()
+        } else {
+            // there was no underflow
+            Ordering::greater()
+        }
     }
 }
