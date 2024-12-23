@@ -34,6 +34,10 @@ jobs:
         run: ./scripts/build-gates-report.sh
         env:
           BACKEND: /home/runner/.bb/bb
+      - name: add gate count sticky comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          message: ${{ steps.gates_diff.outputs.markdown }}
 
       - name: Compare gates reports
         id: gates_diff

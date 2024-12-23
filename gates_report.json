@@ -1,1 +1,14 @@
 {"programs": [
+{"package_name": "test_add_BN.json", "functions": [{
+  "acir_opcodes": 4,
+  "circuit_size": 20,
+  "gates_per_opcode": [
+    2,
+    1,
+    1,
+    1
+  ],
+  "name": "main"
+}]
+}
+]}
