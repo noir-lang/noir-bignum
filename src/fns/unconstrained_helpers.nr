@@ -37,7 +37,7 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
 ) -> ([Field; N], [bool; N], [bool; N]) {
     let a_u60: U60Repr<N, 2> = U60Repr::from(lhs);
     let mut b_u60: U60Repr<N, 2> = U60Repr::from(rhs);
-    b_u60 += U60Repr::one();
+
     let underflow = b_u60.gte(a_u60);
     assert(underflow == false, "BigNum::validate_gt check fails");
     // calls a function that calcuates the lhs - rhs and the carry/borrow flags derived from it
@@ -52,6 +52,7 @@ pub(crate) unconstrained fn __cmp_remainder<let N: u32>(
     let mut a_u60: U60Repr<N, 2> = U60Repr::from(lhs);
     let mut b_u60: U60Repr<N, 2> = U60Repr::from(rhs);
     let underflow = b_u60.gte(a_u60);
+
     let (a_u60, b_u60) = if underflow {
         (b_u60, a_u60)
     } else {
@@ -174,7 +175,7 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
             carry_flags[i / 2] = carry as bool;
             borrow_flags[i / 2] = borrow as bool;
         }
-    } 
+    }
     let result = U60Repr::into(result_u60);
     (result, carry_flags, borrow_flags, underflow)
 }
@@ -352,10 +353,12 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt_inner_loop_check<let N: u32, l
     result
 }
 
-
 //brief: compute the carry and borrow flags for a_u60 - b_u60
 // this is used in the __cmp_remainder function and __validate_gt_remainder function
-unconstrained fn __compute_carry_and_borrow<let N: u32> (a_u60: U60Repr<N, 2>, mut b_u60: U60Repr<N, 2>) -> ([Field; N], [bool; N], [bool; N]) {
+unconstrained fn __compute_carry_and_borrow<let N: u32>(
+    a_u60: U60Repr<N, 2>,
+    mut b_u60: U60Repr<N, 2>,
+) -> ([Field; N], [bool; N], [bool; N]) {
     b_u60 += U60Repr::one();
     let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
     let mut carry_in: u64 = 0;
