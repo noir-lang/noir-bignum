@@ -5,7 +5,7 @@ use crate::params::BigNumParamsGetter;
 use crate::fns::{
     constrained_ops::{
         add, assert_is_not_equal, conditional_select, derive_from_seed, div, eq, mul, neg, sub,
-        udiv, udiv_mod, umod, validate_in_field, validate_in_range,
+        udiv, udiv_mod, umod, validate_in_field, validate_in_range, from_field,
     }, expressions::{__compute_quadratic_expression, evaluate_quadratic_expression},
     serialization::{from_be_bytes, to_le_bytes},
     unconstrained_ops::{
@@ -24,6 +24,7 @@ pub trait BigNumTrait {
     // fn default() -> Self { std::default::Default::default  () }
     pub fn new() -> Self;
     pub fn one() -> Self;
+    pub fn from_field(field: Field) -> Self;
     pub fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
     pub unconstrained fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
     pub fn from_slice(limbs: [Field]) -> Self;
@@ -99,6 +100,15 @@ pub trait BigNumTrait {
     pub fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self;
 }
 
+// impl<let N: u32, let MOD_BITS: u32, Params> std::convert::From<Field> for BigNum<N, MOD_BITS, Params>
+// where
+//     Params: BigNumParamsGetter<N, MOD_BITS>,
+// {
+//     fn from(input: Field) -> Self {
+//         let params = Params::get_params();
+//         Self { limbs: from_field::<N, MOD_BITS>(params, input) }
+//     }
+// }
 impl<let N: u32, let MOD_BITS: u32, Params> BigNumTrait for BigNum<N, MOD_BITS, Params>
 where
     Params: BigNumParamsGetter<N, MOD_BITS>,
@@ -112,6 +122,11 @@ where
         let mut result = BigNum::new();
         result.limbs[0] = 1;
         result
+    }
+
+    fn from_field(field: Field) -> Self {
+        let params = Params::get_params();
+        Self { limbs: from_field::<N, MOD_BITS>(params, field) }
     }
 
     fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self {

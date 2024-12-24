@@ -1,5 +1,6 @@
 use crate::utils::msb::get_msb64;
 use crate::utils::split_bits;
+use crate::utils::split_bits::field_to_u60rep;
 
 /**
  * @brief U60Repr represents a BigNum element as a sequence of 60-bit unsigned integers.
@@ -57,6 +58,31 @@ impl<let N: u32, let NumSegments: u32> std::convert::From<[Field; N]> for U60Rep
     }
 }
 
+// impl<let N: u32, let NumSegments: u32> std::convert::From<Field> for U60Repr<N, NumSegments> {
+//     fn from(input: Field) -> Self {
+//        let (low, mid, high) =  unsafe { field_to_u60rep(input) } ;
+//         let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
+//         let N_u60: u32 = N * NumSegments;
+//         assert(N_u60 >=1, "N must be at least 1");
+//         if N_u60 == 1 {
+//             assert((mid ==0) & (high == 0), "input field is too large to fit in a single limb");
+//             result.limbs[0] = low;
+//         }
+//         else if N_u60 == 2{
+//             assert(high == 0, "input field is too large to fit in two limbs");
+//             result.limbs[0] = low;
+//             result.limbs[1] = mid;
+//         }else{
+//             result.limbs[0] = low;
+//             result.limbs[1] = mid;
+//             result.limbs[2] = high;
+//         }
+//         result
+//     }
+// }
+
+
+
 impl<let N: u32, let NumSegments: u32> std::convert::Into<[Field; N]> for U60Repr<N, NumSegments> {
     fn into(x: U60Repr<N, NumSegments>) -> [Field; N] {
         let mut result: [Field; N] = [0; N];
@@ -76,6 +102,7 @@ impl<let N: u32, let NumSegments: u32> std::cmp::Eq for U60Repr<N, NumSegments> 
 
 impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
 
+
     pub(crate) unconstrained fn new<let NumFieldSegments: u32>(
         x: [Field; N * NumFieldSegments],
     ) -> Self {
@@ -91,6 +118,28 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
     pub(crate) unconstrained fn one() -> Self {
         let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
         result.limbs[0] = 1;
+        result
+    }
+
+
+    pub(crate) fn from_field(input: Field) -> Self {
+        let (low, mid, high) =  unsafe { field_to_u60rep(input) } ;
+        let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
+        let N_u60: u32 = N * NumSegments;
+        assert(N_u60 >=1, "N must be at least 1");
+        if N_u60 == 1 {
+            assert((mid ==0) & (high == 0), "input field is too large to fit in a single limb");
+            result.limbs[0] = low;
+        }
+        else if N_u60 == 2{
+            assert(high == 0, "input field is too large to fit in two limbs");
+            result.limbs[0] = low;
+            result.limbs[1] = mid;
+        }else{
+            result.limbs[0] = low;
+            result.limbs[1] = mid;
+            result.limbs[2] = high;
+        }
         result
     }
 

@@ -790,3 +790,12 @@ fn test_expressions() {
     assert(wx_constrained.limbs == wx.limbs);
 }
 
+
+
+#[test]
+fn test_from_field() {
+    let field: Field = 1;
+    let result = Fq::from_field(field);
+    assert(result == Fq::one());
+}
+

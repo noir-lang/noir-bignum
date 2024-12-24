@@ -18,6 +18,15 @@ global TWO_POW_60: u64 = 0x1000000000000000;
  * __tonelli_shanks_sqrt
  */
 
+
+pub(crate) unconstrained fn __from_field<let N: u32>(field: Field) -> [Field; N] {
+    // cast the field to a u60 representation 
+    let res_u60: U60Repr<N, 2> = U60Repr::from_field(field);
+    let result: [Field; N] = U60Repr::into(res_u60);
+    result
+}
+
+
 pub(crate) unconstrained fn __validate_in_field_compute_borrow_flags<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     val: [Field; N],
@@ -35,8 +44,8 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
     lhs: [Field; N],
     rhs: [Field; N],
 ) -> ([Field; N], [bool; N], [bool; N]) {
-    let a_u60: U60Repr<N, 2> = U60Repr::from(lhs);
-    let mut b_u60: U60Repr<N, 2> = U60Repr::from(rhs);
+    let a_u60: U60Repr<N, 2> = From::from(lhs);
+    let mut b_u60: U60Repr<N, 2> = From::from(rhs);
 
     let underflow = b_u60.gte(a_u60);
     b_u60 += U60Repr::one();
@@ -76,7 +85,7 @@ pub(crate) unconstrained fn __neg_with_flags<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     val: [Field; N],
 ) -> ([Field; N], [bool; N]) {
-    let x_u60: U60Repr<N, 2> = U60Repr::from(val);
+    let x_u60: U60Repr<N, 2> = From::from(val);
     let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
 
     let mut borrow_in: u64 = 0;
@@ -101,8 +110,8 @@ pub(crate) unconstrained fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
     lhs: [Field; N],
     rhs: [Field; N],
 ) -> ([Field; N], [bool; N], [bool; N], bool) {
-    let a_u60: U60Repr<N, 2> = U60Repr::from(lhs);
-    let b_u60: U60Repr<N, 2> = U60Repr::from(rhs);
+    let a_u60: U60Repr<N, 2> = From::from(lhs);
+    let b_u60: U60Repr<N, 2> = From::from(rhs);
     let add_u60 = a_u60 + b_u60;
 
     let overflow = add_u60.gte(params.modulus_u60);

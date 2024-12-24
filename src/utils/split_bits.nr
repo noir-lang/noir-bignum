@@ -2,6 +2,25 @@ global TWO_POW_56: u64 = 0x100000000000000;
 global TWO_POW_60: u64 = 0x1000000000000000;
 global TWO_POW_64: Field = 0x10000000000000000;
 
+
+//fields to u60rep conversion 
+pub unconstrained fn field_to_u60rep(mut x: Field) -> (u64, u64, u64) {
+    // get the first 60 bits by casting to u64 and then taking the lower 60 bits
+    // we use the fact that this casting drops everything above 64 bits 
+    let x_low_u64 = (x as u64);
+    let low = x_low_u64 % TWO_POW_60;
+    // this becomes the same as a integer division because we're removing the remainder 
+    x = (x-(low as Field)) / (TWO_POW_60 as Field);
+    let x_mid_u64 = (x as u64);
+    let mid = x_mid_u64 % TWO_POW_60;
+    x = x - (mid as Field);
+    let x_high_u64 = (x as u64);
+    let high = x_high_u64 % TWO_POW_60;
+    (low, mid, high)
+
+}
+
+
 // Decomposes a single field into two 120 bit fields
 pub unconstrained fn split_120_bits(mut x: Field) -> (Field, Field) {
     // Here we're taking advantage of truncating 64 bit limbs from the input field
