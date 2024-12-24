@@ -790,8 +790,6 @@ fn test_expressions() {
     assert(wx_constrained.limbs == wx.limbs);
 }
 
-
-
 #[test]
 fn test_from_field() {
     let field: Field = 1;

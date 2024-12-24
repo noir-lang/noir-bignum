@@ -3,9 +3,10 @@ use crate::params::BigNumParams as P;
 use crate::fns::{
     expressions::evaluate_quadratic_expression,
     unconstrained_helpers::{
-        __add_with_flags, __neg_with_flags, __sub_with_flags, __validate_gt_remainder,
-        __validate_in_field_compute_borrow_flags, __from_field,
-    }, unconstrained_ops::{__div, __mul, __udiv_mod},
+        __add_with_flags, __from_field, __neg_with_flags, __sub_with_flags, __validate_gt_remainder,
+        __validate_in_field_compute_borrow_flags,
+    },
+    unconstrained_ops::{__div, __mul, __udiv_mod},
 };
 
 /**
@@ -35,7 +36,7 @@ use crate::fns::{
 * We use a hash function that can be modelled as a random oracle
 * This function *should* produce an output that is a uniformly randomly distributed value modulo BigNum::modulus()
 **/
-pub (crate) fn from_field<let N: u32, let MOD_BITS: u32>(
+pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     field: Field,
 ) -> [Field; N] {
@@ -43,16 +44,15 @@ pub (crate) fn from_field<let N: u32, let MOD_BITS: u32>(
     // validate the limbs are in range and the value in total is less than 2^254
     validate_in_range::<N, 254>(result);
     let shift = 0x1000000000000000000000000000000;
-    // validate the limbs sum up to the field value 
+    // validate the limbs sum up to the field value
     let field_val = if N < 2 {
         result[0]
     } else {
         result[0] + result[1] * shift + result[2] * shift * shift
     };
     assert(field_val == field);
-    result 
+    result
 }
-
 
 pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(
     params: P<N, MOD_BITS>,
