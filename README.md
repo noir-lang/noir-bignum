@@ -19,11 +19,11 @@ TODO
 
 ## Noir Version Compatibility
 
-This library is tested with all stable releases since 0.36.0 as well as nightly.
+This library is tested with all stable releases since 1.0.0-beta.0 as well as nightly.
 
 ## Dependencies
 
-- Noir ≥v0.36.0
+- Noir ≥v1.0.0-beta.0
 - Barretenberg ≥v0.56.1
 
 Refer to [Noir's docs](https://noir-lang.org/docs/getting_started/installation/) and [Barretenberg's docs](https://github.com/AztecProtocol/aztec-packages/blob/master/barretenberg/cpp/src/barretenberg/bb/readme.md#installation) for installation steps.
