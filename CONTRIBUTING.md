@@ -6,9 +6,6 @@ This guide will discuss how the team handles [Commits](#commits), [Pull Requests
 
 **Note:** We won't force external contributors to follow this verbatim, but following these guidelines definitely helps us in accepting your contributions.
 
-> [!NOTE]
-> Please tag @DeveloperRelations if you have any questions.
-
 ## Commits
 
 We want to keep our commits small and focused. This allows for easily reviewing individual commits and/or splitting up pull requests when they grow too big. Additionally, this allows us to merge smaller changes quicker.
