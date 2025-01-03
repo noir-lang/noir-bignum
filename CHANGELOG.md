@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.5.0](https://github.com/noir-lang/noir-bignum/compare/v0.4.2...v0.5.0) (2025-01-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove redefinition of arithmetic methods on `BigNumTrait` ([#84](https://github.com/noir-lang/noir-bignum/issues/84))
+
+### Features
+
+* Noir 1.0.0 ([#66](https://github.com/noir-lang/noir-bignum/issues/66)) ([af8d54e](https://github.com/noir-lang/noir-bignum/commit/af8d54e83a96ca4c75432677cdce37901602ef78))
+* Remove redefinition of arithmetic methods on `BigNumTrait` ([#84](https://github.com/noir-lang/noir-bignum/issues/84)) ([b5c6ce2](https://github.com/noir-lang/noir-bignum/commit/b5c6ce20d8a5705127f3b0c33a17e77750fc91c2))
+
+
+### Bug Fixes
+
+* Noir 1.0.0-beta.0 ([#74](https://github.com/noir-lang/noir-bignum/issues/74)) ([4081673](https://github.com/noir-lang/noir-bignum/commit/40816731a636dbb19bea211de72de25394cd0e5c))
+
 ## [0.4.2](https://github.com/noir-lang/noir-bignum/compare/v0.4.1...v0.4.2) (2024-11-15)
 
 
