@@ -206,7 +206,7 @@ pub(crate) unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
     val: [Field; N],
 ) -> [Field; N] {
     let one_u60: U60Repr<N, 2> = U60Repr::one();
-    let exp_u60 = params.modulus_u60.sub(one_u60.add(one_u60));
+    let exp_u60 = params.modulus_u60 - (one_u60 + one_u60);
     let exp = U60Repr::into(exp_u60);
     __pow::<_, MOD_BITS>(params, val, exp)
 }
