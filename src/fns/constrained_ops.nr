@@ -1,5 +1,4 @@
 use crate::params::BigNumParams as P;
-
 use crate::fns::{
     expressions::evaluate_quadratic_expression,
     unconstrained_helpers::{
@@ -40,16 +39,30 @@ pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     field: Field,
 ) -> [Field; N] {
-    let result = __from_field::<N>(field);
+    // safty: we check that the resulting limbs represent the intended field element
+    // we check the bit length, the limbs being max 120 bits, and the value in total is less than the field modulus
+    let result = unsafe { __from_field::<N>(field) };
     // validate the limbs are in range and the value in total is less than 2^254
-    validate_in_range::<N, 254>(result);
     let shift = 0x1000000000000000000000000000000;
+    // validate that the last limb is less than the modulus
+    if N > 2 {
+        // validate that the result is less than the modulus 
+        let mut grumpkin_modulus = [0; N];
+        grumpkin_modulus[0] = 0x33e84879b9709143e1f593f0000001;
+        grumpkin_modulus[1] = 0x4e72e131a029b85045b68181585d28;
+        grumpkin_modulus[2] = 0x3064;
+        validate_gt::<N, 254>(grumpkin_modulus, result);
+        // validate that the limbs are in range 
+        validate_in_range::<N, 254>(result);
+    }
     // validate the limbs sum up to the field value
     let field_val = if N < 2 {
         result[0]
     } else if N == 2 {
+        validate_in_range::<N, 254>(result);
         result[0] + result[1] * shift
     } else {
+        validate_in_range::<N, 254>(result);
         result[0] + result[1] * shift + result[2] * shift * shift
     };
     assert(field_val == field);
