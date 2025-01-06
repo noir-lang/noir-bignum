@@ -35,14 +35,9 @@ For the arithmetic operations it is important to notice the difference between c
 
 ## Noir Version Compatibility
 
-This library is tested with all stable releases since 0.36.0 as well as nightly.
+This library is tested with all stable releases since 1.0.0-beta.0 as well as nightly.
 
-## Dependencies
-
-- nargo >= 1.0.0-beta.0
-- bb >= 0.63.0
-
-Refer to [Noir's docs](https://noir-lang.org/docs/getting_started/installation/) and [Barretenberg's docs](https://github.com/AztecProtocol/aztec-packages/blob/master/barretenberg/cpp/src/barretenberg/bb/readme.md#installation) for installation steps.
+Refer to [Noir's docs](https://noir-lang.org/docs/getting_started/installation/) for installation steps.
 
 ## Installation
 
@@ -58,16 +53,17 @@ bignum = { tag = "v0.4.2", git = "https://github.com/noir-lang/noir-bignum" }
 Add imports at the top of your Noir code, for example:
 
 ```rust
-use dep::bignum::fields::U256::U256Params;
-use dep::bignum::BigNum;
+use bignum::fields::U256::U256Params;
+use bignum::BigNum;
 ```
 ### Quick example: Addition in U256
 
 A simple 1 + 2 = 3 check in 256-bit unsigned integers. Note that for performing multiple arithmetic operations up to degree 2 it is recommended to use `evaluate_quadratic_expression` (see explanation below). 
 
 ```rust
-use dep::bignum::fields::U256::U256Params; // import parameters from library
-use dep::bignum::BigNum;
+
+use bignum::fields::U256::U256Params;
+use bignum::BigNum;
 
 // Define (compile-time) BigNum type
 // number of limbs, number of bits of modulus, parameter set
@@ -100,6 +96,7 @@ The actual value of a BigNum can be calculated by multiplying each limb by an in
 When `modulus` is known at runtime, the type is slightly different, but the representation of the actual number in limbs works the same way:
 
 ```rust
+
 pub struct RuntimeBigNum<let N: u32, let MOD_BITS: u32> {
     pub limbs: [Field; N],
     pub params: BigNumParams<N, MOD_BITS>,
@@ -353,7 +350,7 @@ to the traits implementations for the parameter set.
 For a modulus that is known at runtime, the needed parameters in `BigNumParams` can be provided as witnesses. In the program, use `RuntimeBigNum`, which only requires the number of limbs and number of bits of modulus at the type definition.  
 
 ```rust
-use dep::bignum::fields::bn254Fq::BN254_Fq_Params;
+use bignum::fields::bn254Fq::BN254_Fq_Params;
 
 // Notice how we don't provide the params here, because we're pretending they're
 // not known at compile-time, for illustration purposes.

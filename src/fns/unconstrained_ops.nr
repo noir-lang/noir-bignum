@@ -205,9 +205,8 @@ pub(crate) unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     val: [Field; N],
 ) -> [Field; N] {
-    let one: [Field; N] = __one::<N>();
-    let one_u60: U60Repr<N, 2> = U60Repr::from(one);
-    let exp_u60 = params.modulus_u60.sub(one_u60.add(one_u60));
+    let one_u60: U60Repr<N, 2> = U60Repr::one();
+    let exp_u60 = params.modulus_u60 - (one_u60 + one_u60);
     let exp = U60Repr::into(exp_u60);
     __pow::<_, MOD_BITS>(params, val, exp)
 }
@@ -239,19 +238,19 @@ pub(crate) unconstrained fn __batch_invert<let N: u32, let MOD_BITS: u32, let M:
     // TODO: ugly! Will fail if input slice is empty
     let mut accumulator: [Field; N] = __one::<N>();
     let mut result: [[Field; N]; M] = [[0; N]; M];
-    let mut temporaries: [[Field; N]] = &[];
-    for i in 0..x.len() {
-        temporaries = temporaries.push_back(accumulator);
-        if (__is_zero(x[i]) == false) {
+    let mut temporaries: [[Field; N]; N] = std::mem::zeroed();
+    for i in 0..N {
+        temporaries[i] = accumulator;
+        if (!__is_zero(x[i])) {
             accumulator = __mul::<_, MOD_BITS>(params, accumulator, x[i]);
         }
     }
 
     accumulator = __invmod::<_, MOD_BITS>(params, accumulator);
     let mut T0: [Field; N] = [0; N];
-    for i in 0..x.len() {
-        let idx = x.len() - 1 - i;
-        if (__is_zero(x[idx]) == false) {
+    for i in 0..N {
+        let idx = N - 1 - i;
+        if (!__is_zero(x[idx])) {
             T0 = __mul::<_, MOD_BITS>(params, accumulator, temporaries[idx]);
             accumulator = __mul::<_, MOD_BITS>(params, accumulator, x[idx]);
             result[idx] = T0;
@@ -267,10 +266,10 @@ pub(crate) unconstrained fn __batch_invert_slice<let N: u32, let MOD_BITS: u32>(
     // TODO: ugly! Will fail if input slice is empty
     let mut accumulator: [Field; N] = __one::<N>();
     let mut result: [[Field; N]] = [[0; N]];
-    let mut temporaries: [[Field; N]] = &[];
-    for i in 0..x.len() {
-        temporaries = temporaries.push_back(accumulator);
-        if (__is_zero(x[i]) == false) {
+    let mut temporaries: [[Field; N]; N] = std::mem::zeroed();
+    for i in 0..N {
+        temporaries[i] = accumulator;
+        if (!__is_zero(x[i])) {
             accumulator = __mul::<_, MOD_BITS>(params, accumulator, x[i]);
         }
         result = result.push_back([0; N]);
@@ -324,7 +323,7 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>
     // We can iteratively transform t into ever smaller subgroups, until t = 1.
     // At each iteration, we need to find a new value for b, which we can obtain
     // by repeatedly squaring z^{Q}
-    let one_u60: U60Repr<N, 2> = unsafe { U60Repr::one() };
+    let one_u60: U60Repr<N, 2> = U60Repr::one();
     let primitive_root_log_size = __primitive_root_log_size::<_, MOD_BITS>(params);
     let mut Q = (params.modulus_u60 - one_u60).shr(primitive_root_log_size - 1);
     let Q_minus_one_over_two_u60 = (Q - one_u60).shr(2);
@@ -337,9 +336,9 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>
     for _ in 0..primitive_root_log_size - 1 {
         check = __mul::<_, MOD_BITS>(params, check, check);
     }
-    let mut found_root = false;
+    let mut result = Option::none();
     let one: [Field; N] = __one::<N>();
-    if (__eq(check, one) == false) {} else {
+    if (__eq(check, one)) {
         let mut t1 = __pow::<_, MOD_BITS>(params, z, Q_minus_one_over_two);
         let mut t2 = __mul::<_, MOD_BITS>(params, t1, z);
         let mut c = __mul::<_, MOD_BITS>(params, t2, t1);
@@ -350,7 +349,7 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>
         // algorithm runtime should only be max the number of bits in modulus
         for _ in 0..MOD_BITS {
             if (__eq(t, one)) {
-                found_root = true;
+                result = Option::some(r);
                 break;
             }
             let mut t2m = t;
@@ -372,10 +371,5 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>
             m = i;
         }
     }
-    let result = if found_root {
-        std::option::Option::some(r)
-    } else {
-        std::option::Option::none()
-    };
     result
 }
