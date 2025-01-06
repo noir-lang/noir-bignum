@@ -1,4 +1,3 @@
-use crate::params::BigNumParams as P;
 use crate::fns::{
     expressions::evaluate_quadratic_expression,
     unconstrained_helpers::{
@@ -7,6 +6,7 @@ use crate::fns::{
     },
     unconstrained_ops::{__div, __mul, __udiv_mod},
 };
+use crate::params::BigNumParams as P;
 
 /**
  * In this file:
@@ -46,13 +46,13 @@ pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
     let shift = 0x1000000000000000000000000000000;
     // validate that the last limb is less than the modulus
     if N > 2 {
-        // validate that the result is less than the modulus 
+        // validate that the result is less than the modulus
         let mut grumpkin_modulus = [0; N];
         grumpkin_modulus[0] = 0x33e84879b9709143e1f593f0000001;
         grumpkin_modulus[1] = 0x4e72e131a029b85045b68181585d28;
         grumpkin_modulus[2] = 0x3064;
         validate_gt::<N, 254>(grumpkin_modulus, result);
-        // validate that the limbs are in range 
+        // validate that the limbs are in range
         validate_in_range::<N, 254>(result);
     }
     // validate the limbs sum up to the field value
