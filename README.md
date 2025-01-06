@@ -70,7 +70,7 @@ use dep::bignum::fields::U256::U256Params; // import parameters from library
 use dep::bignum::BigNum;
 
 // Define (compile-time) BigNum type
-// number of limbs, number of bits of modulus, parameterset
+// number of limbs, number of bits of modulus, parameter set
 type U256 = BigNum<3, 257, U256Params>;
 
 fn main() {
@@ -91,9 +91,9 @@ pub struct BigNum<let N: u32, let MOD_BITS: u32, Params> {
     pub limbs: [Field; N],
 }
 ```
-- `N` is the number of limbs needed to represent the number. Each limb is a `Field`, which contains max 120 bits (a field has 254 bits)
+- `N` is the number of limbs needed to represent the number. Each limb is a `Field`, which contains max 120 bits. The field type has 254 bits of space and by only using 120 bits, there is space for multiplications and additions without overflowing. 
 - `MOD_BITS` is the number of bits needed to represent the modulus.
-- `Params` is a parameterset (`BigNumParams`) associated with the big number. More information below.
+- `Params` is a parameter set (`BigNumParams`) associated with the big number. More information below.
 
 The actual value of a BigNum can be calculated by multiplying each limb by an increasing power of $2^{120}$. For example `[1,20,300]` represents $1 \cdot 2^{120\cdot0} + 20 \cdot 2^{120 \cdot 1} + 300 \cdot 2^{120 \cdot 2}$. We say that the BigNum is represented in radix- $2^{120}$. 
 
@@ -108,11 +108,11 @@ pub struct RuntimeBigNum<let N: u32, let MOD_BITS: u32> {
 
 ### `BigNumParams` definition
 
-To define a `BigNum` or `RuntimeBigNum`, you need to provide a `BigNumParams`. For compile-time known moduli you can use predefined parametersets from this library or define custom parameters using [this tool](https://github.com/noir-lang/noir-bignum-paramgen). See below for an overview of the available predefined parametersets, as well as an example of how to generate your own. For runtime known moduli, provide the needed parameters through witnesses. 
+To define a `BigNum` or `RuntimeBigNum`, you need to provide a `BigNumParams`. For compile-time known moduli you can use predefined parameter sets from this library or define custom parameters using [this tool](https://github.com/noir-lang/noir-bignum-paramgen). See below for an overview of the available predefined parameter sets, as well as an example of how to generate your own. For runtime known moduli, provide the needed parameters through witnesses. 
 
 `BigNumParams` contains the following:
 
-- `modulus` represents the BigNum modulus, encoded as an array of `Field` elements that each encode 120 bits of the modulus. The first array element represents the least significant 120 bits. For convenience, the parameterset contains various representations of the same modulus; `modulus`, `modulus_u60` and `modulus_u60_x4`
+- `modulus` represents the BigNum modulus, encoded as an array of `Field` elements that each encode 120 bits of the modulus. The first array element represents the least significant 120 bits. For convenience, the parameter set contains various representations of the same modulus; `modulus`, `modulus_u60` and `modulus_u60_x4`
 
 - `redc_param` is equal to `(1 << (2 * Params::modulus_bits())) / modulus` . This must be computed outside of the circuit and provided either as a private witness or hardcoded constant. (computing it via an unconstrained function would be very expensive until noir witness computation times improve)
 
@@ -123,7 +123,7 @@ To define a `BigNum` or `RuntimeBigNum`, you need to provide a `BigNumParams`. F
 
 ## `BigNum` / `RuntimeBigNum` methods
 
-The methods that are available on the types `BigNum` and `RuntimeBigNum` are almost the same. Thsi section discusses the methods and talks about "bignum" to indicate both types.
+The methods that are available on the types `BigNum` and `RuntimeBigNum` are almost the same. This section discusses these methods and uses "bignum" to indicate both types.
 
 The library offers all standard modular arithmetic operations, constrained and unconstrained. **Important:** When evaluating more than 1 arithmetic operations, it is recommended to perform unconstrained arithmetic operations and then constrain using `evaluate_quadratic_expression`. 
 
@@ -297,7 +297,7 @@ See `bignum_test.nr` for more examples.
 
 ## Custom or predefined parameter set
 
-There are predefined parametersets located in `bignum/fields` of this library. Alternatively, you can create a new parameterset by populating a `BigNumParams`. 
+There are predefined parameter sets located in `bignum/fields` of this library. Alternatively, you can create a new parameter set by populating a `BigNumParams`. 
 
 ### Predefined Unsigned Integers
 
