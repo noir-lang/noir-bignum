@@ -40,7 +40,6 @@ This library is tested with all stable releases since 1.0.0-beta.0 as well as ni
 ## Dependencies
 
 - nargo >= 1.0.0-beta.0
-- bb >= 0.63.0
 
 Refer to [Noir's docs](https://noir-lang.org/docs/getting_started/installation/) for installation steps.
 
