@@ -275,7 +275,7 @@ where
 // // // 929 gates for a 2048 bit mul
 fn test_mul<let N: u32, BN>()
 where
-    BN: BigNumTrait + std::ops::Mul + std::ops::Add,
+    BN: BigNumTrait,
 {
     let a: BN = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
     let b: BN = unsafe { BN::__derive_from_seed([4, 5, 6, 7]) };
@@ -287,7 +287,7 @@ where
 
 fn test_add<let N: u32, BN>()
 where
-    BN: BigNumTrait + std::ops::Add + std::ops::Mul + std::cmp::Eq,
+    BN: BigNumTrait,
 {
     let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
     let b: BN = unsafe { BN::__derive_from_seed([4, 5, 6, 7]) };
@@ -315,7 +315,7 @@ where
 
 fn test_div<let N: u32, BN>()
 where
-    BN: BigNumTrait + std::ops::Div + std::ops::Mul + std::ops::Add + std::cmp::Eq,
+    BN: BigNumTrait,
 {
     let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
     let b = unsafe { BN::__derive_from_seed([4, 5, 6, 7]) };
@@ -326,7 +326,7 @@ where
 
 fn test_invmod<let N: u32, BN>()
 where
-    BN: BigNumTrait + std::cmp::Eq,
+    BN: BigNumTrait,
 {
     let u = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
     for _ in 0..1 {

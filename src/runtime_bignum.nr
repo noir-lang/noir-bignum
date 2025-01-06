@@ -13,6 +13,7 @@ use crate::fns::{
         __is_zero, __mul, __neg, __pow, __sub, __tonelli_shanks_sqrt, __udiv_mod,
     },
 };
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 pub struct RuntimeBigNum<let N: u32, let MOD_BITS: u32> {
     pub limbs: [Field; N],
@@ -23,7 +24,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {}
 
 // All functions prefixed `__` are unconstrained!
 // They're not actually decorated as `unconstrained` because to return the `params` (as part of Self) from an `unconstrained` fn would cause range constraints. Instead, each `__` fn wraps a call to an unconstrained fn, so that the already-range-constrained `params` can be inserted into Self after the unconstrained call.
-pub(crate) trait RuntimeBigNumTrait<let N: u32, let MOD_BITS: u32> {
+pub(crate) trait RuntimeBigNumTrait<let N: u32, let MOD_BITS: u32>: Neg + Add + Sub + Mul + Div + Eq {
     pub fn new(params: BigNumParams<N, MOD_BITS>) -> Self;
     pub fn one(params: BigNumParams<N, MOD_BITS>) -> Self;
     pub fn derive_from_seed<let SeedBytes: u32>(
@@ -106,24 +107,18 @@ pub(crate) trait RuntimeBigNumTrait<let N: u32, let MOD_BITS: u32> {
     pub fn validate_in_range(self);
     // pub fn validate_gt(self, lhs: Self, rhs: Self);
 
-    pub fn neg(self) -> Self;
-    pub fn add(lhs: Self, rhs: Self) -> Self {
-        lhs + rhs
-    }
-    pub fn sub(lhs: Self, rhs: Self) -> Self {
-        lhs - rhs
-    }
-    pub fn mul(lhs: Self, rhs: Self) -> Self {
-        lhs * rhs
-    }
-    pub fn div(lhs: Self, rhs: Self) -> Self {
-        lhs / rhs
-    }
     pub fn udiv_mod(numerator: Self, divisor: Self) -> (Self, Self);
     pub fn udiv(numerator: Self, divisor: Self) -> Self;
     pub fn umod(numerator: Self, divisor: Self) -> Self;
 
     pub fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self;
+}
+
+impl<let N: u32, let MOD_BITS: u32> Neg for RuntimeBigNum<N, MOD_BITS> {
+    fn neg(self) -> Self {
+        let params = self.params;
+        Self { limbs: neg::<_, MOD_BITS>(params, self.limbs), params }
+    }
 }
 
 impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeBigNum<N, MOD_BITS> {
@@ -358,11 +353,6 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeB
         let params = self.params;
         assert(params == other.params);
         assert_is_not_equal(params, self.limbs, other.limbs);
-    }
-
-    fn neg(self) -> Self {
-        let params = self.params;
-        Self { limbs: neg::<_, MOD_BITS>(params, self.limbs), params }
     }
 
     fn udiv_mod(self, divisor: Self) -> (Self, Self) {
