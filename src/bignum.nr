@@ -89,7 +89,6 @@ pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
     pub fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self;
 }
 
-
 // impl<let N: u32, let MOD_BITS: u32, Params> std::convert::From<Field> for BigNum<N, MOD_BITS, Params>
 // where
 //     Params: BigNumParamsGetter<N, MOD_BITS>,
