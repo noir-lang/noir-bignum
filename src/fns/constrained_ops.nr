@@ -47,6 +47,8 @@ pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
     // validate the limbs sum up to the field value
     let field_val = if N < 2 {
         result[0]
+    } else if N == 2 {
+        result[0] + result[1] * shift
     } else {
         result[0] + result[1] * shift + result[2] * shift * shift
     };
