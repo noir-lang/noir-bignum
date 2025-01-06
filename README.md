@@ -328,12 +328,10 @@ This library includes the follow field presets:
 | [Curve25519](https://cr.yp.to/ecdh/curve25519-20060209.pdf)  | `ED25519_Fq_Params`              | `ED25519_Fr_Params`              |
 | [MNT4-753](https://eprint.iacr.org/2014/595)    | `MNT4_753_Fq_Params`             | `MNT4_753_Fr_Params`             |
 | [MNT6-753](https://eprint.iacr.org/2014/595)    | `MNT6_753_Fq_Params`             | `MNT6_753_Fr_Params`             |
-| [Pallas](https://electriccoin.co/blog/the-pasta-curves-for-halo-2-and-beyond/)*      | `Pallas_Fr_Params` | `Pallas_Fq_Params` |
+| [Pallas](https://electriccoin.co/blog/the-pasta-curves-for-halo-2-and-beyond/)     | `Pallas_Fr_Params` | `Pallas_Fq_Params` |
 | [Secp256k1](https://en.bitcoin.it/wiki/Secp256k1) | `Secp256k1_Fq_Params`            | `Secp256k1_Fr_Params`            |
 | [Secp256r1](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.186-4.pdf) | `Secp256r1_Fq_Params`            | `Secp256r1_Fr_Params`            |
 | [Secp384r1](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.186-4.pdf) | `Secp384r1_Fq_Params`            | `Secp384r1_Fr_Params`            |
-
-* TODO: this should probably be adjusted, to avoid confusion
 
 Feature requests and/or pull requests welcome for missing fields you need.
 
