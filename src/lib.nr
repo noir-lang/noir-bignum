@@ -18,6 +18,6 @@ pub(crate) mod utils;
 pub use bignum::BigNum;
 pub use bignum::BigNumTrait; // So that external code can operate on a generic BigNum, `where BigNum: BigNumTrait`.
 pub use runtime_bignum::RuntimeBigNum;
-pub use runtime_bignum::RuntimeBigNumTrait;
+pub use runtime_bignum::RuntimeBigNumTrait; 
 // Tests
 mod tests;
