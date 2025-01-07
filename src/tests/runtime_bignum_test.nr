@@ -210,7 +210,7 @@ comptime fn make_test(_m: Module, N: u32, MOD_BITS: u32, typ: Quoted) -> Quoted 
 #[test]
 fn test_add() {
     let params = $typ ::get_params();
-    
+    // safety: these are just random values for tests 
     let a: $RuntimeBigNum<$N, $MOD_BITS> = unsafe{ $RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4]) };
     let b: $RuntimeBigNum<$N, $MOD_BITS> = unsafe{ $RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7]) };
     let one: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::one(params);
@@ -539,9 +539,9 @@ pub mod BLS12_377_Fr_ParamsTests {}
 
 fn test_div<let N: u32, let MOD_BITS: u32>(params: BigNumParams<N, MOD_BITS>) {
     let a: RuntimeBigNum<N, MOD_BITS> =
-        unsafe { RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4]) };
+         RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4]) ;
     let b: RuntimeBigNum<N, MOD_BITS> =
-        unsafe { RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7]) };
+         RuntimeBigNum::__derive_from_seed(params, [4, 5, 6, 7]) ;
 
     let c = a / b;
     assert((b * c) == a);
@@ -741,3 +741,4 @@ fn test_barrett_reduction_fix() {
     };
     assert(remainder[8].lt(params.modulus[8]));
 }
+

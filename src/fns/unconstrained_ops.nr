@@ -324,7 +324,7 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>
     // We can iteratively transform t into ever smaller subgroups, until t = 1.
     // At each iteration, we need to find a new value for b, which we can obtain
     // by repeatedly squaring z^{Q}
-    let one_u60: U60Repr<N, 2> = unsafe { U60Repr::one() };
+    let one_u60: U60Repr<N, 2> =  U60Repr::one() ;
     let primitive_root_log_size = __primitive_root_log_size::<_, MOD_BITS>(params);
     let mut Q = (params.modulus_u60 - one_u60).shr(primitive_root_log_size - 1);
     let Q_minus_one_over_two_u60 = (Q - one_u60).shr(2);

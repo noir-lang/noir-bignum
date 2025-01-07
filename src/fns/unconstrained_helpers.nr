@@ -324,7 +324,7 @@ unconstrained fn __recursively_find_multiplicative_generator<let N: u32, let MOD
     let found = __eq(exped, neg_one);
     let mut result: (bool, [Field; N]) = (found, target);
     if (!found) {
-        let _target = unsafe { __add(params, target, one) };
+        let _target =  __add(params, target, one) ;
         result = __recursively_find_multiplicative_generator::<_, MOD_BITS>(
             params,
             _target,

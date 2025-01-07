@@ -138,7 +138,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeB
         params: BigNumParams<N, MOD_BITS>,
         seed: [u8; SeedBytes],
     ) -> Self {
-        let limbs = unsafe { derive_from_seed::<_, MOD_BITS, _>(params, seed) };
+        let limbs =  derive_from_seed::<_, MOD_BITS, _>(params, seed) ;
         Self { limbs, params }
     }
 
@@ -281,7 +281,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeB
     unconstrained fn __batch_invert_slice<let M: u32>(x: [Self]) -> [Self] {
         let params = x[0].params;
         assert(params.has_multiplicative_inverse);
-        let all_limbs = unsafe {
+        let all_limbs = {
             let inv_slice =
                 __batch_invert_slice::<_, MOD_BITS>(params, x.map(|bn| Self::get_limbs(bn)));
             inv_slice.as_array()

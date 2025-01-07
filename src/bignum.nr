@@ -242,7 +242,7 @@ where
 
     unconstrained fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self> {
         let params = Params::get_params();
-        let maybe_limbs = unsafe { __tonelli_shanks_sqrt(params, self.limbs) };
+        let maybe_limbs =  __tonelli_shanks_sqrt(params, self.limbs) ;
         maybe_limbs.map(|limbs| Self { limbs })
     }
 

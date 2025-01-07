@@ -39,8 +39,7 @@ pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     field: Field,
 ) -> [Field; N] {
-    // safty: we check that the resulting limbs represent the intended field element
-    // we check the bit length, the limbs being max 120 bits, and the value in total is less than the field modulus
+    // @safety : we check that the resulting limbs represent the intended field element we check the bit length, the limbs being max 120 bits, and the value in total is less than the field modulus
     let result = unsafe { __from_field::<N>(field) };
     // validate the limbs are in range and the value in total is less than 2^254
     let shift = 0x1000000000000000000000000000000;
