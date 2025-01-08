@@ -19,6 +19,16 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 pub struct BigNum<let N: u32, let MOD_BITS: u32, Params> {
     pub limbs: [Field; N],
 }
+
+impl<let N: u32, let MOD_BITS: u32, Params> Default for BigNum<N, MOD_BITS, Params>
+where
+    Params: BigNumParamsGetter<N, MOD_BITS>,
+{
+    fn default() -> Self {
+        BigNum::new()
+    }
+}
+
 // We aim to avoid needing to add a generic parameter to this trait, for this reason we do not allow
 // accessing the limbs of the bignum except through slices.
 pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
