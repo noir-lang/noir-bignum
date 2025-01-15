@@ -26,7 +26,6 @@ pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
     // fn default() -> Self { std::default::Default::default  () }
     pub fn new() -> Self;
     pub fn one() -> Self;
-    pub fn from_field(field: Field) -> Self;
     pub fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
     pub unconstrained fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
     pub fn from_slice(limbs: [Field]) -> Self;
@@ -89,15 +88,15 @@ pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
     pub fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self;
 }
 
-// impl<let N: u32, let MOD_BITS: u32, Params> std::convert::From<Field> for BigNum<N, MOD_BITS, Params>
-// where
-//     Params: BigNumParamsGetter<N, MOD_BITS>,
-// {
-//     fn from(input: Field) -> Self {
-//         let params = Params::get_params();
-//         Self { limbs: from_field::<N, MOD_BITS>(params, input) }
-//     }
-// }
+impl<let N: u32, let MOD_BITS: u32, Params> std::convert::From<Field> for BigNum<N, MOD_BITS, Params>
+where
+    Params: BigNumParamsGetter<N, MOD_BITS>,
+{
+    fn from(input: Field) -> Self {
+        let params = Params::get_params();
+        Self { limbs: from_field::<N, MOD_BITS>(params, input) }
+    }
+}
 
 impl<let N: u32, let MOD_BITS: u32, Params> Neg for BigNum<N, MOD_BITS, Params>
 where
@@ -122,11 +121,6 @@ where
         let mut result = BigNum::new();
         result.limbs[0] = 1;
         result
-    }
-
-    fn from_field(field: Field) -> Self {
-        let params = Params::get_params();
-        Self { limbs: from_field::<N, MOD_BITS>(params, field) }
     }
 
     fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self {
