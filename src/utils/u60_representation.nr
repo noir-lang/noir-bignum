@@ -119,7 +119,7 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
     }
 
     pub(crate) unconstrained fn from_field(input: Field) -> Self {
-        let (first, second, third, fourth, fifth) = unsafe { field_to_u60rep(input) };
+        let (first, second, third, fourth, fifth) = field_to_u60rep(input);
         let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
         let N_u60: u32 = N * NumSegments;
         assert(N_u60 >= 1, "N must be at least 1");
