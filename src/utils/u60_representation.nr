@@ -58,28 +58,46 @@ impl<let N: u32, let NumSegments: u32> std::convert::From<[Field; N]> for U60Rep
     }
 }
 
-// impl<let N: u32, let NumSegments: u32> std::convert::From<Field> for U60Repr<N, NumSegments> {
-//     fn from(input: Field) -> Self {
-//        let (low, mid, high) =  unsafe { field_to_u60rep(input) } ;
-//         let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
-//         let N_u60: u32 = N * NumSegments;
-//         assert(N_u60 >=1, "N must be at least 1");
-//         if N_u60 == 1 {
-//             assert((mid ==0) & (high == 0), "input field is too large to fit in a single limb");
-//             result.limbs[0] = low;
-//         }
-//         else if N_u60 == 2{
-//             assert(high == 0, "input field is too large to fit in two limbs");
-//             result.limbs[0] = low;
-//             result.limbs[1] = mid;
-//         }else{
-//             result.limbs[0] = low;
-//             result.limbs[1] = mid;
-//             result.limbs[2] = high;
-//         }
-//         result
-//     }
-// }
+impl<let N: u32, let NumSegments: u32> std::convert::From<Field> for U60Repr<N, NumSegments> {
+    pub(crate) fn from(input: Field) -> Self {
+        let (first, second, third, fourth, fifth) = unsafe { field_to_u60rep(input) };
+        let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
+        let N_u60: u32 = N * NumSegments;
+        assert(N_u60 >= 1, "N must be at least 1");
+        if N_u60 == 1 {
+            assert(
+                (second == 0) & (third == 0) & (fourth == 0) & (fifth == 0),
+                "input field is too large to fit in a single limb",
+            );
+            result.limbs[0] = first;
+        } else if N_u60 == 2 {
+            assert(
+                (third == 0) & (fourth == 0) & (fifth == 0),
+                "input field is too large to fit in two limbs",
+            );
+            result.limbs[0] = first;
+            result.limbs[1] = second;
+        } else if N_u60 == 3 {
+            assert((fourth == 0) & (fifth == 0), "input field is too large to fit in three limbs");
+            result.limbs[0] = first;
+            result.limbs[1] = second;
+            result.limbs[2] = third;
+        } else if N_u60 == 4 {
+            assert((fifth == 0), "input field is too large to fit in four limbs");
+            result.limbs[0] = first;
+            result.limbs[1] = second;
+            result.limbs[2] = third;
+            result.limbs[3] = fourth;
+        } else {
+            result.limbs[0] = first;
+            result.limbs[1] = second;
+            result.limbs[2] = third;
+            result.limbs[3] = fourth;
+            result.limbs[4] = fifth;
+        }
+        result
+    }
+}
 
 impl<let N: u32, let NumSegments: u32> std::convert::Into<[Field; N]> for U60Repr<N, NumSegments> {
     fn into(x: U60Repr<N, NumSegments>) -> [Field; N] {
@@ -118,44 +136,7 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
         result
     }
 
-    pub(crate) fn from_field(input: Field) -> Self {
-        let (first, second, third, fourth, fifth) = unsafe { field_to_u60rep(input) };
-        let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
-        let N_u60: u32 = N * NumSegments;
-        assert(N_u60 >= 1, "N must be at least 1");
-        if N_u60 == 1 {
-            assert(
-                (second == 0) & (third == 0) & (fourth == 0) & (fifth == 0),
-                "input field is too large to fit in a single limb",
-            );
-            result.limbs[0] = first;
-        } else if N_u60 == 2 {
-            assert(
-                (third == 0) & (fourth == 0) & (fifth == 0),
-                "input field is too large to fit in two limbs",
-            );
-            result.limbs[0] = first;
-            result.limbs[1] = second;
-        } else if N_u60 == 3 {
-            assert((fourth == 0) & (fifth == 0), "input field is too large to fit in three limbs");
-            result.limbs[0] = first;
-            result.limbs[1] = second;
-            result.limbs[2] = third;
-        } else if N_u60 == 4 {
-            assert((fifth == 0), "input field is too large to fit in four limbs");
-            result.limbs[0] = first;
-            result.limbs[1] = second;
-            result.limbs[2] = third;
-            result.limbs[3] = fourth;
-        } else {
-            result.limbs[0] = first;
-            result.limbs[1] = second;
-            result.limbs[2] = third;
-            result.limbs[3] = fourth;
-            result.limbs[4] = fifth;
-        }
-        result
-    }
+    
 
     pub(crate) unconstrained fn into_field_array(
         x: U60Repr<N, NumSegments>,

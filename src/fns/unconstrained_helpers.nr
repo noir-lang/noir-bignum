@@ -20,7 +20,7 @@ global TWO_POW_60: u64 = 0x1000000000000000;
 
 pub(crate) unconstrained fn __from_field<let N: u32>(field: Field) -> [Field; N] {
     // cast the field to a u60 representation
-    let res_u60: U60Repr<N, 2> = U60Repr::from_field(field);
+    let res_u60: U60Repr<N, 2> = From::from(field);
     let result: [Field; N] = U60Repr::into(res_u60);
     result
 }
