@@ -3,7 +3,7 @@
 pub(crate) fn map<T, let N: u32, U, Env>(arr: [T; N], f: fn[Env](T) -> U) -> [U; N] {
     let mut ret: [U; N] = std::mem::zeroed();
 
-    for i in 0..arr.len() {
+    for i in 0..N {
         ret[i] = f(arr[i]);
     }
 
