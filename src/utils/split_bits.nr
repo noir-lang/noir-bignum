@@ -5,7 +5,7 @@ global TWO_POW_64: Field = 0x10000000000000000;
 //fields to u60rep conversion
 // field elements are 254 bits
 // so there will be 5 limbs
-pub unconstrained fn field_to_u60rep(mut x: Field) -> (u64, u64, u64, u64, u64) {
+pub(crate) unconstrained fn field_to_u60rep(mut x: Field) -> (u64, u64, u64, u64, u64) {
     // get the first 60 bits by casting to u64 and then taking the lower 60 bits
     // we use the fact that this casting drops everything above 64 bits
     let x_first_u64 = (x as u64);
