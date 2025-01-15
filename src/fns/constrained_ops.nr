@@ -43,7 +43,7 @@ pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
     // we check the bit length, the limbs being max 120 bits, and the value in total is less than the field modulus
     let result = unsafe { __from_field::<N>(field) };
     // validate the limbs are in range and the value in total is less than 2^254
-    
+
     let TWO_POW_120 = 0x1000000000000000000000000000000;
     // validate that the last limb is less than the modulus
     if N > 2 {
