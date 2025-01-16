@@ -21,3 +21,6 @@ pub use runtime_bignum::RuntimeBigNum;
 
 // Tests
 mod tests;
+
+// Benchmarks
+pub mod benchmarks;
