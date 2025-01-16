@@ -10,8 +10,7 @@ use crate::fields::bls12_381Fq::BLS12_381_Fq_Params;
 use crate::fields::bn254Fq::BN254_Fq_Params;
 use crate::fields::U256::U256Params;
 
-
-// the types we will be benchmarking 
+// the types we will be benchmarking
 
 type Fq = BigNum<3, 254, BN254_Fq_Params>;
 type BN256 = BigNum<3, 257, U256Params>;
@@ -46,7 +45,6 @@ where
     let c = a / b;
 }
 
-
 // type Fq
 // type BN256
 // type BN381
@@ -71,7 +69,6 @@ fn bench_div_Fq(a: Fq, b: Fq) {
     bench_div::<3, Fq>(a, b);
 }
 
-
 #[export]
 fn bench_add_BN256(a: BN256, b: BN256) {
     bench_add::<3, BN256>(a, b);
@@ -84,7 +81,7 @@ fn bench_sub_BN256(a: BN256, b: BN256) {
 
 #[export]
 fn bench_mul_BN256(a: BN256, b: BN256) {
-        bench_mul::<3, BN256>(a, b);
+    bench_mul::<3, BN256>(a, b);
 }
 
 #[export]
