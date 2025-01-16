@@ -1,7 +1,6 @@
-use crate::utils::u60_representation::U60Repr;
-
 use crate::bignum::BigNum;
 use crate::bignum::BigNumTrait;
+use crate::utils::u60_representation::U60Repr;
 
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
@@ -9,6 +8,7 @@ use crate::params::BigNumParamsGetter;
 use crate::fields::bls12_381Fq::BLS12_381_Fq_Params;
 use crate::fields::bn254Fq::BN254_Fq_Params;
 use crate::fields::U256::U256Params;
+use std::bigint::Bn254Fq;
 
 struct Test2048Params {}
 
@@ -817,6 +817,16 @@ fn test_from_field_3_digits() {
 }
 
 #[test]
+fn test_from_field_3_digits_BLS381() {
+    let field: Field = -1;
+    let result = BN381::from(field);
+    let expected: BN381 = BigNum {
+        limbs: [0x33e84879b9709143e1f593f0000000, 0x4e72e131a029b85045b68181585d28, 0x3064, 0x0],
+    };
+    assert(result == expected);
+}
+
+#[test]
 fn test_to_field_one() {
     let field: Field = 1;
     let bn = Fq::one();
@@ -858,11 +868,10 @@ fn test_to_field_three_digits_overflow() {
     let result = bn.to_field();
 }
 
-#[test(should_fail_with = "BigNum::validate_gt check fails")]
+#[test(should_fail_with = "BigNum::validate_in_range check fails")]
 fn test_to_field_too_many_digits() {
     let bn: BN381 = BN381 {
         limbs: [0xea1742447ee9d92f9f18e1c80a481e, 0x3d89ad3d3ae85f3f482a08435c93ec, 0x1e9f, 0x1],
     };
     let result = bn.to_field();
 }
-
