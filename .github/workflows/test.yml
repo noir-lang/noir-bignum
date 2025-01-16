@@ -51,7 +51,6 @@ jobs:
         run: nargo test
 
   format:
-    needs: [noir-version-list]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
