@@ -4,8 +4,8 @@ use crate::params::BigNumParamsGetter;
 
 use crate::fns::{
     constrained_ops::{
-        add, assert_is_not_equal, conditional_select, derive_from_seed, div, eq, mul, neg, sub,
-        udiv, udiv_mod, umod, validate_in_field, validate_in_range,
+        add, assert_is_not_equal, conditional_select, derive_from_seed, div, eq, from_field, mul,
+        neg, sub, udiv, udiv_mod, umod, validate_in_field, validate_in_range,
     },
     expressions::{__compute_quadratic_expression, evaluate_quadratic_expression},
     serialization::{from_be_bytes, to_le_bytes},
@@ -86,6 +86,16 @@ pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
     pub fn umod(self, divisor: Self) -> Self;
 
     pub fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self;
+}
+
+impl<let N: u32, let MOD_BITS: u32, Params> std::convert::From<Field> for BigNum<N, MOD_BITS, Params>
+where
+    Params: BigNumParamsGetter<N, MOD_BITS>,
+{
+    fn from(input: Field) -> Self {
+        let params = Params::get_params();
+        Self { limbs: from_field::<N, MOD_BITS>(params, input) }
+    }
 }
 
 impl<let N: u32, let MOD_BITS: u32, Params> Neg for BigNum<N, MOD_BITS, Params>
@@ -226,7 +236,7 @@ where
 
     unconstrained fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self> {
         let params = Params::get_params();
-        let maybe_limbs = unsafe { __tonelli_shanks_sqrt(params, self.limbs) };
+        let maybe_limbs = __tonelli_shanks_sqrt(params, self.limbs);
         maybe_limbs.map(|limbs| Self { limbs })
     }
 
