@@ -47,18 +47,18 @@ pub(crate) fn to_field<let N: u32, let MOD_BITS: u32>(
         grumpkin_modulus[0] = 0x33e84879b9709143e1f593f0000001;
         grumpkin_modulus[1] = 0x4e72e131a029b85045b68181585d28;
         grumpkin_modulus[2] = 0x3064;
-        validate_gt::<N, 254>(grumpkin_modulus, limbs);
+        validate_gt::<N, MOD_BITS>(grumpkin_modulus, limbs);
         // validate that the limbs are in range
-        validate_in_range::<N, 254>(limbs);
+        validate_in_range::<N, MOD_BITS>(limbs);
     }
     // validate the limbs sum up to the field value
     let field_val = if N < 2 {
         limbs[0]
     } else if N == 2 {
-        validate_in_range::<N, 254>(limbs);
+        validate_in_range::<N, MOD_BITS>(limbs);
         limbs[0] + limbs[1] * TWO_POW_120
     } else {
-        validate_in_range::<N, 254>(limbs);
+        validate_in_range::<N, MOD_BITS>(limbs);
         limbs[0] + limbs[1] * TWO_POW_120 + limbs[2] * TWO_POW_120 * TWO_POW_120
     };
     field_val
@@ -83,18 +83,18 @@ pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
         grumpkin_modulus[0] = 0x33e84879b9709143e1f593f0000001;
         grumpkin_modulus[1] = 0x4e72e131a029b85045b68181585d28;
         grumpkin_modulus[2] = 0x3064;
-        validate_gt::<N, 254>(grumpkin_modulus, result);
+        validate_gt::<N, MOD_BITS>(grumpkin_modulus, result);
         // validate that the limbs are in range
-        validate_in_range::<N, 254>(result);
+        validate_in_range::<N, MOD_BITS>(result);
     }
     // validate the limbs sum up to the field value
     let field_val = if N < 2 {
         result[0]
     } else if N == 2 {
-        validate_in_range::<N, 254>(result);
+        validate_in_range::<N, MOD_BITS>(result);
         result[0] + result[1] * TWO_POW_120
     } else {
-        validate_in_range::<N, 254>(result);
+        validate_in_range::<N, MOD_BITS>(result);
         result[0] + result[1] * TWO_POW_120 + result[2] * TWO_POW_120 * TWO_POW_120
     };
     assert(field_val == field);
