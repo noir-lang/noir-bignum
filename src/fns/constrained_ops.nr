@@ -35,6 +35,39 @@ use crate::params::BigNumParams as P;
 * We use a hash function that can be modelled as a random oracle
 * This function *should* produce an output that is a uniformly randomly distributed value modulo BigNum::modulus()
 **/
+
+pub(crate) fn to_field<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    limbs: [Field; N],
+) -> Field {
+    let TWO_POW_120 = 0x1000000000000000000000000000000;
+    // let mut field: Field = 0;
+    if N > 2 {
+        // validate that the limbs is less than the modulus the grumpkin modulus
+        let mut grumpkin_modulus = [0; N];
+        grumpkin_modulus[0] = 0x33e84879b9709143e1f593f0000001;
+        grumpkin_modulus[1] = 0x4e72e131a029b85045b68181585d28;
+        grumpkin_modulus[2] = 0x3064;
+        validate_gt::<N, 254>(grumpkin_modulus, limbs);
+        // validate that the limbs are in range
+        validate_in_range::<N, 254>(limbs);
+    }
+    // validate the limbs sum up to the field value
+    let field_val = if N < 2 {
+        limbs[0]
+    } else if N == 2 {
+        validate_in_range::<N, 254>(limbs);
+        limbs[0] + limbs[1] * TWO_POW_120
+    } else {
+        validate_in_range::<N, 254>(limbs);
+        limbs[0] + limbs[1] * TWO_POW_120 + limbs[2] * TWO_POW_120 * TWO_POW_120
+    };
+    field_val 
+    // assert that the conversion is possible, i.e. the bignum is less than grumpkin field modulus 
+
+}
+
+
 pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     field: Field,
