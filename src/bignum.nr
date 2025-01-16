@@ -5,7 +5,7 @@ use crate::params::BigNumParamsGetter;
 use crate::fns::{
     constrained_ops::{
         add, assert_is_not_equal, conditional_select, derive_from_seed, div, eq, from_field, mul,
-        neg, sub, udiv, udiv_mod, umod, validate_in_field, validate_in_range, to_field
+        neg, sub, to_field, udiv, udiv_mod, umod, validate_in_field, validate_in_range,
     },
     expressions::{__compute_quadratic_expression, evaluate_quadratic_expression},
     serialization::{from_be_bytes, to_le_bytes},
@@ -138,10 +138,9 @@ where
         Self { limbs: limbs.as_array() }
     }
 
-    pub fn to_field(self) -> Field {
-    to_field::<_, MOD_BITS>(Params::get_params(), self.limbs)
+    fn to_field(self) -> Field {
+        to_field::<_, MOD_BITS>(Params::get_params(), self.limbs)
     }
-
 
     fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> Self {
         Self { limbs: from_be_bytes::<_, MOD_BITS, _>(x) }

@@ -61,8 +61,8 @@ pub(crate) fn to_field<let N: u32, let MOD_BITS: u32>(
         validate_in_range::<N, 254>(limbs);
         limbs[0] + limbs[1] * TWO_POW_120 + limbs[2] * TWO_POW_120 * TWO_POW_120
     };
-    field_val 
-    // assert that the conversion is possible, i.e. the bignum is less than grumpkin field modulus 
+    field_val
+    // assert that the conversion is possible, i.e. the bignum is less than grumpkin field modulus
 
 }
 
