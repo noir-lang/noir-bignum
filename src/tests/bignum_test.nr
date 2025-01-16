@@ -868,7 +868,7 @@ fn test_to_field_three_digits_overflow() {
     let result = bn.to_field();
 }
 
-#[test(should_fail_with = "BigNum::validate_in_range check fails")]
+#[test(should_fail_with = "BigNum::validate_gt check fails")]
 fn test_to_field_too_many_digits() {
     let bn: BN381 = BN381 {
         limbs: [0xea1742447ee9d92f9f18e1c80a481e, 0x3d89ad3d3ae85f3f482a08435c93ec, 0x1e9f, 0x1],
