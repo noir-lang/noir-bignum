@@ -169,22 +169,22 @@ where
 
     unconstrained fn __neg(self) -> Self {
         let params = Params::get_params();
-        Self { limbs: __neg(params, self.limbs)}
+        Self { limbs: __neg(params, self.limbs) }
     }
 
     unconstrained fn __add(self, other: Self) -> Self {
         let params = Params::get_params();
-        Self { limbs: __add(params, self.limbs, other.limbs)}
+        Self { limbs: __add(params, self.limbs, other.limbs) }
     }
 
     unconstrained fn __sub(self, other: Self) -> Self {
         let params = Params::get_params();
-        Self { limbs: __sub(params, self.limbs, other.limbs)}
+        Self { limbs: __sub(params, self.limbs, other.limbs) }
     }
 
     unconstrained fn __mul(self, other: Self) -> Self {
         let params = Params::get_params();
-        Self { limbs: __mul::<_, MOD_BITS>(params, self.limbs, other.limbs)}
+        Self { limbs: __mul::<_, MOD_BITS>(params, self.limbs, other.limbs) }
     }
 
     unconstrained fn __div(self, divisor: Self) -> Self {
