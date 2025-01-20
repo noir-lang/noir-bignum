@@ -1,1 +1,1 @@
-pub mod bignum_benchmarks;
+mod bignum_benchmarks;
