@@ -816,13 +816,10 @@ fn test_from_field_3_digits() {
     assert(result == expected);
 }
 
-
-
-
 #[test]
 fn test_to_field_one() {
     let field: Field = 1;
-    let bn = Fq::one(); 
+    let bn = Fq::one();
     let result = bn.to_field();
     assert(result == field);
 }
@@ -837,38 +834,35 @@ fn test_to_field_one_digit() {
 
 #[test]
 fn test_to_field_two_digits() {
-    let field: Field = 697955470585821007263499235110798476786097877002667034107578965871052378; 
-    let bn = Fq { limbs: [0x5a10b956d41840745e0a9f6e34465a, 0x65209b74583b912262843211905e41,
-    0x0] };
+    let field: Field = 697955470585821007263499235110798476786097877002667034107578965871052378;
+    let bn =
+        Fq { limbs: [0x5a10b956d41840745e0a9f6e34465a, 0x65209b74583b912262843211905e41, 0x0] };
     let result = bn.to_field();
     assert(result == field);
-
 }
 
 #[test]
 fn test_to_field_three_digits() {
-    let field: Field = 2330301921655783950764183713945533646391233209687308929386184468126823563744; 
-    let bn = Fq { limbs: [0x862cf8ea69d6c70c9cc8d8871b41e0, 0xe7763528201566c2fc8d93973cf1b4,
-    0x526] };
+    let field: Field = 2330301921655783950764183713945533646391233209687308929386184468126823563744;
+    let bn =
+        Fq { limbs: [0x862cf8ea69d6c70c9cc8d8871b41e0, 0xe7763528201566c2fc8d93973cf1b4, 0x526] };
     let result = bn.to_field();
     assert(result == field);
-
 }
 
 #[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_to_field_three_digits_overflow() {
-    let bn: Fq = BigNum { limbs: [0x4e6405505a33bb9b9c0563df2bd59a,
-    0x48dbe03a9bb4865ba961e41ef9dded, 0x3a36] };
+    let bn: Fq = BigNum {
+        limbs: [0x4e6405505a33bb9b9c0563df2bd59a, 0x48dbe03a9bb4865ba961e41ef9dded, 0x3a36],
+    };
     let result = bn.to_field();
 }
 
 #[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_to_field_too_many_digits() {
     let bn: BN381 = BN381 {
-        limbs: [0xea1742447ee9d92f9f18e1c80a481e, 0x3d89ad3d3ae85f3f482a08435c93ec,
-        0x1e9f, 0x1]
+        limbs: [0xea1742447ee9d92f9f18e1c80a481e, 0x3d89ad3d3ae85f3f482a08435c93ec, 0x1e9f, 0x1],
     };
     let result = bn.to_field();
 }
-
 

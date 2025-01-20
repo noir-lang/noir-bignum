@@ -19,7 +19,7 @@ pub struct BigNumParams<let N: u32, let MOD_BITS: u32> {
 
 // To be implemented by the user for any BigNum they define, or within the predefined BigNums in the `fields/` dir.
 pub trait BigNumParamsGetter<let N: u32, let MOD_BITS: u32> {
-    pub fn get_params() -> BigNumParams<N, MOD_BITS>;
+    fn get_params() -> BigNumParams<N, MOD_BITS>;
 }
 
 impl<let N: u32, let MOD_BITS: u32> BigNumParams<N, MOD_BITS> {

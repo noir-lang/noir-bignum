@@ -57,8 +57,8 @@ pub(crate) fn to_field<let N: u32, let MOD_BITS: u32>(
         validate_in_range::<N, MOD_BITS>(limbs);
         limbs[0] + limbs[1] * TWO_POW_120 + limbs[2] * TWO_POW_120 * TWO_POW_120
     };
-    field_val 
-    // assert that the conversion is possible, i.e. the bignum is less than grumpkin field modulus 
+    field_val
+    // assert that the conversion is possible, i.e. the bignum is less than grumpkin field modulus
 
 }
 
@@ -309,14 +309,14 @@ pub(crate) fn validate_in_grumpkin<let N: u32, let MOD_BITS: u32>(limbs: [Field;
     let two_pow_120: Field = 0x1000000000000000000000000000000;
     p_grumpkin_minus_self[0] += borrow_flags[0] as Field * two_pow_120;
     for i in 1..N - 1 {
-        p_grumpkin_minus_self[i] += (borrow_flags[i] as Field * two_pow_120 - borrow_flags[i - 1] as Field);
+        p_grumpkin_minus_self[i] +=
+            (borrow_flags[i] as Field * two_pow_120 - borrow_flags[i - 1] as Field);
     }
     p_grumpkin_minus_self[N - 1] -= borrow_flags[N - 2] as Field;
     let mut compare = limbs;
     compare = p_grumpkin_minus_self;
     validate_in_range::<_, MOD_BITS>(compare);
 }
-
 
 /**
 * @brief Validate a BigNum instance is correctly range constrained to contain no more than Params::modulus_bits()
@@ -379,10 +379,6 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [Field; N], rhs: [
         + carry_flags[N - 2] as Field;
     assert(result_limb == 0);
 }
-
-
-
-
 
 pub(crate) fn neg<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
