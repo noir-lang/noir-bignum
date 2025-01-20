@@ -432,16 +432,19 @@ pub(crate) fn mul<let N: u32, let MOD_BITS: u32>(
     lhs: [Field; N],
     rhs: [Field; N],
 ) -> [Field; N] {
+    /// Safety: `result` is checked by `evaluate_quadratic_expression`
     let result = unsafe { __mul::<_, MOD_BITS>(params, lhs, rhs) };
-    evaluate_quadratic_expression(
-        params,
-        [[lhs]],
-        [[false]],
-        [[rhs]],
-        [[false]],
-        [result],
-        [true],
-    );
+    if !std::runtime::is_unconstrained() {
+        evaluate_quadratic_expression(
+            params,
+            [[lhs]],
+            [[false]],
+            [[rhs]],
+            [[false]],
+            [result],
+            [true],
+        );
+    }
     result
 }
 
@@ -455,21 +458,24 @@ pub(crate) fn div<let N: u32, let MOD_BITS: u32>(
         params.has_multiplicative_inverse,
         "BigNum has no multiplicative inverse. Use udiv for unsigned integer division",
     );
+    /// Safety: `result` is checked by `evaluate_quadratic_expression`
     let result = unsafe { __div::<_, MOD_BITS>(params, lhs, rhs) };
-    evaluate_quadratic_expression(
-        params,
-        [[result]],
-        [[false]],
-        [[rhs]],
-        [[false]],
-        [lhs],
-        [true],
-    );
+    if !std::runtime::is_unconstrained() {
+        evaluate_quadratic_expression(
+            params,
+            [[result]],
+            [[false]],
+            [[rhs]],
+            [[false]],
+            [lhs],
+            [true],
+        );
+    }
     result
 }
 
 /**
-* @brief udiv_mod performs integer division between numerator, divisor 
+* @brief udiv_mod performs integer division between numerator, divisor
 *
 * i.e. 1. floor(numerator / divisor) = quotient
 *      2. numerator % divisor = remainder
@@ -480,19 +486,22 @@ pub(crate) fn udiv_mod<let N: u32, let MOD_BITS: u32>(
     numerator: [Field; N],
     divisor: [Field; N],
 ) -> ([Field; N], [Field; N]) {
+    /// Safety: `quotient` and `remainder` are checked by `evaluate_quadratic_expression`
     let (quotient, remainder) = unsafe { __udiv_mod(numerator, divisor) };
 
-    // self / divisor = quotient rounded
-    // quotient * divisor + remainder - self = 0
-    evaluate_quadratic_expression(
-        params,
-        [[quotient]],
-        [[false]],
-        [[divisor]],
-        [[false]],
-        [numerator, remainder],
-        [true, false],
-    );
+    if !std::runtime::is_unconstrained() {
+        // self / divisor = quotient rounded
+        // quotient * divisor + remainder - self = 0
+        evaluate_quadratic_expression(
+            params,
+            [[quotient]],
+            [[false]],
+            [[divisor]],
+            [[false]],
+            [numerator, remainder],
+            [true, false],
+        );
+    }
     // we need (remainder < divisor)
     // implies (divisor - remainder > 0)
     validate_gt::<_, MOD_BITS>(divisor, remainder);
@@ -500,7 +509,7 @@ pub(crate) fn udiv_mod<let N: u32, let MOD_BITS: u32>(
 }
 
 /**
-* @brief udiv_mod performs integer division between numerator, divisor 
+* @brief udiv_mod performs integer division between numerator, divisor
 *
 * i.e. return param is floor(numerator / divisor)
 **/
@@ -524,4 +533,3 @@ pub(crate) fn umod<let N: u32, let MOD_BITS: u32>(
 ) -> [Field; N] {
     udiv_mod::<_, MOD_BITS>(params, numerator, divisor).1
 }
-
