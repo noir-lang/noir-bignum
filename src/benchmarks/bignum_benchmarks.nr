@@ -16,34 +16,6 @@ type Fq = BigNum<3, 254, BN254_Fq_Params>;
 type BN256 = BigNum<3, 257, U256Params>;
 type BN381 = BigNum<4, 381, BLS12_381_Fq_Params>;
 
-// macro magic to generate the benchmarks
-fn bench_add<let N: u32, BN>(a: BN, b: BN)
-where
-    BN: BigNumTrait,
-{
-    let c = a + b;
-}
-
-fn bench_sub<let N: u32, BN>(a: BN, b: BN)
-where
-    BN: BigNumTrait,
-{
-    let c = a - b;
-}
-
-fn bench_mul<let N: u32, BN>(a: BN, b: BN)
-where
-    BN: BigNumTrait,
-{
-    let c = a * b;
-}
-
-fn bench_div<let N: u32, BN>(a: BN, b: BN)
-where
-    BN: BigNumTrait,
-{
-    let c = a / b;
-}
 
 // type Fq
 // type BN256
