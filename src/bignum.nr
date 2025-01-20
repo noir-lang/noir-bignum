@@ -31,7 +31,6 @@ pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
     pub fn from_slice(limbs: [Field]) -> Self;
     pub fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> Self;
     pub fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes];
-    pub fn to_field(self) -> Field;
 
     pub fn modulus() -> Self;
     pub fn modulus_bits(self) -> u32;
