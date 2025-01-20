@@ -432,7 +432,6 @@ pub(crate) fn mul<let N: u32, let MOD_BITS: u32>(
     lhs: [Field; N],
     rhs: [Field; N],
 ) -> [Field; N] {
-    /// Safety: `result` is checked by `evaluate_quadratic_expression`
     let result = unsafe { __mul::<_, MOD_BITS>(params, lhs, rhs) };
     if !std::runtime::is_unconstrained() {
         evaluate_quadratic_expression(
@@ -458,7 +457,6 @@ pub(crate) fn div<let N: u32, let MOD_BITS: u32>(
         params.has_multiplicative_inverse,
         "BigNum has no multiplicative inverse. Use udiv for unsigned integer division",
     );
-    /// Safety: `result` is checked by `evaluate_quadratic_expression`
     let result = unsafe { __div::<_, MOD_BITS>(params, lhs, rhs) };
     if !std::runtime::is_unconstrained() {
         evaluate_quadratic_expression(
@@ -486,7 +484,6 @@ pub(crate) fn udiv_mod<let N: u32, let MOD_BITS: u32>(
     numerator: [Field; N],
     divisor: [Field; N],
 ) -> ([Field; N], [Field; N]) {
-    /// Safety: `quotient` and `remainder` are checked by `evaluate_quadratic_expression`
     let (quotient, remainder) = unsafe { __udiv_mod(numerator, divisor) };
 
     if !std::runtime::is_unconstrained() {
