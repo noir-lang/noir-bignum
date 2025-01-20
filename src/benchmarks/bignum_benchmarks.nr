@@ -111,12 +111,12 @@ fn bench_to_field_BN256(a: BN256) -> Field {
 
 #[export]
 fn bench_from_field_Fq(a: Field) -> Fq {
-    let c = Fq::from_field(a);
+    let c = Fq::from(a);
     c 
 }
 
 #[export]
 fn bench_from_field_BN256(a: Field) -> BN256 {
-    let c = BN256::from_field(a);
+    let c = BN256::from(a);
     c 
 }
