@@ -498,10 +498,10 @@ pub(crate) fn udiv_mod<let N: u32, let MOD_BITS: u32>(
             [numerator, remainder],
             [true, false],
         );
+        // we need (remainder < divisor)
+        // implies (divisor - remainder > 0)
+        validate_gt::<_, MOD_BITS>(divisor, remainder);
     }
-    // we need (remainder < divisor)
-    // implies (divisor - remainder > 0)
-    validate_gt::<_, MOD_BITS>(divisor, remainder);
     (quotient, remainder)
 }
 
