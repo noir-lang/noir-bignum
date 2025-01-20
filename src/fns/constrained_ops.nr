@@ -2,7 +2,7 @@ use crate::fns::{
     expressions::evaluate_quadratic_expression,
     unconstrained_helpers::{
         __add_with_flags, __from_field, __neg_with_flags, __sub_with_flags, __validate_gt_remainder,
-        __validate_in_field_compute_borrow_flags,
+        __validate_in_field_compute_borrow_flags, __validate_in_grumpkin_compute_borrow_flags,
     },
     unconstrained_ops::{__div, __mul, __udiv_mod},
 };
@@ -43,22 +43,18 @@ pub(crate) fn to_field<let N: u32, let MOD_BITS: u32>(
     // let mut field: Field = 0;
     if N > 2 {
         // validate that the limbs is less than the modulus the grumpkin modulus
-        let mut grumpkin_modulus = [0; N];
-        grumpkin_modulus[0] = 0x33e84879b9709143e1f593f0000001;
-        grumpkin_modulus[1] = 0x4e72e131a029b85045b68181585d28;
-        grumpkin_modulus[2] = 0x3064;
-        validate_gt::<N, 254>(grumpkin_modulus, limbs);
+        validate_in_grumpkin::<N, MOD_BITS>(limbs);
         // validate that the limbs are in range
-        validate_in_range::<N, 254>(limbs);
+        validate_in_range::<N, MOD_BITS>(limbs);
     }
     // validate the limbs sum up to the field value
     let field_val = if N < 2 {
         limbs[0]
     } else if N == 2 {
-        validate_in_range::<N, 254>(limbs);
+        validate_in_range::<N, MOD_BITS>(limbs);
         limbs[0] + limbs[1] * TWO_POW_120
     } else {
-        validate_in_range::<N, 254>(limbs);
+        validate_in_range::<N, MOD_BITS>(limbs);
         limbs[0] + limbs[1] * TWO_POW_120 + limbs[2] * TWO_POW_120 * TWO_POW_120
     };
     field_val 
@@ -83,18 +79,18 @@ pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
         grumpkin_modulus[0] = 0x33e84879b9709143e1f593f0000001;
         grumpkin_modulus[1] = 0x4e72e131a029b85045b68181585d28;
         grumpkin_modulus[2] = 0x3064;
-        validate_gt::<N, 254>(grumpkin_modulus, result);
+        validate_gt::<N, MOD_BITS>(grumpkin_modulus, result);
         // validate that the limbs are in range
-        validate_in_range::<N, 254>(result);
+        validate_in_range::<N, MOD_BITS>(result);
     }
     // validate the limbs sum up to the field value
     let field_val = if N < 2 {
         result[0]
     } else if N == 2 {
-        validate_in_range::<N, 254>(result);
+        validate_in_range::<N, MOD_BITS>(result);
         result[0] + result[1] * TWO_POW_120
     } else {
-        validate_in_range::<N, 254>(result);
+        validate_in_range::<N, MOD_BITS>(result);
         result[0] + result[1] * TWO_POW_120 + result[2] * TWO_POW_120 * TWO_POW_120
     };
     assert(field_val == field);
@@ -298,6 +294,30 @@ pub(crate) fn validate_in_field<let N: u32, let MOD_BITS: u32>(
     validate_in_range::<_, MOD_BITS>(compare);
 }
 
+pub(crate) fn validate_in_grumpkin<let N: u32, let MOD_BITS: u32>(limbs: [Field; N]) {
+    // N.B. need to combine with validate_in_range if `self` limbs have not been range constrained
+    let mut grumpkin_modulus = [0; N];
+    grumpkin_modulus[0] = 0x33e84879b9709143e1f593f0000001;
+    grumpkin_modulus[1] = 0x4e72e131a029b85045b68181585d28;
+    grumpkin_modulus[2] = 0x3064;
+
+    let mut p_grumpkin_minus_self: [Field; N] = [0; N];
+    for i in 0..N {
+        p_grumpkin_minus_self[i] = grumpkin_modulus[i] - limbs[i];
+    }
+    let borrow_flags = unsafe { __validate_in_grumpkin_compute_borrow_flags(limbs) };
+    let two_pow_120: Field = 0x1000000000000000000000000000000;
+    p_grumpkin_minus_self[0] += borrow_flags[0] as Field * two_pow_120;
+    for i in 1..N - 1 {
+        p_grumpkin_minus_self[i] += (borrow_flags[i] as Field * two_pow_120 - borrow_flags[i - 1] as Field);
+    }
+    p_grumpkin_minus_self[N - 1] -= borrow_flags[N - 2] as Field;
+    let mut compare = limbs;
+    compare = p_grumpkin_minus_self;
+    validate_in_range::<_, MOD_BITS>(compare);
+}
+
+
 /**
 * @brief Validate a BigNum instance is correctly range constrained to contain no more than Params::modulus_bits()
 **/
@@ -359,6 +379,10 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [Field; N], rhs: [
         + carry_flags[N - 2] as Field;
     assert(result_limb == 0);
 }
+
+
+
+
 
 pub(crate) fn neg<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,

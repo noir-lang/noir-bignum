@@ -38,6 +38,21 @@ pub(crate) unconstrained fn __validate_in_field_compute_borrow_flags<let N: u32,
     flags
 }
 
+pub(crate) unconstrained fn __validate_in_grumpkin_compute_borrow_flags<let N: u32, let MOD_BITS: u32>(
+    val: [Field; N],
+) -> [bool; N] {
+    let mut flags: [bool; N] = [false; N];
+    let mut grumpkin_modulus = [0; N];
+    grumpkin_modulus[0] = 0x33e84879b9709143e1f593f0000001;
+    grumpkin_modulus[1] = 0x4e72e131a029b85045b68181585d28;
+    grumpkin_modulus[2] = 0x3064;
+    flags[0] = grumpkin_modulus[0].lt(val[0]);
+    for i in 1..N - 1 {
+        flags[i] = grumpkin_modulus[i].lt(val[i] + flags[i - 1] as Field);
+    }
+    flags
+}
+
 pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
     lhs: [Field; N],
     rhs: [Field; N],
