@@ -3,7 +3,7 @@ name: Benchmarks
 on:
   push:
    branches:
-    - master
+    - main
   pull_request:
 
 jobs:
@@ -23,6 +23,7 @@ jobs:
         run: |
           npm install -g bbup
           bbup -nv 1.0.0-beta.0
+          sudo apt install libc++-dev
 
       - name: Build Noir benchmark programs
         run: nargo export
