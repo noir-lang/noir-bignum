@@ -1,1 +1,0 @@
-nargo compile --force && bb gates -b ./target/bignum.json
