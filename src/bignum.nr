@@ -374,9 +374,13 @@ where
     }
 }
 
-// @Brief: Convert a BigNum to a Field
-// we decided to not add this to the BigNumTrait as it is might lead to bad use cases of it
-pub(crate) fn to_field<let N: u32, let MOD_BITS: u32, Params>(
+/**
+ * @brief to_field converts a BigNum to a Field, conditioned on the bignum fitting in a field element
+ * we have opted to not add this to the BigNumTrait as it might lead to bad usage of it
+ * i.e. using this function with modulus larger than the Grumpkin modulus would lead to runtime errors, if the bignum is not deliberately picked to be in range, e.g. the bignum is the output of a hash function.  
+ * for such use cases we advise developers to use comptime assertions to ensure the modulus is not larger than the Grumpkin modulus
+ **/
+pub fn to_field<let N: u32, let MOD_BITS: u32, Params>(
     input: BigNum<N, MOD_BITS, Params>,
 ) -> Field
 where
