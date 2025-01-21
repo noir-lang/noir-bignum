@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.5.1](https://github.com/noir-lang/noir-bignum/compare/v0.5.0...v0.5.1) (2025-01-21)
+
+
+### Features
+
+* Implement `From&lt;Field&gt;` on `BigNum` ([#87](https://github.com/noir-lang/noir-bignum/issues/87)) ([35bf983](https://github.com/noir-lang/noir-bignum/commit/35bf983bdf80abbb2f191dd6c464a6fe3516f9c2))
+* Minor unconstrained bytecode optimizations ([#79](https://github.com/noir-lang/noir-bignum/issues/79)) ([b44ef7f](https://github.com/noir-lang/noir-bignum/commit/b44ef7f6bee56751e2d83848e84accf25e0bdc0f))
+* Remove unnecessary usage of slices ([#104](https://github.com/noir-lang/noir-bignum/issues/104)) ([fb6f9e5](https://github.com/noir-lang/noir-bignum/commit/fb6f9e5982dda8729d6b12ef83ad3ef60cdf0b7e))
+
 ## [0.5.0](https://github.com/noir-lang/noir-bignum/compare/v0.4.2...v0.5.0) (2025-01-06)
 
 
