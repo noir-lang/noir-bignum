@@ -2,6 +2,30 @@ global TWO_POW_56: u64 = 0x100000000000000;
 global TWO_POW_60: u64 = 0x1000000000000000;
 global TWO_POW_64: Field = 0x10000000000000000;
 
+//fields to u60rep conversion
+// field elements are 254 bits
+// so there will be 5 limbs
+pub(crate) unconstrained fn field_to_u60rep(mut x: Field) -> (u64, u64, u64, u64, u64) {
+    // get the first 60 bits by casting to u64 and then taking the lower 60 bits
+    // we use the fact that this casting drops everything above 64 bits
+    let x_first_u64 = (x as u64);
+    let first: u64 = x_first_u64 % TWO_POW_60;
+    // this becomes the same as a integer division because we're removing the remainder
+    x = (x - (first as Field)) / (TWO_POW_60 as Field);
+    let x_second_u64 = (x as u64);
+    let second = x_second_u64 % TWO_POW_60;
+    x = (x - (second as Field)) / (TWO_POW_60 as Field);
+    let x_third_u64 = (x as u64);
+    let third = x_third_u64 % TWO_POW_60;
+    x = (x - (third as Field)) / (TWO_POW_60 as Field);
+    let x_fourth_u64 = (x as u64);
+    let fourth = x_fourth_u64 % TWO_POW_60;
+    x = (x - (fourth as Field)) / (TWO_POW_60 as Field);
+    let x_fifth_u64 = (x as u64);
+    let fifth = x_fifth_u64 % TWO_POW_60;
+    (first, second, third, fourth, fifth)
+}
+
 // Decomposes a single field into two 120 bit fields
 pub unconstrained fn split_120_bits(mut x: Field) -> (Field, Field) {
     // Here we're taking advantage of truncating 64 bit limbs from the input field
@@ -36,15 +60,15 @@ pub(crate) unconstrained fn __normalize_limbs<let N: u32>(
     range: u32,
 ) -> [Field; N] {
     let mut normalized: [Field; N] = [0; N];
-    let mut inp: _ = input;
+    let mut next: Field = input[0];
     for i in 0..(range - 1) {
-        let (lo, hi) = split_120_bits(inp[i]);
+        let (lo, hi) = split_120_bits(next);
 
         normalized[i] = lo;
-        inp[i + 1] += hi;
+        next = input[i + 1] + hi;
     }
     {
-        let (lo, hi) = split_120_bits(inp[range - 1]);
+        let (lo, hi) = split_120_bits(next);
         normalized[range - 1] = lo;
         assert(hi == 0);
     }
