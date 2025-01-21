@@ -1,4 +1,4 @@
-/// Multiple entires in the `MUL_DE_BRUIJN_BIT` list do not map to a valid output of `v * 0x6c04f118e9966f6b`.
+/// Multiple entries in the `MUL_DE_BRUIJN_BIT` list do not map to a valid output of `v * 0x6c04f118e9966f6b`.
 /// This is a dummy value to fill the gaps in the map.
 global n1: u32 = 0xffffffff;
 
