@@ -380,9 +380,7 @@ where
  * i.e. using this function with modulus larger than the Grumpkin modulus would lead to runtime errors, if the bignum is not deliberately picked to be in range, e.g. the bignum is the output of a hash function.  
  * for such use cases we advise developers to use comptime assertions to ensure the modulus is not larger than the Grumpkin modulus
  **/
-pub fn to_field<let N: u32, let MOD_BITS: u32, Params>(
-    input: BigNum<N, MOD_BITS, Params>,
-) -> Field
+pub fn to_field<let N: u32, let MOD_BITS: u32, Params>(input: BigNum<N, MOD_BITS, Params>) -> Field
 where
     Params: BigNumParamsGetter<N, MOD_BITS>,
 {
