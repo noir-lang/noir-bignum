@@ -131,7 +131,7 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
 
     // we want to convert our byte array into bigfield chunks
     // each chunk has at most N-1 limbs
-    // to determine the exact number of chunks, we need the `!=` or `>` operator which is not avaiable when defining array sizes
+    // to determine the exact number of chunks, we need the `!=` or `>` operator which is not available when defining array sizes
     // so we overestimate at 4
     // e.g. if N = 20, then we have 40 limbs we want to reduce, but each bigfield chunk is 19 limbs, so we need 3
     // if N = 2, we have 4 limbs we want to reduce but each bigfield chunk is only 1 limb, so we need 4
