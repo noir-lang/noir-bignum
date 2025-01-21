@@ -74,9 +74,6 @@ pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
         add_flags: [bool; ADD_N],
     );
 
-    pub fn eq(self, other: Self) -> bool {
-        self == other
-    }
     pub fn assert_is_not_equal(self, other: Self);
     pub fn validate_in_range(self);
     pub fn validate_in_field(self);
