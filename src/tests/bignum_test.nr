@@ -790,3 +790,28 @@ fn test_expressions() {
     assert(wx_constrained.limbs == wx.limbs);
 }
 
+#[test]
+fn test_from_field_1_digit() {
+    let field: Field = 1;
+    let result = Fq::from(field);
+    assert(result == Fq::one());
+}
+
+#[test]
+fn test_from_field_2_digits() {
+    let field: Field = 762576765071760201410184025311678064293966151975347778787092903729041075;
+    let result = Fq::from(field);
+    let expected: Fq =
+        BigNum { limbs: [0xe88ed97f8f707abd3fa65763c80eb3, 0x6e7d8b5586595aa1fb2ee04d5cb4f5, 0x0] };
+    assert(result == expected);
+}
+
+#[test]
+fn test_from_field_3_digits() {
+    let field: Field = -1;
+    let result = Fq::from(field);
+    let expected: Fq = BigNum {
+        limbs: [0x33e84879b9709143e1f593f0000000, 0x4e72e131a029b85045b68181585d28, 0x3064],
+    };
+    assert(result == expected);
+}

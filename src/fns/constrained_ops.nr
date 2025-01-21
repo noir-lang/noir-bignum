@@ -1,13 +1,12 @@
-use crate::params::BigNumParams as P;
-
 use crate::fns::{
     expressions::evaluate_quadratic_expression,
     unconstrained_helpers::{
-        __add_with_flags, __neg_with_flags, __sub_with_flags, __validate_gt_remainder,
+        __add_with_flags, __from_field, __neg_with_flags, __sub_with_flags, __validate_gt_remainder,
         __validate_in_field_compute_borrow_flags,
     },
     unconstrained_ops::{__div, __mul, __udiv_mod},
 };
+use crate::params::BigNumParams as P;
 
 /**
  * In this file:
@@ -28,6 +27,41 @@ use crate::fns::{
  * udiv
  * umod
  */
+
+pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    field: Field,
+) -> [Field; N] {
+    // safty: we check that the resulting limbs represent the intended field element
+    // we check the bit length, the limbs being max 120 bits, and the value in total is less than the field modulus
+    let result = unsafe { __from_field::<N>(field) };
+    // validate the limbs are in range and the value in total is less than 2^254
+
+    let TWO_POW_120 = 0x1000000000000000000000000000000;
+    // validate that the last limb is less than the modulus
+    if N > 2 {
+        // validate that the result is less than the modulus
+        let mut grumpkin_modulus = [0; N];
+        grumpkin_modulus[0] = 0x33e84879b9709143e1f593f0000001;
+        grumpkin_modulus[1] = 0x4e72e131a029b85045b68181585d28;
+        grumpkin_modulus[2] = 0x3064;
+        validate_gt::<N, 254>(grumpkin_modulus, result);
+        // validate that the limbs are in range
+        validate_in_range::<N, 254>(result);
+    }
+    // validate the limbs sum up to the field value
+    let field_val = if N < 2 {
+        result[0]
+    } else if N == 2 {
+        validate_in_range::<N, 254>(result);
+        result[0] + result[1] * TWO_POW_120
+    } else {
+        validate_in_range::<N, 254>(result);
+        result[0] + result[1] * TWO_POW_120 + result[2] * TWO_POW_120 * TWO_POW_120
+    };
+    assert(field_val == field);
+    result
+}
 
 /**
 * @brief given an input seed, generate a pseudorandom BigNum value
