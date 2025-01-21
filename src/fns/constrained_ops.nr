@@ -28,39 +28,6 @@ use crate::params::BigNumParams as P;
  * umod
  */
 
-/**
-* @brief given an input seed, generate a pseudorandom BigNum value
-* @details we hash the input seed into `modulus_bits * 2` bits of entropy,
-* which is then reduced into a BigNum value
-* We use a hash function that can be modelled as a random oracle
-* This function *should* produce an output that is a uniformly randomly distributed value modulo BigNum::modulus()
-**/
-pub(crate) fn to_field<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
-    limbs: [Field; N],
-) -> Field {
-    let TWO_POW_120 = 0x1000000000000000000000000000000;
-    // let mut field: Field = 0;
-    if N > 2 {
-        // validate that the limbs is less than the modulus the grumpkin modulus
-        validate_in_grumpkin::<N, MOD_BITS>(limbs);
-        // validate that the limbs are in range
-        validate_in_range::<N, MOD_BITS>(limbs);
-    }
-    // validate the limbs sum up to the field value
-    let field_val = if N < 2 {
-        limbs[0]
-    } else if N == 2 {
-        validate_in_range::<N, MOD_BITS>(limbs);
-        limbs[0] + limbs[1] * TWO_POW_120
-    } else {
-        validate_in_range::<N, MOD_BITS>(limbs);
-        limbs[0] + limbs[1] * TWO_POW_120 + limbs[2] * TWO_POW_120 * TWO_POW_120
-    };
-    field_val
-    // assert that the conversion is possible, i.e. the bignum is less than grumpkin field modulus
-
-}
 
 pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
@@ -97,6 +64,13 @@ pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
     result
 }
 
+/**
+* @brief given an input seed, generate a pseudorandom BigNum value
+* @details we hash the input seed into `modulus_bits * 2` bits of entropy,
+* which is then reduced into a BigNum value
+* We use a hash function that can be modelled as a random oracle
+* This function *should* produce an output that is a uniformly randomly distributed value modulo BigNum::modulus()
+**/
 pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(
     params: P<N, MOD_BITS>,
     seed: [u8; SeedBytes],

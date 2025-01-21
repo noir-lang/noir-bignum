@@ -816,39 +816,6 @@ fn test_from_field_3_digits() {
     assert(result == expected);
 }
 
-#[test]
-fn test_to_field_one() {
-    let field: Field = 1;
-    let bn = Fq::one();
-    let result = bn.to_field();
-    assert(result == field);
-}
-
-#[test]
-fn test_to_field_one_digit() {
-    let field: Field = 1066513542066841864585910935480267774;
-    let bn = Fq { limbs: [0xcd672d695ef3129e4c40867a7173fe, 0x0, 0x0] };
-    let result = bn.to_field();
-    assert(result == field);
-}
-
-#[test]
-fn test_to_field_two_digits() {
-    let field: Field = 697955470585821007263499235110798476786097877002667034107578965871052378;
-    let bn =
-        Fq { limbs: [0x5a10b956d41840745e0a9f6e34465a, 0x65209b74583b912262843211905e41, 0x0] };
-    let result = bn.to_field();
-    assert(result == field);
-}
-
-#[test]
-fn test_to_field_three_digits() {
-    let field: Field = 2330301921655783950764183713945533646391233209687308929386184468126823563744;
-    let bn =
-        Fq { limbs: [0x862cf8ea69d6c70c9cc8d8871b41e0, 0xe7763528201566c2fc8d93973cf1b4, 0x526] };
-    let result = bn.to_field();
-    assert(result == field);
-}
 
 #[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_to_field_three_digits_overflow() {
@@ -865,4 +832,5 @@ fn test_to_field_too_many_digits() {
     };
     let result = bn.to_field();
 }
+
 

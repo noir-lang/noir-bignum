@@ -3,7 +3,7 @@ name: Benchmarks
 on:
   push:
    branches:
-    - master
+    - main
   pull_request:
 
 jobs:
@@ -23,6 +23,9 @@ jobs:
         run: |
           npm install -g bbup
           bbup -nv 1.0.0-beta.0
+
+          sudo apt install libc++-dev
+
 
       - name: Build Noir benchmark programs
         run: nargo export
@@ -46,3 +49,4 @@ jobs:
           # delete the comment in case changes no longer impact circuit sizes
           delete: ${{ !steps.gates_diff.outputs.markdown }}
           message: ${{ steps.gates_diff.outputs.markdown }}
+
