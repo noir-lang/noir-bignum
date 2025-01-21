@@ -1,4 +1,5 @@
 use crate::bignum::BigNum;
+use crate::bignum::to_field;
 use crate::bignum::BigNumTrait;
 use crate::utils::u60_representation::U60Repr;
 
@@ -826,11 +827,13 @@ fn test_from_field_3_digits_BLS381() {
     assert(result == expected);
 }
 
+
+
 #[test]
 fn test_to_field_one() {
     let field: Field = 1;
     let bn = Fq::one();
-    let result = bn.to_field();
+    let result = to_field(bn);
     assert(result == field);
 }
 
@@ -838,7 +841,7 @@ fn test_to_field_one() {
 fn test_to_field_one_digit() {
     let field: Field = 1066513542066841864585910935480267774;
     let bn = Fq { limbs: [0xcd672d695ef3129e4c40867a7173fe, 0x0, 0x0] };
-    let result = bn.to_field();
+    let result = to_field(bn);
     assert(result == field);
 }
 
@@ -847,7 +850,7 @@ fn test_to_field_two_digits() {
     let field: Field = 697955470585821007263499235110798476786097877002667034107578965871052378;
     let bn =
         Fq { limbs: [0x5a10b956d41840745e0a9f6e34465a, 0x65209b74583b912262843211905e41, 0x0] };
-    let result = bn.to_field();
+    let result = to_field(bn);
     assert(result == field);
 }
 
@@ -856,7 +859,7 @@ fn test_to_field_three_digits() {
     let field: Field = 2330301921655783950764183713945533646391233209687308929386184468126823563744;
     let bn =
         Fq { limbs: [0x862cf8ea69d6c70c9cc8d8871b41e0, 0xe7763528201566c2fc8d93973cf1b4, 0x526] };
-    let result = bn.to_field();
+    let result = to_field(bn);
     assert(result == field);
 }
 
@@ -865,7 +868,7 @@ fn test_to_field_three_digits_overflow() {
     let bn: Fq = BigNum {
         limbs: [0x4e6405505a33bb9b9c0563df2bd59a, 0x48dbe03a9bb4865ba961e41ef9dded, 0x3a36],
     };
-    let result = bn.to_field();
+    let result = to_field(bn);
 }
 
 #[test(should_fail_with = "BigNum::validate_gt check fails")]
@@ -873,22 +876,21 @@ fn test_to_field_too_many_digits() {
     let bn: BN381 = BN381 {
         limbs: [0xea1742447ee9d92f9f18e1c80a481e, 0x3d89ad3d3ae85f3f482a08435c93ec, 0x1e9f, 0x1],
     };
-    let result = bn.to_field();
+    let result = to_field(bn);
 }
 
 #[test]
 fn test_from_to_field_1() {
     let a = 20192735083400333763152317277081729935089452774154199134677444560763605803197;
     let b = Fq::from(a);
-    let c = b.to_field();
+    let c = to_field(b);
     assert(c == a);
 }
 
 #[test]
-fn test_from_to_field_2() {
-    let a = 14303970258849913684902154884389710461666851233307022345291062877970713998175;
+fn test_from_to_field_fuzz(a: Field) {
     let b = BN381::from(a);
-    let c = b.to_field();
+    let c = to_field(b);
     assert(c == a);
 }
 
@@ -897,7 +899,7 @@ fn test_to_from_field_1() {
     let a: Fq = BigNum {
         limbs: [0x3c768db7732ea1b536c06ae66bce70, 0xb9936c1401d91e7e9e1138375650b4, 0x8c8],
     };
-    let b = a.to_field();
+    let b = to_field(a);
     let c = Fq::from(b);
     assert(a == c);
 }
@@ -907,7 +909,8 @@ fn test_to_from_field_2() {
     let a: BN381 = BigNum {
         limbs: [0xd7562bf2b1fe13d458685c96a46d28, 0x2079950acd45bb43a9beeba69d5dc9, 0x18ca, 0x0],
     };
-    let b = a.to_field();
+    let b = to_field(a);
     let c = BN381::from(b);
     assert(a == c);
 }
+
