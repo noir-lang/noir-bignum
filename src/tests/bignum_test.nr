@@ -791,6 +791,48 @@ fn test_expressions() {
 }
 
 #[test]
+fn test_cmp_BN() {
+    let mut a: Fq = BigNum::modulus();
+    let mut b: Fq = BigNum::modulus();
+
+    a.limbs[0] -= 2;
+    b.limbs[0] -= 1;
+
+    assert(a < b);
+}
+
+#[test(should_fail_with = "Failed constraint")]
+fn test_cmp_BN_fail() {
+    let mut a: Fq = BigNum::modulus();
+    let mut b: Fq = BigNum::modulus();
+
+    a.limbs[0] -= 1;
+    b.limbs[0] -= 2;
+
+    assert(a < b);
+}
+
+#[test]
+fn test_cmp_BN_2() {
+    let mut a: Fq = BigNum::modulus();
+    let mut b: Fq = BigNum::modulus();
+
+    a.limbs[0] -= 1;
+    b.limbs[0] -= 2;
+
+    assert(a > b);
+}
+
+#[test(should_fail_with = "Failed constraint")]
+fn test_cmp_BN_fail_2() {
+    let mut a: Fq = BigNum::modulus();
+    let mut b: Fq = BigNum::modulus();
+
+    a.limbs[0] -= 2;
+    b.limbs[0] -= 1;
+
+    assert(a > b);
+
 fn test_from_field_1_digit() {
     let field: Field = 1;
     let result = Fq::from(field);
