@@ -4,8 +4,8 @@ use crate::params::BigNumParamsGetter;
 
 use crate::fns::{
     constrained_ops::{
-        add, assert_is_not_equal, conditional_select, derive_from_seed, div, eq, from_field, mul,
-        neg, sub, limbs_to_field, udiv, udiv_mod, umod, validate_in_field, validate_in_range,
+        add, assert_is_not_equal, conditional_select, derive_from_seed, div, eq, from_field,
+        limbs_to_field, mul, neg, sub, udiv, udiv_mod, umod, validate_in_field, validate_in_range,
     },
     expressions::{__compute_quadratic_expression, evaluate_quadratic_expression},
     serialization::{from_be_bytes, to_le_bytes},
@@ -133,7 +133,6 @@ where
     fn from_slice(limbs: [Field]) -> Self {
         Self { limbs: limbs.as_array() }
     }
-
 
     fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> Self {
         Self { limbs: from_be_bytes::<_, MOD_BITS, _>(x) }
@@ -375,14 +374,14 @@ where
     }
 }
 
-
-// @Brief: Convert a BigNum to a Field 
+// @Brief: Convert a BigNum to a Field
 // we decided to not add this to the BigNumTrait as it is might lead to bad use cases of it
-pub(crate) fn to_field<let N: u32, let MOD_BITS: u32, Params>(input: BigNum<N, MOD_BITS, Params>) -> Field
+pub(crate) fn to_field<let N: u32, let MOD_BITS: u32, Params>(
+    input: BigNum<N, MOD_BITS, Params>,
+) -> Field
 where
     Params: BigNumParamsGetter<N, MOD_BITS>,
 {
     limbs_to_field(Params::get_params(), input.limbs)
 }
-
 

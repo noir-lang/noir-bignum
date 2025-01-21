@@ -1,6 +1,6 @@
 use crate::bignum::BigNum;
-use crate::bignum::to_field;
 use crate::bignum::BigNumTrait;
+use crate::bignum::to_field;
 use crate::utils::u60_representation::U60Repr;
 
 use crate::params::BigNumParams;
@@ -826,8 +826,6 @@ fn test_from_field_3_digits_BLS381() {
     };
     assert(result == expected);
 }
-
-
 
 #[test]
 fn test_to_field_one() {
