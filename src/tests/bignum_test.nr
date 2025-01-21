@@ -816,6 +816,7 @@ fn test_from_field_3_digits() {
     assert(result == expected);
 }
 
+
 #[test]
 fn test_from_field_3_digits_BLS381() {
     let field: Field = -1;
@@ -875,3 +876,4 @@ fn test_to_field_too_many_digits() {
     };
     let result = bn.to_field();
 }
+
