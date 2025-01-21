@@ -28,7 +28,6 @@ use crate::params::BigNumParams as P;
  * umod
  */
 
-
 pub(crate) fn to_field<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     limbs: [Field; N],
@@ -57,8 +56,6 @@ pub(crate) fn to_field<let N: u32, let MOD_BITS: u32>(
     };
     field_val
 }
-
-
 
 pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,

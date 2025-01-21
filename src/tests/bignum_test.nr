@@ -816,7 +816,6 @@ fn test_from_field_3_digits() {
     assert(result == expected);
 }
 
-
 #[test]
 fn test_from_field_3_digits_BLS381() {
     let field: Field = -1;
@@ -877,3 +876,38 @@ fn test_to_field_too_many_digits() {
     let result = bn.to_field();
 }
 
+#[test]
+fn test_from_to_field_1() {
+    let a = 20192735083400333763152317277081729935089452774154199134677444560763605803197;
+    let b = Fq::from(a);
+    let c = b.to_field();
+    assert(c == a);
+}
+
+#[test]
+fn test_from_to_field_2() {
+    let a = 14303970258849913684902154884389710461666851233307022345291062877970713998175;
+    let b = BN381::from(a);
+    let c = b.to_field();
+    assert(c == a);
+}
+
+#[test]
+fn test_to_from_field_1() {
+    let a: Fq = BigNum {
+        limbs: [0x3c768db7732ea1b536c06ae66bce70, 0xb9936c1401d91e7e9e1138375650b4, 0x8c8],
+    };
+    let b = a.to_field();
+    let c = Fq::from(b);
+    assert(a == c);
+}
+
+#[test]
+fn test_to_from_field_2() {
+    let a: BN381 = BigNum {
+        limbs: [0xd7562bf2b1fe13d458685c96a46d28, 0x2079950acd45bb43a9beeba69d5dc9, 0x18ca, 0x0],
+    };
+    let b = a.to_field();
+    let c = BN381::from(b);
+    assert(a == c);
+}
