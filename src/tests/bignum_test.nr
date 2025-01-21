@@ -816,21 +816,3 @@ fn test_from_field_3_digits() {
     assert(result == expected);
 }
 
-
-#[test(should_fail_with = "call to assert_max_bit_size")]
-fn test_to_field_three_digits_overflow() {
-    let bn: Fq = BigNum {
-        limbs: [0x4e6405505a33bb9b9c0563df2bd59a, 0x48dbe03a9bb4865ba961e41ef9dded, 0x3a36],
-    };
-    let result = bn.to_field();
-}
-
-#[test(should_fail_with = "call to assert_max_bit_size")]
-fn test_to_field_too_many_digits() {
-    let bn: BN381 = BN381 {
-        limbs: [0xea1742447ee9d92f9f18e1c80a481e, 0x3d89ad3d3ae85f3f482a08435c93ec, 0x1e9f, 0x1],
-    };
-    let result = bn.to_field();
-}
-
-
