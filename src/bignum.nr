@@ -74,9 +74,6 @@ pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
         add_flags: [bool; ADD_N],
     );
 
-    pub fn eq(self, other: Self) -> bool {
-        self == other
-    }
     pub fn assert_is_not_equal(self, other: Self);
     pub fn validate_in_range(self);
     pub fn validate_in_field(self);
@@ -179,27 +176,27 @@ where
 
     unconstrained fn __neg(self) -> Self {
         let params = Params::get_params();
-        Self::from_slice(__neg(params, self.limbs))
+        Self { limbs: __neg(params, self.limbs) }
     }
 
     unconstrained fn __add(self, other: Self) -> Self {
         let params = Params::get_params();
-        Self::from_slice(__add(params, self.limbs, other.limbs))
+        Self { limbs: __add(params, self.limbs, other.limbs) }
     }
 
     unconstrained fn __sub(self, other: Self) -> Self {
         let params = Params::get_params();
-        Self::from_slice(__sub(params, self.limbs, other.limbs))
+        Self { limbs: __sub(params, self.limbs, other.limbs) }
     }
 
     unconstrained fn __mul(self, other: Self) -> Self {
         let params = Params::get_params();
-        Self::from_slice(__mul::<_, MOD_BITS>(params, self.limbs, other.limbs))
+        Self { limbs: __mul::<_, MOD_BITS>(params, self.limbs, other.limbs) }
     }
 
     unconstrained fn __div(self, divisor: Self) -> Self {
         let params = Params::get_params();
-        Self::from_slice(__div::<_, MOD_BITS>(params, self.limbs, divisor.limbs))
+        Self { limbs: __div::<_, MOD_BITS>(params, self.limbs, divisor.limbs) }
     }
 
     unconstrained fn __udiv_mod(self, divisor: Self) -> (Self, Self) {
