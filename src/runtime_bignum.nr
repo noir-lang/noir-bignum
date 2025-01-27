@@ -382,7 +382,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeB
     }
 
     fn is_zero(self) -> bool {
-        is_zero(self.limbs)
+        is_zero::<N, MOD_BITS>(self.limbs)
     }
 }
 

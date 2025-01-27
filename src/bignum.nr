@@ -321,7 +321,7 @@ where
     }
 
     fn is_zero(self) -> bool {
-        is_zero(self.limbs)
+        is_zero::<N, MOD_BITS>(self.limbs)
     }
 }
 
