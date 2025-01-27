@@ -276,6 +276,18 @@ pub(crate) fn eq<let N: u32, let MOD_BITS: u32>(
     is_equal_modulus | is_equal_zero
 }
 
+pub(crate) fn is_zero<let N: u32, let MOD_BITS: u32>(
+    val: [Field; N],
+) -> bool {
+    let mut result: bool = true;
+
+    for i in 0..N {
+        result = result & (val[i] == 0);
+    }
+
+    result
+}
+
 pub(crate) fn validate_in_field<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     val: [Field; N],

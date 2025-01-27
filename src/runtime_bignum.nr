@@ -3,7 +3,7 @@ use crate::utils::map::map;
 
 use crate::fns::{
     constrained_ops::{
-        add, assert_is_not_equal, conditional_select, derive_from_seed, div, eq, mul, neg, sub,
+        add, assert_is_not_equal, conditional_select, derive_from_seed, div, eq, is_zero, mul, neg, sub,
         udiv, udiv_mod, umod, validate_in_field, validate_in_range,
     },
     expressions::{__compute_quadratic_expression, evaluate_quadratic_expression},
@@ -112,6 +112,7 @@ pub(crate) trait RuntimeBigNumTrait<let N: u32, let MOD_BITS: u32>: Neg + Add + 
     pub fn umod(numerator: Self, divisor: Self) -> Self;
 
     pub fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self;
+    pub fn is_zero(self) -> bool;
 }
 
 impl<let N: u32, let MOD_BITS: u32> Neg for RuntimeBigNum<N, MOD_BITS> {
@@ -378,6 +379,10 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeB
         let params = lhs.params;
         assert(params == rhs.params);
         Self { limbs: conditional_select(lhs.limbs, rhs.limbs, predicate), params }
+    }
+
+    fn is_zero(self) -> bool {
+        is_zero(self.limbs)
     }
 }
 
