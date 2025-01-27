@@ -33,7 +33,6 @@ pub(crate) fn limbs_to_field<let N: u32, let MOD_BITS: u32>(
     limbs: [Field; N],
 ) -> Field {
     let TWO_POW_120 = 0x1000000000000000000000000000000;
-    // let mut field: Field = 0;
     if N > 2 {
         // validate that the limbs is less than the modulus the grumpkin modulus
         let mut grumpkin_modulus = [0; N];
