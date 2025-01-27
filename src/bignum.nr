@@ -25,6 +25,7 @@ pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
     // TODO: this crashes the compiler? v0.32
     // fn default() -> Self { std::default::Default::default  () }
     pub fn new() -> Self;
+    fn zero() -> Self;
     pub fn one() -> Self;
     pub fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
     pub unconstrained fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
@@ -111,6 +112,10 @@ where
 {
 
     fn new() -> Self {
+        Self::zero()
+    }
+
+    fn zero() -> Self {
         Self { limbs: [0; N] }
     }
 
