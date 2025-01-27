@@ -44,7 +44,7 @@ pub(crate) fn limbs_to_field<let N: u32, let MOD_BITS: u32>(
         validate_in_range::<N, MOD_BITS>(limbs);
     }
     // validate the limbs sum up to the field value
-    let field_val = if N < 2 {
+    if N < 2 {
         limbs[0]
     } else if N == 2 {
         validate_in_range::<N, MOD_BITS>(limbs);
@@ -52,8 +52,7 @@ pub(crate) fn limbs_to_field<let N: u32, let MOD_BITS: u32>(
     } else {
         // validate_in_range::<N, 254>(limbs);
         limbs[0] + limbs[1] * TWO_POW_120 + limbs[2] * TWO_POW_120 * TWO_POW_120
-    };
-    field_val
+    }
 }
 
 pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
