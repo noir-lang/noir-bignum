@@ -255,7 +255,10 @@ where
     assert(c.eq(a) == false);
 }
 
-fn test_is_zero<let N: u32, BN>() where BN: BigNumTrait {
+fn test_is_zero<let N: u32, BN>()
+where
+    BN: BigNumTrait,
+{
     let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
     let zero = BN::zero();
     assert(a.is_zero() == false);
