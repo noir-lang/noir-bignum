@@ -318,7 +318,14 @@ where
     }
 }
 
-// impl<let N: u32, Params> BigNumTrait<N, Params> for BigNum<N, Params> where Params: BigNumParamsGetter<N> {}
+impl<let N: u32, let MOD_BITS: u32, Params> Default for BigNum<N, MOD_BITS, Params>
+where
+    Params: BigNumParamsGetter<N, MOD_BITS>,
+{
+    fn default() -> Self {
+        Self::zero()
+    }
+}
 
 impl<let N: u32, let MOD_BITS: u32, Params> std::ops::Add for BigNum<N, MOD_BITS, Params>
 where
