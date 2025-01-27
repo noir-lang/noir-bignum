@@ -10,8 +10,8 @@ use crate::fns::{
     expressions::{__compute_quadratic_expression, evaluate_quadratic_expression},
     serialization::{from_be_bytes, to_le_bytes},
     unconstrained_ops::{
-        __add, __batch_invert, __batch_invert_slice, __derive_from_seed, __div, __eq, __invmod,
-        __is_zero, __mul, __neg, __pow, __sub, __tonelli_shanks_sqrt, __udiv_mod,
+        __batch_invert, __batch_invert_slice, __derive_from_seed, __invmod, __is_zero, __pow,
+        __tonelli_shanks_sqrt,
     },
 };
 use std::ops::{Add, Div, Mul, Neg, Sub};
@@ -19,11 +19,10 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 pub struct BigNum<let N: u32, let MOD_BITS: u32, Params> {
     pub limbs: [Field; N],
 }
+
 // We aim to avoid needing to add a generic parameter to this trait, for this reason we do not allow
 // accessing the limbs of the bignum except through slices.
 pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
-    // TODO: this crashes the compiler? v0.32
-    // fn default() -> Self { std::default::Default::default  () }
     pub fn new() -> Self;
     fn zero() -> Self;
     pub fn one() -> Self;
@@ -40,15 +39,32 @@ pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
     pub fn get_limb(self, idx: u32) -> Field;
     pub fn set_limb(&mut self, idx: u32, value: Field);
 
-    pub unconstrained fn __eq(self, other: Self) -> bool;
+    pub unconstrained fn __eq(self, other: Self) -> bool {
+        self.eq(other)
+    }
+
     pub unconstrained fn __is_zero(self) -> bool;
 
-    pub unconstrained fn __neg(self) -> Self;
-    pub unconstrained fn __add(self, other: Self) -> Self;
-    pub unconstrained fn __sub(self, other: Self) -> Self;
-    pub unconstrained fn __mul(self, other: Self) -> Self;
-    pub unconstrained fn __div(self, other: Self) -> Self;
-    pub unconstrained fn __udiv_mod(self, divisor: Self) -> (Self, Self);
+    pub unconstrained fn __neg(self) -> Self {
+        self.neg()
+    }
+    pub unconstrained fn __add(self, other: Self) -> Self {
+        self.add(other)
+    }
+    pub unconstrained fn __sub(self, other: Self) -> Self {
+        self.sub(other)
+    }
+    pub unconstrained fn __mul(self, other: Self) -> Self {
+        self.mul(other)
+    }
+    pub unconstrained fn __div(self, other: Self) -> Self {
+        self.div(other)
+    }
+
+    pub unconstrained fn __udiv_mod(self, divisor: Self) -> (Self, Self) {
+        self.udiv_mod(divisor)
+    }
+
     pub unconstrained fn __invmod(self) -> Self;
     pub unconstrained fn __pow(self, exponent: Self) -> Self;
 
@@ -171,42 +187,8 @@ where
         self.limbs[idx] = value;
     }
 
-    unconstrained fn __eq(self, other: Self) -> bool {
-        __eq(self.limbs, other.limbs)
-    }
-
     unconstrained fn __is_zero(self) -> bool {
         __is_zero(self.limbs)
-    }
-
-    unconstrained fn __neg(self) -> Self {
-        let params = Params::get_params();
-        Self { limbs: __neg(params, self.limbs) }
-    }
-
-    unconstrained fn __add(self, other: Self) -> Self {
-        let params = Params::get_params();
-        Self { limbs: __add(params, self.limbs, other.limbs) }
-    }
-
-    unconstrained fn __sub(self, other: Self) -> Self {
-        let params = Params::get_params();
-        Self { limbs: __sub(params, self.limbs, other.limbs) }
-    }
-
-    unconstrained fn __mul(self, other: Self) -> Self {
-        let params = Params::get_params();
-        Self { limbs: __mul::<_, MOD_BITS>(params, self.limbs, other.limbs) }
-    }
-
-    unconstrained fn __div(self, divisor: Self) -> Self {
-        let params = Params::get_params();
-        Self { limbs: __div::<_, MOD_BITS>(params, self.limbs, divisor.limbs) }
-    }
-
-    unconstrained fn __udiv_mod(self, divisor: Self) -> (Self, Self) {
-        let (q, r) = __udiv_mod(self.limbs, divisor.limbs);
-        (Self { limbs: q }, Self { limbs: r })
     }
 
     unconstrained fn __invmod(self) -> Self {
