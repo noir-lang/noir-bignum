@@ -49,8 +49,8 @@ impl<let N: u32, let NumSegments: u32> std::ops::Sub for U60Repr<N, NumSegments>
 impl<let N: u32, let NumSegments: u32> std::convert::From<[Field; N]> for U60Repr<N, NumSegments> {
     fn from(input: [Field; N]) -> Self {
         let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
-        for i in 0..(N) {
-            let (lo, hi) = unsafe { split_bits::split_60_bits(input[i]) };
+        for i in 0..N {
+            let (lo, hi) = split_bits::split_60_bits(input[i]);
             result.limbs[2 * i] = lo;
             result.limbs[2 * i + 1] = hi;
         }
