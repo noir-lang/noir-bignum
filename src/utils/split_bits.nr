@@ -57,7 +57,7 @@ unconstrained fn __split_60_bits(x: Field) -> (u64, u64) {
 ///
 /// Expects the input limb to be in the range [0, ..., 2^{120 - 1}]
 pub fn split_60_bits(x: Field) -> (u64, u64) {
-    //@safety We assert that the two returned limbs fit within 60 bits each
+    // We assert that the two returned limbs fit within 60 bits each
     // and reconstruct `x` when added together.
     let (lo, hi) = unsafe { __split_60_bits(x) };
     if !std::runtime::is_unconstrained() {
