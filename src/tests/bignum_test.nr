@@ -241,9 +241,9 @@ fn test_eq<let N: u32, BN>()
 where
     BN: BigNumTrait,
 {
-    let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
-    let b = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
-    let c = unsafe { BN::__derive_from_seed([2, 2, 3, 4]) };
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let b = BN::derive_from_seed([1, 2, 3, 4]);
+    let c = BN::derive_from_seed([2, 2, 3, 4]);
 
     let modulus = BN::modulus();
     let t0: U60Repr<N, 2> = (U60Repr::from(modulus.get_limbs_slice().as_array()));
@@ -278,8 +278,8 @@ fn test_mul<let N: u32, BN>()
 where
     BN: BigNumTrait,
 {
-    let a: BN = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
-    let b: BN = unsafe { BN::__derive_from_seed([4, 5, 6, 7]) };
+    let a: BN = BN::derive_from_seed([1, 2, 3, 4]);
+    let b: BN = BN::derive_from_seed([4, 5, 6, 7]);
 
     let c = (a + b) * (a + b);
     let d = (a * a) + (b * b) + (a * b) + (a * b);
@@ -290,8 +290,8 @@ fn test_add<let N: u32, BN>()
 where
     BN: BigNumTrait,
 {
-    let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
-    let b: BN = unsafe { BN::__derive_from_seed([4, 5, 6, 7]) };
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let b: BN = BN::derive_from_seed([4, 5, 6, 7]);
     let one = BN::one();
     a.validate_in_range();
     a.validate_in_field();
@@ -318,8 +318,8 @@ fn test_div<let N: u32, BN>()
 where
     BN: BigNumTrait,
 {
-    let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
-    let b = unsafe { BN::__derive_from_seed([4, 5, 6, 7]) };
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let b = BN::derive_from_seed([4, 5, 6, 7]);
 
     let c = a / b;
     assert((b * c) == (a));
@@ -329,7 +329,7 @@ fn test_invmod<let N: u32, BN>()
 where
     BN: BigNumTrait,
 {
-    let u = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
+    let u = BN::derive_from_seed([1, 2, 3, 4]);
     for _ in 0..1 {
         let v = unsafe { u.__invmod() };
         let result = unsafe { u.__mul(v) };
@@ -342,8 +342,8 @@ fn assert_is_not_equal<let N: u32, BN>()
 where
     BN: BigNumTrait,
 {
-    let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
-    let b = unsafe { BN::__derive_from_seed([4, 5, 6, 7]) };
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let b = BN::derive_from_seed([4, 5, 6, 7]);
 
     a.assert_is_not_equal(b);
 }
@@ -352,8 +352,8 @@ fn assert_is_not_equal_fail<let N: u32, BN>()
 where
     BN: BigNumTrait,
 {
-    let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
-    let b = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let b = BN::derive_from_seed([1, 2, 3, 4]);
 
     a.assert_is_not_equal(b);
 }
@@ -362,8 +362,8 @@ fn assert_is_not_equal_overloaded_lhs_fail<let N: u32, BN>()
 where
     BN: BigNumTrait,
 {
-    let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
-    let b = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let b = BN::derive_from_seed([1, 2, 3, 4]);
 
     let modulus = BN::modulus();
 
@@ -377,8 +377,8 @@ fn assert_is_not_equal_overloaded_rhs_fail<let N: u32, BN>()
 where
     BN: BigNumTrait,
 {
-    let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
-    let b = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let b = BN::derive_from_seed([1, 2, 3, 4]);
 
     let modulus = BN::modulus();
 
@@ -392,8 +392,8 @@ fn assert_is_not_equal_overloaded_fail<let N: u32, BN>()
 where
     BN: BigNumTrait,
 {
-    let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
-    let b = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let b = BN::derive_from_seed([1, 2, 3, 4]);
 
     let modulus = BN::modulus();
 
@@ -623,7 +623,7 @@ type U256 = BN256;
 
 #[test]
 fn test_udiv_mod_U256() {
-    let a: U256 = unsafe { BigNum::__derive_from_seed([1, 2, 3, 4]) };
+    let a: U256 = BigNum::derive_from_seed([1, 2, 3, 4]);
     let b: U256 = BigNum::from_slice([12, 0, 0]);
 
     let (q, r) = a.udiv_mod(b);
@@ -866,7 +866,7 @@ fn test_to_field_three_digits_overflow() {
     let bn: Fq = BigNum {
         limbs: [0x4e6405505a33bb9b9c0563df2bd59a, 0x48dbe03a9bb4865ba961e41ef9dded, 0x3a36],
     };
-    let result = to_field(bn);
+    let _ = to_field(bn);
 }
 
 #[test(should_fail_with = "BigNum::validate_gt check fails")]
@@ -874,7 +874,7 @@ fn test_to_field_too_many_digits() {
     let bn: BN381 = BN381 {
         limbs: [0xea1742447ee9d92f9f18e1c80a481e, 0x3d89ad3d3ae85f3f482a08435c93ec, 0x1e9f, 0x1],
     };
-    let result = to_field(bn);
+    let _ = to_field(bn);
 }
 
 #[test]
