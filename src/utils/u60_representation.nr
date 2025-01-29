@@ -103,7 +103,7 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
     pub(crate) fn new<let NumFieldSegments: u32>(x: [Field; N * NumFieldSegments]) -> Self {
         let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
         for i in 0..(N * NumFieldSegments) {
-            let (lo, hi) = unsafe { split_bits::split_60_bits(x[i]) };
+            let (lo, hi) = split_bits::split_60_bits(x[i]);
             result.limbs[2 * i] = lo;
             result.limbs[2 * i + 1] = hi;
         }
