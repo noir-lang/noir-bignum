@@ -8,6 +8,8 @@ use crate::fns::{
 };
 use crate::params::BigNumParams as P;
 
+global TWO_POW_120: Field = 0x1000000000000000000000000000000;
+
 /**
  * In this file:
  *
@@ -337,19 +339,16 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [Field; N], rhs: [
     let (result, carry_flags, borrow_flags) = unsafe { __validate_gt_remainder(lhs, rhs) };
     validate_in_range::<_, MOD_BITS>(result);
 
-    let borrow_shift = 0x1000000000000000000000000000000;
-    let carry_shift = 0x1000000000000000000000000000000;
-
     let mut addend: [Field; N] = [0; N];
     let result_limb = lhs[0] - rhs[0] + addend[0] - result[0] - 1
-        + (borrow_flags[0] as Field * borrow_shift)
-        - (carry_flags[0] as Field * carry_shift);
+        + (borrow_flags[0] as Field - carry_flags[0] as Field) * TWO_POW_120;
     assert(result_limb == 0);
 
     for i in 1..N - 1 {
-        let result_limb = lhs[i] - rhs[i] + addend[i] - result[i] - borrow_flags[i - 1] as Field
-            + carry_flags[i - 1] as Field
-            + ((borrow_flags[i] as Field - carry_flags[i] as Field) * borrow_shift);
+        let prev_borrow_sub_carry = borrow_flags[i - 1] as Field - carry_flags[i - 1] as Field;
+        let borrow_sub_carry = borrow_flags[i] as Field - carry_flags[i] as Field;
+        let result_limb = lhs[i] - rhs[i] + addend[i] - result[i] - prev_borrow_sub_carry
+            + borrow_sub_carry * TWO_POW_120;
         assert(result_limb == 0);
     }
 
@@ -374,13 +373,12 @@ pub(crate) fn neg<let N: u32, let MOD_BITS: u32>(
         let (result, borrow_flags) = unsafe { __neg_with_flags(params, val) };
         validate_in_range::<_, MOD_BITS>(result);
         let modulus = params.modulus;
-        let borrow_shift = 0x1000000000000000000000000000000;
         let result_limb =
-            modulus[0] - val[0] - result[0] + (borrow_flags[0] as Field * borrow_shift);
+            modulus[0] - val[0] - result[0] + (borrow_flags[0] as Field * TWO_POW_120);
         assert(result_limb == 0);
         for i in 1..N - 1 {
             let result_limb = modulus[i] - val[i] - result[i] - borrow_flags[i - 1] as Field
-                + (borrow_flags[i] as Field * borrow_shift);
+                + (borrow_flags[i] as Field * TWO_POW_120);
             assert(result_limb == 0);
         }
         let result_limb =
@@ -406,31 +404,25 @@ pub(crate) fn add<let N: u32, let MOD_BITS: u32>(
             unsafe { __add_with_flags(params, lhs, rhs) };
         validate_in_range::<_, MOD_BITS>(result);
         let modulus = params.modulus;
-        let borrow_shift = 0x1000000000000000000000000000000;
-        let carry_shift = 0x1000000000000000000000000000000;
 
         let mut subtrahend: [Field; N] = [0; N];
         if (overflow_modulus) {
             subtrahend = modulus;
         }
-        let result_limb = lhs[0] + rhs[0] - subtrahend[0] - result[0]
-            + (borrow_flags[0] as Field * borrow_shift)
-            - (carry_flags[0] as Field * carry_shift);
+        let borrow_sub_carry = borrow_flags[0] as Field - carry_flags[0] as Field;
+        let result_limb =
+            lhs[0] + rhs[0] - subtrahend[0] - result[0] + borrow_sub_carry * TWO_POW_120;
         assert(result_limb == 0);
         for i in 1..N - 1 {
-            let result_limb = lhs[i] + rhs[i]
-                - subtrahend[i]
-                - result[i]
-                - borrow_flags[i - 1] as Field
-                + carry_flags[i - 1] as Field
-                + ((borrow_flags[i] as Field - carry_flags[i] as Field) * borrow_shift);
+            let prev_borrow_sub_carry = borrow_flags[i - 1] as Field - carry_flags[i - 1] as Field;
+            let borrow_sub_carry = borrow_flags[i] as Field - carry_flags[i] as Field;
+            let result_limb = lhs[i] + rhs[i] - subtrahend[i] - result[i] - prev_borrow_sub_carry
+                + borrow_sub_carry * TWO_POW_120;
             assert(result_limb == 0);
         }
-        let result_limb = lhs[N - 1] + rhs[N - 1]
-            - subtrahend[N - 1]
-            - result[N - 1]
-            - borrow_flags[N - 2] as Field
-            + carry_flags[N - 2] as Field;
+        let borrow_sub_carry = borrow_flags[N - 2] as Field - carry_flags[N - 2] as Field;
+        let result_limb =
+            lhs[N - 1] + rhs[N - 1] - subtrahend[N - 1] - result[N - 1] - borrow_sub_carry;
         assert(result_limb == 0);
         result
     }
@@ -454,27 +446,25 @@ pub(crate) fn sub<let N: u32, let MOD_BITS: u32>(
             unsafe { __sub_with_flags(params, lhs, rhs) };
         validate_in_range::<_, MOD_BITS>(result);
         let modulus = params.modulus;
-        let borrow_shift = 0x1000000000000000000000000000000;
-        let carry_shift = 0x1000000000000000000000000000000;
 
         let mut addend: [Field; N] = [0; N];
         if (underflow) {
             addend = modulus;
         }
-        let result_limb = lhs[0] - rhs[0] + addend[0] - result[0]
-            + (borrow_flags[0] as Field * borrow_shift)
-            - (carry_flags[0] as Field * carry_shift);
+
+        let borrow_sub_carry = borrow_flags[0] as Field - carry_flags[0] as Field;
+        let result_limb = lhs[0] - rhs[0] + addend[0] - result[0] + borrow_sub_carry * TWO_POW_120;
         assert(result_limb == 0);
         for i in 1..N - 1 {
-            let result_limb = lhs[i] - rhs[i] + addend[i] - result[i] - borrow_flags[i - 1] as Field
-                + carry_flags[i - 1] as Field
-                + ((borrow_flags[i] as Field - carry_flags[i] as Field) * borrow_shift);
+            let prev_borrow_sub_carry = borrow_flags[i - 1] as Field - carry_flags[i - 1] as Field;
+            let borrow_sub_carry = borrow_flags[i] as Field - carry_flags[i] as Field;
+            let result_limb = lhs[i] - rhs[i] + addend[i] - result[i] - prev_borrow_sub_carry
+                + borrow_sub_carry * TWO_POW_120;
             assert(result_limb == 0);
         }
-        let result_limb = lhs[N - 1] - rhs[N - 1] + addend[N - 1]
-            - result[N - 1]
-            - borrow_flags[N - 2] as Field
-            + carry_flags[N - 2] as Field;
+        let borrow_sub_carry = borrow_flags[N - 2] as Field - carry_flags[N - 2] as Field;
+        let result_limb =
+            lhs[N - 1] - rhs[N - 1] + addend[N - 1] - result[N - 1] - borrow_sub_carry;
         assert(result_limb == 0);
         result
     }
