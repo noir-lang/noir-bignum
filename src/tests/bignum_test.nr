@@ -259,7 +259,7 @@ fn test_is_zero<let N: u32, BN>()
 where
     BN: BigNumTrait,
 {
-    let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
     let zero = BN::zero();
     assert(a.is_zero() == false);
     assert(zero.is_zero() == true);

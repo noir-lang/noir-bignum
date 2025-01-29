@@ -514,9 +514,7 @@ fn test_is_zero() {
     let params = $typ ::get_params();
 
     let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::new(params);
-    let b: $RuntimeBigNum<$N, $MOD_BITS> = unsafe {
-        $RuntimeBigNum::__derive_from_seed(params, [1, 2, 3, 4])
-    };
+    let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
 
     assert(a.is_zero() == true);
     assert(b.is_zero() == false);
