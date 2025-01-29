@@ -264,11 +264,11 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     // convert the input into U60Repr
     let x_u60: U60Repr<N, 4> = U60Repr::new(x);
     let mut remainder_u60 = x_u60 - quotient_mul_modulus_u60;
-    // barrett reduction is quircky so might need to remove a few modulus_u60 from the remainder
+    // barrett reduction is quirky so might need to remove a few modulus_u60 from the remainder
     if (remainder_u60.gte(modulus_u60)) {
         remainder_u60 = remainder_u60 - modulus_u60;
         quotient_u60.increment();
-    } else {}
+    }
     if (remainder_u60.gte(modulus_u60)) {
         remainder_u60 = remainder_u60 - modulus_u60;
         quotient_u60.increment();
