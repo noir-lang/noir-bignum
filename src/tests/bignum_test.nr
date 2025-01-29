@@ -255,6 +255,16 @@ where
     assert(c.eq(a) == false);
 }
 
+fn test_is_zero<let N: u32, BN>()
+where
+    BN: BigNumTrait,
+{
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let zero = BN::zero();
+    assert(a.is_zero() == false);
+    assert(zero.is_zero() == true);
+}
+
 // fn test_eq<let N: u32, Params>(_: BigNum<N, Params>) where Params: BigNumParamsGetter<N> + RuntimeBigNumParamsTrait<N> {
 //     let a = BigNum::__derive_from_seed([1, 2, 3, 4]);
 //     let b = BigNum::__derive_from_seed([1, 2, 3, 4]);
@@ -410,6 +420,12 @@ fn test_eq_BN() {
     // let stub: Fq = BigNum::new();
     test_eq::<3, Fq>();
 }
+
+#[test]
+fn test_is_zero_BN() {
+    test_is_zero::<3, Fq>();
+}
+
 #[test]
 fn test_add_BN() {
     let mut a: Fq = BigNum::modulus();
@@ -545,6 +561,11 @@ fn test_eq_2048() {
 }
 
 #[test]
+fn test_is_zero_2048() {
+    test_is_zero::<18, BN2048>();
+}
+
+#[test]
 fn test_mul_2048() {
     test_mul::<18, BN2048>();
 }
@@ -582,6 +603,11 @@ fn test_assert_is_not_equal_overloaded_fail_2048() {
 #[test]
 fn test_eq_U256() {
     test_eq::<3, BN256>();
+}
+
+#[test]
+fn test_is_zero_U256() {
+    test_is_zero::<3, BN256>();
 }
 
 #[test]
