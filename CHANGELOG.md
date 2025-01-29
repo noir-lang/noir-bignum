@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.5.2](https://github.com/noir-lang/noir-bignum/compare/v0.5.1...v0.5.2) (2025-01-29)
+
+
+### Features
+
+* Add `is_zero` ([#111](https://github.com/noir-lang/noir-bignum/issues/111)) ([2ca1383](https://github.com/noir-lang/noir-bignum/commit/2ca1383238b927d11fc12c48c618475172c0a677))
+* Implement `Default` trait on `BigNum` ([#109](https://github.com/noir-lang/noir-bignum/issues/109)) ([e56352a](https://github.com/noir-lang/noir-bignum/commit/e56352a05c3cb8620076dd9e0453ef9b20974315))
+
+
+### Bug Fixes
+
+* Constrain `split_60_bits` function ([#113](https://github.com/noir-lang/noir-bignum/issues/113)) ([0d19e5a](https://github.com/noir-lang/noir-bignum/commit/0d19e5a34dbfa91e9f7c2eedb3e51b034ecd75d7))
+
 ## [0.5.1](https://github.com/noir-lang/noir-bignum/compare/v0.5.0...v0.5.1) (2025-01-27)
 
 
