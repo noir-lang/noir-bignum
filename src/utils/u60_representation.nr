@@ -1,6 +1,6 @@
 use crate::utils::msb::get_msb64;
 use crate::utils::split_bits;
-use crate::utils::split_bits::field_to_u60rep;
+use crate::utils::split_bits::{field_to_u60rep, TWO_POW_60};
 
 /**
  * @brief U60Repr represents a BigNum element as a sequence of 60-bit unsigned integers.
@@ -161,9 +161,9 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
         x: U60Repr<N, NumSegments>,
     ) -> [Field; N * NumSegments / 2] {
         let mut result: [Field; N * NumSegments / 2] = [0; N * NumSegments / 2];
-        let two_pow_60: Field = 0x1000000000000000;
         for i in 0..(N * NumSegments / 2) {
-            result[i] = x.limbs[2 * i] as Field + (x.limbs[2 * i + 1] as Field * two_pow_60);
+            result[i] =
+                x.limbs[2 * i] as Field + (x.limbs[2 * i + 1] as Field * TWO_POW_60 as Field);
         }
         result
     }
@@ -172,22 +172,20 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
         let mut result = false;
         let mut early_exit = false;
         for i in 0..(N * NumSegments) {
-            if (b.limbs[(N * NumSegments) - 1 - i] < self.limbs[((N * NumSegments) - 1 - i)]) {
-                result = true;
-                early_exit = true;
-                break;
-            } else if (
-                b.limbs[(N * NumSegments) - 1 - i] != self.limbs[((N * NumSegments) - 1 - i)]
-            ) {
-                result = false;
-                early_exit = true;
-                break;
+            let idx = (N * NumSegments) - 1 - i;
+            if (b.limbs[idx] == self.limbs[idx]) {
+                continue;
             }
+
+            result = b.limbs[idx] < self.limbs[idx];
+            early_exit = true;
+            break;
         }
-        if (early_exit == false) {
-            result = (self.limbs[0] == b.limbs[0]);
+        if early_exit {
+            result
+        } else {
+            self.limbs[0] == b.limbs[0]
         }
-        result
     }
 
     pub(crate) fn get_bit(self, bit: u32) -> bool {
@@ -204,15 +202,15 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
         let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
 
         let num_shifted_limbs = shift / 60;
-        let limb_shift = shift % 60;
-        let remainder_shift = 60 - limb_shift;
-        let mask: u64 = (((1 as u64) << limb_shift as u8) - 1) << remainder_shift as u8;
-        result.limbs[0] = (self.limbs[0 + num_shifted_limbs] >> limb_shift as u8);
+        let limb_shift = (shift % 60) as u8;
+        let remainder_shift = (60 - limb_shift) as u8;
+        let mask: u64 = (((1 as u64) << limb_shift) - 1) << remainder_shift;
+        result.limbs[0] = (self.limbs[0 + num_shifted_limbs] >> limb_shift);
 
         for i in 1..((N * NumSegments) - num_shifted_limbs) {
             let value = self.limbs[i + num_shifted_limbs];
-            result.limbs[i] = (value >> limb_shift as u8);
-            let remainder: u64 = (value << remainder_shift as u8) & mask;
+            result.limbs[i] = value >> limb_shift;
+            let remainder: u64 = (value << remainder_shift) & mask;
             result.limbs[i - 1] = result.limbs[i - 1] + remainder;
         }
         result
@@ -249,12 +247,12 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
         let value = self.limbs[0];
 
         let mut remainder = (value >> remainder_shift);
-        result.limbs[num_shifted_limbs] = (value << (limb_shift as u8)) & mask;
+        result.limbs[num_shifted_limbs] = (value << limb_shift) & mask;
 
         // shift 84. num shifted = 1
         for i in 1..((N * NumSegments) - num_shifted_limbs) {
             let value = self.limbs[i];
-            let upshift = ((value << (limb_shift as u8)) + remainder) & mask;
+            let upshift = ((value << limb_shift) + remainder) & mask;
             result.limbs[i + num_shifted_limbs] = upshift;
             remainder = (value >> remainder_shift);
             // let remainder: u64 = (self.limbs.get(i + num_shifted_limbs as u64) << remainder_shift as u8) & mask;
