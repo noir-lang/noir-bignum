@@ -5,7 +5,8 @@ use crate::params::BigNumParamsGetter;
 use crate::fns::{
     constrained_ops::{
         add, assert_is_not_equal, conditional_select, derive_from_seed, div, eq, from_field,
-        limbs_to_field, mul, neg, sub, udiv, udiv_mod, umod, validate_in_field, validate_in_range,
+        is_zero, limbs_to_field, mul, neg, sub, udiv, udiv_mod, umod, validate_in_field,
+        validate_in_range,
     },
     expressions::{__compute_quadratic_expression, evaluate_quadratic_expression},
     serialization::{from_be_bytes, to_le_bytes},
@@ -84,6 +85,7 @@ pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
     pub fn umod(self, divisor: Self) -> Self;
 
     pub fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self;
+    pub fn is_zero(self) -> bool;
 }
 
 impl<let N: u32, let MOD_BITS: u32, Params> std::convert::From<Field> for BigNum<N, MOD_BITS, Params>
@@ -316,6 +318,10 @@ where
 
     fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self {
         Self { limbs: conditional_select(lhs.limbs, rhs.limbs, predicate) }
+    }
+
+    fn is_zero(self) -> bool {
+        is_zero::<N, MOD_BITS>(self.limbs)
     }
 }
 
