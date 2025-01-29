@@ -111,6 +111,7 @@ where
     Params: BigNumParamsGetter<N, MOD_BITS>,
 {
 
+    #[deprecated("`BigNum::zero()` is preferred")]
     fn new() -> Self {
         Self::zero()
     }
@@ -120,7 +121,7 @@ where
     }
 
     fn one() -> Self {
-        let mut result = BigNum::new();
+        let mut result = BigNum::zero();
         result.limbs[0] = 1;
         result
     }

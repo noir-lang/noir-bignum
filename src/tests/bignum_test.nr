@@ -427,7 +427,7 @@ fn test_add_BN() {
 #[test]
 fn test_sub_test_BN() {
     // 0 - 1 should equal p - 1
-    let mut a: Fq = BigNum::new();
+    let mut a: Fq = BigNum::zero();
     let mut b: Fq = BigNum::one();
     let mut expected: Fq = BigNum::modulus();
     expected.limbs[0] -= 1; // p - 1
@@ -440,9 +440,9 @@ fn test_sub_modulus_limit() {
     // if we underflow, maximum result should be ...
     // 0 - 1 = o-1
     // 0 - p = 0
-    let mut a: Fq = BigNum::new();
+    let mut a: Fq = BigNum::zero();
     let mut b: Fq = BigNum::modulus();
-    let mut expected = BigNum::new();
+    let mut expected = BigNum::zero();
 
     let result = a - b;
     assert(result == expected);
@@ -451,7 +451,7 @@ fn test_sub_modulus_limit() {
 #[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_sub_modulus_underflow() {
     // 0 - (p + 1) is smaller than p and should produce unsatisfiable constraints
-    let mut a: Fq = BigNum::new();
+    let mut a: Fq = BigNum::zero();
     let mut b: Fq = BigNum::modulus();
     b.limbs[0] += 1;
     let mut expected = BigNum::one();
