@@ -241,15 +241,13 @@ pub(crate) fn assert_is_not_equal<let N: u32, let MOD_BITS: u32>(
     let mut l: Field = 0;
     let mut r: Field = 0;
     let mut modulus_mod_n: Field = 0;
-    let two_pow_120: Field = 0x1000000000000000000000000000000;
-    let modulus = params.modulus;
     for i in 0..N {
-        l *= two_pow_120;
-        r *= two_pow_120;
-        modulus_mod_n *= two_pow_120;
+        l *= TWO_POW_120;
+        r *= TWO_POW_120;
+        modulus_mod_n *= TWO_POW_120;
         l += lhs[N - i - 1];
         r += rhs[N - i - 1];
-        modulus_mod_n += modulus[N - i - 1];
+        modulus_mod_n += params.modulus[N - i - 1];
     }
 
     // lhs can be either X mod N or P + X mod N
@@ -269,12 +267,8 @@ pub(crate) fn eq<let N: u32, let MOD_BITS: u32>(
     // if self == other, possible values of `diff` will be `p` or `0`
     // (the subtract operator constrains diff to be < ceil(log(p)))
     // TODO: can do this more efficiently via witngen in unconstrained functions?
-    let mut is_equal_modulus: bool = true;
-    let mut is_equal_zero: bool = true;
-    for i in 0..N {
-        is_equal_modulus = is_equal_modulus & (diff[i] == params.modulus[i]);
-        is_equal_zero = is_equal_zero & (diff[i] == 0);
-    }
+    let mut is_equal_modulus: bool = diff == params.modulus;
+    let mut is_equal_zero: bool = diff.all(|elem| elem == 0);
     is_equal_modulus | is_equal_zero
 }
 
@@ -289,10 +283,9 @@ pub(crate) fn validate_in_field<let N: u32, let MOD_BITS: u32>(
         p_minus_self[i] = modulus[i] - val[i];
     }
     let borrow_flags = unsafe { __validate_in_field_compute_borrow_flags(params, val) };
-    let two_pow_120: Field = 0x1000000000000000000000000000000;
-    p_minus_self[0] += borrow_flags[0] as Field * two_pow_120;
+    p_minus_self[0] += borrow_flags[0] as Field * TWO_POW_120;
     for i in 1..N - 1 {
-        p_minus_self[i] += (borrow_flags[i] as Field * two_pow_120 - borrow_flags[i - 1] as Field);
+        p_minus_self[i] += (borrow_flags[i] as Field * TWO_POW_120 - borrow_flags[i - 1] as Field);
     }
     p_minus_self[N - 1] -= borrow_flags[N - 2] as Field;
     let mut compare = val;
