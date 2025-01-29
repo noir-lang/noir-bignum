@@ -267,8 +267,8 @@ pub(crate) fn eq<let N: u32, let MOD_BITS: u32>(
     // if self == other, possible values of `diff` will be `p` or `0`
     // (the subtract operator constrains diff to be < ceil(log(p)))
     // TODO: can do this more efficiently via witngen in unconstrained functions?
-    let mut is_equal_modulus: bool = diff == params.modulus;
-    let mut is_equal_zero: bool = diff.all(|elem| elem == 0);
+    let is_equal_modulus: bool = diff == params.modulus;
+    let is_equal_zero: bool = diff.all(|elem| elem == 0);
     is_equal_modulus | is_equal_zero
 }
 
@@ -288,9 +288,7 @@ pub(crate) fn validate_in_field<let N: u32, let MOD_BITS: u32>(
         p_minus_self[i] += (borrow_flags[i] as Field * TWO_POW_120 - borrow_flags[i - 1] as Field);
     }
     p_minus_self[N - 1] -= borrow_flags[N - 2] as Field;
-    let mut compare = val;
-    compare = p_minus_self;
-    validate_in_range::<_, MOD_BITS>(compare);
+    validate_in_range::<_, MOD_BITS>(p_minus_self);
 }
 
 /**
