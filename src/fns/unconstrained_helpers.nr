@@ -67,12 +67,11 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
         borrow_in = borrow;
 
         if ((i & 1) == 1) {
-            if (carry & borrow == 1) {
-                carry = 0;
-                borrow = 0;
+            // Only set `borrow` and `carry` if they differ
+            if (carry != borrow) {
+                carry_flags[i / 2] = carry as bool;
+                borrow_flags[i / 2] = borrow as bool;
             }
-            carry_flags[i / 2] = carry as bool;
-            borrow_flags[i / 2] = borrow as bool;
         }
     }
     let result = U60Repr::into(result_u60);
@@ -137,13 +136,12 @@ pub(crate) unconstrained fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
         borrow_in = borrow;
 
         if ((i & 1) == 1) {
-            let idx = (i - 1) / 2;
-            if (carry & borrow == 1) {
-                carry = 0;
-                borrow = 0;
+            // Only set `borrow` and `carry` if they differ
+            if (carry != borrow) {
+                let idx = (i - 1) / 2;
+                carry_flags[idx] = carry as bool;
+                borrow_flags[idx] = borrow as bool;
             }
-            carry_flags[idx] = carry as bool;
-            borrow_flags[idx] = borrow as bool;
         }
     }
     let result = U60Repr::into(result_u60);
@@ -184,12 +182,11 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
         borrow_in = borrow;
 
         if ((i & 1) == 1) {
-            if (carry & borrow == 1) {
-                carry = 0;
-                borrow = 0;
+            // Only set `borrow` and `carry` if they differ
+            if (carry != borrow) {
+                carry_flags[i / 2] = carry as bool;
+                borrow_flags[i / 2] = borrow as bool;
             }
-            carry_flags[i / 2] = carry as bool;
-            borrow_flags[i / 2] = borrow as bool;
         }
     }
     let result = U60Repr::into(result_u60);
@@ -267,11 +264,11 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     // convert the input into U60Repr
     let x_u60: U60Repr<N, 4> = U60Repr::new(x);
     let mut remainder_u60 = x_u60 - quotient_mul_modulus_u60;
-    // barrett reduction is quircky so might need to remove a few modulus_u60 from the remainder
+    // barrett reduction is quirky so might need to remove a few modulus_u60 from the remainder
     if (remainder_u60.gte(modulus_u60)) {
         remainder_u60 = remainder_u60 - modulus_u60;
         quotient_u60.increment();
-    } else {}
+    }
     if (remainder_u60.gte(modulus_u60)) {
         remainder_u60 = remainder_u60 - modulus_u60;
         quotient_u60.increment();
