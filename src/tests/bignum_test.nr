@@ -9,7 +9,6 @@ use crate::params::BigNumParamsGetter;
 use crate::fields::bls12_381Fq::BLS12_381_Fq_Params;
 use crate::fields::bn254Fq::BN254_Fq_Params;
 use crate::fields::U256::U256Params;
-use std::bigint::Bn254Fq;
 
 struct Test2048Params {}
 
@@ -938,3 +937,20 @@ fn test_to_from_field_2() {
     assert(a == c);
 }
 
+unconstrained fn test_batch_inversion<let N: u32, BN>(fields: [BN; N])
+where
+    BN: BigNumTrait,
+{
+    let inverted_fields = BN::__batch_invert(fields);
+    for i in 0..N {
+        assert_eq(fields[i] * inverted_fields[i], BN::one());
+    }
+}
+
+#[test]
+unconstrained fn test_batch_inversion_BN381(seeds: [[u8; 2]; 3]) {
+    let fields = seeds.map(|seed| BN381::derive_from_seed(seed));
+    unsafe {
+        test_batch_inversion(fields)
+    }
+}
