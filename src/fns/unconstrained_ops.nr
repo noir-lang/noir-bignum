@@ -279,7 +279,6 @@ pub(crate) unconstrained fn __batch_invert_slice<let N: u32, let MOD_BITS: u32>(
         if (!__is_zero(x[idx])) {
             let T0 = __mul::<_, MOD_BITS>(params, accumulator, temporaries[idx]);
             accumulator = __mul::<_, MOD_BITS>(params, accumulator, x[idx]);
-            assert(__mul::<_, MOD_BITS>(params, T0, x[idx]) == __one::<N>());
             result = result.push_front(T0);
         } else {
             result = result.push_front([0; N]);
