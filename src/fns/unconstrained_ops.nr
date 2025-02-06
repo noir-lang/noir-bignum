@@ -1,7 +1,8 @@
 use crate::fns::constrained_ops::derive_from_seed;
 use crate::fns::unconstrained_helpers::{
-    __barrett_reduction, __helper_sub, __multiplicative_generator, __primitive_root_log_size,
-    __tonelli_shanks_sqrt_inner_loop_check, __get_msb, __shr, __shl, __increment, __helper_add, __get_bit
+    __barrett_reduction, __get_bit, __get_msb, __helper_add, __helper_sub, __increment,
+    __multiplicative_generator, __primitive_root_log_size, __shl, __shr,
+    __tonelli_shanks_sqrt_inner_loop_check,
 };
 use crate::params::BigNumParams as P;
 use crate::utils::split_bits;
@@ -101,7 +102,6 @@ pub(crate) unconstrained fn __neg<let N: u32, let MOD_BITS: u32>(
 //     U60Repr::into(z_u60)
 // }
 
-
 pub(crate) unconstrained fn __add<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     lhs: [u128; N],
@@ -112,12 +112,12 @@ pub(crate) unconstrained fn __add<let N: u32, let MOD_BITS: u32>(
 
     // let mut z_u60 = x_u60 + y_u60;
     let mut result: [u128; N] = [0; N];
-    let mut carry: u128 = 0; 
+    let mut carry: u128 = 0;
     for i in 0..N {
         let mut add_term = (lhs[i] as u128 + rhs[i] as u128 + carry);
         carry = add_term >> 120;
         add_term = add_term - (carry << 120);
-        result[i] = add_term; 
+        result[i] = add_term;
     }
     // check if the result is greater than the modulus
     if __gte(result, params.modulus) {
@@ -168,12 +168,7 @@ pub(crate) unconstrained fn __mul_with_quotient<let N: u32, let MOD_BITS: u32>(
         }
     }
     let to_reduce: [u128; (N * 2)] = split_bits::__normalize_limbs(mul, 2 * N);
-    let (q, r) = __barrett_reduction(
-        to_reduce,
-        params.redc_param,
-        MOD_BITS,
-        params.modulus,
-    );
+    let (q, r) = __barrett_reduction(to_reduce, params.redc_param, MOD_BITS, params.modulus);
     (q, r)
 }
 
@@ -222,8 +217,8 @@ pub(crate) unconstrained fn __udiv_mod<let N: u32>(
     let mut divisor = __shl(divisor, bit_difference);
     // accumulator_u60 = accumulator_u60.shl(bit_difference);
     accumulator = __shl(accumulator, bit_difference);
-    
-    if (__gte(divisor , __increment(remainder))) {
+
+    if (__gte(divisor, __increment(remainder))) {
         divisor = __shr(divisor, 1);
         accumulator = __shr(accumulator, 1);
     }
@@ -252,7 +247,7 @@ pub(crate) unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
     val: [u128; N],
 ) -> [u128; N] {
     // let one_u60: U60Repr<N, 2> = U60Repr::one();
-    let one = __one(); 
+    let one = __one();
     // let exp_u60 = params.modulus_u60 - (one_u60 + one_u60);
     let exp = __helper_sub(params.modulus, __helper_add(one, one));
     // let exp = U60Repr::into(exp_u60);
@@ -374,7 +369,10 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>
     let one = __one();
     let primitive_root_log_size = __primitive_root_log_size::<_, MOD_BITS>(params);
     // let mut Q = (params.modulus_u60 - one_u60).shr(primitive_root_log_size - 1);
-    let Q = __shr(__helper_sub(params.modulus, one), primitive_root_log_size - 1); 
+    let Q = __shr(
+        __helper_sub(params.modulus, one),
+        primitive_root_log_size - 1,
+    );
     // let Q_minus_one_over_two_u60 = (Q - one_u60).shr(2);
     // let Q_minus_one_over_two: [Field; N] = U60Repr::into(Q_minus_one_over_two_u60);
     let two = __helper_add(one, one);
@@ -424,24 +422,25 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>
     result
 }
 
-
-
-pub(crate) unconstrained fn __gte<let N: u32 , let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N]) -> bool {
-        let mut result = false;
-        let mut early_exit = false;
-        for i in 0..N {
-            let idx = N  - 1 - i;
-            if (lhs[idx] == rhs[idx]) {
-                continue;
-            }
-
-            result = rhs[idx] < lhs[idx];
-            early_exit = true;
-            break;
+pub(crate) unconstrained fn __gte<let N: u32, let MOD_BITS: u32>(
+    lhs: [u128; N],
+    rhs: [u128; N],
+) -> bool {
+    let mut result = false;
+    let mut early_exit = false;
+    for i in 0..N {
+        let idx = N - 1 - i;
+        if (lhs[idx] == rhs[idx]) {
+            continue;
         }
-        if early_exit {
-            result
-        } else {
-            lhs[0] == rhs[0]
-        }
+
+        result = rhs[idx] < lhs[idx];
+        early_exit = true;
+        break;
+    }
+    if early_exit {
+        result
+    } else {
+        lhs[0] == rhs[0]
+    }
 }

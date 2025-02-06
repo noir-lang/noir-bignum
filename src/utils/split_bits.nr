@@ -27,8 +27,6 @@ pub(crate) unconstrained fn field_to_u60rep(mut x: Field) -> (u64, u64, u64, u64
     (first, second, third, fourth, fifth)
 }
 
-
-
 /// TODO: this is still using the u60representation, we should get rid of it and use u128
 // Decomposes a single field into two 120 bit fields
 pub unconstrained fn split_120_bits(mut x: Field) -> (u128, u128) {
@@ -37,7 +35,7 @@ pub unconstrained fn split_120_bits(mut x: Field) -> (u128, u128) {
     // let low_lower_64 = (x as u64) as Field;
     // x = (x - low_lower_64) / TWO_POW_64;
     // let low_upper_56 = ((x as u64) % TWO_POW_56) as Field;
-    let low = x as u128; 
+    let low = x as u128;
     let high = ((x - low as Field) / TWO_POW_120 as Field) as u128;
     (low, high)
 }

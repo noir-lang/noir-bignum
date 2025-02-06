@@ -50,13 +50,6 @@ impl<let N: u32, let MOD_BITS: u32> std::cmp::Eq for BigNumParams<N, MOD_BITS> {
     }
 }
 
-fn test<let N: u32>() -> bool {
-    let a: [u128; N] = [0; N]; 
-    let b: [u128; N] = [0; N];
-    let c: [Field; N] = [0; N];
-    let d: [Field; N] = [0; N]; 
-    a == b && c == d
-}
 fn get_double_modulus<let N: u32>(modulus: [u128; N]) -> [u128; N] {
     let TWO_POW_120: u128 = 0x1000000000000000000000000000000;
     let m: U60Repr<N, 2> = U60Repr::from(modulus);

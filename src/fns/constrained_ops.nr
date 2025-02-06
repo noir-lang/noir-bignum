@@ -331,9 +331,9 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u
     // so we do... p - x - r = 0 and there might be borrow flags
     // a - b = r
     // p + a - b - r = 0
-    
+
     let (result, carry_flags, borrow_flags) = unsafe { __validate_gt_remainder(lhs, rhs) };
-    
+
     validate_in_range::<_, MOD_BITS>(result);
 
     let mut addend: [u128; N] = [0; N];
@@ -370,16 +370,14 @@ pub(crate) fn neg<let N: u32, let MOD_BITS: u32>(
         let (result, borrow_flags) = unsafe { __neg_with_flags(params, val) };
         validate_in_range::<_, MOD_BITS>(result);
         let modulus = params.modulus;
-        let result_limb =
-            modulus[0] - val[0] - result[0] + (borrow_flags[0] as u128 * TWO_POW_120);
+        let result_limb = modulus[0] - val[0] - result[0] + (borrow_flags[0] as u128 * TWO_POW_120);
         assert(result_limb == 0);
         for i in 1..N - 1 {
             let result_limb = modulus[i] - val[i] - result[i] - borrow_flags[i - 1] as u128
                 + (borrow_flags[i] as u128 * TWO_POW_120);
             assert(result_limb == 0);
         }
-        let result_limb =
-            modulus[N - 1] - val[N - 1] - result[N - 1] - borrow_flags[N - 2] as u128;
+        let result_limb = modulus[N - 1] - val[N - 1] - result[N - 1] - borrow_flags[N - 2] as u128;
         assert(result_limb == 0);
         result
     }

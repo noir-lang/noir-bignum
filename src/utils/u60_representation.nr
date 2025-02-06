@@ -10,7 +10,7 @@ use crate::utils::split_bits::{field_to_u60rep, TWO_POW_60};
  * as well as when performing bit shifts.
  */
 
-global TWO_POW_59: u128  = 0x800000000000000;
+global TWO_POW_59: u128 = 0x800000000000000;
 pub struct U60Repr<let N: u32, let NumSegments: u32> {
     pub(crate) limbs: [u64; N * NumSegments],
 }

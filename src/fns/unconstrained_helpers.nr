@@ -1,11 +1,11 @@
 use crate::utils::split_bits;
 use crate::utils::u60_representation::U60Repr;
 
-use crate::fns::unconstrained_ops::{__add, __mul, __neg, __one, __pow, __gte};
+use crate::fns::unconstrained_ops::{__add, __gte, __mul, __neg, __one, __pow};
 use crate::params::BigNumParams as P;
 
 global TWO_POW_60: u128 = 0x1000000000000000;
-global TWO_POW_119: u128  = 0x800000000000000000000000000000;
+global TWO_POW_119: u128 = 0x800000000000000000000000000000;
 global TWO_POW_120: u128 = 0x1000000000000000000000000000000;
 
 /**
@@ -67,7 +67,6 @@ pub(crate) unconstrained fn __validate_in_field_compute_borrow_flags<let N: u32,
     flags
 }
 
-
 pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
     lhs: [u128; N],
     rhs: [u128; N],
@@ -76,12 +75,12 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
     // let mut b_u60: U60Repr<N, 2> = From::from(rhs);
 
     // let underflow = b_u60.gte(a_u60);
-    let underflow = __gte(rhs, lhs);   
+    let underflow = __gte(rhs, lhs);
     // b_u60 += U60Repr::one();
-    // add one to the rhs 
+    // add one to the rhs
     let mut one = [0; N];
     one[0] = 1;
-    //fix this in a sec 
+    //fix this in a sec
     let rhs: [u128; N] = __increment(rhs);
     assert(underflow == false, "BigNum::validate_gt check fails");
     // let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
@@ -145,12 +144,12 @@ pub(crate) unconstrained fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
     // let b_u60: U60Repr<N, 2> = From::from(rhs);
     // let add_u60 = a_u60 + b_u60;
     let mut add: [u128; N] = [0; N];
-    let mut carry: u128 = 0; 
+    let mut carry: u128 = 0;
     for i in 0..N {
         let mut add_term = (lhs[i] as u128 + rhs[i] as u128 + carry);
         carry = add_term >> 120;
         add_term = add_term - (carry << 120);
-        add[i] = add_term; 
+        add[i] = add_term;
     }
 
     // let overflow = add.gte(params.modulus_u60);
@@ -203,14 +202,10 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
 
     // let underflow = b_u60.gte(a_u60 + U60Repr::one());
     let ap1: [u128; N] = __increment(lhs);
-    let underflow: bool = __gte(rhs , ap1); 
-    let addend: [u128; N] = if underflow {
-        params.modulus
-    } else {
-        [0; N]
-    };
+    let underflow: bool = __gte(rhs, ap1);
+    let addend: [u128; N] = if underflow { params.modulus } else { [0; N] };
     // let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
-    let mut result: [u128; N] = [0; N]; 
+    let mut result: [u128; N] = [0; N];
 
     let mut carry_in: u128 = 0;
     let mut borrow_in: u128 = 0;
@@ -224,7 +219,7 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
 
         let sub_term = rhs[i] + borrow_in;
         let mut borrow = (sub_term > add_term) as u128;
-        result[i] = borrow * TWO_POW_120 + add_term - sub_term;  
+        result[i] = borrow * TWO_POW_120 + add_term - sub_term;
         borrow_in = borrow;
 
         if ((i & 1) == 1) {
@@ -287,7 +282,8 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     // First, accumulate the products into quotient_mul_modulus_normalized
     for j in 0..N {
         for i in 0..(N + N - j) {
-            quotient_mul_modulus_normalized_field[i + j] += partial_quotient_full[i] as Field * modulus[j] as Field;
+            quotient_mul_modulus_normalized_field[i + j] +=
+                partial_quotient_full[i] as Field * modulus[j] as Field;
         }
     }
 
@@ -307,13 +303,13 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     // let quotient_mul_modulus_u60: U60Repr<N, 4> = U60Repr::new(quotient_mul_modulus_normalized);
     // convert the input into U60Repr
     // let x_u60: U60Repr<N, 4> = U60Repr::new(x);
-    let mut remainder_2n_limbs = __helper_sub(x , quotient_mul_modulus_normalized);
-    // the last N limbs of this are going to be 0 so we just need the first N limbs of it 
+    let mut remainder_2n_limbs = __helper_sub(x, quotient_mul_modulus_normalized);
+    // the last N limbs of this are going to be 0 so we just need the first N limbs of it
     let mut remainder: [u128; N] = [0; N];
     for i in 0..N {
         remainder[i] = remainder_2n_limbs[i];
     }
-    
+
     let mut quotient: [u128; N] = [0; N];
     // barrett reduction is quirky so might need to remove a few modulus_u60 from the remainder
     if (__gte(remainder, modulus)) {
@@ -342,7 +338,7 @@ pub(crate) unconstrained fn __primitive_root_log_size<let N: u32, let MOD_BITS: 
 ) -> u32 {
     // let mut target: U60Repr<N, 2> = params.modulus_u60 - U60Repr::one();
     let mut one: [u128; N] = [0; N];
-    one[0] = 1; 
+    one[0] = 1;
     let mut target = __helper_sub(params.modulus, one);
     let mut result: u32 = 0;
     for _ in 0..MOD_BITS {
@@ -390,7 +386,7 @@ pub(crate) unconstrained fn __multiplicative_generator<let N: u32, let MOD_BITS:
     params: P<N, MOD_BITS>,
 ) -> [u128; N] {
     let mut target: [u128; N] = __one();
-    let p_minus_one_over_two  = __shr(__helper_sub(params.modulus ,__one()), 1);
+    let p_minus_one_over_two = __shr(__helper_sub(params.modulus, __one()), 1);
     // let p_minus_one_over_two: U60Repr<N, 2> = (params.modulus_u60 - U60Repr::one()).shr(1);
     let (_, target) = __recursively_find_multiplicative_generator::<_, MOD_BITS>(
         params,
@@ -418,65 +414,62 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt_inner_loop_check<let N: u32, l
 
 pub(crate) unconstrained fn __increment<let N: u32>(val: [u128; N]) -> [u128; N] {
     let mut result: [u128; N] = [0; N];
-    let mut carry: u128 = 1; 
+    let mut carry: u128 = 1;
     for i in 0..N {
         let mut add_term = (val[i] + carry);
         carry = add_term >> 120;
         add_term = add_term - (carry << 120);
-        result[i] = add_term; 
+        result[i] = add_term;
     }
     result
 }
 
-
 pub(crate) unconstrained fn __shr<let N: u32>(input: [u128; N], shift: u32) -> [u128; N] {
-        let mut result: [u128; N] = [0; N];
-        let num_shifted_limbs = shift / 120;
-        let limb_shift = (shift % 120) as u8;
-        let remainder_shift = (120 - limb_shift) as u8;
-        let mask: u128 = (((1 as u128) << limb_shift) - 1) << remainder_shift;
-        result[0] = (input[0 + num_shifted_limbs] >> limb_shift);
+    let mut result: [u128; N] = [0; N];
+    let num_shifted_limbs = shift / 120;
+    let limb_shift = (shift % 120) as u8;
+    let remainder_shift = (120 - limb_shift) as u8;
+    let mask: u128 = (((1 as u128) << limb_shift) - 1) << remainder_shift;
+    result[0] = (input[0 + num_shifted_limbs] >> limb_shift);
 
-        for i in 1..(N  - num_shifted_limbs) {
-            let value = input[i + num_shifted_limbs];
-            result[i] = value >> limb_shift;
-            let remainder: u128 = (value << remainder_shift) & mask;
-            result[i - 1] = result[i - 1] + remainder;
-        }
-        result
+    for i in 1..(N - num_shifted_limbs) {
+        let value = input[i + num_shifted_limbs];
+        result[i] = value >> limb_shift;
+        let remainder: u128 = (value << remainder_shift) & mask;
+        result[i - 1] = result[i - 1] + remainder;
+    }
+    result
 }
 
+pub(crate) unconstrained fn __shl<let N: u32>(input: [u128; N], shift: u32) -> [u128; N] {
+    let mut result: [u128; N] = [0; N];
 
-pub(crate) unconstrained fn __shl<let N: u32>(input: [u128; N], shift: u32) -> [u128; N] {    
-        let mut result: [u128; N] = [0; N];
+    let num_shifted_limbs = shift / 120;
+    let limb_shift = (shift % 120) as u8;
+    let remainder_shift: u8 = 120 - limb_shift as u8;
 
-        let num_shifted_limbs = shift / 120;
-        let limb_shift = (shift % 120) as u8;
-        let remainder_shift: u8 = 120 - limb_shift as u8;
+    // 83
+    // limb shift = 1
+    // inside shift = 19 bits to the left
+    // meaning we have 19 carry bits and 41 remainder bits
+    let mask: u128 = (1 as u128 << 120) - 1;
+    //   let mask: u64 = (((1 as u64) << limb_shift as u8) - 1) << remainder_shift as u8;
+    let value = input[0];
 
-        // 83
-        // limb shift = 1
-        // inside shift = 19 bits to the left
-        // meaning we have 19 carry bits and 41 remainder bits
-        let mask: u128 = (1 as u128 << 120) - 1;
-        //   let mask: u64 = (((1 as u64) << limb_shift as u8) - 1) << remainder_shift as u8;
-        let value = input[0];
+    let mut remainder = (value >> remainder_shift);
+    result[num_shifted_limbs] = (value << limb_shift) & mask;
 
-        let mut remainder = (value >> remainder_shift);
-        result[num_shifted_limbs] = (value << limb_shift) & mask;
-
-        // shift 84. num shifted = 1
-        for i in 1..((N) - num_shifted_limbs) {
-            let value = input[i];
-            let upshift = ((value << limb_shift) + remainder) & mask;
-            result[i + num_shifted_limbs] = upshift;
-            remainder = (value >> remainder_shift);
-            // let remainder: u64 = (self.limbs.get(i + num_shifted_limbs as u64) << remainder_shift as u8) & mask;
-            // result.limbs.set(i - 1, result.limbs.get(i - 1) + remainder);
-        }
-        result
+    // shift 84. num shifted = 1
+    for i in 1..((N) - num_shifted_limbs) {
+        let value = input[i];
+        let upshift = ((value << limb_shift) + remainder) & mask;
+        result[i + num_shifted_limbs] = upshift;
+        remainder = (value >> remainder_shift);
+        // let remainder: u64 = (self.limbs.get(i + num_shifted_limbs as u64) << remainder_shift as u8) & mask;
+        // result.limbs.set(i - 1, result.limbs.get(i - 1) + remainder);
+    }
+    result
 }
-
 
 pub(crate) unconstrained fn __helper_sub<let N: u32>(lhs: [u128; N], rhs: [u128; N]) -> [u128; N] {
     let mut result: [u128; N] = [0; N];
@@ -493,50 +486,47 @@ pub(crate) unconstrained fn __helper_sub<let N: u32>(lhs: [u128; N], rhs: [u128;
 
 pub(crate) unconstrained fn __helper_add<let N: u32>(lhs: [u128; N], rhs: [u128; N]) -> [u128; N] {
     let mut result: [u128; N] = [0; N];
-    let mut carry: u128 = 0; 
+    let mut carry: u128 = 0;
     for i in 0..N {
         let mut add_term = (lhs[i] as u128 + rhs[i] as u128 + carry);
         carry = add_term >> 120;
         add_term = add_term - (carry << 120);
-        result[i] = add_term; 
+        result[i] = add_term;
     }
     result
 }
 
 pub(crate) unconstrained fn __shr1<let N: u32>(mut input: [u128; N]) -> [u128; N] {
-        let value = input[N - 1];
-        input[N - 1] = value >> 1;
+    let value = input[N - 1];
+    input[N - 1] = value >> 1;
 
-        let mut remainder = (value & 1) << 59;
+    let mut remainder = (value & 1) << 59;
 
-        for i in 0..N {
-            let value = input[N - 1 - i];
-            input[N - 1 - i] = (value >> 1) + remainder;
-            remainder = (value << 119) & TWO_POW_119;
-        }
-        input
+    for i in 0..N {
+        let value = input[N - 1 - i];
+        input[N - 1 - i] = (value >> 1) + remainder;
+        remainder = (value << 119) & TWO_POW_119;
+    }
+    input
 }
-
-
 
 pub(crate) unconstrained fn __get_msb<let N: u32>(val: [u128; N]) -> u32 {
-        let mut count = 0;
-        for i in 0..N {
-            let v = val[((N) - 1 - i)];
-            if (v > 0) {
-                count = 120 * ((N) - 1 - i) + get_msb128(v);
-                break;
-            }
+    let mut count = 0;
+    for i in 0..N {
+        let v = val[((N) - 1 - i)];
+        if (v > 0) {
+            count = 120 * ((N) - 1 - i) + get_msb128(v);
+            break;
         }
-        count
+    }
+    count
 }
 
-
 pub(crate) fn __get_bit<let N: u32>(input: [u128; N], bit: u32) -> bool {
-        let segment_index: u32 = bit / 60;
-        let uint_index = bit % 60;
+    let segment_index: u32 = bit / 60;
+    let uint_index = bit % 60;
 
-        let limb: u128 = input[segment_index];
-        let value = (limb >> uint_index as u8) & 1;
-        value == 1
-    }
+    let limb: u128 = input[segment_index];
+    let value = (limb >> uint_index as u8) & 1;
+    value == 1
+}

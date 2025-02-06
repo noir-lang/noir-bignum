@@ -18,8 +18,7 @@ use crate::fields::U256::U256Params;
 
 type Fq = BigNum<3, 254, BN254_Fq_Params>;
 
-
 fn main(a: Fq, b: Fq) -> pub Fq {
-    a +b 
+    a + b
     // assert(result == expected);
 }

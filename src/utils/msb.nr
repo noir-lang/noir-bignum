@@ -47,7 +47,6 @@ pub unconstrained fn get_msb128(x: u128) -> u32 {
 
 // 1100
 
-
 pub unconstrained fn get_msb128(x: u128) -> u32 {
     let mut v = x;
     v |= v >> 1;
