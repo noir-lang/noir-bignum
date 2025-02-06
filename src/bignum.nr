@@ -18,7 +18,7 @@ use crate::fns::{
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 pub struct BigNum<let N: u32, let MOD_BITS: u32, Params> {
-    pub limbs: [Field; N],
+    pub limbs: [u128; N],
 }
 // We aim to avoid needing to add a generic parameter to this trait, for this reason we do not allow
 // accessing the limbs of the bignum except through slices.

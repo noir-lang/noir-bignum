@@ -267,11 +267,11 @@ pub(crate) unconstrained fn __compute_quadratic_expression<let N: u32, let MOD_B
 **/
 pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
     params: P<N, MOD_BITS>,
-    lhs_terms: [[[Field; N]; LHS_N]; NUM_PRODUCTS],
+    lhs_terms: [[[u128; N]; LHS_N]; NUM_PRODUCTS],
     lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
-    rhs_terms: [[[Field; N]; RHS_N]; NUM_PRODUCTS],
+    rhs_terms: [[[u128; N]; RHS_N]; NUM_PRODUCTS],
     rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
-    linear_terms: [[Field; N]; ADD_N],
+    linear_terms: [[u128; N]; ADD_N],
     linear_flags: [bool; ADD_N],
 ) {
     // use an unconstrained function to compute the value of the quotient

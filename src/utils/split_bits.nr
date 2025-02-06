@@ -1,6 +1,7 @@
 global TWO_POW_56: u64 = 0x100000000000000;
 pub(crate) global TWO_POW_60: u64 = 0x1000000000000000;
 global TWO_POW_64: Field = 0x10000000000000000;
+global TWO_POW_120: u128 = 0x1000000000000000000000000000000;
 
 //fields to u60rep conversion
 // field elements are 254 bits
@@ -26,17 +27,18 @@ pub(crate) unconstrained fn field_to_u60rep(mut x: Field) -> (u64, u64, u64, u64
     (first, second, third, fourth, fifth)
 }
 
+
+
+/// TODO: this is still using the u60representation, we should get rid of it and use u128
 // Decomposes a single field into two 120 bit fields
-pub unconstrained fn split_120_bits(mut x: Field) -> (Field, Field) {
+pub unconstrained fn split_120_bits(mut x: Field) -> (u128, u128) {
     // Here we're taking advantage of truncating 64 bit limbs from the input field
     // and then subtracting them from the input such that the field division is equivalent to integer division.
-    let low_lower_64 = (x as u64) as Field;
-    x = (x - low_lower_64) / TWO_POW_64;
-    let low_upper_56 = ((x as u64) % TWO_POW_56) as Field;
-
-    let low = low_lower_64 + TWO_POW_64 * low_upper_56;
-    let high = (x - low_upper_56) / TWO_POW_56 as Field;
-
+    // let low_lower_64 = (x as u64) as Field;
+    // x = (x - low_lower_64) / TWO_POW_64;
+    // let low_upper_56 = ((x as u64) % TWO_POW_56) as Field;
+    let low = x as u128; 
+    let high = ((x - low as Field) / TWO_POW_120 as Field) as u128;
     (low, high)
 }
 
@@ -74,18 +76,18 @@ pub fn split_60_bits(x: Field) -> (u64, u64) {
 pub(crate) unconstrained fn __normalize_limbs<let N: u32>(
     input: [Field; N],
     range: u32,
-) -> [Field; N] {
-    let mut normalized: [Field; N] = [0; N];
+) -> [u128; N] {
+    let mut normalized: [u128; N] = [0; N];
     let mut next: Field = input[0];
     for i in 0..(range - 1) {
         let (lo, hi) = split_120_bits(next);
 
-        normalized[i] = lo;
-        next = input[i + 1] + hi;
+        normalized[i] = lo as u128;
+        next = input[i + 1] + hi as Field;
     }
     {
         let (lo, hi) = split_120_bits(next);
-        normalized[range - 1] = lo;
+        normalized[range - 1] = lo as u128;
         assert(hi == 0);
     }
     normalized

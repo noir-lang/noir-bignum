@@ -9,6 +9,8 @@ use crate::utils::split_bits::{field_to_u60rep, TWO_POW_60};
  * It is helpful to use u60 types when evaluating addition operations that can overflow the field modulus,
  * as well as when performing bit shifts.
  */
+
+global TWO_POW_59: u128  = 0x800000000000000;
 pub struct U60Repr<let N: u32, let NumSegments: u32> {
     pub(crate) limbs: [u64; N * NumSegments],
 }
@@ -46,11 +48,11 @@ impl<let N: u32, let NumSegments: u32> std::ops::Sub for U60Repr<N, NumSegments>
     }
 }
 
-impl<let N: u32, let NumSegments: u32> std::convert::From<[Field; N]> for U60Repr<N, NumSegments> {
-    fn from(input: [Field; N]) -> Self {
+impl<let N: u32, let NumSegments: u32> std::convert::From<[u128; N]> for U60Repr<N, NumSegments> {
+    fn from(input: [u128; N]) -> Self {
         let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
         for i in 0..N {
-            let (lo, hi) = split_bits::split_60_bits(input[i]);
+            let (lo, hi) = split_bits::split_60_bits(input[i] as Field);
             result.limbs[2 * i] = lo;
             result.limbs[2 * i + 1] = hi;
         }
@@ -224,7 +226,7 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
         for i in 0..N * NumSegments {
             let value = self.limbs[N * NumSegments - 1 - i];
             self.limbs[N * NumSegments - 1 - i] = (value >> 1) + remainder;
-            remainder = (value << 59) & 0x800000000000000;
+            remainder = (value << 59) & TWO_POW_59 as u64;
         }
     }
 
