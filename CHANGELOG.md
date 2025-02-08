@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.3](https://github.com/noir-lang/noir-bignum/compare/v0.5.2...v0.5.3) (2025-02-03)
+
+
+### Bug Fixes
+
+* Correct batch inversion function ([#117](https://github.com/noir-lang/noir-bignum/issues/117)) ([976d3ef](https://github.com/noir-lang/noir-bignum/commit/976d3efd392fc12d95256624e82f5c826e98ab82))
+
 ## [0.5.2](https://github.com/noir-lang/noir-bignum/compare/v0.5.1...v0.5.2) (2025-01-29)
 
 
