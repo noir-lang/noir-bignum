@@ -237,7 +237,7 @@ pub(crate) unconstrained fn __batch_invert<let N: u32, let MOD_BITS: u32, let M:
 ) -> [[Field; N]; M] {
     // TODO: ugly! Will fail if input slice is empty
     let mut accumulator: [Field; N] = __one::<N>();
-    let mut temporaries: [[Field; N]; N] = std::mem::zeroed();
+    let mut temporaries: [[Field; N]; M] = std::mem::zeroed();
     for i in 0..M {
         temporaries[i] = accumulator;
         if (!__is_zero(x[i])) {
