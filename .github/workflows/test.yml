@@ -9,6 +9,6 @@ on:
 jobs:
   test:
     name: Test on Nargo 
-    uses: noir-lang/noir/.github/workflows/test.yml@master
+    uses: noir-lang/library-workflows/.github/workflows/test.yml@master
     with:
       minimum-noir-version: v1.0.0-beta.0
