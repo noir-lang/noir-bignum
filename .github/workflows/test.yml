@@ -6,9 +6,6 @@ on:
     - main
   pull_request:
 
-env:
-  MINIMUM_NOIR_VERSION: v1.0.0-beta.0
-
 jobs:
   test:
     name: Test on Nargo 
