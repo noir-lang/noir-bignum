@@ -9,9 +9,6 @@ on:
 jobs:
   test:
     name: Test on Nargo 
-    runs-on: ubuntu-latest
-    steps:
-      - name: Run test suite
-        uses: noir-lang/noir/.github/workflows/test.yml@master
-        with:
-          minimum-noir-version: v1.0.0-beta.0
+    uses: noir-lang/noir/.github/workflows/test.yml@master
+    with:
+      minimum-noir-version: v1.0.0-beta.0
