@@ -1,8 +1,11 @@
+use crate::bignum::BigNum;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 use crate::utils::u60_representation::U60Repr;
 
 pub struct U256Params {}
+
+pub type U256 = BigNum<3, 257, U256Params>;
 
 impl BigNumParamsGetter<3, 257> for U256Params {
     fn get_params() -> BigNumParams<3, 257> {
@@ -10,7 +13,7 @@ impl BigNumParamsGetter<3, 257> for U256Params {
     }
 }
 
-global U256_PARAMS: BigNumParams<3, 257> = BigNumParams {
+pub global U256_PARAMS: BigNumParams<3, 257> = BigNumParams {
     has_multiplicative_inverse: false,
     modulus: [0x00, 0x00, 0x010000],
     double_modulus: [

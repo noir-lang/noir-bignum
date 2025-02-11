@@ -1,16 +1,19 @@
+use crate::bignum::BigNum;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 use crate::utils::u60_representation::U60Repr;
 
 pub struct ED25519_Fr_Params {}
 
-impl BigNumParamsGetter<3, 255> for ED25519_Fr_Params {
-    fn get_params() -> BigNumParams<3, 255> {
+pub type ED25519_Fr = BigNum<3, 253, ED25519_Fr_Params>;
+
+impl BigNumParamsGetter<3, 253> for ED25519_Fr_Params {
+    fn get_params() -> BigNumParams<3, 253> {
         ED25519_Fr_PARAMS
     }
 }
 
-global ED25519_Fr_PARAMS: BigNumParams<3, 255> = BigNumParams {
+pub global ED25519_Fr_PARAMS: BigNumParams<3, 253> = BigNumParams {
     has_multiplicative_inverse: true,
     modulus: [0xdef9dea2f79cd65812631a5cf5d3ed, 0x14, 0x1000],
     double_modulus: [

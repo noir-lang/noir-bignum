@@ -1,8 +1,11 @@
+use crate::bignum::BigNum;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 use crate::utils::u60_representation::U60Repr;
 
 pub struct Secp384r1_Fr_Params {}
+
+pub type Secp384r1_Fr = BigNum<4, 384, Secp384r1_Fr_Params>;
 
 impl BigNumParamsGetter<4, 384> for Secp384r1_Fr_Params {
     fn get_params() -> BigNumParams<4, 384> {
@@ -10,7 +13,7 @@ impl BigNumParamsGetter<4, 384> for Secp384r1_Fr_Params {
     }
 }
 
-global Secp384r1_Fr_PARAMS: BigNumParams<4, 384> = BigNumParams {
+pub global Secp384r1_Fr_PARAMS: BigNumParams<4, 384> = BigNumParams {
     has_multiplicative_inverse: true,
     modulus: [
         0x1a0db248b0a77aecec196accc52973,
