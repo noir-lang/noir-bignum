@@ -866,8 +866,9 @@ fn test_to_field_one_digit() {
 #[test]
 fn test_to_field_two_digits() {
     let field: Field = 697955470585821007263499235110798476786097877002667034107578965871052378;
-    let bn =
-        BN254_Fq { limbs: [0x5a10b956d41840745e0a9f6e34465a, 0x65209b74583b912262843211905e41, 0x0] };
+    let bn = BN254_Fq {
+        limbs: [0x5a10b956d41840745e0a9f6e34465a, 0x65209b74583b912262843211905e41, 0x0],
+    };
     let result = to_field(bn);
     assert(result == field);
 }
@@ -875,8 +876,9 @@ fn test_to_field_two_digits() {
 #[test]
 fn test_to_field_three_digits() {
     let field: Field = 2330301921655783950764183713945533646391233209687308929386184468126823563744;
-    let bn =
-        BN254_Fq { limbs: [0x862cf8ea69d6c70c9cc8d8871b41e0, 0xe7763528201566c2fc8d93973cf1b4, 0x526] };
+    let bn = BN254_Fq {
+        limbs: [0x862cf8ea69d6c70c9cc8d8871b41e0, 0xe7763528201566c2fc8d93973cf1b4, 0x526],
+    };
     let result = to_field(bn);
     assert(result == field);
 }
