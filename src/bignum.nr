@@ -395,10 +395,6 @@ where
 {
     fn eq(self, other: Self) -> bool {
         let params = Params::get_params();
-        println("self");
-        println(self.limbs);
-        println("other");
-        println(other.limbs);
         eq::<_, MOD_BITS>(params, self.limbs, other.limbs)
     }
 }

@@ -272,10 +272,9 @@ pub(crate) fn eq<let N: u32, let MOD_BITS: u32>(
     // if self == other, possible values of `diff` will be `p` or `0`
     // (the subtract operator constrains diff to be < ceil(log(p)))
     // TODO: can do this more efficiently via witngen in unconstrained functions?
-    // let is_equal_modulus: bool = diff == params.modulus;
+    let is_equal_modulus: bool = diff == params.modulus;
     let is_equal_zero: bool = diff.all(|elem| elem == 0);
-    // is_equal_modulus | is_equal_zero
-    is_equal_zero
+    is_equal_modulus | is_equal_zero
 }
 
 pub(crate) fn is_zero<let N: u32, let MOD_BITS: u32>(val: [u128; N]) -> bool {

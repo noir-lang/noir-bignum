@@ -416,9 +416,10 @@ fn test_add_test_BN_wrap_around() {
     let mut b: Fq = Fq {limbs: [3,0,0]} ;
     let mut expected: Fq = Fq::one();
     a.limbs[0] -= 2;
-    println("a");
-    println(a);
+    println("the sum is"); 
+    // println(unsafe{__add_with_flags(BN254_Fq_Params::get_params(), a.limbs, b.limbs)});
     let c = a + b;
+    println(c);
      assert(c == expected);
 }
 
@@ -430,9 +431,17 @@ fn test_sub_test_BN() {
     let mut expected: Fq = BigNum::modulus();
     println(expected);
     expected.limbs[0] -= 1; // p - 1
+    println("the sub result is is:"); 
     println(unsafe{__sub_with_flags(BN254_Fq_Params::get_params(), a.limbs, b.limbs)});
     let result = a - b;
     assert(result == expected);
+}
+
+#[test]
+fn test_eq_wrap(){
+    let a: Fq = BigNum::modulus();
+    let b = Fq::zero();
+    assert(a == b);
 }
 
 #[test]

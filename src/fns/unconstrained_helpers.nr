@@ -3,6 +3,7 @@ use crate::utils::u60_representation::U60Repr;
 use crate::utils::msb::get_msb64;
 use crate::fns::unconstrained_ops::{__add, __gte, __mul, __neg, __one, __pow};
 use crate::params::BigNumParams as P;
+use crate::utils::split_bits::__normalize_limbs;
 
 global TWO_POW_60: u128 = 0x1000000000000000;
 global TWO_POW_119: u128 = 0x800000000000000000000000000000;
@@ -159,15 +160,16 @@ pub(crate) unconstrained fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
     let mut borrow_flags: [bool; N] = [false; N];
     let mut carry_flags: [bool; N] = [false; N];
     for i in 0..N {
-        let mut add_term: u128 = lhs[i] + rhs[i] + carry_in;
-        let mut carry = (add_term <= TWO_POW_120) as u128;
-        add_term -= carry * TWO_POW_120;
-        carry_in = carry;
+        let mut add_term: Field = lhs[i] as Field + rhs[i] as Field + carry_in as Field;
+        let mut carry = (add_term as u128 >= TWO_POW_120) as Field;
+        add_term -= carry as Field * TWO_POW_120 as Field;
+        carry_in = carry as u128;
 
         let sub_term = subtrahend[i] + borrow_in;
-        let mut borrow = (sub_term > add_term) as u128;
-        result[i] = borrow * TWO_POW_120 + add_term - sub_term;
-        borrow_in = borrow;
+        
+        let mut borrow: Field = (sub_term > add_term as u128) as Field;
+        result[i] = (borrow * TWO_POW_120 as Field + add_term - sub_term as Field) as u128;
+        borrow_in = borrow as u128;
 
       
             // Only set `borrow` and `carry` if they differ
@@ -178,9 +180,8 @@ pub(crate) unconstrained fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
         }
         
     }
-    // let result = U60Repr::into(result_u60);
-
     (result, carry_flags, borrow_flags, overflow)
+    // (add_res, [false; N], [false; N], false)
 }
 
 pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
@@ -202,19 +203,19 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
     };
     let mut result: [u128; N] = [0; N];
 
-    let mut carry_in: u128 = 0;
-    let mut borrow_in: u128 = 0;
+    let mut carry_in: Field = 0;
+    let mut borrow_in: Field = 0;
     let mut borrow_flags: [bool; N] = [false; N];
     let mut carry_flags: [bool; N] = [false; N];
     for i in 0..N {
-        let mut add_term: u128 = lhs[i] + rhs[i] + carry_in;
-        let mut carry = (add_term >= TWO_POW_120) as u128;
-        add_term -= carry * TWO_POW_120;
+        let mut add_term: Field = lhs[i] as Field + addend[i] as Field + carry_in;
+        let mut carry = (add_term as u128 >= TWO_POW_120) as Field;
+        add_term -= carry * TWO_POW_120 as Field;
         carry_in = carry;
 
-        let sub_term = rhs[i] + borrow_in;
-        let mut borrow = (sub_term > add_term) as u128;
-        result[i] = ((borrow * TWO_POW_120) as Field + add_term as Field - sub_term as Field) as u128;
+        let sub_term = rhs[i] as Field + borrow_in;
+        let mut borrow = (sub_term as u128 > add_term as u128) as Field;
+        result[i] = ((borrow * TWO_POW_120 as Field) + add_term - sub_term) as u128;
         borrow_in = borrow;
 
         
