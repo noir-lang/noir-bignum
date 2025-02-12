@@ -30,16 +30,16 @@ pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
     fn one() -> Self;
     fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
     unconstrained fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
-    fn from_slice(limbs: [Field]) -> Self;
+    fn from_slice(limbs: [u128]) -> Self;
     fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> Self;
     fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes];
 
     fn modulus() -> Self;
     fn modulus_bits(self) -> u32;
     fn num_limbs(self) -> u32;
-    fn get_limbs_slice(self) -> [Field];
-    fn get_limb(self, idx: u32) -> Field;
-    fn set_limb(&mut self, idx: u32, value: Field);
+    fn get_limbs_slice(self) -> [u128];
+    fn get_limb(self, idx: u32) -> u128;
+    fn set_limb(&mut self, idx: u32, value: u128);
 
     unconstrained fn __eq(self, other: Self) -> bool;
     unconstrained fn __is_zero(self) -> bool;
@@ -138,12 +138,18 @@ where
         Self { limbs: __derive_from_seed::<_, MOD_BITS, _>(params, seed) }
     }
 
-    fn from_slice(limbs: [Field]) -> Self {
+    fn from_slice(limbs: [u128]) -> Self {
         Self { limbs: limbs.as_array() }
     }
 
     fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> Self {
-        Self { limbs: from_be_bytes::<_, MOD_BITS, _>(x) }
+        // Self { limbs: from_be_bytes::<_, MOD_BITS, _>(x) }
+        let limbs_field = from_be_bytes::<_, MOD_BITS, _>(x); 
+        let mut limbs: [u128; N] = [0; N];
+        for i in 0..N {
+            limbs[i] = limbs_field[i] as u128;
+        }
+        Self { limbs: limbs }
     }
 
     fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes] {
@@ -162,15 +168,15 @@ where
         N
     }
 
-    fn get_limbs_slice(self) -> [Field] {
+    fn get_limbs_slice(self) -> [u128] {
         self.limbs
     }
 
-    fn get_limb(self, idx: u32) -> Field {
+    fn get_limb(self, idx: u32) -> u128 {
         self.limbs[idx]
     }
 
-    fn set_limb(&mut self, idx: u32, value: Field) {
+    fn set_limb(&mut self, idx: u32, value: u128) {
         self.limbs[idx] = value;
     }
 
@@ -292,7 +298,7 @@ where
     }
 
     fn validate_in_range(self) {
-        validate_in_range::<_, MOD_BITS>(self.limbs);
+        validate_in_range::<_,_, MOD_BITS>(self.limbs);
     }
 
     fn assert_is_not_equal(self, other: Self) {
@@ -389,6 +395,10 @@ where
 {
     fn eq(self, other: Self) -> bool {
         let params = Params::get_params();
+        println("self");
+        println(self.limbs);
+        println("other");
+        println(other.limbs);
         eq::<_, MOD_BITS>(params, self.limbs, other.limbs)
     }
 }

@@ -55,7 +55,7 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, le
     linear_flags: [bool; ADD_N],
 ) -> ([u128; N], [u128; N], [Field; 2 * N]) {
     // TODO, validate we do not overflow N2 when multiplying and N when adding
-    let mut mulout_p = __compute_quadratic_expression_product(
+        let mut mulout_p = __compute_quadratic_expression_product(
         params,
         lhs_terms,
         lhs_flags,
@@ -69,8 +69,12 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, le
 
     let modulus: [u128; N] = params.modulus;
     let modulus_bits = MOD_BITS;
-    let (quotient, remainder) =
-        __barrett_reduction(relation_result, params.redc_param, modulus_bits, modulus);
+    let (quotient, remainder) = __barrett_reduction(
+        relation_result,
+        params.redc_param,
+        modulus_bits,
+        modulus,
+    );
     assert(remainder == [0; N]);
 
     for i in 0..N {
@@ -81,9 +85,10 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, le
 
     // compute borrow flags from mulout_p and mulout_n
     let mut borrow_flags: [Field; 2 * N] = [0; 2 * N];
-    let borrow_shift: Field = TWO_POW_246; // 2^{246}
-    let borrow_carry: Field = TWO_POW_126; // 2^{246 - 120} = 2^{126}
-    let downshift: Field = 1 / TWO_POW_120 as Field;
+    let borrow_shift: Field = 0x40000000000000000000000000000000000000000000000000000000000000; // 2^{246}
+    let borrow_carry: Field = 0x40000000000000000000000000000000; // 2^{246 - 120} = 2^{126}
+    let two_pow_120: Field = 0x1000000000000000000000000000000;
+    let downshift: Field = 1 / two_pow_120;
 
     // determine whether we need to borrow from more significant limbs.
     // initial limb is "simple" comparison operation
@@ -91,8 +96,7 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, le
     borrow_flags[0] = mulout_p[0].lt(mulout_n[0]) as Field;
     // we have 2N - 2 borrow flags. The number of limbs from our product computation is 2N - 1
     // and there is nothing to borrow against for the final limb.
-    let mut hi_bits =
-        (mulout_p[0] - mulout_n[0] + (borrow_flags[0] as Field * borrow_shift)) * downshift;
+    let mut hi_bits = (mulout_p[0] - mulout_n[0] + (borrow_flags[0] * borrow_shift)) * downshift;
     for i in 1..(N + N - 2) {
         // compute the contribution from limb `i-1` that gets added into limb `i`, and add into limb `i`
         // let hi_bits = (mulout_p.get(i - 1) - mulout_n.get(i - 1) + (borrow_flags.get(i - 1) * borrow_shift))
@@ -101,7 +105,7 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, le
 
         // determine whether negative limb values are greater than positive limb values
         let underflow: Field =
-            mulout_p[i].lt(mulout_n[i] + (borrow_flags[i - 1] as Field * borrow_carry)) as Field;
+            mulout_p[i].lt(mulout_n[i] + (borrow_flags[i - 1] * borrow_carry)) as Field;
         borrow_flags[i] = underflow;
 
         hi_bits = (
@@ -134,7 +138,7 @@ unconstrained fn __add_linear_expression<let N: u32, let MOD_BITS: u32, let M: u
     for i in 0..M {
         if (flags[i]) {
             for j in 0..N {
-                sum[j] = sum[j] + modulus2[j] - x[i][j];
+                sum[j] = sum[j] + (modulus2[j] as Field - x[i][j] as Field) as u128;
                 // assert(x[i][j].lt(modulus2[j]));
             }
         } else {
@@ -280,6 +284,9 @@ pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let L
             linear_flags,
         )
     };
+    
+    println("borrow_flags");
+    println(borrow_flags);
     // constrain the quotient to be in the range [0, ..., 2^{m} - 1], where `m` is log2(modulus) rounded up.
     // Additionally, validate quotient limbs are also in the range [0, ..., 2^{120} - 1]
     validate_quotient_in_range::<_, MOD_BITS>(quotient);
@@ -292,6 +299,7 @@ pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let L
 
     // TODO: this is super nasty as it requires a multiplication
     let double_modulus: [u128; N] = params.double_modulus;
+
     for k in 0..NUM_PRODUCTS {
         for i in 0..N {
             for j in 0..LHS_N {
@@ -349,6 +357,8 @@ pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let L
         }
         product_limbs[i] += t4[i];
     }
+    println("product_limbs"); 
+    println(product_limbs);
 
     // each limb product represents the sum of 120-bit products.
     // by setting the borrow value to 2^246 we are restricting this method's completeness to expressions
@@ -358,8 +368,8 @@ pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let L
     // (the larger the value, the greater the range check that is required on product_limbs)
     // (126-bit range check is a sweet spot for the barretenberg backend as it decomposes into 9 14-bit range checks)
     // (the barretenberg backend can evaluate these in 5.25 gates. 127 bits costs 6.5 gates)
-    let borrow_shift: Field = TWO_POW_246; // 2^{246}
-    let borrow_carry: Field = TWO_POW_126; // 2^{246 - 120} = 2^{126}
+    let borrow_shift: Field = 0x40000000000000000000000000000000000000000000000000000000000000; // 2^{246}
+    let borrow_carry: Field = 0x40000000000000000000000000000000; // 2^{246 - 120} = 2^{126}
     // N.B. borrow_flags is `Field` type because making it `bool` would apply boolean constraints to all `N2` array entries.
     //      We only use `N2 - 2` borrow flags so applying 1-bit range checks on the array elements we use is more efficient.
     // TODO: Once it is possible to perform arithmetic on generics we can use `borrow_flags: [bool;N+N-2]` to avoid this issue
@@ -370,7 +380,7 @@ pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let L
         product_limbs[i] += (borrow_flags[i] * borrow_shift - borrow_flags[i - 1] * borrow_carry);
     }
     product_limbs[N + N - 2] -= borrow_flags[N + N - 3] * borrow_carry;
-
+    
     // Final step: Validate `product_limbs` represents the integer value `0`
     // Each element `i` in `product_limbs` overlaps in bitrange with element `i+1`, EXCEPT for the low 120 bits
     // i.e. we need to do the following for each limb `i`:
@@ -387,6 +397,8 @@ pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let L
     for i in 0..N + N - 2 {
         product_limbs[i] *= hi_downshift;
         std::as_witness(product_limbs[i]);
+        println("product_limbs[i]");
+        println(product_limbs[i]);
         product_limbs[i].assert_max_bit_size::<126>(); // N.B. is this sufficient? going beyond 126 costs us 1 gate per limb
         product_limbs[i + 1] += product_limbs[i];
     }

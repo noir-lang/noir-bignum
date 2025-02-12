@@ -16,7 +16,7 @@ use crate::fns::{
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 pub struct RuntimeBigNum<let N: u32, let MOD_BITS: u32> {
-    pub limbs: [Field; N],
+    pub limbs: [u128; N],
     pub params: BigNumParams<N, MOD_BITS>,
 }
 
@@ -35,8 +35,8 @@ pub(crate) trait RuntimeBigNumTrait<let N: u32, let MOD_BITS: u32>: Neg + Add + 
         params: BigNumParams<N, MOD_BITS>,
         seed: [u8; SeedBytes],
     ) -> Self;
-    fn from_slice(params: BigNumParams<N, MOD_BITS>, limbs: [Field]) -> Self;
-    fn from_array(params: BigNumParams<N, MOD_BITS>, limbs: [Field; N]) -> Self;
+    fn from_slice(params: BigNumParams<N, MOD_BITS>, limbs: [u128]) -> Self;
+    fn from_array(params: BigNumParams<N, MOD_BITS>, limbs: [u128; N]) -> Self;
     fn from_be_bytes<let NBytes: u32>(params: BigNumParams<N, MOD_BITS>, x: [u8; NBytes]) -> Self;
 
     fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes];
@@ -45,9 +45,9 @@ pub(crate) trait RuntimeBigNumTrait<let N: u32, let MOD_BITS: u32>: Neg + Add + 
     fn modulus_bits() -> u32;
     fn num_limbs() -> u32;
     // pub fn get(self) -> [Field];
-    fn get_limbs(self) -> [Field; N];
-    fn get_limb(self, idx: u32) -> Field;
-    fn set_limb(&mut self, idx: u32, value: Field);
+    fn get_limbs(self) -> [u128; N];
+    fn get_limb(self, idx: u32) -> u128;
+    fn set_limb(&mut self, idx: u32, value: u128);
 
     unconstrained fn __eq(self, other: Self) -> bool;
     unconstrained fn __is_zero(self) -> bool;
@@ -122,7 +122,7 @@ impl<let N: u32, let MOD_BITS: u32> Neg for RuntimeBigNum<N, MOD_BITS> {
 impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeBigNum<N, MOD_BITS> {
 
     fn new(params: BigNumParams<N, MOD_BITS>) -> Self {
-        let limbs: [Field; N] = [0; N];
+        let limbs: [u128; N] = [0; N];
         Self { limbs, params }
     }
 
@@ -149,16 +149,21 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeB
         Self { limbs, params }
     }
 
-    fn from_slice(params: BigNumParams<N, MOD_BITS>, limbs: [Field]) -> Self {
+    fn from_slice(params: BigNumParams<N, MOD_BITS>, limbs: [u128]) -> Self {
         Self { limbs: limbs.as_array(), params }
     }
 
-    fn from_array(params: BigNumParams<N, MOD_BITS>, limbs: [Field; N]) -> Self {
+    fn from_array(params: BigNumParams<N, MOD_BITS>, limbs: [u128; N]) -> Self {
         Self { limbs, params }
     }
 
     fn from_be_bytes<let NBytes: u32>(params: BigNumParams<N, MOD_BITS>, x: [u8; NBytes]) -> Self {
-        Self { limbs: from_be_bytes::<_, MOD_BITS, _>(x), params }
+        let limbs_field =  from_be_bytes::<_, MOD_BITS, _>(x); 
+        let mut limbs: [u128; N] = [0; N];
+        for i in 0..N {
+            limbs[i] = limbs_field[i] as u128;
+        }
+        Self { limbs, params }
     }
 
     fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes] {
@@ -182,15 +187,15 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeB
     //     self.get_limbs()
     // }
 
-    fn get_limbs(self) -> [Field; N] {
+    fn get_limbs(self) -> [u128; N] {
         self.limbs
     }
 
-    fn get_limb(self, idx: u32) -> Field {
+    fn get_limb(self, idx: u32) -> u128 {
         self.limbs[idx]
     }
 
-    fn set_limb(&mut self, idx: u32, value: Field) {
+    fn set_limb(&mut self, idx: u32, value: u128) {
         self.limbs[idx] = value;
     }
 
@@ -344,7 +349,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeB
     }
 
     fn validate_in_range(self) {
-        validate_in_range::<_, MOD_BITS>(self.limbs);
+        validate_in_range::<_,_, MOD_BITS>(self.limbs);
     }
 
     fn assert_is_not_equal(self, other: Self) {

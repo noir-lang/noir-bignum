@@ -35,7 +35,7 @@ pub unconstrained fn split_120_bits(mut x: Field) -> (u128, u128) {
     // let low_lower_64 = (x as u64) as Field;
     // x = (x - low_lower_64) / TWO_POW_64;
     // let low_upper_56 = ((x as u64) % TWO_POW_56) as Field;
-    let low = x as u128;
+    let low = (x as u128) % TWO_POW_120;
     let high = ((x - low as Field) / TWO_POW_120 as Field) as u128;
     (low, high)
 }
@@ -79,7 +79,6 @@ pub(crate) unconstrained fn __normalize_limbs<let N: u32>(
     let mut next: Field = input[0];
     for i in 0..(range - 1) {
         let (lo, hi) = split_120_bits(next);
-
         normalized[i] = lo as u128;
         next = input[i + 1] + hi as Field;
     }
