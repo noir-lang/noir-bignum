@@ -948,9 +948,7 @@ where
 #[test]
 unconstrained fn test_batch_inversion_BN381(seeds: [[u8; 2]; 3]) {
     let fields = seeds.map(|seed| BN381::derive_from_seed(seed));
-    unsafe {
-        test_batch_inversion(fields)
-    }
+    test_batch_inversion(fields)
 }
 
 unconstrained fn test_batch_inversion_slice<BN>(fields: [BN])
@@ -967,7 +965,5 @@ where
 #[test]
 unconstrained fn test_batch_inversion_slice_BN381(seeds: [[u8; 2]; 3]) {
     let fields = seeds.map(|seed| BN381::derive_from_seed(seed)).as_slice();
-    unsafe {
-        test_batch_inversion_slice(fields)
-    }
+    test_batch_inversion_slice(fields)
 }
