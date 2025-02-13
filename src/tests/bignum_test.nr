@@ -266,7 +266,7 @@ where
 
     let t0: [u128; N] = a.get_limbs_slice().as_array();
     let t1: [u128; N] = modulus.get_limbs_slice().as_array();
-    let a_plus_modulus = BN::from_slice(unsafe{__helper_add(t0, t1)});
+    let a_plus_modulus = BN::from_slice(unsafe { __helper_add(t0, t1) });
     a_plus_modulus.assert_is_not_equal(b);
 }
 
@@ -281,7 +281,7 @@ where
 
     let t0: [u128; N] = b.get_limbs_slice().as_array();
     let t1: [u128; N] = modulus.get_limbs_slice().as_array();
-    let b_plus_modulus = BN::from_slice(unsafe{__helper_add(t0, t1)});
+    let b_plus_modulus = BN::from_slice(unsafe { __helper_add(t0, t1) });
     a.assert_is_not_equal(b_plus_modulus);
 }
 
@@ -297,8 +297,8 @@ where
     let t0: [u128; N] = a.get_limbs_slice().as_array();
     let t1: [u128; N] = b.get_limbs_slice().as_array();
     let t2: [u128; N] = modulus.get_limbs_slice().as_array();
-    let a_plus_modulus: BN = BN::from_slice(unsafe{__helper_add(t0, t2)});
-    let b_plus_modulus: BN = BN::from_slice(unsafe{__helper_add(t1, t2)});
+    let a_plus_modulus: BN = BN::from_slice(unsafe { __helper_add(t0, t2) });
+    let b_plus_modulus: BN = BN::from_slice(unsafe { __helper_add(t1, t2) });
     a_plus_modulus.assert_is_not_equal(b_plus_modulus);
 }
 
@@ -455,13 +455,10 @@ fn test_add_modulus_limit() {
     // this is the largest value that will satisfy the range check applied when constructing a bignum
     // let p: U60Repr<3, 2> = U60Repr::from(BN254_Fq_Params::get_params().modulus);
     let p: [u128; 3] = BN254_Fq_Params::get_params().modulus;
-    let two_pow_254_minus_1: [u128; 3] = [
-        0xffffffffffffffffffffffffffffff,
-        0xffffffffffffffffffffffffffffff,
-        0x3fff,
-    ];
+    let two_pow_254_minus_1: [u128; 3] =
+        [0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x3fff];
     let a: Fq = BigNum { limbs: p };
-    let b: Fq = BigNum { limbs : two_pow_254_minus_1 };
+    let b: Fq = BigNum { limbs: two_pow_254_minus_1 };
     let result = a + b;
     assert(result == b);
 }
@@ -471,13 +468,10 @@ fn test_add_modulus_overflow() {
     //(2^{254} - 1) + (p - 1) = 2^{254} + p
     // after subtracting modulus, result is 2^{254} will does not satisfy the range check applied when constructing a BigNum
     let p: [u128; 3] = BN254_Fq_Params::get_params().modulus;
-    let two_pow_254_minus_1: [u128; 3] = [
-        0xffffffffffffffffffffffffffffff,
-        0xffffffffffffffffffffffffffffff,
-        0x3fff,
-    ];
+    let two_pow_254_minus_1: [u128; 3] =
+        [0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x3fff];
     let one = [1, 0, 0];
-    let a: Fq = BigNum { limbs: unsafe{__helper_add(p, one)} };
+    let a: Fq = BigNum { limbs: unsafe { __helper_add(p, one) } };
     let b: Fq = BigNum { limbs: two_pow_254_minus_1 };
     let result = a + b;
     assert(result == b);
