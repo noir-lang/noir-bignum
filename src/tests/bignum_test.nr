@@ -127,7 +127,6 @@ fn test_derive_from_seed() {
     let params = BN254_Fq_Params::get_params();
     let seed = [1, 2, 3, 4];
     let result = derive_from_seed::<3, 254, 4>(params, seed);
-    println(result);
 }
 
 fn test_eq<let N: u32, BN>()
@@ -139,11 +138,7 @@ where
     let c = BN::derive_from_seed([2, 2, 3, 4]);
 
     let modulus = BN::modulus();
-    // let t0: U60Repr<N, 2> = (U60Repr::from(modulus.get_limbs_slice().as_array()));
-    // let t1: U60Repr<N, 2> = (U60Repr::from(b.get_limbs_slice().as_array()));
-    // let b_plus_modulus = BN::from_slice(U60Repr::into(t0 + t1));
     assert(a.eq(b) == true);
-    // assert(a.eq(b_plus_modulus) == true);
     assert(c.eq(b) == false);
     assert(c.eq(a) == false);
 }
@@ -184,7 +179,6 @@ where
     let a: BN = BN::derive_from_seed([1, 2, 3, 4]);
     let b: BN = BN::derive_from_seed([4, 5, 6, 7]);
     let c = (a + b) * (a + b);
-    // println(c);
     let d = (a * a) + (b * b) + (a * b) + (a * b);
     assert(c.eq(d));
 }
@@ -203,19 +197,18 @@ where
     let mut c = (a + b);
     c += c;
     let d = (a + b) * (one + one);
-    // assert(c == (d));
-    // let e = one + one;
-    // let limbs: [u128; N] = e.get_limbs_slice().as_array();
-    // let mut first: bool = true;
-    // println(limbs);
-    // for limb in limbs {
-    //     if first {
-    //         first = false;
-    //         assert(limb == 2);
-    //     } else {
-    //         assert(limb == 0);
-    //     }
-    // }
+    assert(c == (d));
+    let e = one + one;
+    let limbs: [u128; N] = e.get_limbs_slice().as_array();
+    let mut first: bool = true;
+    for limb in limbs {
+        if first {
+            first = false;
+            assert(limb == 2);
+        } else {
+            assert(limb == 0);
+        }
+    }
 }
 
 fn test_div<let N: u32, BN>()
@@ -248,8 +241,7 @@ where
 {
     let a = BN::derive_from_seed([1, 2, 3, 4]);
     let b = BN::derive_from_seed([4, 5, 6, 7]);
-    println(a);
-    println(b);
+
     a.assert_is_not_equal(b);
 }
 
@@ -389,18 +381,14 @@ fn test_u128_div() {
 unconstrained fn test_add_BN() {
     let mut a: Fq = BigNum::modulus();
     let mut b: Fq = BigNum::modulus();
-    println("modulus");
-    println(BN254_Fq_Params::get_params().modulus);
+
     a.limbs[0] -= 1;
-    println("a");
-    println(a);
+
     b.limbs[0] -= 1;
-    println("b");
-    println(b);
+
     let mut expected: Fq = BigNum::modulus();
     expected.limbs[0] -= 2;
-    println("expected");
-    println(expected);
+
     let c = a + b;
     assert(c == expected);
 }
@@ -411,10 +399,9 @@ fn test_add_test_BN_wrap_around() {
     let mut b: Fq = Fq { limbs: [3, 0, 0] };
     let mut expected: Fq = Fq::one();
     a.limbs[0] -= 2;
-    println("the sum is");
-    // println(unsafe{__add_with_flags(BN254_Fq_Params::get_params(), a.limbs, b.limbs)});
+
     let c = a + b;
-    println(c);
+
     assert(c == expected);
 }
 
@@ -424,12 +411,7 @@ fn test_sub_test_BN() {
     let mut a: Fq = BigNum::zero();
     let mut b: Fq = BigNum::one();
     let mut expected: Fq = BigNum::modulus();
-    println(expected);
     expected.limbs[0] -= 1; // p - 1
-    println("the sub result is is:");
-    println(
-        unsafe { __sub_with_flags(BN254_Fq_Params::get_params(), a.limbs, b.limbs) },
-    );
     let result = a - b;
     assert(result == expected);
 }
@@ -513,11 +495,9 @@ fn test_add_BN2() {
 #[test]
 fn test_mul_BN_with_one() {
     let a: Fq = BigNum::modulus() - (BigNum::one() + BigNum::one());
-    // println("a");
-    // println(a);
+
     let b: Fq = BigNum::one();
-    // println("modulus");
-    // println(BN254_Fq_Params::get_params().modulus);
+
     let c = a * b;
     assert(c == a);
 }

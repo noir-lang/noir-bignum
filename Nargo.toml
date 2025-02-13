@@ -1,6 +1,6 @@
 [package]
 name = "bignum"
-type = "bin"
+type = "lib"
 authors = [""]
 compiler_version = ">=1.0.0"
 

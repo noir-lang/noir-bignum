@@ -3,7 +3,6 @@ use crate::params::BigNumParams as P;
 use crate::utils::msb::get_msb64;
 use crate::utils::split_bits;
 use crate::utils::split_bits::__normalize_limbs;
-use crate::utils::u60_representation::U60Repr;
 
 global TWO_POW_60: u128 = 0x1000000000000000;
 global TWO_POW_119: u128 = 0x800000000000000000000000000000;
@@ -20,13 +19,6 @@ global TWO_POW_120: u128 = 0x1000000000000000000000000000000;
  * __barrett_reduction
  * __tonelli_shanks_sqrt
  */
-
-// pub(crate) unconstrained fn __from_field<let N: u32>(field: Field) -> [Field; N] {
-//     // cast the field to a u60 representation
-//     let res_u60: U60Repr<N, 2> = U60Repr::from_field(field);
-//     let result: [Field; N] = U60Repr::into(res_u60);
-//     result
-// }
 
 pub(crate) unconstrained fn __from_field<let N: u32>(field: Field) -> [u128; N] {
     let mut x = field;
@@ -72,8 +64,6 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
     lhs: [u128; N],
     rhs: [u128; N],
 ) -> ([u128; N], [bool; N], [bool; N]) {
-    // let a_u60: U60Repr<N, 2> = From::from(lhs);
-    // let mut b_u60: U60Repr<N, 2> = From::from(rhs);
     let mut a = lhs;
     let mut b = rhs;
     let underflow = __gte(rhs, lhs);
@@ -123,7 +113,6 @@ pub(crate) unconstrained fn __neg_with_flags<let N: u32, let MOD_BITS: u32>(
         borrow_in = borrow;
         borrow_flags[i] = borrow as bool;
     }
-    // let result = U60Repr::into(result_u60);
     (result, borrow_flags)
 }
 
@@ -132,12 +121,6 @@ pub(crate) unconstrained fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
     lhs: [u128; N],
     rhs: [u128; N],
 ) -> ([u128; N], [bool; N], [bool; N], bool) {
-    // let a_u60: U60Repr<N, 2> = From::from(lhs);
-    // let b_u60: U60Repr<N, 2> = From::from(rhs);
-    // let add_u60 = a_u60 + b_u60;
-    // let a_u60: U60Repr<N, 2> = From::from(lhs);
-    // let b_u60: U60Repr<N, 2> = From::from(rhs);
-    // let add_u60 = a_u60 + b_u60;
     let add_res = __helper_add(lhs, rhs);
     let overflow = __gte(add_res, params.modulus);
 
@@ -171,7 +154,6 @@ pub(crate) unconstrained fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
         }
     }
     (result, carry_flags, borrow_flags, overflow)
-    // (add_res, [false; N], [false; N], false)
 }
 
 pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
@@ -179,8 +161,6 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
     lhs: [u128; N],
     rhs: [u128; N],
 ) -> ([u128; N], [bool; N], [bool; N], bool) {
-    // let a_u60: U60Repr<N, 2> = U60Repr::from(lhs);
-    // let b_u60: U60Repr<N, 2> = U60Repr::from(rhs);
     let mut one: [u128; N] = [0; N];
     one[0] = 1;
     let underflow = __gte(rhs, lhs);
@@ -232,8 +212,6 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     }
 
     let mulout: [u128; 3 * N] = __normalize_limbs(mulout_field, 3 * N - 1);
-    // K.B everything is the same up to here.
-    // let mulout_u60: U60Repr<N, 6> = U60Repr::new(mulout);
 
     // When we apply the barrett reduction, the maximum value of the output will be
     // <= p * (1 + x/2^{2k})
@@ -289,16 +267,13 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
         quotient_mul_modulus_normalized[i] = long_quotient_mul_modulus_normalized[i] as u128;
     }
 
-    // let quotient_mul_modulus_u60: U60Repr<N, 4> = U60Repr::new(quotient_mul_modulus_normalized);
-    // convert the input into U60Repr
-    // let x_u60: U60Repr<N, 4> = U60Repr::new(x);
     let mut long_remainder = __helper_sub(x, long_quotient_mul_modulus_normalized);
     // ugly but have to remove a bunch of zeros from this
     let mut remainder = [0; N];
     for i in 0..N {
         remainder[i] = long_remainder[i] as u128;
     }
-    // barrett reduction is quirky so might need to remove a few modulus_u60 from the remainder
+    // barrett reduction is quirky so might need to remove a few modulus from the remainder
     if (__gte(remainder, modulus)) {
         remainder = __helper_sub(remainder, modulus);
         smaller_quotient = __increment(smaller_quotient);
@@ -323,7 +298,6 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
 pub(crate) unconstrained fn __primitive_root_log_size<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
 ) -> u32 {
-    // let mut target: U60Repr<N, 2> = params.modulus_u60 - U60Repr::one();
     let mut one: [u128; N] = [0; N];
     one[0] = 1;
     let mut target = __helper_sub(params.modulus, one);
@@ -374,7 +348,6 @@ pub(crate) unconstrained fn __multiplicative_generator<let N: u32, let MOD_BITS:
 ) -> [u128; N] {
     let mut target: [u128; N] = __one();
     let p_minus_one_over_two = __shr(__helper_sub(params.modulus, __one()), 1);
-    // let p_minus_one_over_two: U60Repr<N, 2> = (params.modulus_u60 - U60Repr::one()).shr(1);
     let (_, target) = __recursively_find_multiplicative_generator::<_, MOD_BITS>(
         params,
         target,
@@ -452,8 +425,6 @@ pub(crate) unconstrained fn __shl<let N: u32>(input: [u128; N], shift: u32) -> [
         let upshift = ((value << limb_shift) + remainder) & mask;
         result[i + num_shifted_limbs] = upshift;
         remainder = (value >> remainder_shift);
-        // let remainder: u64 = (self.limbs.get(i + num_shifted_limbs as u64) << remainder_shift as u8) & mask;
-        // result.limbs.set(i - 1, result.limbs.get(i - 1) + remainder);
     }
     result
 }

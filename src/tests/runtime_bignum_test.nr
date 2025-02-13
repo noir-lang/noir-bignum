@@ -1,7 +1,6 @@
 use crate::fns::unconstrained_helpers::__barrett_reduction;
 use crate::params::{BigNumParams, BigNumParamsGetter};
 use crate::runtime_bignum::{RuntimeBigNum, RuntimeBigNumTrait};
-use crate::utils::u60_representation::U60Repr;
 
 use crate::fields::bn254Fq::BN254_Fq_Params;
 
