@@ -228,7 +228,6 @@ pub(crate) unconstrained fn __udiv_mod<let N: u32>(
     println("remainder");
     println(remainder);
 
-
     for i in 0..(N * 120) {
         if (__gte(remainder, b) == false) {
             break;
