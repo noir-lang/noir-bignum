@@ -203,15 +203,14 @@ pub(crate) unconstrained fn __udiv_mod<let N: u32>(
     divisor: [u128; N],
 ) -> ([u128; N], [u128; N]) {
     // let mut quotient_u60: U60Repr<N, 2> = U60Repr::from([0; N]);
-    let mut quotient: [u128; N] = [0; N];
     // let mut remainder_u60: U60Repr<N, 2> = U60Repr::from(numerator);
+    let mut quotient: [u128; N] = [0; N];
     let mut remainder: [u128; N] = numerator;
+
     // let mut divisor_u60: U60Repr<N, 2> = U60Repr::from(divisor);
-    // let b = divisor_u60;
     let b = divisor;
 
     let mut bit_difference = __get_msb(remainder) - __get_msb(divisor);
-
     // let mut accumulator_u60: U60Repr<N, 2> = U60Repr::one();
     let mut accumulator: [u128; N] = __one();
     // divisor_u60 = divisor_u60.shl(bit_difference);
@@ -223,11 +222,17 @@ pub(crate) unconstrained fn __udiv_mod<let N: u32>(
         divisor = __shr(divisor, 1);
         accumulator = __shr(accumulator, 1);
     }
-    for _ in 0..(N * 120) {
-        if (__gte(remainder, divisor) == false) {
+
+    println("divisor");
+    println(divisor);
+    println("remainder");
+    println(remainder);
+
+
+    for i in 0..(N * 120) {
+        if (__gte(remainder, b) == false) {
             break;
         }
-
         // we've shunted 'divisor' up to have the same bit length as our remainder.
         // If remainder >= divisor, then a is at least '1 << bit_difference' multiples of b
         if (__gte(remainder, divisor)) {
@@ -429,9 +434,9 @@ pub(crate) unconstrained fn __gte<let N: u32, let MOD_BITS: u32>(
 ) -> bool {
     let mut result = false;
     let mut early_exit = false;
-    for i in 0..N {
-        let idx = N - 1 - i;
-        if (lhs[idx] == rhs[idx]) {
+    for i in 0..(N) {
+        let idx = (N) - 1 - i;
+        if (rhs[idx] == lhs[idx]) {
             continue;
         }
 

@@ -16,7 +16,6 @@
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 
-
 pub struct Pallas_Fr_Params {}
 
 impl BigNumParamsGetter<3, 255> for Pallas_Fr_Params {

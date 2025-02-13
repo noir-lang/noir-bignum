@@ -1,7 +1,6 @@
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 
-
 pub struct U4096Params {}
 
 impl BigNumParamsGetter<35, 4097> for U4096Params {

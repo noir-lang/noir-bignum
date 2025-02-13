@@ -1,7 +1,7 @@
 use crate::bignum::BigNum;
 use crate::bignum::BigNumTrait;
 use crate::bignum::to_field;
-use crate::fns::unconstrained_helpers::{__helper_add, __add_with_flags};
+use crate::fns::unconstrained_helpers::{__add_with_flags, __helper_add};
 
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
@@ -9,8 +9,8 @@ use crate::params::BigNumParamsGetter;
 use crate::fields::bls12_381Fq::BLS12_381_Fq_Params;
 use crate::fields::bn254Fq::BN254_Fq_Params;
 use crate::fields::U256::U256Params;
-use crate::fns::unconstrained_helpers::__sub_with_flags;
 use crate::fns::constrained_ops::derive_from_seed;
+use crate::fns::unconstrained_helpers::__sub_with_flags;
 
 struct Test2048Params {}
 
@@ -62,7 +62,6 @@ global TEST_2048_PARAMS: BigNumParams<18, 2048> = BigNumParams {
         0x01383fb63120ee237fc7c7839f230729,
         0x0170,
     ],
-
     redc_param: [
         0x1697def7100cd5cf8d890b4ef2ec3f,
         0x765ba8304214dac764d3f4adc31859,
@@ -122,7 +121,6 @@ fn test_bls_reduction() {
     };
     XX_mul_3.validate_in_field();
 }
-
 
 #[test]
 fn test_derive_from_seed() {
@@ -186,6 +184,7 @@ where
     let a: BN = BN::derive_from_seed([1, 2, 3, 4]);
     let b: BN = BN::derive_from_seed([4, 5, 6, 7]);
     let c = (a + b) * (a + b);
+    // println(c);
     let d = (a * a) + (b * b) + (a * b) + (a * b);
     assert(c.eq(d));
 }
@@ -203,7 +202,7 @@ where
     b.validate_in_field();
     let mut c = (a + b);
     c += c;
-    let d =  (a + b) * (one + one);
+    let d = (a + b) * (one + one);
     // assert(c == (d));
     // let e = one + one;
     // let limbs: [u128; N] = e.get_limbs_slice().as_array();
@@ -325,70 +324,66 @@ fn test_is_zero_BN() {
 #[test]
 fn test_u128_sub_hex() {
     let a: u128 = 0x816a916871ca8d3c208c16d87cfd46;
-    let b = 0x816a916871ca8d3c208c16d87cfd45; 
-    let c = a -1; 
+    let b = 0x816a916871ca8d3c208c16d87cfd45;
+    let c = a - 1;
     assert(c == b);
 }
 
 #[test]
 fn test_u128_add_hex() {
     let a: u128 = 0x816a916871ca8d3c208c16d87cfd46;
-    let b = 0x816a916871ca8d3c208c16d87cfd45; 
-    let c = b + 1; 
+    let b = 0x816a916871ca8d3c208c16d87cfd45;
+    let c = b + 1;
     assert(c == a);
 }
 
 #[test]
 fn test_u128_mul_hex() {
     let a: u128 = 0x40b548b438e5469e10460b6c3e7ea3;
-    let b = 0x816a916871ca8d3c208c16d87cfd46; 
-    let c = 2*a; 
+    let b = 0x816a916871ca8d3c208c16d87cfd46;
+    let c = 2 * a;
     assert(c == b);
 }
 
 #[test]
 fn test_u128_div_hex() {
     let a: u128 = 0x816a916871ca8d3c208c16d87cfd46;
-    let b = 0x40b548b438e5469e10460b6c3e7ea3; 
-    let c = a / 2; 
+    let b = 0x40b548b438e5469e10460b6c3e7ea3;
+    let c = a / 2;
     assert(c == b);
 }
 
 #[test]
 fn test_u128_sub() {
     let a: u128 = 671967750576550571863734675757137222;
-    let b = 671967750576550571863734675757137221; 
-    let c = a -1;  
+    let b = 671967750576550571863734675757137221;
+    let c = a - 1;
     assert(c == b);
 }
-
 
 #[test]
 fn test_u128_add() {
     let a: u128 = 671967750576550571863734675757137222;
-    let b: u128 = 671967750576550571863734675757137221; 
-    let c: u128 = b+1;  
+    let b: u128 = 671967750576550571863734675757137221;
+    let c: u128 = b + 1;
     assert(c == a);
 }
 
 #[test]
 fn test_u128_mul() {
     let a: u128 = 671967750576550571863734675757137222;
-    let b: u128 = 335983875288275285931867337878568611; 
-    let c: u128 = b* 2;  
+    let b: u128 = 335983875288275285931867337878568611;
+    let c: u128 = b * 2;
     assert(c == a);
 }
 
 #[test]
 fn test_u128_div() {
     let a: u128 = 671967750576550571863734675757137222;
-    let b: u128 = 335983875288275285931867337878568611; 
-    let c = a / 2;  
+    let b: u128 = 335983875288275285931867337878568611;
+    let c = a / 2;
     assert(c == b);
 }
-
-
-
 
 #[test]
 unconstrained fn test_add_BN() {
@@ -413,14 +408,14 @@ unconstrained fn test_add_BN() {
 #[test]
 fn test_add_test_BN_wrap_around() {
     let mut a: Fq = BigNum::modulus();
-    let mut b: Fq = Fq {limbs: [3,0,0]} ;
+    let mut b: Fq = Fq { limbs: [3, 0, 0] };
     let mut expected: Fq = Fq::one();
     a.limbs[0] -= 2;
-    println("the sum is"); 
+    println("the sum is");
     // println(unsafe{__add_with_flags(BN254_Fq_Params::get_params(), a.limbs, b.limbs)});
     let c = a + b;
     println(c);
-     assert(c == expected);
+    assert(c == expected);
 }
 
 #[test]
@@ -431,14 +426,16 @@ fn test_sub_test_BN() {
     let mut expected: Fq = BigNum::modulus();
     println(expected);
     expected.limbs[0] -= 1; // p - 1
-    println("the sub result is is:"); 
-    println(unsafe{__sub_with_flags(BN254_Fq_Params::get_params(), a.limbs, b.limbs)});
+    println("the sub result is is:");
+    println(
+        unsafe { __sub_with_flags(BN254_Fq_Params::get_params(), a.limbs, b.limbs) },
+    );
     let result = a - b;
     assert(result == expected);
 }
 
 #[test]
-fn test_eq_wrap(){
+fn test_eq_wrap() {
     let a: Fq = BigNum::modulus();
     let b = Fq::zero();
     assert(a == b);
@@ -503,8 +500,6 @@ fn test_sub_modulus_underflow() {
 //     assert(result == b);
 // }
 
-
-
 #[test]
 fn test_mul_BN() {
     test_mul::<3, Fq>();
@@ -518,17 +513,14 @@ fn test_add_BN2() {
 #[test]
 fn test_mul_BN_with_one() {
     let a: Fq = BigNum::modulus() - (BigNum::one() + BigNum::one());
-    println("a");
-    println(a);
+    // println("a");
+    // println(a);
     let b: Fq = BigNum::one();
-    println("modulus");
-    println(BN254_Fq_Params::get_params().modulus);
+    // println("modulus");
+    // println(BN254_Fq_Params::get_params().modulus);
     let c = a * b;
-    println("c");
-    println(c);
-    // assert(c == a);
+    assert(c == a);
 }
-
 
 #[test]
 fn test_div_BN() {
@@ -659,7 +651,12 @@ type U256 = BN256;
 
 #[test]
 fn test_udiv_mod_U256() {
-    let a: U256 = BigNum::derive_from_seed([1, 2, 3, 4]);
+    // let a: U256 = BigNum::derive_from_seed([1, 2, 3, 4]);
+    let a: U256 = BigNum::from_slice([
+        0xec0ca0c0adce359af6fcea1a7ab2dc,
+        0xdd52c4aa3fde93685d3f7cc285de32,
+        0x6fea,
+    ]);
     let b: U256 = BigNum::from_slice([12, 0, 0]);
 
     let (q, r) = a.udiv_mod(b);
@@ -854,17 +851,12 @@ fn test_from_field_3_digits() {
 }
 
 #[test]
-fn test_do_nothing(){
-    let a: Fq = BigNum {
-        limbs: [1, 2, 0],
-    };
-    let b: Fq = BigNum {
-        limbs: [1, 2, 0],
-    };
+fn test_do_nothing() {
+    let a: Fq = BigNum { limbs: [1, 2, 0] };
+    let b: Fq = BigNum { limbs: [1, 2, 0] };
     let c = unsafe { __helper_add(a.limbs, b.limbs) };
     let d = unsafe { a.__add(b) };
-    let e =  a + b;
-    
+    let e = a + b;
 }
 
 #[test]

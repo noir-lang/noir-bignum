@@ -55,7 +55,7 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, le
     linear_flags: [bool; ADD_N],
 ) -> ([u128; N], [u128; N], [Field; 2 * N]) {
     // TODO, validate we do not overflow N2 when multiplying and N when adding
-        let mut mulout_p = __compute_quadratic_expression_product(
+    let mut mulout_p = __compute_quadratic_expression_product(
         params,
         lhs_terms,
         lhs_flags,
@@ -64,19 +64,17 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, le
         linear_terms,
         linear_flags,
     );
+
     let mut mulout_n: [Field; 2 * N] = [0; 2 * N];
     let mut relation_result: [u128; 2 * N] = split_bits::__normalize_limbs(mulout_p, 2 * N);
 
     let modulus: [u128; N] = params.modulus;
     let modulus_bits = MOD_BITS;
-    let (quotient, remainder) = __barrett_reduction(
-        relation_result,
-        params.redc_param,
-        modulus_bits,
-        modulus,
-    );
+    // everything is the same up to here.
+    let (quotient, remainder) =
+        __barrett_reduction(relation_result, params.redc_param, modulus_bits, modulus);
+    // real quotient should be 2 but we get 1 here.
     assert(remainder == [0; N]);
-
     for i in 0..N {
         for j in 0..N {
             mulout_n[i + j] += quotient[i] as Field * modulus[j] as Field;
@@ -284,9 +282,7 @@ pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let L
             linear_flags,
         )
     };
-    
-    println("borrow_flags");
-    println(borrow_flags);
+
     // constrain the quotient to be in the range [0, ..., 2^{m} - 1], where `m` is log2(modulus) rounded up.
     // Additionally, validate quotient limbs are also in the range [0, ..., 2^{120} - 1]
     validate_quotient_in_range::<_, MOD_BITS>(quotient);
@@ -357,8 +353,6 @@ pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let L
         }
         product_limbs[i] += t4[i];
     }
-    println("product_limbs"); 
-    println(product_limbs);
 
     // each limb product represents the sum of 120-bit products.
     // by setting the borrow value to 2^246 we are restricting this method's completeness to expressions
@@ -380,7 +374,7 @@ pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let L
         product_limbs[i] += (borrow_flags[i] * borrow_shift - borrow_flags[i - 1] * borrow_carry);
     }
     product_limbs[N + N - 2] -= borrow_flags[N + N - 3] * borrow_carry;
-    
+
     // Final step: Validate `product_limbs` represents the integer value `0`
     // Each element `i` in `product_limbs` overlaps in bitrange with element `i+1`, EXCEPT for the low 120 bits
     // i.e. we need to do the following for each limb `i`:
@@ -397,8 +391,6 @@ pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let L
     for i in 0..N + N - 2 {
         product_limbs[i] *= hi_downshift;
         std::as_witness(product_limbs[i]);
-        println("product_limbs[i]");
-        println(product_limbs[i]);
         product_limbs[i].assert_max_bit_size::<126>(); // N.B. is this sufficient? going beyond 126 costs us 1 gate per limb
         product_limbs[i + 1] += product_limbs[i];
     }

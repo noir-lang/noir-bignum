@@ -7,7 +7,6 @@ mod fns;
 use crate::bignum::BigNum;
 use crate::bignum::BigNumTrait;
 use crate::bignum::to_field;
-use crate::utils::u60_representation::U60Repr;
 
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
@@ -19,6 +18,6 @@ use crate::fields::U256::U256Params;
 type Fq = BigNum<3, 254, BN254_Fq_Params>;
 
 fn main(a: Fq, b: Fq) -> pub Fq {
-    a + b
+    a.udiv(b)
     // assert(result == expected);
 }

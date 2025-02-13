@@ -144,7 +144,7 @@ where
 
     fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> Self {
         // Self { limbs: from_be_bytes::<_, MOD_BITS, _>(x) }
-        let limbs_field = from_be_bytes::<_, MOD_BITS, _>(x); 
+        let limbs_field = from_be_bytes::<_, MOD_BITS, _>(x);
         let mut limbs: [u128; N] = [0; N];
         for i in 0..N {
             limbs[i] = limbs_field[i] as u128;
@@ -298,7 +298,7 @@ where
     }
 
     fn validate_in_range(self) {
-        validate_in_range::<_,_, MOD_BITS>(self.limbs);
+        validate_in_range::<_, _, MOD_BITS>(self.limbs);
     }
 
     fn assert_is_not_equal(self, other: Self) {

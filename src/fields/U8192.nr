@@ -152,7 +152,7 @@ global U8192_PARAMS: BigNumParams<69, 8193> = BigNumParams {
         0xffffffffffffffffffffffffffffff,
         0xffffffffffffffffffffffffffffff,
         0x01ffffffff,
-    ],   
+    ],
     redc_param: [
         0x00,
         0x00,

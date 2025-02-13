@@ -1,7 +1,6 @@
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 
-
 pub struct Secp256k1_Fq_Params {}
 
 impl BigNumParamsGetter<3, 256> for Secp256k1_Fq_Params {

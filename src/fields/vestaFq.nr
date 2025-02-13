@@ -17,7 +17,6 @@
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 
-
 pub struct Vesta_Fq_Params {}
 
 impl BigNumParamsGetter<3, 255> for Vesta_Fq_Params {

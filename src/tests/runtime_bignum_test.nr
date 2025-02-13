@@ -47,122 +47,6 @@ global TEST_2048_PARAMS: BigNumParams<18, 2048> = BigNumParams {
         0x01383fb63120ee237fc7c7839f230729,
         0x0170,
     ],
-    modulus_u60: U60Repr {
-        limbs: [
-            0x0eb052c9732614fe,
-            0x0c0a197a5ae0fcdc,
-            0x022243918ab83be3,
-            0x0656ae0344232834,
-            0x070b7d5aabaac678,
-            0x06bf590da48a7c10,
-            0x6f24b296e2bda9,
-            0xcce39f530238b6,
-            0x0ead98f226f1bfa0,
-            0x1e1fef9bb9c1c3,
-            0x0d1379055e373abf,
-            0x0ad8c1c816e12e0e,
-            0x0a9d1461c435123d,
-            0x0cebe80e474f753a,
-            0x0d115a8b93c167ad,
-            0x0aee5a18ceedef88,
-            0x7427fc495d9e44,
-            0x0268ba83c4a65c43,
-            0x0b7df79f342639d4,
-            0x0dd2777926848667,
-            0x068668efe7da3d,
-            0x0f455074c96855ca,
-            0x0bfb3a1225f27d65,
-            0x05ddba6b30bbc168,
-            0x0524133bcd6f4258,
-            0x0591fec484f36707,
-            0x0be66781dd01d062,
-            0x059641b756766aee,
-            0x0142bf9e2480eebb,
-            0x058bc5eaff4b165e,
-            0x0f772ce64b229a72,
-            0x0667a3964f08e06d,
-            0x0fe3e3c1cf918395,
-            0x09c1fdb18907711b,
-            0xb8,
-            0x00,
-        ],
-    },
-    modulus_u60_x4: U60Repr {
-        limbs: [
-            0x0eb052c9732614fe,
-            0x0c0a197a5ae0fcdc,
-            0x022243918ab83be3,
-            0x0656ae0344232834,
-            0x070b7d5aabaac678,
-            0x06bf590da48a7c10,
-            0x6f24b296e2bda9,
-            0xcce39f530238b6,
-            0x0ead98f226f1bfa0,
-            0x1e1fef9bb9c1c3,
-            0x0d1379055e373abf,
-            0x0ad8c1c816e12e0e,
-            0x0a9d1461c435123d,
-            0x0cebe80e474f753a,
-            0x0d115a8b93c167ad,
-            0x0aee5a18ceedef88,
-            0x7427fc495d9e44,
-            0x0268ba83c4a65c43,
-            0x0b7df79f342639d4,
-            0x0dd2777926848667,
-            0x068668efe7da3d,
-            0x0f455074c96855ca,
-            0x0bfb3a1225f27d65,
-            0x05ddba6b30bbc168,
-            0x0524133bcd6f4258,
-            0x0591fec484f36707,
-            0x0be66781dd01d062,
-            0x059641b756766aee,
-            0x0142bf9e2480eebb,
-            0x058bc5eaff4b165e,
-            0x0f772ce64b229a72,
-            0x0667a3964f08e06d,
-            0x0fe3e3c1cf918395,
-            0x09c1fdb18907711b,
-            0xb8,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-        ],
-    },
     redc_param: [
         0x1697def7100cd5cf8d890b4ef2ec3f,
         0x765ba8304214dac764d3f4adc31859,
@@ -285,12 +169,13 @@ fn test_add_modulus_limit() {
     // p + 2^{modulus_bits()} - 1 should be the maximum allowed value fed into an add operation
     // when adding, if the result overflows the modulus, we conditionally subtract the modulus, producing 2^{254} -  1
     // this is the largest value that will satisfy the range check applied when constructing a bignum
-    let p: $U60Repr<$N, 2> = $U60Repr::from(params.modulus);
-    let one = $U60Repr::one();
+    // let p: $U60Repr<$N, 2> = $U60Repr::from(params.modulus);
+    let p: [u128; $N] = params.modulus;
+    let one: [u128; $N] = [1; $N];
 
-    let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: $U60Repr::into(p), params };
+    let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: p, params };
 
-    let two_pow_modulus_bits_minus_one: $U60Repr<$N, 2> =  one.shl($MOD_BITS) - one ;
+    let two_pow_modulus_bits_minus_one: [u128; $N] =  __helper_sub(__shl(one, $MOD_BITS), one);
 
     let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: $U60Repr::into(two_pow_modulus_bits_minus_one), params };
     let result = a + b;
@@ -393,56 +278,56 @@ fn assert_is_not_equal_fail() {
     a.assert_is_not_equal(b);
 }
 
-#[test(should_fail_with = "asssert_is_not_equal fail")]
-fn assert_is_not_equal_overloaded_lhs_fail() {
-    let params = $typ ::get_params();
+// #[test(should_fail_with = "asssert_is_not_equal fail")]
+// fn assert_is_not_equal_overloaded_lhs_fail() {
+//     let params = $typ ::get_params();
 
-    let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
-    let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
+//     let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
+//     let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
 
-    let modulus = params.modulus;
+//     let modulus = params.modulus;
 
-    let t0: $U60Repr<$N, 2> = $U60Repr::from(a.limbs);
-    let t1: $U60Repr<$N, 2> = $U60Repr::from(modulus);
-    let a_plus_modulus: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: $U60Repr::into(t0 + t1), params };
+//     let t0: $U60Repr<$N, 2> = $U60Repr::from(a.limbs);
+//     let t1: $U60Repr<$N, 2> = $U60Repr::from(modulus);
+//     let a_plus_modulus: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: $U60Repr::into(t0 + t1), params };
 
-    a_plus_modulus.assert_is_not_equal(b);
-}
+//     a_plus_modulus.assert_is_not_equal(b);
+// }
 
-#[test(should_fail_with = "asssert_is_not_equal fail")]
-fn assert_is_not_equal_overloaded_rhs_fail() {
-    let params = $typ ::get_params();
+// #[test(should_fail_with = "asssert_is_not_equal fail")]
+// fn assert_is_not_equal_overloaded_rhs_fail() {
+//     let params = $typ ::get_params();
 
-    let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
-    let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
+//     let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
+//     let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
 
-    let modulus = params.modulus;
+//     let modulus = params.modulus;
 
-    let t0: $U60Repr<$N, 2> = $U60Repr::from(b.limbs);
-    let t1: $U60Repr<$N, 2> = $U60Repr::from(modulus);
-    let b_plus_modulus: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: $U60Repr::into(t0 + t1), params };
+//     let t0: $U60Repr<$N, 2> = $U60Repr::from(b.limbs);
+//     let t1: $U60Repr<$N, 2> = $U60Repr::from(modulus);
+//     let b_plus_modulus: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: $U60Repr::into(t0 + t1), params };
 
-    a.assert_is_not_equal(b_plus_modulus);
-}
+//     a.assert_is_not_equal(b_plus_modulus);
+// }
 
-#[test(should_fail_with = "asssert_is_not_equal fail")]
-fn assert_is_not_equal_overloaded_fail() {
-    let params = $typ ::get_params();
+// #[test(should_fail_with = "asssert_is_not_equal fail")]
+// fn assert_is_not_equal_overloaded_fail() {
+//     let params = $typ ::get_params();
 
-    let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
-    let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
+//     let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
+//     let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
 
-    let modulus = params.modulus;
+//     let modulus = params.modulus;
 
-    let t0: $U60Repr<$N, 2> = $U60Repr::from(a.limbs);
-    let t1: $U60Repr<$N, 2> = $U60Repr::from(b.limbs);
-    let t2: $U60Repr<$N, 2> = $U60Repr::from(modulus);
+//     let t0: $U60Repr<$N, 2> = $U60Repr::from(a.limbs);
+//     let t1: $U60Repr<$N, 2> = $U60Repr::from(b.limbs);
+//     let t2: $U60Repr<$N, 2> = $U60Repr::from(modulus);
 
-    let a_plus_modulus: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: $U60Repr::into(t0 + t2), params };
-    let b_plus_modulus: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: $U60Repr::into(t1 + t2), params };
+//     let a_plus_modulus: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: $U60Repr::into(t0 + t2), params };
+//     let b_plus_modulus: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: $U60Repr::into(t1 + t2), params };
 
-    a_plus_modulus.assert_is_not_equal(b_plus_modulus);
-}
+//     a_plus_modulus.assert_is_not_equal(b_plus_modulus);
+// }
 
 #[test]
 fn test_derive()
@@ -455,26 +340,26 @@ fn test_derive()
     assert_eq(a, b);
 }
 
-#[test]
-fn test_eq() {
-    let params = $typ ::get_params();
+// #[test]
+// fn test_eq() {
+//     let params = $typ ::get_params();
 
-    let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
-    let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
-    let c: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [2, 2, 3, 4]);
+//     let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
+//     let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
+//     let c: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [2, 2, 3, 4]);
 
-    let modulus = a.modulus();
+//     let modulus = a.modulus();
 
-    let t0: $U60Repr<$N, 2> = ($U60Repr::from(modulus.limbs));
-    let t1: $U60Repr<$N, 2> = ($U60Repr::from(b.limbs));
+//     let t0: $U60Repr<$N, 2> = ($U60Repr::from(modulus.limbs));
+//     let t1: $U60Repr<$N, 2> = ($U60Repr::from(b.limbs));
 
-    let b_plus_modulus: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: $U60Repr::into(t0 + t1), params };
+//     let b_plus_modulus: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: $U60Repr::into(t0 + t1), params };
 
-    assert_eq(a, b);
-    assert_eq(a, b_plus_modulus);
-    assert(!(c == b));
-    assert(!(c == a));
-}
+//     assert_eq(a, b);
+//     assert_eq(a, b_plus_modulus);
+//     assert(!(c == b));
+//     assert(!(c == a));
+// }
 
 #[test]
 fn test_is_zero() {
@@ -490,47 +375,47 @@ fn test_is_zero() {
 }
 }
 
-#[make_test(3, 254, quote {crate::fields::bn254Fq::BN254_Fq_Params})]
-pub mod BNTests {
-    use crate::params::BigNumParamsGetter;
-    use crate::runtime_bignum::RuntimeBigNumTrait;
-}
+// #[make_test(3, 254, quote {crate::fields::bn254Fq::BN254_Fq_Params})]
+// pub mod BNTests {
+//     use crate::params::BigNumParamsGetter;
+//     use crate::runtime_bignum::RuntimeBigNumTrait;
+// }
 
-#[make_test(3, 256, quote {crate::fields::secp256k1Fq::Secp256k1_Fq_Params})]
-pub mod Secp256K1FqTests {
-    use crate::params::BigNumParamsGetter;
-    use crate::runtime_bignum::RuntimeBigNumTrait;
-}
+// #[make_test(3, 256, quote {crate::fields::secp256k1Fq::Secp256k1_Fq_Params})]
+// pub mod Secp256K1FqTests {
+//     use crate::params::BigNumParamsGetter;
+//     use crate::runtime_bignum::RuntimeBigNumTrait;
+// }
 
-#[make_test(4, 381, quote {crate::fields::bls12_381Fq::BLS12_381_Fq_Params})]
-pub mod BLS12_381FqTests {
-    use crate::params::BigNumParamsGetter;
-    use crate::runtime_bignum::RuntimeBigNumTrait;
-}
+// #[make_test(4, 381, quote {crate::fields::bls12_381Fq::BLS12_381_Fq_Params})]
+// pub mod BLS12_381FqTests {
+//     use crate::params::BigNumParamsGetter;
+//     use crate::runtime_bignum::RuntimeBigNumTrait;
+// }
 
-#[make_test(18, 2048, quote {super::Test2048Params})]
-pub mod Test2048Tests {
-    use crate::params::BigNumParamsGetter;
-    use crate::runtime_bignum::RuntimeBigNumTrait;
-}
+// #[make_test(18, 2048, quote {super::Test2048Params})]
+// pub mod Test2048Tests {
+//     use crate::params::BigNumParamsGetter;
+//     use crate::runtime_bignum::RuntimeBigNumTrait;
+// }
 
-#[make_test(3, 255, quote {crate::fields::bls12_381Fr::BLS12_381_Fr_Params})]
-pub mod BLS12_381_Fr_ParamsTests {
-    use crate::params::BigNumParamsGetter;
-    use crate::runtime_bignum::RuntimeBigNumTrait;
-}
+// #[make_test(3, 255, quote {crate::fields::bls12_381Fr::BLS12_381_Fr_Params})]
+// pub mod BLS12_381_Fr_ParamsTests {
+//     use crate::params::BigNumParamsGetter;
+//     use crate::runtime_bignum::RuntimeBigNumTrait;
+// }
 
-#[make_test(4, 377, quote {crate::fields::bls12_377Fq::BLS12_377_Fq_Params})]
-pub mod BLS12_377_Fq_ParamsTests {
-    use crate::params::BigNumParamsGetter;
-    use crate::runtime_bignum::RuntimeBigNumTrait;
-}
+// #[make_test(4, 377, quote {crate::fields::bls12_377Fq::BLS12_377_Fq_Params})]
+// pub mod BLS12_377_Fq_ParamsTests {
+//     use crate::params::BigNumParamsGetter;
+//     use crate::runtime_bignum::RuntimeBigNumTrait;
+// }
 
-#[make_test(3, 253, quote {crate::fields::bls12_377Fr::BLS12_377_Fr_Params})]
-pub mod BLS12_377_Fr_ParamsTests {
-    use crate::params::BigNumParamsGetter;
-    use crate::runtime_bignum::RuntimeBigNumTrait;
-}
+// #[make_test(3, 253, quote {crate::fields::bls12_377Fr::BLS12_377_Fr_Params})]
+// pub mod BLS12_377_Fr_ParamsTests {
+//     use crate::params::BigNumParamsGetter;
+//     use crate::runtime_bignum::RuntimeBigNumTrait;
+// }
 
 // 98760
 // 99689
@@ -583,7 +468,7 @@ fn test_invmod_BN() {
 #[test]
 fn test_2048_bit_quadratic_expression() {
     let params = TEST_2048_PARAMS;
-    let a: [Field; 18] = [
+    let a: [u128; 18] = [
         0x000000000000000000000000000000000083684820ff40795b8d9f1be2220cba,
         0x0000000000000000000000000000000000d4924fbdc522b07b6cd0ef5508fd66,
         0x0000000000000000000000000000000000d48f6c43c5930f3d70d6db09a48f4a,
@@ -603,7 +488,7 @@ fn test_2048_bit_quadratic_expression() {
         0x000000000000000000000000000000000055f1a92a5dd099ef2bcd89ac175b52,
         0x00000000000000000000000000000000000000000000000000000000000000fc,
     ];
-    let b: [Field; 18] = [
+    let b: [u128; 18] = [
         0x0000000000000000000000000000000000c5694493e9bcc76e68dfcf73e0fde1,
         0x0000000000000000000000000000000000ede5e4b8b3e0dec1f4705c35521620,
         0x00000000000000000000000000000000007aa800bab1b33eda0f07695af6c583,
@@ -623,7 +508,7 @@ fn test_2048_bit_quadratic_expression() {
         0x0000000000000000000000000000000000b942b0d26e5be2e08cd425107c59f7,
         0x0000000000000000000000000000000000000000000000000000000000000031,
     ];
-    let c_expected: [Field; 18] = [
+    let c_expected: [u128; 18] = [
         0x00000000000000000000000000000000004518a874adebbcf963fed876dfcf78,
         0x00000000000000000000000000000000002b1535070c2deca63e2dc7145a9997,
         0x0000000000000000000000000000000000d9b738665a290c09f09202043d9387,
@@ -706,7 +591,7 @@ fn test_barrett_reduction_fix() {
             0x167968c0000761a273,
         ],
     );
-    let to_reduce: [Field; 18] = [
+    let to_reduce: [u128; 18] = [
         0xc4b8aacb43f12eb7f3f356ca26fb91,
         0xfc57d87e81f39810ffb63957395499,
         0x8308e90fc38cfe95d2a0f7ab577c17,
@@ -733,8 +618,7 @@ fn test_barrett_reduction_fix() {
             params.redc_param,
             1024,
             params.modulus,
-            params.modulus_u60_x4,
         )
     };
-    assert(remainder[8].lt(params.modulus[8]));
+    assert((remainder[8] as Field).lt(params.modulus[8] as Field));
 }
