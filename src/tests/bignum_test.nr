@@ -153,22 +153,6 @@ where
     assert(zero.is_zero() == true);
 }
 
-// fn test_eq<let N: u32, Params>(_: BigNum<N, Params>) where Params: BigNumParamsGetter<N> + RuntimeBigNumParamsTrait<N> {
-//     let a = BigNum::__derive_from_seed([1, 2, 3, 4]);
-//     let b = BigNum::__derive_from_seed([1, 2, 3, 4]);
-//     let c = BigNum::__derive_from_seed([2, 2, 3, 4]);
-
-//     let modulus: BigNum<N, Params> = Params::get_params().modulus();
-//     let t0: U60Repr<N, 2> = (U60Repr::from(modulus.limbs));
-//     let t1: U60Repr<N, 2> = (U60Repr::from(b.limbs));
-//     let b_plus_modulus: BigNum<N, Params> = BigNum { limbs: U60Repr::into(t0 + t1) };
-
-//     assert(a.eq(b) == true);
-//     assert(a.eq(b_plus_modulus) == true);
-//     assert(c.eq(b) == false);
-//     assert(c.eq(a) == false);
-// }
-
 // // // 98760
 // // // 99689
 // // // 929 gates for a 2048 bit mul
