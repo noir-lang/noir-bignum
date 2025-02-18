@@ -46,12 +46,11 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
     let mut b_u60: U60Repr<N, 2> = From::from(rhs);
 
     let underflow = b_u60.gte(a_u60);
-    b_u60 += U60Repr::one();
     assert(underflow == false, "BigNum::validate_gt check fails");
     let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
 
     let mut carry_in: u64 = 0;
-    let mut borrow_in: u64 = 0;
+    let mut borrow_in: u64 = 1;
     let mut borrow_flags: [bool; N] = [false; N];
     let mut carry_flags: [bool; N] = [false; N];
     for i in 0..2 * N {
@@ -157,7 +156,7 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
     let a_u60: U60Repr<N, 2> = U60Repr::from(lhs);
     let b_u60: U60Repr<N, 2> = U60Repr::from(rhs);
 
-    let underflow = b_u60.gte(a_u60 + U60Repr::one());
+    let underflow = !a_u60.gte(b_u60);
 
     let addend_u60: U60Repr<N, 2> = if underflow {
         params.modulus_u60

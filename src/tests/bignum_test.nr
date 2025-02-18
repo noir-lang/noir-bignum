@@ -658,6 +658,21 @@ fn test_udiv_mod_U256() {
     assert(product == a);
 }
 
+#[test]
+fn test_1_udiv_mod_2() {
+    let _0: U256 = BigNum::zero();
+    let _1: U256 = BigNum::one();
+    assert(_1.udiv_mod(_1 + _1) == (_0, _1));
+}
+
+#[test]
+fn test_20_udiv_mod_11() {
+    let _1: U256 = BigNum::one();
+    let _2_POW_120: U256 = BigNum::from_slice([0, 1, 0]);
+    let _2_POW_121: U256 = BigNum::from_slice([0, 2, 0]);
+    assert(_2_POW_121.udiv_mod(_2_POW_120 + _1) == (_1, _2_POW_120 - _1));
+}
+
 // // N.B. witness generation times make these tests take ~15 minutes each! Uncomment at your peril
 // #[test]
 // fn test_div_2048() {
