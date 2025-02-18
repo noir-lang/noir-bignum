@@ -1,8 +1,11 @@
+use crate::bignum::BigNum;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 use crate::utils::u60_representation::U60Repr;
 
 pub struct U2048Params {}
+
+pub type U2048 = BigNum<18, 2049, U2048Params>;
 
 impl BigNumParamsGetter<18, 2049> for U2048Params {
     fn get_params() -> BigNumParams<18, 2049> {
@@ -10,7 +13,7 @@ impl BigNumParamsGetter<18, 2049> for U2048Params {
     }
 }
 
-global U2048_PARAMS: BigNumParams<18, 2049> = BigNumParams {
+pub global U2048_PARAMS: BigNumParams<18, 2049> = BigNumParams {
     has_multiplicative_inverse: false,
     modulus: [
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
