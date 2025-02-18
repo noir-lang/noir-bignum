@@ -335,7 +335,7 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [Field; N], rhs: [
     let (underflow, result, carry_flags, borrow_flags) =
         unsafe { __validate_gt_remainder(lhs, rhs) };
     validate_in_range::<_, MOD_BITS>(result);
-    assert(!underflow, "validate_gt check fails");
+    assert(!underflow, "BigNum::validate_gt check fails");
     check_gt_with_flags(lhs, rhs, result, borrow_flags, carry_flags);
 }
 
