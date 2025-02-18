@@ -660,7 +660,7 @@ fn test_udiv_mod_U256() {
 
 #[test]
 fn test_1_udiv_mod_2() {
-    let _0: U256 = BigNum::new();
+    let _0: U256 = BigNum::zero();
     let _1: U256 = BigNum::one();
     assert(_1.udiv_mod(_1 + _1) == (_0, _1));
 }

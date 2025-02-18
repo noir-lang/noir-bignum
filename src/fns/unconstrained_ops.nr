@@ -182,7 +182,8 @@ pub(crate) unconstrained fn __udiv_mod<let N: u32>(
         divisor_u60 = divisor_u60.shl(bit_difference);
         accumulator_u60 = accumulator_u60.shl(bit_difference);
 
-        if (divisor_u60.gte(remainder_u60 + U60Repr::one())) {
+        // if divisor > remainder
+        if (!remainder_u60.gte(divisor_u60)) {
             divisor_u60.shr1();
             accumulator_u60.shr1();
         }
