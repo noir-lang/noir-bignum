@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.5](https://github.com/noir-lang/noir-bignum/compare/v0.5.4...v0.5.5) (2025-02-18)
+
+
+### Bug Fixes
+
+* Bugs on border cases of udiv_mod ([#128](https://github.com/noir-lang/noir-bignum/issues/128)) ([86a9492](https://github.com/noir-lang/noir-bignum/commit/86a9492b063de8b9ce29382445f84efff46a372e))
+
 ## [0.5.4](https://github.com/noir-lang/noir-bignum/compare/v0.5.3...v0.5.4) (2025-02-08)
 
 
