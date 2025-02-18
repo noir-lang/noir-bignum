@@ -336,7 +336,7 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [Field; N], rhs: [
         unsafe { __validate_gt_remainder(lhs, rhs) };
     validate_in_range::<_, MOD_BITS>(result);
     assert(!underflow, "BigNum::validate_gt check fails");
-    check_gt_with_flags(lhs, rhs, result, borrow_flags, carry_flags);
+    check_gt_with_flags::<N, MOD_BITS>(lhs, rhs, result, borrow_flags, carry_flags);
 }
 
 pub(crate) fn neg<let N: u32, let MOD_BITS: u32>(
@@ -564,7 +564,7 @@ pub(crate) fn cmp<let N: u32, let MOD_BITS: u32>(lhs: [Field; N], rhs: [Field; N
         unsafe { __validate_gt_remainder(lhs, rhs) };
     // if underflow is true, swap lhs and rhs
     let (lhs, rhs) = if underflow { (rhs, lhs) } else { (lhs, rhs) };
-    check_gt_with_flags(lhs, rhs, result, borrow_flags, carry_flags);
+    check_gt_with_flags::<N, MOD_BITS>(lhs, rhs, result, borrow_flags, carry_flags);
     !underflow
 }
 
