@@ -156,7 +156,7 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
     let a_u60: U60Repr<N, 2> = U60Repr::from(lhs);
     let b_u60: U60Repr<N, 2> = U60Repr::from(rhs);
 
-    let underflow = b_u60.gte(a_u60 + U60Repr::one());
+    let underflow = !a_u60.gte(b_u60);
 
     let addend_u60: U60Repr<N, 2> = if underflow {
         params.modulus_u60
