@@ -18,6 +18,13 @@ global TWO_POW_60: u64 = 0x1000000000000000;
  * __tonelli_shanks_sqrt
  */
 
+pub(crate) unconstrained fn __from_field<let N: u32>(field: Field) -> [Field; N] {
+    // cast the field to a u60 representation
+    let res_u60: U60Repr<N, 2> = U60Repr::from_field(field);
+    let result: [Field; N] = U60Repr::into(res_u60);
+    result
+}
+
 pub(crate) unconstrained fn __validate_in_field_compute_borrow_flags<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     val: [Field; N],
@@ -35,8 +42,8 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
     lhs: [Field; N],
     rhs: [Field; N],
 ) -> ([Field; N], [bool; N], [bool; N]) {
-    let a_u60: U60Repr<N, 2> = U60Repr::from(lhs);
-    let mut b_u60: U60Repr<N, 2> = U60Repr::from(rhs);
+    let a_u60: U60Repr<N, 2> = From::from(lhs);
+    let mut b_u60: U60Repr<N, 2> = From::from(rhs);
 
     let underflow = b_u60.gte(a_u60);
     assert(underflow == false, "BigNum::validate_gt check fails");
@@ -59,12 +66,11 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
         borrow_in = borrow;
 
         if ((i & 1) == 1) {
-            if (carry & borrow == 1) {
-                carry = 0;
-                borrow = 0;
+            // Only set `borrow` and `carry` if they differ
+            if (carry != borrow) {
+                carry_flags[i / 2] = carry as bool;
+                borrow_flags[i / 2] = borrow as bool;
             }
-            carry_flags[i / 2] = carry as bool;
-            borrow_flags[i / 2] = borrow as bool;
         }
     }
     let result = U60Repr::into(result_u60);
@@ -75,7 +81,7 @@ pub(crate) unconstrained fn __neg_with_flags<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     val: [Field; N],
 ) -> ([Field; N], [bool; N]) {
-    let x_u60: U60Repr<N, 2> = U60Repr::from(val);
+    let x_u60: U60Repr<N, 2> = From::from(val);
     let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
 
     let mut borrow_in: u64 = 0;
@@ -100,8 +106,8 @@ pub(crate) unconstrained fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
     lhs: [Field; N],
     rhs: [Field; N],
 ) -> ([Field; N], [bool; N], [bool; N], bool) {
-    let a_u60: U60Repr<N, 2> = U60Repr::from(lhs);
-    let b_u60: U60Repr<N, 2> = U60Repr::from(rhs);
+    let a_u60: U60Repr<N, 2> = From::from(lhs);
+    let b_u60: U60Repr<N, 2> = From::from(rhs);
     let add_u60 = a_u60 + b_u60;
 
     let overflow = add_u60.gte(params.modulus_u60);
@@ -129,13 +135,12 @@ pub(crate) unconstrained fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
         borrow_in = borrow;
 
         if ((i & 1) == 1) {
-            let idx = (i - 1) / 2;
-            if (carry & borrow == 1) {
-                carry = 0;
-                borrow = 0;
+            // Only set `borrow` and `carry` if they differ
+            if (carry != borrow) {
+                let idx = (i - 1) / 2;
+                carry_flags[idx] = carry as bool;
+                borrow_flags[idx] = borrow as bool;
             }
-            carry_flags[idx] = carry as bool;
-            borrow_flags[idx] = borrow as bool;
         }
     }
     let result = U60Repr::into(result_u60);
@@ -176,12 +181,11 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
         borrow_in = borrow;
 
         if ((i & 1) == 1) {
-            if (carry & borrow == 1) {
-                carry = 0;
-                borrow = 0;
+            // Only set `borrow` and `carry` if they differ
+            if (carry != borrow) {
+                carry_flags[i / 2] = carry as bool;
+                borrow_flags[i / 2] = borrow as bool;
             }
-            carry_flags[i / 2] = carry as bool;
-            borrow_flags[i / 2] = borrow as bool;
         }
     }
     let result = U60Repr::into(result_u60);
@@ -259,11 +263,11 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     // convert the input into U60Repr
     let x_u60: U60Repr<N, 4> = U60Repr::new(x);
     let mut remainder_u60 = x_u60 - quotient_mul_modulus_u60;
-    // barrett reduction is quircky so might need to remove a few modulus_u60 from the remainder
+    // barrett reduction is quirky so might need to remove a few modulus_u60 from the remainder
     if (remainder_u60.gte(modulus_u60)) {
         remainder_u60 = remainder_u60 - modulus_u60;
         quotient_u60.increment();
-    } else {}
+    }
     if (remainder_u60.gte(modulus_u60)) {
         remainder_u60 = remainder_u60 - modulus_u60;
         quotient_u60.increment();

@@ -1,7 +1,7 @@
-use crate::utils::u60_representation::U60Repr;
-
 use crate::bignum::BigNum;
 use crate::bignum::BigNumTrait;
+use crate::bignum::to_field;
+use crate::utils::u60_representation::U60Repr;
 
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
@@ -240,9 +240,9 @@ fn test_eq<let N: u32, BN>()
 where
     BN: BigNumTrait,
 {
-    let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
-    let b = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
-    let c = unsafe { BN::__derive_from_seed([2, 2, 3, 4]) };
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let b = BN::derive_from_seed([1, 2, 3, 4]);
+    let c = BN::derive_from_seed([2, 2, 3, 4]);
 
     let modulus = BN::modulus();
     let t0: U60Repr<N, 2> = (U60Repr::from(modulus.get_limbs_slice().as_array()));
@@ -252,6 +252,16 @@ where
     assert(a.eq(b_plus_modulus) == true);
     assert(c.eq(b) == false);
     assert(c.eq(a) == false);
+}
+
+fn test_is_zero<let N: u32, BN>()
+where
+    BN: BigNumTrait,
+{
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let zero = BN::zero();
+    assert(a.is_zero() == false);
+    assert(zero.is_zero() == true);
 }
 
 // fn test_eq<let N: u32, Params>(_: BigNum<N, Params>) where Params: BigNumParamsGetter<N> + RuntimeBigNumParamsTrait<N> {
@@ -277,8 +287,8 @@ fn test_mul<let N: u32, BN>()
 where
     BN: BigNumTrait,
 {
-    let a: BN = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
-    let b: BN = unsafe { BN::__derive_from_seed([4, 5, 6, 7]) };
+    let a: BN = BN::derive_from_seed([1, 2, 3, 4]);
+    let b: BN = BN::derive_from_seed([4, 5, 6, 7]);
 
     let c = (a + b) * (a + b);
     let d = (a * a) + (b * b) + (a * b) + (a * b);
@@ -289,8 +299,8 @@ fn test_add<let N: u32, BN>()
 where
     BN: BigNumTrait,
 {
-    let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
-    let b: BN = unsafe { BN::__derive_from_seed([4, 5, 6, 7]) };
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let b: BN = BN::derive_from_seed([4, 5, 6, 7]);
     let one = BN::one();
     a.validate_in_range();
     a.validate_in_field();
@@ -317,8 +327,8 @@ fn test_div<let N: u32, BN>()
 where
     BN: BigNumTrait,
 {
-    let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
-    let b = unsafe { BN::__derive_from_seed([4, 5, 6, 7]) };
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let b = BN::derive_from_seed([4, 5, 6, 7]);
 
     let c = a / b;
     assert((b * c) == (a));
@@ -328,7 +338,7 @@ fn test_invmod<let N: u32, BN>()
 where
     BN: BigNumTrait,
 {
-    let u = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
+    let u = BN::derive_from_seed([1, 2, 3, 4]);
     for _ in 0..1 {
         let v = unsafe { u.__invmod() };
         let result = unsafe { u.__mul(v) };
@@ -341,8 +351,8 @@ fn assert_is_not_equal<let N: u32, BN>()
 where
     BN: BigNumTrait,
 {
-    let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
-    let b = unsafe { BN::__derive_from_seed([4, 5, 6, 7]) };
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let b = BN::derive_from_seed([4, 5, 6, 7]);
 
     a.assert_is_not_equal(b);
 }
@@ -351,8 +361,8 @@ fn assert_is_not_equal_fail<let N: u32, BN>()
 where
     BN: BigNumTrait,
 {
-    let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
-    let b = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let b = BN::derive_from_seed([1, 2, 3, 4]);
 
     a.assert_is_not_equal(b);
 }
@@ -361,8 +371,8 @@ fn assert_is_not_equal_overloaded_lhs_fail<let N: u32, BN>()
 where
     BN: BigNumTrait,
 {
-    let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
-    let b = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let b = BN::derive_from_seed([1, 2, 3, 4]);
 
     let modulus = BN::modulus();
 
@@ -376,8 +386,8 @@ fn assert_is_not_equal_overloaded_rhs_fail<let N: u32, BN>()
 where
     BN: BigNumTrait,
 {
-    let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
-    let b = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let b = BN::derive_from_seed([1, 2, 3, 4]);
 
     let modulus = BN::modulus();
 
@@ -391,8 +401,8 @@ fn assert_is_not_equal_overloaded_fail<let N: u32, BN>()
 where
     BN: BigNumTrait,
 {
-    let a = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
-    let b = unsafe { BN::__derive_from_seed([1, 2, 3, 4]) };
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let b = BN::derive_from_seed([1, 2, 3, 4]);
 
     let modulus = BN::modulus();
 
@@ -409,6 +419,12 @@ fn test_eq_BN() {
     // let stub: Fq = BigNum::new();
     test_eq::<3, Fq>();
 }
+
+#[test]
+fn test_is_zero_BN() {
+    test_is_zero::<3, Fq>();
+}
+
 #[test]
 fn test_add_BN() {
     let mut a: Fq = BigNum::modulus();
@@ -426,7 +442,7 @@ fn test_add_BN() {
 #[test]
 fn test_sub_test_BN() {
     // 0 - 1 should equal p - 1
-    let mut a: Fq = BigNum::new();
+    let mut a: Fq = BigNum::zero();
     let mut b: Fq = BigNum::one();
     let mut expected: Fq = BigNum::modulus();
     expected.limbs[0] -= 1; // p - 1
@@ -439,9 +455,9 @@ fn test_sub_modulus_limit() {
     // if we underflow, maximum result should be ...
     // 0 - 1 = o-1
     // 0 - p = 0
-    let mut a: Fq = BigNum::new();
+    let mut a: Fq = BigNum::zero();
     let mut b: Fq = BigNum::modulus();
-    let mut expected = BigNum::new();
+    let mut expected = BigNum::zero();
 
     let result = a - b;
     assert(result == expected);
@@ -450,7 +466,7 @@ fn test_sub_modulus_limit() {
 #[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_sub_modulus_underflow() {
     // 0 - (p + 1) is smaller than p and should produce unsatisfiable constraints
-    let mut a: Fq = BigNum::new();
+    let mut a: Fq = BigNum::zero();
     let mut b: Fq = BigNum::modulus();
     b.limbs[0] += 1;
     let mut expected = BigNum::one();
@@ -544,6 +560,11 @@ fn test_eq_2048() {
 }
 
 #[test]
+fn test_is_zero_2048() {
+    test_is_zero::<18, BN2048>();
+}
+
+#[test]
 fn test_mul_2048() {
     test_mul::<18, BN2048>();
 }
@@ -581,6 +602,11 @@ fn test_assert_is_not_equal_overloaded_fail_2048() {
 #[test]
 fn test_eq_U256() {
     test_eq::<3, BN256>();
+}
+
+#[test]
+fn test_is_zero_U256() {
+    test_is_zero::<3, BN256>();
 }
 
 #[test]
@@ -622,7 +648,7 @@ type U256 = BN256;
 
 #[test]
 fn test_udiv_mod_U256() {
-    let a: U256 = unsafe { BigNum::__derive_from_seed([1, 2, 3, 4]) };
+    let a: U256 = BigNum::derive_from_seed([1, 2, 3, 4]);
     let b: U256 = BigNum::from_slice([12, 0, 0]);
 
     let (q, r) = a.udiv_mod(b);
@@ -805,3 +831,156 @@ fn test_expressions() {
     assert(wx_constrained.limbs == wx.limbs);
 }
 
+#[test]
+fn test_from_field_1_digit() {
+    let field: Field = 1;
+    let result = Fq::from(field);
+    assert(result == Fq::one());
+}
+
+#[test]
+fn test_from_field_2_digits() {
+    let field: Field = 762576765071760201410184025311678064293966151975347778787092903729041075;
+    let result = Fq::from(field);
+    let expected: Fq =
+        BigNum { limbs: [0xe88ed97f8f707abd3fa65763c80eb3, 0x6e7d8b5586595aa1fb2ee04d5cb4f5, 0x0] };
+    assert(result == expected);
+}
+
+#[test]
+fn test_from_field_3_digits() {
+    let field: Field = -1;
+    let result = Fq::from(field);
+    let expected: Fq = BigNum {
+        limbs: [0x33e84879b9709143e1f593f0000000, 0x4e72e131a029b85045b68181585d28, 0x3064],
+    };
+    assert(result == expected);
+}
+
+#[test]
+fn test_from_field_3_digits_BLS381() {
+    let field: Field = -1;
+    let result = BN381::from(field);
+    let expected: BN381 = BigNum {
+        limbs: [0x33e84879b9709143e1f593f0000000, 0x4e72e131a029b85045b68181585d28, 0x3064, 0x0],
+    };
+    assert(result == expected);
+}
+
+#[test]
+fn test_to_field_one() {
+    let field: Field = 1;
+    let bn = Fq::one();
+    let result = to_field(bn);
+    assert(result == field);
+}
+
+#[test]
+fn test_to_field_one_digit() {
+    let field: Field = 1066513542066841864585910935480267774;
+    let bn = Fq { limbs: [0xcd672d695ef3129e4c40867a7173fe, 0x0, 0x0] };
+    let result = to_field(bn);
+    assert(result == field);
+}
+
+#[test]
+fn test_to_field_two_digits() {
+    let field: Field = 697955470585821007263499235110798476786097877002667034107578965871052378;
+    let bn =
+        Fq { limbs: [0x5a10b956d41840745e0a9f6e34465a, 0x65209b74583b912262843211905e41, 0x0] };
+    let result = to_field(bn);
+    assert(result == field);
+}
+
+#[test]
+fn test_to_field_three_digits() {
+    let field: Field = 2330301921655783950764183713945533646391233209687308929386184468126823563744;
+    let bn =
+        Fq { limbs: [0x862cf8ea69d6c70c9cc8d8871b41e0, 0xe7763528201566c2fc8d93973cf1b4, 0x526] };
+    let result = to_field(bn);
+    assert(result == field);
+}
+
+#[test(should_fail_with = "BigNum::validate_gt check fails")]
+fn test_to_field_three_digits_overflow() {
+    let bn: Fq = BigNum {
+        limbs: [0x4e6405505a33bb9b9c0563df2bd59a, 0x48dbe03a9bb4865ba961e41ef9dded, 0x3a36],
+    };
+    let _ = to_field(bn);
+}
+
+#[test(should_fail_with = "BigNum::validate_gt check fails")]
+fn test_to_field_too_many_digits() {
+    let bn: BN381 = BN381 {
+        limbs: [0xea1742447ee9d92f9f18e1c80a481e, 0x3d89ad3d3ae85f3f482a08435c93ec, 0x1e9f, 0x1],
+    };
+    let _ = to_field(bn);
+}
+
+#[test]
+fn test_from_to_field_1() {
+    let a = 20192735083400333763152317277081729935089452774154199134677444560763605803197;
+    let b = Fq::from(a);
+    let c = to_field(b);
+    assert(c == a);
+}
+
+#[test]
+fn test_from_to_field_fuzz(a: Field) {
+    let b = BN381::from(a);
+    let c = to_field(b);
+    assert(c == a);
+}
+
+#[test]
+fn test_to_from_field_1() {
+    let a: Fq = BigNum {
+        limbs: [0x3c768db7732ea1b536c06ae66bce70, 0xb9936c1401d91e7e9e1138375650b4, 0x8c8],
+    };
+    let b = to_field(a);
+    let c = Fq::from(b);
+    assert(a == c);
+}
+
+#[test]
+fn test_to_from_field_2() {
+    let a: BN381 = BigNum {
+        limbs: [0xd7562bf2b1fe13d458685c96a46d28, 0x2079950acd45bb43a9beeba69d5dc9, 0x18ca, 0x0],
+    };
+    let b = to_field(a);
+    let c = BN381::from(b);
+    assert(a == c);
+}
+
+unconstrained fn test_batch_inversion<let N: u32, BN>(fields: [BN; N])
+where
+    BN: BigNumTrait,
+{
+    let inverted_fields = BN::__batch_invert(fields);
+    for i in 0..N {
+        assert_eq(fields[i] * inverted_fields[i], BN::one());
+    }
+}
+
+#[test]
+unconstrained fn test_batch_inversion_BN381(seeds: [[u8; 2]; 3]) {
+    let fields = seeds.map(|seed| BN381::derive_from_seed(seed));
+    test_batch_inversion(fields)
+}
+
+unconstrained fn test_batch_inversion_slice<BN>(fields: [BN])
+where
+    BN: BigNumTrait,
+{
+    let inverted_fields = BN::__batch_invert_slice(fields);
+    assert_eq(fields.len(), inverted_fields.len());
+    for i in 0..fields.len() {
+        assert_eq(fields[i] * inverted_fields[i], BN::one());
+    }
+}
+
+#[test]
+unconstrained fn test_batch_inversion_slice_BN381(seeds: [[u8; 2]; 3]) {
+    let fields = seeds.map(|seed| BN381::derive_from_seed(seed)).as_slice();
+    test_batch_inversion_slice(fields)
+}

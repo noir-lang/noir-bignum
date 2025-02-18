@@ -1,5 +1,45 @@
 # Changelog
 
+## [0.5.4](https://github.com/noir-lang/noir-bignum/compare/v0.5.3...v0.5.4) (2025-02-08)
+
+
+### Bug Fixes
+
+* Correct batch inversion implementation ([#121](https://github.com/noir-lang/noir-bignum/issues/121)) ([399d21a](https://github.com/noir-lang/noir-bignum/commit/399d21adb6786ad0ce2b670e8b216faf1f8a3fc2))
+
+## [0.5.3](https://github.com/noir-lang/noir-bignum/compare/v0.5.2...v0.5.3) (2025-02-03)
+
+
+### Bug Fixes
+
+* Correct batch inversion function ([#117](https://github.com/noir-lang/noir-bignum/issues/117)) ([976d3ef](https://github.com/noir-lang/noir-bignum/commit/976d3efd392fc12d95256624e82f5c826e98ab82))
+
+## [0.5.2](https://github.com/noir-lang/noir-bignum/compare/v0.5.1...v0.5.2) (2025-01-29)
+
+
+### Features
+
+* Add `is_zero` ([#111](https://github.com/noir-lang/noir-bignum/issues/111)) ([2ca1383](https://github.com/noir-lang/noir-bignum/commit/2ca1383238b927d11fc12c48c618475172c0a677))
+* Implement `Default` trait on `BigNum` ([#109](https://github.com/noir-lang/noir-bignum/issues/109)) ([e56352a](https://github.com/noir-lang/noir-bignum/commit/e56352a05c3cb8620076dd9e0453ef9b20974315))
+
+
+### Bug Fixes
+
+* Constrain `split_60_bits` function ([#113](https://github.com/noir-lang/noir-bignum/issues/113)) ([0d19e5a](https://github.com/noir-lang/noir-bignum/commit/0d19e5a34dbfa91e9f7c2eedb3e51b034ecd75d7))
+
+## [0.5.1](https://github.com/noir-lang/noir-bignum/compare/v0.5.0...v0.5.1) (2025-01-27)
+
+
+### Features
+
+* Add zero constructor ([#108](https://github.com/noir-lang/noir-bignum/issues/108)) ([c6466ef](https://github.com/noir-lang/noir-bignum/commit/c6466ef6c831d6ecd12dbc9e921b822319f7e4a8))
+* Added `to_field` function ([#99](https://github.com/noir-lang/noir-bignum/issues/99)) ([7c92c22](https://github.com/noir-lang/noir-bignum/commit/7c92c22d35bb2f4199d53b32dd339d6b9142bb0d))
+* Constrain ops only in constrained context ([#102](https://github.com/noir-lang/noir-bignum/issues/102)) ([b3000e1](https://github.com/noir-lang/noir-bignum/commit/b3000e17c4f057be85cf36e56816ea77b719e5f2))
+* Deprecate `BigNum::new()` ([#110](https://github.com/noir-lang/noir-bignum/issues/110)) ([ce3c654](https://github.com/noir-lang/noir-bignum/commit/ce3c654a077f2b5c96f53610123f9321fcd11089))
+* Implement `From&lt;Field&gt;` on `BigNum` ([#87](https://github.com/noir-lang/noir-bignum/issues/87)) ([35bf983](https://github.com/noir-lang/noir-bignum/commit/35bf983bdf80abbb2f191dd6c464a6fe3516f9c2))
+* Minor unconstrained bytecode optimizations ([#79](https://github.com/noir-lang/noir-bignum/issues/79)) ([b44ef7f](https://github.com/noir-lang/noir-bignum/commit/b44ef7f6bee56751e2d83848e84accf25e0bdc0f))
+* Remove unnecessary usage of slices ([#104](https://github.com/noir-lang/noir-bignum/issues/104)) ([fb6f9e5](https://github.com/noir-lang/noir-bignum/commit/fb6f9e5982dda8729d6b12ef83ad3ef60cdf0b7e))
+
 ## [0.5.0](https://github.com/noir-lang/noir-bignum/compare/v0.4.2...v0.5.0) (2025-01-06)
 
 

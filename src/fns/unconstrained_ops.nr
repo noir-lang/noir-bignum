@@ -243,21 +243,20 @@ pub(crate) unconstrained fn __batch_invert<let N: u32, let MOD_BITS: u32, let M:
 ) -> [[Field; N]; M] {
     // TODO: ugly! Will fail if input slice is empty
     let mut accumulator: [Field; N] = __one::<N>();
-    let mut result: [[Field; N]; M] = [[0; N]; M];
-    let mut temporaries: [[Field; N]; N] = std::mem::zeroed();
-    for i in 0..N {
+    let mut temporaries: [[Field; N]; M] = std::mem::zeroed();
+    for i in 0..M {
         temporaries[i] = accumulator;
         if (!__is_zero(x[i])) {
             accumulator = __mul::<_, MOD_BITS>(params, accumulator, x[i]);
         }
     }
 
+    let mut result: [[Field; N]; M] = [[0; N]; M];
     accumulator = __invmod::<_, MOD_BITS>(params, accumulator);
-    let mut T0: [Field; N] = [0; N];
-    for i in 0..N {
-        let idx = N - 1 - i;
+    for i in 0..M {
+        let idx = M - 1 - i;
         if (!__is_zero(x[idx])) {
-            T0 = __mul::<_, MOD_BITS>(params, accumulator, temporaries[idx]);
+            let T0 = __mul::<_, MOD_BITS>(params, accumulator, temporaries[idx]);
             accumulator = __mul::<_, MOD_BITS>(params, accumulator, x[idx]);
             result[idx] = T0;
         }
@@ -271,26 +270,27 @@ pub(crate) unconstrained fn __batch_invert_slice<let N: u32, let MOD_BITS: u32>(
 ) -> [[Field; N]] {
     // TODO: ugly! Will fail if input slice is empty
     let mut accumulator: [Field; N] = __one::<N>();
-    let mut result: [[Field; N]] = [[0; N]];
-    let mut temporaries: [[Field; N]; N] = std::mem::zeroed();
-    for i in 0..N {
-        temporaries[i] = accumulator;
+    let mut temporaries: [[Field; N]] = &[];
+    for i in 0..x.len() {
+        temporaries = temporaries.push_back(accumulator);
         if (!__is_zero(x[i])) {
             accumulator = __mul::<_, MOD_BITS>(params, accumulator, x[i]);
         }
-        result = result.push_back([0; N]);
     }
 
+    let mut result: [[Field; N]] = [];
     accumulator = __invmod::<_, MOD_BITS>(params, accumulator);
-    let mut T0: [Field; N] = [0; N];
     for i in 0..x.len() {
         let idx = x.len() - 1 - i;
-        if (__is_zero(x[idx]) == false) {
-            T0 = __mul::<_, MOD_BITS>(params, accumulator, temporaries[idx]);
+        if (!__is_zero(x[idx])) {
+            let T0 = __mul::<_, MOD_BITS>(params, accumulator, temporaries[idx]);
             accumulator = __mul::<_, MOD_BITS>(params, accumulator, x[idx]);
-            result[idx] = T0;
-        }
+            result = result.push_front(T0);
+        } else {
+            result = result.push_front([0; N]);
+        };
     }
+
     result
 }
 

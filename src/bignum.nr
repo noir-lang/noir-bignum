@@ -4,8 +4,9 @@ use crate::params::BigNumParamsGetter;
 
 use crate::fns::{
     constrained_ops::{
-        add, assert_is_not_equal, conditional_select, derive_from_seed, div, eq, mul, neg, sub,
-        udiv, udiv_mod, umod, validate_in_field, validate_in_range,
+        add, assert_is_not_equal, conditional_select, derive_from_seed, div, eq, from_field,
+        is_zero, limbs_to_field, mul, neg, sub, udiv, udiv_mod, umod, validate_in_field,
+        validate_in_range,
     },
     expressions::{__compute_quadratic_expression, evaluate_quadratic_expression},
     serialization::{from_be_bytes, to_le_bytes},
@@ -24,39 +25,40 @@ pub struct BigNum<let N: u32, let MOD_BITS: u32, Params> {
 pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
     // TODO: this crashes the compiler? v0.32
     // fn default() -> Self { std::default::Default::default  () }
-    pub fn new() -> Self;
-    pub fn one() -> Self;
-    pub fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
-    pub unconstrained fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
-    pub fn from_slice(limbs: [Field]) -> Self;
-    pub fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> Self;
-    pub fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes];
+    fn new() -> Self;
+    fn zero() -> Self;
+    fn one() -> Self;
+    fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
+    unconstrained fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
+    fn from_slice(limbs: [Field]) -> Self;
+    fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> Self;
+    fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes];
 
-    pub fn modulus() -> Self;
-    pub fn modulus_bits(self) -> u32;
-    pub fn num_limbs(self) -> u32;
-    pub fn get_limbs_slice(self) -> [Field];
-    pub fn get_limb(self, idx: u32) -> Field;
-    pub fn set_limb(&mut self, idx: u32, value: Field);
+    fn modulus() -> Self;
+    fn modulus_bits(self) -> u32;
+    fn num_limbs(self) -> u32;
+    fn get_limbs_slice(self) -> [Field];
+    fn get_limb(self, idx: u32) -> Field;
+    fn set_limb(&mut self, idx: u32, value: Field);
 
-    pub unconstrained fn __eq(self, other: Self) -> bool;
-    pub unconstrained fn __is_zero(self) -> bool;
+    unconstrained fn __eq(self, other: Self) -> bool;
+    unconstrained fn __is_zero(self) -> bool;
 
-    pub unconstrained fn __neg(self) -> Self;
-    pub unconstrained fn __add(self, other: Self) -> Self;
-    pub unconstrained fn __sub(self, other: Self) -> Self;
-    pub unconstrained fn __mul(self, other: Self) -> Self;
-    pub unconstrained fn __div(self, other: Self) -> Self;
-    pub unconstrained fn __udiv_mod(self, divisor: Self) -> (Self, Self);
-    pub unconstrained fn __invmod(self) -> Self;
-    pub unconstrained fn __pow(self, exponent: Self) -> Self;
+    unconstrained fn __neg(self) -> Self;
+    unconstrained fn __add(self, other: Self) -> Self;
+    unconstrained fn __sub(self, other: Self) -> Self;
+    unconstrained fn __mul(self, other: Self) -> Self;
+    unconstrained fn __div(self, other: Self) -> Self;
+    unconstrained fn __udiv_mod(self, divisor: Self) -> (Self, Self);
+    unconstrained fn __invmod(self) -> Self;
+    unconstrained fn __pow(self, exponent: Self) -> Self;
 
-    pub unconstrained fn __batch_invert<let M: u32>(to_invert: [Self; M]) -> [Self; M];
-    pub unconstrained fn __batch_invert_slice<let M: u32>(to_invert: [Self]) -> [Self];
+    unconstrained fn __batch_invert<let M: u32>(to_invert: [Self; M]) -> [Self; M];
+    unconstrained fn __batch_invert_slice<let M: u32>(to_invert: [Self]) -> [Self];
 
-    pub unconstrained fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self>;
+    unconstrained fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self>;
 
-    pub unconstrained fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
+    unconstrained fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
         lhs: [[Self; LHS_N]; NUM_PRODUCTS],
         lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
         rhs: [[Self; RHS_N]; NUM_PRODUCTS],
@@ -65,7 +67,7 @@ pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
         add_flags: [bool; ADD_N],
     ) -> (Self, Self);
 
-    pub fn evaluate_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
+    fn evaluate_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
         lhs: [[Self; LHS_N]; NUM_PRODUCTS],
         lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
         rhs: [[Self; RHS_N]; NUM_PRODUCTS],
@@ -74,18 +76,26 @@ pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
         add_flags: [bool; ADD_N],
     );
 
-    pub fn eq(self, other: Self) -> bool {
-        self == other
+    fn assert_is_not_equal(self, other: Self);
+    fn validate_in_range(self);
+    fn validate_in_field(self);
+
+    fn udiv_mod(self, divisor: Self) -> (Self, Self);
+    fn udiv(self, divisor: Self) -> Self;
+    fn umod(self, divisor: Self) -> Self;
+
+    fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self;
+    fn is_zero(self) -> bool;
+}
+
+impl<let N: u32, let MOD_BITS: u32, Params> std::convert::From<Field> for BigNum<N, MOD_BITS, Params>
+where
+    Params: BigNumParamsGetter<N, MOD_BITS>,
+{
+    fn from(input: Field) -> Self {
+        let params = Params::get_params();
+        Self { limbs: from_field::<N, MOD_BITS>(params, input) }
     }
-    pub fn assert_is_not_equal(self, other: Self);
-    pub fn validate_in_range(self);
-    pub fn validate_in_field(self);
-
-    pub fn udiv_mod(self, divisor: Self) -> (Self, Self);
-    pub fn udiv(self, divisor: Self) -> Self;
-    pub fn umod(self, divisor: Self) -> Self;
-
-    pub fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self;
 }
 
 impl<let N: u32, let MOD_BITS: u32, Params> Neg for BigNum<N, MOD_BITS, Params>
@@ -103,12 +113,17 @@ where
     Params: BigNumParamsGetter<N, MOD_BITS>,
 {
 
+    #[deprecated("`BigNum::zero()` is preferred")]
     fn new() -> Self {
+        Self::zero()
+    }
+
+    fn zero() -> Self {
         Self { limbs: [0; N] }
     }
 
     fn one() -> Self {
-        let mut result = BigNum::new();
+        let mut result = BigNum::zero();
         result.limbs[0] = 1;
         result
     }
@@ -169,27 +184,27 @@ where
 
     unconstrained fn __neg(self) -> Self {
         let params = Params::get_params();
-        Self::from_slice(__neg(params, self.limbs))
+        Self { limbs: __neg(params, self.limbs) }
     }
 
     unconstrained fn __add(self, other: Self) -> Self {
         let params = Params::get_params();
-        Self::from_slice(__add(params, self.limbs, other.limbs))
+        Self { limbs: __add(params, self.limbs, other.limbs) }
     }
 
     unconstrained fn __sub(self, other: Self) -> Self {
         let params = Params::get_params();
-        Self::from_slice(__sub(params, self.limbs, other.limbs))
+        Self { limbs: __sub(params, self.limbs, other.limbs) }
     }
 
     unconstrained fn __mul(self, other: Self) -> Self {
         let params = Params::get_params();
-        Self::from_slice(__mul::<_, MOD_BITS>(params, self.limbs, other.limbs))
+        Self { limbs: __mul::<_, MOD_BITS>(params, self.limbs, other.limbs) }
     }
 
     unconstrained fn __div(self, divisor: Self) -> Self {
         let params = Params::get_params();
-        Self::from_slice(__div::<_, MOD_BITS>(params, self.limbs, divisor.limbs))
+        Self { limbs: __div::<_, MOD_BITS>(params, self.limbs, divisor.limbs) }
     }
 
     unconstrained fn __udiv_mod(self, divisor: Self) -> (Self, Self) {
@@ -226,7 +241,7 @@ where
 
     unconstrained fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self> {
         let params = Params::get_params();
-        let maybe_limbs = unsafe { __tonelli_shanks_sqrt(params, self.limbs) };
+        let maybe_limbs = __tonelli_shanks_sqrt(params, self.limbs);
         maybe_limbs.map(|limbs| Self { limbs })
     }
 
@@ -304,9 +319,20 @@ where
     fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self {
         Self { limbs: conditional_select(lhs.limbs, rhs.limbs, predicate) }
     }
+
+    fn is_zero(self) -> bool {
+        is_zero::<N, MOD_BITS>(self.limbs)
+    }
 }
 
-// impl<let N: u32, Params> BigNumTrait<N, Params> for BigNum<N, Params> where Params: BigNumParamsGetter<N> {}
+impl<let N: u32, let MOD_BITS: u32, Params> Default for BigNum<N, MOD_BITS, Params>
+where
+    Params: BigNumParamsGetter<N, MOD_BITS>,
+{
+    fn default() -> Self {
+        Self::zero()
+    }
+}
 
 impl<let N: u32, let MOD_BITS: u32, Params> std::ops::Add for BigNum<N, MOD_BITS, Params>
 where
@@ -365,5 +391,17 @@ where
         let params = Params::get_params();
         eq::<_, MOD_BITS>(params, self.limbs, other.limbs)
     }
+}
+
+/// `to_field` converts a BigNum to a Field, conditioned on the bignum fitting in a field element
+///
+/// we have opted to not add this to the BigNumTrait as it might lead to bad usage of it
+/// i.e. using this function with modulus larger than the Grumpkin modulus would lead to runtime errors, if the bignum is not deliberately picked to be in range, e.g. the bignum is the output of a hash function.
+/// for such use cases we advise developers to use comptime assertions to ensure the modulus is not larger than the Grumpkin modulus
+pub fn to_field<let N: u32, let MOD_BITS: u32, Params>(input: BigNum<N, MOD_BITS, Params>) -> Field
+where
+    Params: BigNumParamsGetter<N, MOD_BITS>,
+{
+    limbs_to_field(Params::get_params(), input.limbs)
 }
 

@@ -1,5 +1,6 @@
 use crate::utils::msb::get_msb64;
 use crate::utils::split_bits;
+use crate::utils::split_bits::{field_to_u60rep, TWO_POW_60};
 
 /**
  * @brief U60Repr represents a BigNum element as a sequence of 60-bit unsigned integers.
@@ -48,14 +49,37 @@ impl<let N: u32, let NumSegments: u32> std::ops::Sub for U60Repr<N, NumSegments>
 impl<let N: u32, let NumSegments: u32> std::convert::From<[Field; N]> for U60Repr<N, NumSegments> {
     fn from(input: [Field; N]) -> Self {
         let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
-        for i in 0..(N) {
-            let (lo, hi) = unsafe { split_bits::split_60_bits(input[i]) };
+        for i in 0..N {
+            let (lo, hi) = split_bits::split_60_bits(input[i]);
             result.limbs[2 * i] = lo;
             result.limbs[2 * i + 1] = hi;
         }
         result
     }
 }
+
+// impl<let N: u32, let NumSegments: u32> std::convert::From<Field> for U60Repr<N, NumSegments> {
+//     fn from(input: Field) -> Self {
+//        let (low, mid, high) =  unsafe { field_to_u60rep(input) } ;
+//         let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
+//         let N_u60: u32 = N * NumSegments;
+//         assert(N_u60 >=1, "N must be at least 1");
+//         if N_u60 == 1 {
+//             assert((mid ==0) & (high == 0), "input field is too large to fit in a single limb");
+//             result.limbs[0] = low;
+//         }
+//         else if N_u60 == 2{
+//             assert(high == 0, "input field is too large to fit in two limbs");
+//             result.limbs[0] = low;
+//             result.limbs[1] = mid;
+//         }else{
+//             result.limbs[0] = low;
+//             result.limbs[1] = mid;
+//             result.limbs[2] = high;
+//         }
+//         result
+//     }
+// }
 
 impl<let N: u32, let NumSegments: u32> std::convert::Into<[Field; N]> for U60Repr<N, NumSegments> {
     fn into(x: U60Repr<N, NumSegments>) -> [Field; N] {
@@ -76,9 +100,7 @@ impl<let N: u32, let NumSegments: u32> std::cmp::Eq for U60Repr<N, NumSegments> 
 
 impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
 
-    pub(crate) unconstrained fn new<let NumFieldSegments: u32>(
-        x: [Field; N * NumFieldSegments],
-    ) -> Self {
+    pub(crate) fn new<let NumFieldSegments: u32>(x: [Field; N * NumFieldSegments]) -> Self {
         let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
         for i in 0..(N * NumFieldSegments) {
             let (lo, hi) = split_bits::split_60_bits(x[i]);
@@ -88,9 +110,48 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
         result
     }
 
-    pub(crate) unconstrained fn one() -> Self {
+    pub(crate) fn one() -> Self {
         let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
         result.limbs[0] = 1;
+        result
+    }
+
+    pub(crate) unconstrained fn from_field(input: Field) -> Self {
+        let (first, second, third, fourth, fifth) = field_to_u60rep(input);
+        let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
+        let N_u60: u32 = N * NumSegments;
+        assert(N_u60 >= 1, "N must be at least 1");
+        if N_u60 == 1 {
+            assert(
+                (second == 0) & (third == 0) & (fourth == 0) & (fifth == 0),
+                "input field is too large to fit in a single limb",
+            );
+            result.limbs[0] = first;
+        } else if N_u60 == 2 {
+            assert(
+                (third == 0) & (fourth == 0) & (fifth == 0),
+                "input field is too large to fit in two limbs",
+            );
+            result.limbs[0] = first;
+            result.limbs[1] = second;
+        } else if N_u60 == 3 {
+            assert((fourth == 0) & (fifth == 0), "input field is too large to fit in three limbs");
+            result.limbs[0] = first;
+            result.limbs[1] = second;
+            result.limbs[2] = third;
+        } else if N_u60 == 4 {
+            assert((fifth == 0), "input field is too large to fit in four limbs");
+            result.limbs[0] = first;
+            result.limbs[1] = second;
+            result.limbs[2] = third;
+            result.limbs[3] = fourth;
+        } else {
+            result.limbs[0] = first;
+            result.limbs[1] = second;
+            result.limbs[2] = third;
+            result.limbs[3] = fourth;
+            result.limbs[4] = fifth;
+        }
         result
     }
 
@@ -98,9 +159,9 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
         x: U60Repr<N, NumSegments>,
     ) -> [Field; N * NumSegments / 2] {
         let mut result: [Field; N * NumSegments / 2] = [0; N * NumSegments / 2];
-        let two_pow_60: Field = 0x1000000000000000;
         for i in 0..(N * NumSegments / 2) {
-            result[i] = x.limbs[2 * i] as Field + (x.limbs[2 * i + 1] as Field * two_pow_60);
+            result[i] =
+                x.limbs[2 * i] as Field + (x.limbs[2 * i + 1] as Field * TWO_POW_60 as Field);
         }
         result
     }
@@ -109,22 +170,20 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
         let mut result = false;
         let mut early_exit = false;
         for i in 0..(N * NumSegments) {
-            if (b.limbs[(N * NumSegments) - 1 - i] < self.limbs[((N * NumSegments) - 1 - i)]) {
-                result = true;
-                early_exit = true;
-                break;
-            } else if (
-                b.limbs[(N * NumSegments) - 1 - i] != self.limbs[((N * NumSegments) - 1 - i)]
-            ) {
-                result = false;
-                early_exit = true;
-                break;
+            let idx = (N * NumSegments) - 1 - i;
+            if (b.limbs[idx] == self.limbs[idx]) {
+                continue;
             }
+
+            result = b.limbs[idx] < self.limbs[idx];
+            early_exit = true;
+            break;
         }
-        if (early_exit == false) {
-            result = (self.limbs[0] == b.limbs[0]);
+        if early_exit {
+            result
+        } else {
+            self.limbs[0] == b.limbs[0]
         }
-        result
     }
 
     pub(crate) fn get_bit(self, bit: u32) -> bool {
@@ -141,15 +200,15 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
         let mut result: Self = U60Repr { limbs: [0; N * NumSegments] };
 
         let num_shifted_limbs = shift / 60;
-        let limb_shift = shift % 60;
-        let remainder_shift = 60 - limb_shift;
-        let mask: u64 = (((1 as u64) << limb_shift as u8) - 1) << remainder_shift as u8;
-        result.limbs[0] = (self.limbs[0 + num_shifted_limbs] >> limb_shift as u8);
+        let limb_shift = (shift % 60) as u8;
+        let remainder_shift = (60 - limb_shift) as u8;
+        let mask: u64 = (((1 as u64) << limb_shift) - 1) << remainder_shift;
+        result.limbs[0] = (self.limbs[0 + num_shifted_limbs] >> limb_shift);
 
         for i in 1..((N * NumSegments) - num_shifted_limbs) {
             let value = self.limbs[i + num_shifted_limbs];
-            result.limbs[i] = (value >> limb_shift as u8);
-            let remainder: u64 = (value << remainder_shift as u8) & mask;
+            result.limbs[i] = value >> limb_shift;
+            let remainder: u64 = (value << remainder_shift) & mask;
             result.limbs[i - 1] = result.limbs[i - 1] + remainder;
         }
         result
@@ -186,12 +245,12 @@ impl<let N: u32, let NumSegments: u32> U60Repr<N, NumSegments> {
         let value = self.limbs[0];
 
         let mut remainder = (value >> remainder_shift);
-        result.limbs[num_shifted_limbs] = (value << (limb_shift as u8)) & mask;
+        result.limbs[num_shifted_limbs] = (value << limb_shift) & mask;
 
         // shift 84. num shifted = 1
         for i in 1..((N * NumSegments) - num_shifted_limbs) {
             let value = self.limbs[i];
-            let upshift = ((value << (limb_shift as u8)) + remainder) & mask;
+            let upshift = ((value << limb_shift) + remainder) & mask;
             result.limbs[i + num_shifted_limbs] = upshift;
             remainder = (value >> remainder_shift);
             // let remainder: u64 = (self.limbs.get(i + num_shifted_limbs as u64) << remainder_shift as u8) & mask;
