@@ -5,9 +5,9 @@ use crate::params::BigNumParamsGetter;
 
 use crate::fns::{
     constrained_ops::{
-        add, assert_is_not_equal, conditional_select, derive_from_seed, div, eq, from_field,
+        add, assert_is_not_equal, cmp, conditional_select, derive_from_seed, div, eq, from_field,
         is_zero, limbs_to_field, mul, neg, sub, udiv, udiv_mod, umod, validate_in_field,
-        validate_in_range, cmp,
+        validate_in_range,
     },
     expressions::{__compute_quadratic_expression, evaluate_quadratic_expression},
     serialization::{from_be_bytes, to_le_bytes},
@@ -393,7 +393,6 @@ where
         eq::<_, MOD_BITS>(params, self.limbs, other.limbs)
     }
 }
-
 
 impl<let N: u32, let MOD_BITS: u32, Params> std::cmp::Ord for BigNum<N, MOD_BITS, Params>
 where

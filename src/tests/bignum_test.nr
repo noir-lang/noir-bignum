@@ -962,7 +962,7 @@ where
     }
 }
 
-// this test takes a while to run 
+// this test takes a while to run
 // #[test]
 unconstrained fn test_batch_inversion_BN381(seeds: [[u8; 2]; 3]) {
     let fields = seeds.map(|seed| BN381::derive_from_seed(seed));
@@ -980,13 +980,12 @@ where
     }
 }
 
-// this test takes a while to run 
+// this test takes a while to run
 // #[test]
 unconstrained fn test_batch_inversion_slice_BN381(seeds: [[u8; 2]; 3]) {
     let fields = seeds.map(|seed| BN381::derive_from_seed(seed)).as_slice();
     test_batch_inversion_slice(fields)
 }
-
 
 #[test]
 fn test_cmp_BN() {
@@ -1031,7 +1030,4 @@ fn test_cmp_BN_fail_2() {
 
     assert(a > b);
 }
-
-
-
 

@@ -41,14 +41,14 @@ pub(crate) unconstrained fn __validate_in_field_compute_borrow_flags<let N: u32,
 pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
     lhs: [Field; N],
     rhs: [Field; N],
-) -> (bool ,[Field; N], [bool; N], [bool; N]) {
+) -> (bool, [Field; N], [bool; N], [bool; N]) {
     let a_u60: U60Repr<N, 2> = From::from(lhs);
     let mut b_u60: U60Repr<N, 2> = From::from(rhs);
 
     let underflow = b_u60.gte(a_u60);
-    
+
     let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
-    // swap a and b if there's an underflow 
+    // swap a and b if there's an underflow
     let (a_u60, b_u60) = if underflow {
         (b_u60, a_u60)
     } else {
@@ -368,6 +368,4 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt_inner_loop_check<let N: u32, l
     }
     result
 }
-
-
 

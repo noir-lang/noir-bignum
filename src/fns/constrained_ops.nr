@@ -332,7 +332,8 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [Field; N], rhs: [
     // so we do... p - x - r = 0 and there might be borrow flags
     // a - b = r
     // p + a - b - r = 0
-    let (underflow, result, carry_flags, borrow_flags) = unsafe { __validate_gt_remainder(lhs, rhs) };
+    let (underflow, result, carry_flags, borrow_flags) =
+        unsafe { __validate_gt_remainder(lhs, rhs) };
     validate_in_range::<_, MOD_BITS>(result);
     assert(!underflow, "validate_gt check fails");
     check_gt_with_flags(lhs, rhs, result, borrow_flags, carry_flags);
@@ -558,21 +559,14 @@ pub(crate) fn umod<let N: u32, let MOD_BITS: u32>(
 }
 
 // a comparison function. returns true if lhs > rhs and false otherwise
-pub(crate) fn cmp<let N: u32, let MOD_BITS: u32>(
-    lhs: [Field; N],
-    rhs: [Field; N],
-) -> bool {
-    let (underflow, result, carry_flags, borrow_flags) = unsafe { __validate_gt_remainder(lhs, rhs) };
+pub(crate) fn cmp<let N: u32, let MOD_BITS: u32>(lhs: [Field; N], rhs: [Field; N]) -> bool {
+    let (underflow, result, carry_flags, borrow_flags) =
+        unsafe { __validate_gt_remainder(lhs, rhs) };
     // if underflow is true, swap lhs and rhs
-    let (lhs, rhs) = if underflow {
-        (rhs, lhs)
-    } else {
-        (lhs, rhs)
-    };
+    let (lhs, rhs) = if underflow { (rhs, lhs) } else { (lhs, rhs) };
     check_gt_with_flags(lhs, rhs, result, borrow_flags, carry_flags);
     !underflow
 }
-
 
 // the constraining function for the results returned by __validate_gt_remainder. this is used in both comparisons and validate gt
 pub(crate) fn check_gt_with_flags<let N: u32, let MOD_BITS: u32>(
