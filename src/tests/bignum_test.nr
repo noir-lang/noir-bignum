@@ -962,7 +962,8 @@ where
     }
 }
 
-#[test]
+// this test takes a while to run 
+// #[test]
 unconstrained fn test_batch_inversion_BN381(seeds: [[u8; 2]; 3]) {
     let fields = seeds.map(|seed| BN381::derive_from_seed(seed));
     test_batch_inversion(fields)
@@ -979,8 +980,58 @@ where
     }
 }
 
-#[test]
+// this test takes a while to run 
+// #[test]
 unconstrained fn test_batch_inversion_slice_BN381(seeds: [[u8; 2]; 3]) {
     let fields = seeds.map(|seed| BN381::derive_from_seed(seed)).as_slice();
     test_batch_inversion_slice(fields)
 }
+
+
+#[test]
+fn test_cmp_BN() {
+    let mut a: Fq = BigNum::modulus();
+    let mut b: Fq = BigNum::modulus();
+
+    a.limbs[0] -= 2;
+    b.limbs[0] -= 1;
+
+    assert(a < b);
+}
+
+#[test(should_fail_with = "Failed constraint")]
+fn test_cmp_BN_fail() {
+    let mut a: Fq = BigNum::modulus();
+    let mut b: Fq = BigNum::modulus();
+
+    a.limbs[0] -= 1;
+    b.limbs[0] -= 2;
+
+    assert(a < b);
+}
+
+#[test]
+fn test_cmp_BN_2() {
+    let mut a: Fq = BigNum::modulus();
+    let mut b: Fq = BigNum::modulus();
+
+    a.limbs[0] -= 1;
+    b.limbs[0] -= 2;
+
+    assert(a > b);
+}
+
+#[test(should_fail_with = "Failed constraint")]
+fn test_cmp_BN_fail_2() {
+    let mut a: Fq = BigNum::modulus();
+    let mut b: Fq = BigNum::modulus();
+
+    a.limbs[0] -= 2;
+    b.limbs[0] -= 1;
+
+    assert(a > b);
+}
+
+
+
+

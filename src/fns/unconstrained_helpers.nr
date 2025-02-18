@@ -41,14 +41,19 @@ pub(crate) unconstrained fn __validate_in_field_compute_borrow_flags<let N: u32,
 pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
     lhs: [Field; N],
     rhs: [Field; N],
-) -> ([Field; N], [bool; N], [bool; N]) {
+) -> (bool ,[Field; N], [bool; N], [bool; N]) {
     let a_u60: U60Repr<N, 2> = From::from(lhs);
     let mut b_u60: U60Repr<N, 2> = From::from(rhs);
 
     let underflow = b_u60.gte(a_u60);
-    assert(underflow == false, "BigNum::validate_gt check fails");
+    
     let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
-
+    // swap a and b if there's an underflow 
+    let (a_u60, b_u60) = if underflow {
+        (b_u60, a_u60)
+    } else {
+        (a_u60, b_u60)
+    };
     let mut carry_in: u64 = 0;
     let mut borrow_in: u64 = 1;
     let mut borrow_flags: [bool; N] = [false; N];
@@ -74,7 +79,7 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
         }
     }
     let result = U60Repr::into(result_u60);
-    (result, carry_flags, borrow_flags)
+    (underflow, result, carry_flags, borrow_flags)
 }
 
 pub(crate) unconstrained fn __neg_with_flags<let N: u32, let MOD_BITS: u32>(
@@ -363,3 +368,6 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt_inner_loop_check<let N: u32, l
     }
     result
 }
+
+
+

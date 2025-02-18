@@ -28,6 +28,7 @@ global TWO_POW_120: Field = 0x1000000000000000000000000000000;
  * udiv_mod
  * udiv
  * umod
+ * cmp 
  */
 
 pub(crate) fn limbs_to_field<let N: u32, let MOD_BITS: u32>(
@@ -331,27 +332,10 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [Field; N], rhs: [
     // so we do... p - x - r = 0 and there might be borrow flags
     // a - b = r
     // p + a - b - r = 0
-    let (result, carry_flags, borrow_flags) = unsafe { __validate_gt_remainder(lhs, rhs) };
+    let (underflow, result, carry_flags, borrow_flags) = unsafe { __validate_gt_remainder(lhs, rhs) };
     validate_in_range::<_, MOD_BITS>(result);
-
-    let mut addend: [Field; N] = [0; N];
-    let result_limb = lhs[0] - rhs[0] + addend[0] - result[0] - 1
-        + (borrow_flags[0] as Field - carry_flags[0] as Field) * TWO_POW_120;
-    assert(result_limb == 0);
-
-    for i in 1..N - 1 {
-        let prev_borrow_sub_carry = borrow_flags[i - 1] as Field - carry_flags[i - 1] as Field;
-        let borrow_sub_carry = borrow_flags[i] as Field - carry_flags[i] as Field;
-        let result_limb = lhs[i] - rhs[i] + addend[i] - result[i] - prev_borrow_sub_carry
-            + borrow_sub_carry * TWO_POW_120;
-        assert(result_limb == 0);
-    }
-
-    let result_limb = lhs[N - 1] - rhs[N - 1] + addend[N - 1]
-        - result[N - 1]
-        - borrow_flags[N - 2] as Field
-        + carry_flags[N - 2] as Field;
-    assert(result_limb == 0);
+    assert(!underflow, "validate_gt check fails");
+    check_gt_with_flags(lhs, rhs, result, borrow_flags, carry_flags);
 }
 
 pub(crate) fn neg<let N: u32, let MOD_BITS: u32>(
@@ -571,4 +555,49 @@ pub(crate) fn umod<let N: u32, let MOD_BITS: u32>(
     divisor: [Field; N],
 ) -> [Field; N] {
     udiv_mod::<_, MOD_BITS>(params, numerator, divisor).1
+}
+
+// a comparison function. returns true if lhs > rhs and false otherwise
+pub(crate) fn cmp<let N: u32, let MOD_BITS: u32>(
+    lhs: [Field; N],
+    rhs: [Field; N],
+) -> bool {
+    let (underflow, result, carry_flags, borrow_flags) = unsafe { __validate_gt_remainder(lhs, rhs) };
+    // if underflow is true, swap lhs and rhs
+    let (lhs, rhs) = if underflow {
+        (rhs, lhs)
+    } else {
+        (lhs, rhs)
+    };
+    check_gt_with_flags(lhs, rhs, result, borrow_flags, carry_flags);
+    !underflow
+}
+
+
+// the constraining function for the results returned by __validate_gt_remainder. this is used in both comparisons and validate gt
+pub(crate) fn check_gt_with_flags<let N: u32, let MOD_BITS: u32>(
+    lhs: [Field; N],
+    rhs: [Field; N],
+    result: [Field; N],
+    borrow_flags: [bool; N],
+    carry_flags: [bool; N],
+) {
+    let mut addend: [Field; N] = [0; N];
+    let result_limb = lhs[0] - rhs[0] + addend[0] - result[0] - 1
+        + (borrow_flags[0] as Field - carry_flags[0] as Field) * TWO_POW_120;
+    assert(result_limb == 0);
+
+    for i in 1..N - 1 {
+        let prev_borrow_sub_carry = borrow_flags[i - 1] as Field - carry_flags[i - 1] as Field;
+        let borrow_sub_carry = borrow_flags[i] as Field - carry_flags[i] as Field;
+        let result_limb = lhs[i] - rhs[i] + addend[i] - result[i] - prev_borrow_sub_carry
+            + borrow_sub_carry * TWO_POW_120;
+        assert(result_limb == 0);
+    }
+
+    let result_limb = lhs[N - 1] - rhs[N - 1] + addend[N - 1]
+        - result[N - 1]
+        - borrow_flags[N - 2] as Field
+        + carry_flags[N - 2] as Field;
+    assert(result_limb == 0);
 }
