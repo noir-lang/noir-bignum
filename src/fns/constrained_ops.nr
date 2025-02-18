@@ -31,7 +31,7 @@ global TWO_POW_120: Field = 0x1000000000000000000000000000000;
  */
 
 pub(crate) fn limbs_to_field<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
+    _params: P<N, MOD_BITS>,
     limbs: [Field; N],
 ) -> Field {
     let TWO_POW_120 = 0x1000000000000000000000000000000;
@@ -58,7 +58,7 @@ pub(crate) fn limbs_to_field<let N: u32, let MOD_BITS: u32>(
 }
 
 pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
+    _params: P<N, MOD_BITS>,
     field: Field,
 ) -> [Field; N] {
     // Safety: we check that the resulting limbs represent the intended field element
