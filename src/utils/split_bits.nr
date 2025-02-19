@@ -1,5 +1,5 @@
 global TWO_POW_56: u64 = 0x100000000000000;
-global TWO_POW_60: u64 = 0x1000000000000000;
+pub(crate) global TWO_POW_60: u64 = 0x1000000000000000;
 global TWO_POW_64: Field = 0x10000000000000000;
 
 //fields to u60rep conversion
@@ -40,12 +40,10 @@ pub unconstrained fn split_120_bits(mut x: Field) -> (Field, Field) {
     (low, high)
 }
 
-/**
- * @brief Decomposes a single field into two 60 bit fields
- *
- * @description Expects the input limb to be in the range [0, ..., 2^{120 - 1}]
- **/
-pub unconstrained fn split_60_bits(x: Field) -> (u64, u64) {
+/// Decomposes a single field into two 60 bit fields
+///
+/// Expects the input limb to be in the range [0, ..., 2^{120 - 1}]
+unconstrained fn __split_60_bits(x: Field) -> (u64, u64) {
     // Here we're taking advantage of truncating 64 bit limbs from the input field
     // and then subtracting them from the input such that the field division is equivalent to integer division.
     let x_lower_64 = (x as u64);
@@ -53,6 +51,24 @@ pub unconstrained fn split_60_bits(x: Field) -> (u64, u64) {
     let high = ((x - (low as Field)) / TWO_POW_60 as Field) as u64;
 
     (low, high)
+}
+
+/// Decomposes a single field into two 60 bit fields
+///
+/// Expects the input limb to be in the range [0, ..., 2^{120 - 1}]
+pub fn split_60_bits(x: Field) -> (u64, u64) {
+    // We assert that the two returned limbs fit within 60 bits each
+    // and reconstruct `x` when added together.
+    let (lo, hi) = unsafe { __split_60_bits(x) };
+    if !std::runtime::is_unconstrained() {
+        let lo_field = lo as Field;
+        let hi_field = hi as Field;
+        lo_field.assert_max_bit_size::<60>();
+        hi_field.assert_max_bit_size::<60>();
+        assert_eq(lo_field + (TWO_POW_60 as Field) * hi_field, x);
+    }
+
+    (lo, hi)
 }
 
 pub(crate) unconstrained fn __normalize_limbs<let N: u32>(

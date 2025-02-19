@@ -46,12 +46,11 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
     let mut b_u60: U60Repr<N, 2> = From::from(rhs);
 
     let underflow = b_u60.gte(a_u60);
-    b_u60 += U60Repr::one();
     assert(underflow == false, "BigNum::validate_gt check fails");
     let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
 
     let mut carry_in: u64 = 0;
-    let mut borrow_in: u64 = 0;
+    let mut borrow_in: u64 = 1;
     let mut borrow_flags: [bool; N] = [false; N];
     let mut carry_flags: [bool; N] = [false; N];
     for i in 0..2 * N {
@@ -67,12 +66,11 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
         borrow_in = borrow;
 
         if ((i & 1) == 1) {
-            if (carry & borrow == 1) {
-                carry = 0;
-                borrow = 0;
+            // Only set `borrow` and `carry` if they differ
+            if (carry != borrow) {
+                carry_flags[i / 2] = carry as bool;
+                borrow_flags[i / 2] = borrow as bool;
             }
-            carry_flags[i / 2] = carry as bool;
-            borrow_flags[i / 2] = borrow as bool;
         }
     }
     let result = U60Repr::into(result_u60);
@@ -137,13 +135,12 @@ pub(crate) unconstrained fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
         borrow_in = borrow;
 
         if ((i & 1) == 1) {
-            let idx = (i - 1) / 2;
-            if (carry & borrow == 1) {
-                carry = 0;
-                borrow = 0;
+            // Only set `borrow` and `carry` if they differ
+            if (carry != borrow) {
+                let idx = (i - 1) / 2;
+                carry_flags[idx] = carry as bool;
+                borrow_flags[idx] = borrow as bool;
             }
-            carry_flags[idx] = carry as bool;
-            borrow_flags[idx] = borrow as bool;
         }
     }
     let result = U60Repr::into(result_u60);
@@ -159,7 +156,7 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
     let a_u60: U60Repr<N, 2> = U60Repr::from(lhs);
     let b_u60: U60Repr<N, 2> = U60Repr::from(rhs);
 
-    let underflow = b_u60.gte(a_u60 + U60Repr::one());
+    let underflow = !a_u60.gte(b_u60);
 
     let addend_u60: U60Repr<N, 2> = if underflow {
         params.modulus_u60
@@ -184,12 +181,11 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
         borrow_in = borrow;
 
         if ((i & 1) == 1) {
-            if (carry & borrow == 1) {
-                carry = 0;
-                borrow = 0;
+            // Only set `borrow` and `carry` if they differ
+            if (carry != borrow) {
+                carry_flags[i / 2] = carry as bool;
+                borrow_flags[i / 2] = borrow as bool;
             }
-            carry_flags[i / 2] = carry as bool;
-            borrow_flags[i / 2] = borrow as bool;
         }
     }
     let result = U60Repr::into(result_u60);
@@ -267,11 +263,11 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     // convert the input into U60Repr
     let x_u60: U60Repr<N, 4> = U60Repr::new(x);
     let mut remainder_u60 = x_u60 - quotient_mul_modulus_u60;
-    // barrett reduction is quircky so might need to remove a few modulus_u60 from the remainder
+    // barrett reduction is quirky so might need to remove a few modulus_u60 from the remainder
     if (remainder_u60.gte(modulus_u60)) {
         remainder_u60 = remainder_u60 - modulus_u60;
         quotient_u60.increment();
-    } else {}
+    }
     if (remainder_u60.gte(modulus_u60)) {
         remainder_u60 = remainder_u60 - modulus_u60;
         quotient_u60.increment();
