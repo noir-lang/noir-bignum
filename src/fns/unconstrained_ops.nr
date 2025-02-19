@@ -171,34 +171,41 @@ pub(crate) unconstrained fn __udiv_mod<let N: u32>(
     let mut divisor_u60: U60Repr<N, 2> = U60Repr::from(divisor);
     let b = divisor_u60;
 
-    let mut bit_difference = remainder_u60.get_msb() - divisor_u60.get_msb();
+    let numerator_msb = remainder_u60.get_msb();
+    let divisor_msb = divisor_u60.get_msb();
+    if divisor_msb > numerator_msb {
+        ([0; N], numerator)
+    } else {
+        let mut bit_difference = numerator_msb - divisor_msb;
 
-    let mut accumulator_u60: U60Repr<N, 2> = U60Repr::one();
-    divisor_u60 = divisor_u60.shl(bit_difference);
-    accumulator_u60 = accumulator_u60.shl(bit_difference);
+        let mut accumulator_u60: U60Repr<N, 2> = U60Repr::one();
+        divisor_u60 = divisor_u60.shl(bit_difference);
+        accumulator_u60 = accumulator_u60.shl(bit_difference);
 
-    if (divisor_u60.gte(remainder_u60 + U60Repr::one())) {
-        divisor_u60.shr1();
-        accumulator_u60.shr1();
-    }
-    for _ in 0..(N * 120) {
-        if (remainder_u60.gte(b) == false) {
-            break;
+        // if divisor > remainder
+        if (!remainder_u60.gte(divisor_u60)) {
+            divisor_u60.shr1();
+            accumulator_u60.shr1();
+        }
+        for _ in 0..(N * 120) {
+            if (remainder_u60.gte(b) == false) {
+                break;
+            }
+
+            // we've shunted 'divisor' up to have the same bit length as our remainder.
+            // If remainder >= divisor, then a is at least '1 << bit_difference' multiples of b
+            if (remainder_u60.gte(divisor_u60)) {
+                remainder_u60 -= divisor_u60;
+                // we can use OR here instead of +, as
+                // accumulator is always a nice power of two
+                quotient_u60 = quotient_u60 + accumulator_u60;
+            }
+            divisor_u60.shr1(); // >>= 1;
+            accumulator_u60.shr1(); //  >>= 1;
         }
 
-        // we've shunted 'divisor' up to have the same bit length as our remainder.
-        // If remainder >= divisor, then a is at least '1 << bit_difference' multiples of b
-        if (remainder_u60.gte(divisor_u60)) {
-            remainder_u60 -= divisor_u60;
-            // we can use OR here instead of +, as
-            // accumulator is always a nice power of two
-            quotient_u60 = quotient_u60 + accumulator_u60;
-        }
-        divisor_u60.shr1(); // >>= 1;
-        accumulator_u60.shr1(); //  >>= 1;
+        (U60Repr::into(quotient_u60), U60Repr::into(remainder_u60))
     }
-
-    (U60Repr::into(quotient_u60), U60Repr::into(remainder_u60))
 }
 
 pub(crate) unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
