@@ -80,13 +80,13 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
 pub(crate) unconstrained fn __neg_with_flags<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     val: [Field; N],
-) -> ([Field; N], [bool; N-1]) {
+) -> ([Field; N], [bool; N]) {
     let x_u60: U60Repr<N, 2> = From::from(val);
     let mut result_u60: U60Repr<N, 2> = U60Repr { limbs: [0; 2 * N] };
 
     let mut borrow_in: u64 = 0;
 
-    let mut borrow_flags: [bool; N-1] = [false; N-1];
+    let mut borrow_flags: [bool; N] = [false; N];
     for i in 0..2 * N {
         let sub_term = x_u60.limbs[i] + borrow_in;
         let borrow = (sub_term > params.modulus_u60.limbs[i]) as u64;
@@ -94,9 +94,7 @@ pub(crate) unconstrained fn __neg_with_flags<let N: u32, let MOD_BITS: u32>(
 
         borrow_in = borrow;
         if ((i & 1) == 1) {
-            if i != 2 * N - 1 {
-                borrow_flags[i / 2] = borrow as bool;
-            }
+            borrow_flags[i / 2] = borrow as bool;
         }
     }
     let result = U60Repr::into(result_u60);
@@ -154,7 +152,7 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     lhs: [Field; N],
     rhs: [Field; N],
-) -> ([Field; N], [bool; N], [bool; N-1], bool) {
+) -> ([Field; N], [bool; N], [bool; N], bool) {
     let a_u60: U60Repr<N, 2> = U60Repr::from(lhs);
     let b_u60: U60Repr<N, 2> = U60Repr::from(rhs);
 
@@ -169,7 +167,7 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
 
     let mut carry_in: u64 = 0;
     let mut borrow_in: u64 = 0;
-    let mut borrow_flags: [bool; N-1] = [false; N-1];
+    let mut borrow_flags: [bool; N] = [false; N];
     let mut carry_flags: [bool; N] = [false; N];
     for i in 0..2 * N {
         let mut add_term: u64 = a_u60.limbs[i] + addend_u60.limbs[i] + carry_in;
@@ -186,9 +184,7 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
             // Only set `borrow` and `carry` if they differ
             if (carry != borrow) {
                 carry_flags[i / 2] = carry as bool;
-                if i != 2 * N - 1 {
-                    borrow_flags[i / 2] = borrow as bool;
-                }
+                borrow_flags[i / 2] = borrow as bool;
             }
         }
     }
