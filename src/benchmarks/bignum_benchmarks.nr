@@ -89,12 +89,26 @@ fn bench_udiv_BN256(a: BN256, b: BN256) -> BN256 {
 }
 
 #[export]
-fn bench_evaluate_quadratic_expression_3_elements(lhs: [[Fq; 3]; 3], lhs_flags: [[bool; 3]; 3], rhs: [[Fq; 3]; 3], rhs_flags: [[bool; 3]; 3], add: [Fq; 3], add_flags: [bool; 3]) {
+fn bench_evaluate_quadratic_expression_3_elements(
+    lhs: [[Fq; 3]; 3],
+    lhs_flags: [[bool; 3]; 3],
+    rhs: [[Fq; 3]; 3],
+    rhs_flags: [[bool; 3]; 3],
+    add: [Fq; 3],
+    add_flags: [bool; 3],
+) {
     Fq::evaluate_quadratic_expression(lhs, lhs_flags, rhs, rhs_flags, add, add_flags)
 }
 
 #[export]
-fn bench_compute_quadratic_expression_12_elemepts(lhs: [[Fq; 3]; 12], lhs_flags: [[bool; 3]; 12], rhs: [[Fq; 3]; 12], rhs_flags: [[bool; 3]; 12], add: [Fq; 3], add_flags: [bool; 3]) {
+fn bench_compute_quadratic_expression_12_elemepts(
+    lhs: [[Fq; 3]; 12],
+    lhs_flags: [[bool; 3]; 12],
+    rhs: [[Fq; 3]; 12],
+    rhs_flags: [[bool; 3]; 12],
+    add: [Fq; 3],
+    add_flags: [bool; 3],
+) {
     Fq::evaluate_quadratic_expression(lhs, lhs_flags, rhs, rhs_flags, add, add_flags)
 }
 
