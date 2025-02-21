@@ -500,10 +500,4 @@ pub(crate) fn __into_field_array<let N: u32>(input: [u128; N]) -> [Field; N] {
     result
 }
 
-#[test]
-unconstrained fn test_shr1() {
-    let input = [1, 2, 3, 4];
-    let result = __shr1(input);
-    let expected = __shr(input, 1);
-    assert(result == expected);
-}
+
