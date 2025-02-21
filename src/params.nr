@@ -44,7 +44,14 @@ impl<let N: u32, let MOD_BITS: u32> std::cmp::Eq for BigNumParams<N, MOD_BITS> {
 
 fn get_double_modulus<let N: u32>(modulus: [u128; N]) -> [u128; N] {
     let TWO_POW_120: u128 = 0x1000000000000000000000000000000;
-    let mut result: [u128; N] = unsafe { __helper_add(modulus, modulus) };
+    let mut result: [u128; N] = [0; N];
+    let mut carry: u128 = 0;
+    for i in 0..N {
+        let mut add_term = (modulus[i] + modulus[i] + carry);
+        carry = add_term >> 120;
+        add_term = add_term - (carry << 120);
+        result[i] = add_term;
+    }
 
     result[0] += TWO_POW_120;
     for i in 1..N - 1 {
