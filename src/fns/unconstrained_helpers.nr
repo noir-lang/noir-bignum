@@ -134,15 +134,15 @@ pub(crate) unconstrained fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
     let mut borrow_flags: [bool; N] = [false; N];
     let mut carry_flags: [bool; N] = [false; N];
     for i in 0..N {
-        let mut add_term: Field = lhs[i] as Field + rhs[i] as Field + carry_in as Field;
-        let mut carry = (add_term as u128 >= TWO_POW_120) as Field;
-        add_term -= carry as Field * TWO_POW_120 as Field;
+        let mut add_term = lhs[i] + rhs[i] + carry_in;
+        let mut carry = (add_term as u128 >= TWO_POW_120) as u128;
+        add_term -= carry * TWO_POW_120;
         carry_in = carry as u128;
 
         let sub_term = subtrahend[i] + borrow_in;
 
-        let mut borrow: Field = (sub_term > add_term as u128) as Field;
-        result[i] = (borrow * TWO_POW_120 as Field + add_term - sub_term as Field) as u128;
+        let mut borrow: u128 = (sub_term > add_term) as u128;
+        result[i] = borrow * TWO_POW_120 + add_term - sub_term;
         borrow_in = borrow as u128;
 
         // Only set `borrow` and `carry` if they differ
