@@ -6,28 +6,28 @@
 **/
 pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32, let NBytes: u32>(
     x: [u8; NBytes],
-) -> [Field; N] {
+) -> [u128; N] {
     let num_bits = NBytes * 8;
     assert(num_bits >= MOD_BITS);
     assert(num_bits - MOD_BITS < 8);
-    let mut result = [0; N];
+    let mut result: [u128; N] = [0; N];
 
     let excess_bytes = N * 15 - NBytes;
     let final_limb_bytes = 15 - excess_bytes;
-    let mut limb: Field = 0;
+    let mut limb: u128 = 0;
     let mut k = 0;
     for _j in 0..final_limb_bytes {
         limb *= 256;
-        limb += x[k] as Field;
+        limb += x[k] as u128;
         k += 1;
     }
     result[N - 1] = limb;
 
     for i in 1..N {
-        let mut limb: Field = 0;
+        let mut limb: u128 = 0;
         for _j in 0..15 {
             limb *= 256;
-            limb += x[k] as Field;
+            limb += x[k] as u128;
             k += 1;
         }
         result[N - i - 1] = limb;

@@ -143,13 +143,7 @@ where
     }
 
     fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> Self {
-        // Self { limbs: from_be_bytes::<_, MOD_BITS, _>(x) }
-        let limbs_field = from_be_bytes::<_, MOD_BITS, _>(x);
-        let mut limbs: [u128; N] = [0; N];
-        for i in 0..N {
-            limbs[i] = limbs_field[i] as u128;
-        }
-        Self { limbs: limbs }
+        Self { limbs: from_be_bytes::<_, MOD_BITS, _>(x) }
     }
 
     fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes] {
