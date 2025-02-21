@@ -262,14 +262,14 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
         __normalize_limbs(quotient_mul_modulus_normalized, 2 * N);
     let mut quotient_mul_modulus_normalized: [u128; N] = [0; N];
     for i in 0..N {
-        quotient_mul_modulus_normalized[i] = long_quotient_mul_modulus_normalized[i] as u128;
+        quotient_mul_modulus_normalized[i] = long_quotient_mul_modulus_normalized[i];
     }
 
     let mut long_remainder = __helper_sub(x, long_quotient_mul_modulus_normalized);
     // ugly but have to remove a bunch of zeros from this
     let mut remainder = [0; N];
     for i in 0..N {
-        remainder[i] = long_remainder[i] as u128;
+        remainder[i] = long_remainder[i];
     }
     // barrett reduction is quirky so might need to remove a few modulus from the remainder
     if (__gte(remainder, modulus)) {
