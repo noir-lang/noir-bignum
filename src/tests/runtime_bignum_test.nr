@@ -433,7 +433,7 @@ unconstrained fn test_invmod<let N: u32, let MOD_BITS: u32>(params: BigNumParams
     let u: RuntimeBigNum<N, MOD_BITS> = RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
     for _ in 0..1 {
         let v = u.__invmod();
-        let result =  u.__mul(v);
+        let result = u.__mul(v);
         let expected: RuntimeBigNum<N, MOD_BITS> = RuntimeBigNum::one(params);
         assert(result.limbs == expected.limbs);
     }
