@@ -311,10 +311,10 @@ where
     T: Into<Field>,
 {
     for i in 0..(N - 1) {
-        (limbs[i].into() as Field).assert_max_bit_size::<120>();
+        limbs[i].into().assert_max_bit_size::<120>();
     }
 
-    (limbs[N - 1].into() as Field).assert_max_bit_size::<MOD_BITS - ((N - 1) * 120)>();
+    limbs[N - 1].into().assert_max_bit_size::<MOD_BITS - ((N - 1) * 120)>();
 }
 
 /**

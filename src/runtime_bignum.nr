@@ -24,7 +24,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {}
 
 // All functions prefixed `__` are unconstrained!
 // They're not actually decorated as `unconstrained` because to return the `params` (as part of Self) from an `unconstrained` fn would cause range constraints. Instead, each `__` fn wraps a call to an unconstrained fn, so that the already-range-constrained `params` can be inserted into Self after the unconstrained call.
-pub trait RuntimeBigNumTrait<let N: u32, let MOD_BITS: u32>: Neg + Add + Sub + Mul + Div + Eq {
+pub(crate) trait RuntimeBigNumTrait<let N: u32, let MOD_BITS: u32>: Neg + Add + Sub + Mul + Div + Eq {
     fn new(params: BigNumParams<N, MOD_BITS>) -> Self;
     fn one(params: BigNumParams<N, MOD_BITS>) -> Self;
     fn derive_from_seed<let SeedBytes: u32>(
@@ -158,12 +158,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeB
     }
 
     fn from_be_bytes<let NBytes: u32>(params: BigNumParams<N, MOD_BITS>, x: [u8; NBytes]) -> Self {
-        let limbs_field = from_be_bytes::<_, MOD_BITS, _>(x);
-        let mut limbs: [u128; N] = [0; N];
-        for i in 0..N {
-            limbs[i] = limbs_field[i] as u128;
-        }
-        Self { limbs, params }
+        Self { limbs: from_be_bytes::<_, MOD_BITS, _>(x), params }
     }
 
     fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes] {
