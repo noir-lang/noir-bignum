@@ -6,6 +6,7 @@ use crate::fns::unconstrained_helpers::{
 };
 use crate::params::BigNumParams as P;
 use crate::utils::split_bits;
+use super::unconstrained_helpers::__shr1;
 
 /**
  * In this file:
@@ -93,7 +94,7 @@ pub(crate) unconstrained fn __add<let N: u32, let MOD_BITS: u32>(
     let mut result: [u128; N] = [0; N];
     let mut carry: u128 = 0;
     for i in 0..N {
-        let mut add_term = (lhs[i] as u128 + rhs[i] as u128 + carry);
+        let mut add_term = (lhs[i] + rhs[i] + carry);
         carry = add_term >> 120;
         add_term = add_term - (carry << 120);
         result[i] = add_term;
@@ -179,11 +180,11 @@ pub(crate) unconstrained fn __udiv_mod<let N: u32>(
         accumulator = __shl(accumulator, bit_difference);
 
         if (__gte(divisor, __increment(remainder))) {
-            divisor = __shr(divisor, 1);
-            accumulator = __shr(accumulator, 1);
+            divisor = __shr1(divisor);
+            accumulator = __shr1(accumulator);
         }
 
-        for i in 0..(N * 120) {
+        for _ in 0..(N * 120) {
             if (__gte(remainder, b) == false) {
                 break;
             }
@@ -195,8 +196,8 @@ pub(crate) unconstrained fn __udiv_mod<let N: u32>(
                 // accumulator is always a nice power of two
                 quotient = __helper_add(quotient, accumulator);
             }
-            divisor = __shr(divisor, 1); // >>= 1;
-            accumulator = __shr(accumulator, 1); //  >>= 1;
+            divisor = __shr1(divisor); // >>= 1;
+            accumulator = __shr1(accumulator); //  >>= 1;
         }
 
         (quotient, remainder)

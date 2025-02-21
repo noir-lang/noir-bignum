@@ -345,7 +345,7 @@ pub(crate) unconstrained fn __multiplicative_generator<let N: u32, let MOD_BITS:
     params: P<N, MOD_BITS>,
 ) -> [u128; N] {
     let mut target: [u128; N] = __one();
-    let p_minus_one_over_two = __shr(__helper_sub(params.modulus, __one()), 1);
+    let p_minus_one_over_two = __shr1(__helper_sub(params.modulus, __one()));
     let (_, target) = __recursively_find_multiplicative_generator::<_, MOD_BITS>(
         params,
         target,
@@ -444,7 +444,7 @@ pub(crate) unconstrained fn __helper_add<let N: u32>(lhs: [u128; N], rhs: [u128;
     let mut result: [u128; N] = [0; N];
     let mut carry: u128 = 0;
     for i in 0..N {
-        let mut add_term = (lhs[i] as u128 + rhs[i] as u128 + carry);
+        let mut add_term = (lhs[i] + rhs[i] + carry);
         carry = add_term >> 120;
         add_term = add_term - (carry << 120);
         result[i] = add_term;
