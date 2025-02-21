@@ -69,19 +69,19 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
     assert(underflow == false, "BigNum::validate_gt check fails");
     let mut result: [u128; N] = [0; N];
 
-    let mut carry_in: Field = 0;
-    let mut borrow_in: Field = 1;
+    let mut carry_in: u128 = 0;
+    let mut borrow_in: u128 = 1;
     let mut borrow_flags: [bool; N] = [false; N];
     let mut carry_flags: [bool; N] = [false; N];
     for i in 0..N {
-        let mut add_term: Field = a[i] as Field + carry_in;
-        let mut carry = (add_term as u128 >= TWO_POW_120) as Field;
-        add_term -= carry * TWO_POW_120 as Field;
+        let mut add_term: u128 = a[i] + carry_in;
+        let mut carry = (add_term as u128 >= TWO_POW_120) as u128;
+        add_term -= carry * TWO_POW_120;
         carry_in = carry;
 
-        let sub_term = b[i] as Field + borrow_in;
-        let mut borrow = (sub_term as u128 > add_term as u128) as Field;
-        result[i] = (borrow * TWO_POW_120 as Field + add_term - sub_term) as u128;
+        let sub_term = b[i] + borrow_in;
+        let mut borrow = (sub_term > add_term) as u128;
+        result[i] = (borrow * TWO_POW_120 + add_term - sub_term);
 
         borrow_in = borrow;
 
