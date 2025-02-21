@@ -385,11 +385,13 @@ pub(crate) fn neg<let N: u32, let MOD_BITS: u32>(
         let (result, borrow_flags) = unsafe { __neg_with_flags(params, val) };
         validate_in_range::<_, _, MOD_BITS>(result);
         let modulus = params.modulus;
-        let result_limb = modulus[0] - val[0] - result[0] + (borrow_flags[0] as u128 * TWO_POW_120);
+        let result_limb = modulus[0] + (borrow_flags[0] as u128 * TWO_POW_120) - val[0] - result[0];
         assert(result_limb == 0);
         for i in 1..N - 1 {
-            let result_limb = modulus[i] - val[i] - result[i] - borrow_flags[i - 1] as u128
-                + (borrow_flags[i] as u128 * TWO_POW_120);
+            let result_limb = modulus[i] + (borrow_flags[i] as u128 * TWO_POW_120)
+                - val[i]
+                - result[i]
+                - borrow_flags[i - 1] as u128;
             assert(result_limb == 0);
         }
         let result_limb = modulus[N - 1] - val[N - 1] - result[N - 1] - borrow_flags[N - 2] as u128;
