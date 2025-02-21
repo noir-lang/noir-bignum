@@ -24,4 +24,3 @@ pub unconstrained fn get_msb64(x: u64) -> u32 {
 }
 
 // 1100
-

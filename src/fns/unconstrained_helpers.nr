@@ -63,17 +63,16 @@ pub(crate) unconstrained fn __validate_in_field_compute_borrow_flags<let N: u32,
 pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
     lhs: [u128; N],
     rhs: [u128; N],
-) -> ([u128; N], [bool; N], [bool; N]) {
+) -> ([u128; N], [bool; N], [bool; N - 1]) {
     let mut a = lhs;
     let mut b = rhs;
-    let underflow = __gte(rhs, lhs);
-    b = __increment(b);
+    let underflow = !__gte(lhs, rhs);
     assert(underflow == false, "BigNum::validate_gt check fails");
     let mut result: [u128; N] = [0; N];
 
     let mut carry_in: Field = 0;
-    let mut borrow_in: Field = 0;
-    let mut borrow_flags: [bool; N] = [false; N];
+    let mut borrow_in: Field = 1;
+    let mut borrow_flags: [bool; N - 1] = [false; N - 1];
     let mut carry_flags: [bool; N] = [false; N];
     for i in 0..N {
         let mut add_term: Field = a[i] as Field + carry_in;
@@ -90,7 +89,9 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
         // Only set `borrow` and `carry` if they differ
         if (carry != borrow) {
             carry_flags[i] = carry as bool;
-            borrow_flags[i] = borrow as bool;
+            if i != N - 1 {
+                borrow_flags[i] = borrow as bool;
+            }
         }
     }
 
@@ -100,18 +101,20 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
 pub(crate) unconstrained fn __neg_with_flags<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     val: [u128; N],
-) -> ([u128; N], [bool; N]) {
+) -> ([u128; N], [bool; N - 1]) {
     let mut result: [u128; N] = [0; N];
     let mut borrow_in: u128 = 0;
 
-    let mut borrow_flags: [bool; N] = [false; N];
+    let mut borrow_flags: [bool; N - 1] = [false; N - 1];
     for i in 0..N {
         let sub_term = val[i] + borrow_in;
         let borrow = (sub_term > params.modulus[i]) as u128;
         result[i] = borrow * TWO_POW_120 + params.modulus[i] - sub_term;
 
         borrow_in = borrow;
-        borrow_flags[i] = borrow as bool;
+        if i != N - 1 {
+            borrow_flags[i] = borrow as bool;
+        }
     }
     (result, borrow_flags)
 }
@@ -160,16 +163,16 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     lhs: [u128; N],
     rhs: [u128; N],
-) -> ([u128; N], [bool; N], [bool; N], bool) {
+) -> ([u128; N], [bool; N], [bool; N - 1], bool) {
     let mut one: [u128; N] = [0; N];
     one[0] = 1;
-    let underflow = __gte(rhs, lhs);
+    let underflow = !__gte(lhs, rhs);
     let addend: [u128; N] = if underflow { params.modulus } else { [0; N] };
     let mut result: [u128; N] = [0; N];
 
     let mut carry_in: Field = 0;
     let mut borrow_in: Field = 0;
-    let mut borrow_flags: [bool; N] = [false; N];
+    let mut borrow_flags: [bool; N - 1] = [false; N - 1];
     let mut carry_flags: [bool; N] = [false; N];
     for i in 0..N {
         let mut add_term: Field = lhs[i] as Field + addend[i] as Field + carry_in;
@@ -185,7 +188,9 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
         // Only set `borrow` and `carry` if they differ
         if (carry != borrow) {
             carry_flags[i] = carry as bool;
-            borrow_flags[i] = borrow as bool;
+            if i != N - 1 {
+                borrow_flags[i] = borrow as bool;
+            }
         }
     }
     (result, carry_flags, borrow_flags, underflow)

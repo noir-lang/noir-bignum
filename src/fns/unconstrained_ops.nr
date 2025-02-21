@@ -168,34 +168,39 @@ pub(crate) unconstrained fn __udiv_mod<let N: u32>(
     let mut remainder: [u128; N] = numerator;
 
     let b = divisor;
+    let numerator_msb = __get_msb(numerator);
+    let divisor_msb = __get_msb(divisor);
+    if divisor_msb > numerator_msb {
+        ([0; N], numerator)
+    } else {
+        let mut bit_difference = __get_msb(remainder) - __get_msb(divisor);
+        let mut accumulator: [u128; N] = __one();
+        let mut divisor = __shl(divisor, bit_difference);
+        accumulator = __shl(accumulator, bit_difference);
 
-    let mut bit_difference = __get_msb(remainder) - __get_msb(divisor);
-    let mut accumulator: [u128; N] = __one();
-    let mut divisor = __shl(divisor, bit_difference);
-    accumulator = __shl(accumulator, bit_difference);
-
-    if (__gte(divisor, __increment(remainder))) {
-        divisor = __shr(divisor, 1);
-        accumulator = __shr(accumulator, 1);
-    }
-
-    for i in 0..(N * 120) {
-        if (__gte(remainder, b) == false) {
-            break;
+        if (__gte(divisor, __increment(remainder))) {
+            divisor = __shr(divisor, 1);
+            accumulator = __shr(accumulator, 1);
         }
-        // we've shunted 'divisor' up to have the same bit length as our remainder.
-        // If remainder >= divisor, then a is at least '1 << bit_difference' multiples of b
-        if (__gte(remainder, divisor)) {
-            remainder = __helper_sub(remainder, divisor);
-            // we can use OR here instead of +, as
-            // accumulator is always a nice power of two
-            quotient = __helper_add(quotient, accumulator);
-        }
-        divisor = __shr(divisor, 1); // >>= 1;
-        accumulator = __shr(accumulator, 1); //  >>= 1;
-    }
 
-    (quotient, remainder)
+        for i in 0..(N * 120) {
+            if (__gte(remainder, b) == false) {
+                break;
+            }
+            // we've shunted 'divisor' up to have the same bit length as our remainder.
+            // If remainder >= divisor, then a is at least '1 << bit_difference' multiples of b
+            if (__gte(remainder, divisor)) {
+                remainder = __helper_sub(remainder, divisor);
+                // we can use OR here instead of +, as
+                // accumulator is always a nice power of two
+                quotient = __helper_add(quotient, accumulator);
+            }
+            divisor = __shr(divisor, 1); // >>= 1;
+            accumulator = __shr(accumulator, 1); //  >>= 1;
+        }
+
+        (quotient, remainder)
+    }
 }
 
 pub(crate) unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
