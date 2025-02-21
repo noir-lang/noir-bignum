@@ -24,7 +24,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {}
 
 // All functions prefixed `__` are unconstrained!
 // They're not actually decorated as `unconstrained` because to return the `params` (as part of Self) from an `unconstrained` fn would cause range constraints. Instead, each `__` fn wraps a call to an unconstrained fn, so that the already-range-constrained `params` can be inserted into Self after the unconstrained call.
-pub trait RuntimeBigNumTrait<let N: u32, let MOD_BITS: u32>: Neg + Add + Sub + Mul + Div + Eq {
+pub(crate) trait RuntimeBigNumTrait<let N: u32, let MOD_BITS: u32>: Neg + Add + Sub + Mul + Div + Eq {
     fn new(params: BigNumParams<N, MOD_BITS>) -> Self;
     fn one(params: BigNumParams<N, MOD_BITS>) -> Self;
     fn derive_from_seed<let SeedBytes: u32>(
