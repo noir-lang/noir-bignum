@@ -1,6 +1,3 @@
-global TWO_POW_56: u64 = 0x100000000000000;
-pub(crate) global TWO_POW_60: u64 = 0x1000000000000000;
-global TWO_POW_64: Field = 0x10000000000000000;
 global TWO_POW_120: u128 = 0x1000000000000000000000000000000;
 
 pub unconstrained fn split_120_bits(mut x: Field) -> (u128, u128) {

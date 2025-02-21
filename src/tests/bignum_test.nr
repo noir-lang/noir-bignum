@@ -1,7 +1,7 @@
 use crate::bignum::BigNum;
 use crate::bignum::BigNumTrait;
 use crate::bignum::to_field;
-use crate::fns::unconstrained_helpers::{__add_with_flags, __helper_add};
+use crate::fns::unconstrained_helpers::{__helper_add};
 
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
@@ -9,8 +9,7 @@ use crate::params::BigNumParamsGetter;
 use crate::fields::bls12_381Fq::BLS12_381_Fq_Params;
 use crate::fields::bn254Fq::BN254_Fq_Params;
 use crate::fields::U256::U256Params;
-use crate::fns::constrained_ops::derive_from_seed;
-use crate::fns::unconstrained_helpers::__sub_with_flags;
+
 
 struct Test2048Params {}
 
@@ -124,9 +123,9 @@ fn test_bls_reduction() {
 
 #[test]
 fn test_derive_from_seed() {
-    let params = BN254_Fq_Params::get_params();
     let seed = [1, 2, 3, 4];
-    let result = derive_from_seed::<3, 254, 4>(params, seed);
+    let result_bn = Fq::derive_from_seed(seed);
+    result_bn.validate_in_field();
 }
 
 fn test_eq<let N: u32, BN>()
@@ -511,10 +510,10 @@ fn test_assert_is_not_equal_overloaded_rhs_fail_BN() {
     assert_is_not_equal_overloaded_rhs_fail::<3, Fq>();
 }
 
-// #[test(should_fail_with = "asssert_is_not_equal fail")]
-// fn test_assert_is_not_equal_overloaded_fail_BN() {
-//     assert_is_not_equal_overloaded_fail::<3, Fq>();
-// }
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn test_assert_is_not_equal_overloaded_fail_BN() {
+    assert_is_not_equal_overloaded_fail::<3, Fq>();
+}
 
 #[test]
 fn test_eq_2048() {
@@ -828,9 +827,12 @@ fn test_from_field_3_digits() {
 fn test_do_nothing() {
     let a: Fq = BigNum { limbs: [1, 2, 0] };
     let b: Fq = BigNum { limbs: [1, 2, 0] };
+    //@safty: this is a test
     let c = unsafe { __helper_add(a.limbs, b.limbs) };
     let d = unsafe { a.__add(b) };
     let e = a + b;
+    assert(c == d.limbs);
+    assert(c == e.limbs);
 }
 
 #[test]

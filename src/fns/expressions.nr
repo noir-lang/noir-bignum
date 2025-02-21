@@ -53,7 +53,7 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, le
     rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
     linear_terms: [[u128; N]; ADD_N],
     linear_flags: [bool; ADD_N],
-) -> ([u128; N], [u128; N], [bool; 2 * N]) {
+) -> ([u128; N], [u128; N], [bool; 2 * N - 2]) {
     // TODO, validate we do not overflow N2 when multiplying and N when adding
     let mut mulout_p = __compute_quadratic_expression_product(
         params,
@@ -82,11 +82,10 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, le
     }
 
     // compute borrow flags from mulout_p and mulout_n
-    let mut borrow_flags: [bool; 2 * N] = [false ; 2 * N];
-    let borrow_shift: Field = 0x40000000000000000000000000000000000000000000000000000000000000; // 2^{246}
-    let borrow_carry: Field = 0x40000000000000000000000000000000; // 2^{246 - 120} = 2^{126}
-    let two_pow_120: Field = 0x1000000000000000000000000000000;
-    let downshift: Field = 1 / two_pow_120;
+    let mut borrow_flags: [bool; 2 * N - 2] = [false; 2 * N - 2];
+    let borrow_shift: Field = TWO_POW_246; // 2^{246}
+    let borrow_carry: Field = TWO_POW_126; // 2^{246 - 120} = 2^{126}
+    let downshift: Field = 1 / (TWO_POW_120 as Field);
 
     // determine whether we need to borrow from more significant limbs.
     // initial limb is "simple" comparison operation
@@ -94,7 +93,8 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, le
     borrow_flags[0] = mulout_p[0].lt(mulout_n[0]);
     // we have 2N - 2 borrow flags. The number of limbs from our product computation is 2N - 1
     // and there is nothing to borrow against for the final limb.
-    let mut hi_bits = (mulout_p[0] - mulout_n[0] + (borrow_flags[0] as Field * borrow_shift)) * downshift;
+    let mut hi_bits =
+        (mulout_p[0] - mulout_n[0] + (borrow_flags[0] as Field * borrow_shift)) * downshift;
     for i in 1..(N + N - 2) {
         // compute the contribution from limb `i-1` that gets added into limb `i`, and add into limb `i`
         // let hi_bits = (mulout_p.get(i - 1) - mulout_n.get(i - 1) + (borrow_flags.get(i - 1) * borrow_shift))
@@ -271,7 +271,7 @@ pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let L
     linear_flags: [bool; ADD_N],
 ) {
     // use an unconstrained function to compute the value of the quotient
-    let (quotient, _, borrow_flags): ([u128; N], [u128; N], [bool; 2 * N]) = unsafe {
+    let (quotient, _, borrow_flags): ([u128; N], [u128; N], [bool; 2 * N - 2]) = unsafe {
         __compute_quadratic_expression_with_borrow_flags::<_, MOD_BITS, _, _, _, _>(
             params,
             lhs_terms,
@@ -369,7 +369,8 @@ pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let L
     // TODO: Once it is possible to perform arithmetic on generics we can use `borrow_flags: [bool;N+N-2]` to avoid this issue
     product_limbs[0] += borrow_flags[0] as Field * borrow_shift;
     for i in 1..(N + N - 2) {
-        product_limbs[i] += (borrow_flags[i] as Field * borrow_shift - borrow_flags[i - 1] as Field * borrow_carry);
+        product_limbs[i] +=
+            (borrow_flags[i] as Field * borrow_shift - borrow_flags[i - 1] as Field * borrow_carry);
     }
     product_limbs[N + N - 2] -= borrow_flags[N + N - 3] as Field * borrow_carry;
 

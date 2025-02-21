@@ -7,7 +7,6 @@ use crate::fns::{
     unconstrained_ops::{__add, __div, __mul, __neg, __sub, __udiv_mod},
 };
 use crate::params::BigNumParams as P;
-use std::convert::AsPrimitive;
 
 global TWO_POW_120: u128 = 0x1000000000000000000000000000000;
 
