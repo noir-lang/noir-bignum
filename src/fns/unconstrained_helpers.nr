@@ -165,19 +165,19 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
     let addend: [u128; N] = if underflow { params.modulus } else { [0; N] };
     let mut result: [u128; N] = [0; N];
 
-    let mut carry_in: Field = 0;
-    let mut borrow_in: Field = 0;
+    let mut carry_in: u128 = 0;
+    let mut borrow_in: u128 = 0;
     let mut borrow_flags: [bool; N] = [false; N];
     let mut carry_flags: [bool; N] = [false; N];
     for i in 0..N {
-        let mut add_term: Field = lhs[i] as Field + addend[i] as Field + carry_in;
-        let mut carry = (add_term as u128 >= TWO_POW_120) as Field;
-        add_term -= carry * TWO_POW_120 as Field;
+        let mut add_term: u128 = lhs[i] + addend[i] + carry_in;
+        let mut carry = (add_term as u128 >= TWO_POW_120) as u128;
+        add_term -= carry * TWO_POW_120;
         carry_in = carry;
 
-        let sub_term = rhs[i] as Field + borrow_in;
-        let mut borrow = (sub_term as u128 > add_term as u128) as Field;
-        result[i] = borrow as u128 * TWO_POW_120 as u128 + add_term as u128 - sub_term as u128;
+        let sub_term = rhs[i] + borrow_in;
+        let mut borrow = (sub_term > add_term) as u128;
+        result[i] = borrow as u128 * TWO_POW_120 + add_term - sub_term;
         borrow_in = borrow;
 
         // Only set `borrow` and `carry` if they differ
