@@ -499,5 +499,3 @@ pub(crate) fn __into_field_array<let N: u32>(input: [u128; N]) -> [Field; N] {
     }
     result
 }
-
-
