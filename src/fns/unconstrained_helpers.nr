@@ -456,9 +456,9 @@ pub(crate) unconstrained fn __shr1<let N: u32>(mut input: [u128; N]) -> [u128; N
     let value = input[N - 1];
     input[N - 1] = value >> 1;
 
-    let mut remainder = (value & 1) << 59;
+    let mut remainder = (value & 1) << 119;
 
-    for i in 0..N {
+    for i in 1..N {
         let value = input[N - 1 - i];
         input[N - 1 - i] = (value >> 1) + remainder;
         remainder = (value << 119) & TWO_POW_119;
@@ -498,4 +498,13 @@ pub(crate) fn __into_field_array<let N: u32>(input: [u128; N]) -> [Field; N] {
         result[i] = input[i] as Field;
     }
     result
+}
+
+
+#[test]
+unconstrained fn test_shr1() {
+    let input = [1, 2, 3, 4];
+    let result = __shr1(input);
+    let expected = __shr(input, 1);
+    assert(result == expected);
 }

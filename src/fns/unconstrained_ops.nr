@@ -180,7 +180,7 @@ pub(crate) unconstrained fn __udiv_mod<let N: u32>(
         accumulator = __shl(accumulator, bit_difference);
 
         if (__gte(divisor, __increment(remainder))) {
-            divisor = __shr1(divisor);
+            divisor = __shr1(divisor);    
             accumulator = __shr1(accumulator);
         }
 
