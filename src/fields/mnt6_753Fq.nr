@@ -21,7 +21,6 @@
 //!      extension field Fq3
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
-use crate::utils::u60_representation::U60Repr;
 
 pub struct MNT6_753_Fq_Params {}
 
@@ -51,56 +50,6 @@ global MNT6_753_Fq_PARAMS: BigNumParams<7, 753> = BigNumParams {
         0x01882220452045ddc59b5b6ff32ea0b6,
         0x03898c5b24,
     ],
-    modulus_u60: U60Repr {
-        limbs: [
-            0x090776e240000001,
-            0x0a099170fa13a4fd,
-            0x0381bc3f0057974e,
-            0x0f97634993aa4d6c,
-            0x0a9429212636b9df,
-            0x028c859a99b3eebc,
-            0x09a15af79db26c5c,
-            0x0e8a0ed8d99d124d,
-            0x0c97d87307fdb925,
-            0x08fafed5eb7e8f96,
-            0x02cdadb7f997505b,
-            0x0c41110229022eee,
-            0x01c4c62d92,
-            0x00,
-        ],
-    },
-    modulus_u60_x4: U60Repr {
-        limbs: [
-            0x090776e240000001,
-            0x0a099170fa13a4fd,
-            0x0381bc3f0057974e,
-            0x0f97634993aa4d6c,
-            0x0a9429212636b9df,
-            0x028c859a99b3eebc,
-            0x09a15af79db26c5c,
-            0x0e8a0ed8d99d124d,
-            0x0c97d87307fdb925,
-            0x08fafed5eb7e8f96,
-            0x02cdadb7f997505b,
-            0x0c41110229022eee,
-            0x01c4c62d92,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-        ],
-    },
     redc_param: [
         0x2dae11d15867718ec70f5ff059bba2,
         0x76d65fe7e00ba391da260f2623ff9a,

@@ -16,7 +16,6 @@
 //! * Valuation(r - 1, 2) = 32
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
-use crate::utils::u60_representation::U60Repr;
 
 pub struct Vesta_Fr_Params {}
 
@@ -34,24 +33,5 @@ global Vesta_Fr_PARAMS: BigNumParams<3, 255> = BigNumParams {
         0x01000000000000000000000000000043,
         0x7fff,
     ],
-    modulus_u60: U60Repr {
-        limbs: [0x092d30ed00000001, 0x04698fc094cf91b9, 0x22, 0x00, 0x4000, 0x00],
-    },
-    modulus_u60_x4: U60Repr {
-        limbs: [
-            0x092d30ed00000001,
-            0x04698fc094cf91b9,
-            0x22,
-            0x00,
-            0x4000,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-        ],
-    },
     redc_param: [0x59c0fdacc1b919b4b3c4bfffffffc4, 0xfffffffffffffffffffffffffff76e, 0x0fffff],
 };
