@@ -229,7 +229,7 @@ pub(crate) fn conditional_select<let N: u32>(
     for i in 0..N {
         // (lhs[i] - rhs[i]) * predicate + rhs[i]
         // in case lhs < rhs, this will underflow so we have to do one extra multiplication to prevent it
-        result[i] = lhs[i] * predicate as u128 + rhs[i] - rhs[i] * predicate as u128;
+        result[i] = lhs[i] * predicate as u128 + rhs[i] * (1 - predicate as u128);
     }
     result
 }
