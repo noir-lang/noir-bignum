@@ -7,6 +7,7 @@ use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 
 use crate::fields::bls12_381Fq::BLS12_381_Fq_Params;
+use crate::fields::bls12_381Fr::BLS12_381_Fr_Params;
 use crate::fields::bn254Fq::BN254_Fq_Params;
 use crate::fields::U256::U256Params;
 
@@ -92,6 +93,7 @@ type Fq = BigNum<3, 254, BN254_Fq_Params>;
 type BN256 = BigNum<3, 257, U256Params>;
 type BN381 = BigNum<4, 381, BLS12_381_Fq_Params>;
 type BN2048 = BigNum<18, 2048, Test2048Params>;
+type BLS_FR = BigNum<3, 255, BLS12_381_Fr_Params>;
 
 /**
  * @brief this example was failing - sanity test to validate it now works
@@ -960,4 +962,19 @@ where
 unconstrained fn test_batch_inversion_slice_BN381(seeds: [[u8; 2]; 3]) {
     let fields = seeds.map(|seed| BN381::derive_from_seed(seed)).as_slice();
     test_batch_inversion_slice(fields)
+}
+
+#[test]
+unconstrained fn test_batch_inversion_BN381_regression(seeds: [[u8; 2]; 5]) {
+    let fields = seeds.map(|seed| BN381::derive_from_seed(seed));
+    test_batch_inversion(fields)
+}
+
+#[test]
+fn test_sub_underflow_regression() {
+    let limbs = [605231426910671071918217543292637230, 925169190305713195541137574269511054, 4915];
+    let a = BLS_FR { limbs: limbs };
+    let b = BLS_FR { limbs: limbs };
+    let c = b - a;
+    assert(c.limbs == [0, 0, 0]);
 }
