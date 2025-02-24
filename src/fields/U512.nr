@@ -49,4 +49,3 @@ global U512_PARAMS: BigNumParams<5, 513> = BigNumParams {
     },
     redc_param: [0x00, 0x00, 0x00, 0x00, 0x4000000000],
 };
-
