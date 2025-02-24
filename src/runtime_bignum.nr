@@ -29,13 +29,13 @@ impl<let N: u32, let MOD_BITS: u32> Neg for RuntimeBigNum<N, MOD_BITS> {
 
 impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
 
-    pub fn new(params: BigNumParams<N, MOD_BITS>) -> Self {
+    pub fn zero(params: BigNumParams<N, MOD_BITS>) -> Self {
         let limbs: [Field; N] = [0; N];
         Self { limbs, params }
     }
 
     pub fn one(params: BigNumParams<N, MOD_BITS>) -> Self {
-        let mut result = RuntimeBigNum::new(params);
+        let mut result = RuntimeBigNum::zero(params);
         result.limbs[0] = 1;
         result
     }

@@ -237,7 +237,7 @@ fn test_sub() {
     let params = $typ ::get_params();
 
     // 0 - 1 should equal p - 1
-    let mut a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::new(params);
+    let mut a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::zero(params);
     let mut b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::one(params);
     let mut expected: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: params.modulus, params };
 
@@ -254,9 +254,9 @@ fn test_sub_modulus_limit() {
     // if we underflow, maximum result should be ...
     // 0 - 1 = o-1
     // 0 - p = 0
-    let mut a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::new(params);
+    let mut a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::zero(params);
     let mut b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: params.modulus, params };
-    let mut expected: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::new(params);
+    let mut expected: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::zero(params);
 
     let result = a - b;
     assert(result == expected);
@@ -268,7 +268,7 @@ fn test_sub_modulus_underflow() {
     let params = $typ ::get_params();
 
     // 0 - (p + 1) is smaller than p and should produce unsatisfiable constraints
-    let mut a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::new(params);
+    let mut a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::zero(params);
     let mut b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: params.modulus, params };
     b.limbs[0] += 1;
     let mut expected: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::one(params);
@@ -480,7 +480,7 @@ fn test_eq() {
 fn test_is_zero() {
     let params = $typ ::get_params();
 
-    let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::new(params);
+    let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::zero(params);
     let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
 
     assert(a.is_zero() == true);
