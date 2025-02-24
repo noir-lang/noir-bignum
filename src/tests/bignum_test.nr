@@ -137,7 +137,6 @@ where
     let b = BN::derive_from_seed([1, 2, 3, 4]);
     let c = BN::derive_from_seed([2, 2, 3, 4]);
 
-    let modulus = BN::modulus();
     assert(a.eq(b) == true);
     assert(c.eq(b) == false);
     assert(c.eq(a) == false);
@@ -437,7 +436,6 @@ fn test_add_modulus_limit() {
     // p + 2^{254} - 1 should be the maximum allowed value fed into an add operation
     // when adding, if the result overflows the modulus, we conditionally subtract the modulus, producing 2^{254} -  1
     // this is the largest value that will satisfy the range check applied when constructing a bignum
-    // let p: U60Repr<3, 2> = U60Repr::from(BN254_Fq_Params::get_params().modulus);
     let p: [u128; 3] = BN254_Fq_Params::get_params().modulus;
     let two_pow_254_minus_1: [u128; 3] =
         [0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x3fff];
@@ -556,10 +554,10 @@ fn test_assert_is_not_equal_overloaded_rhs_fail_2048() {
     assert_is_not_equal_overloaded_rhs_fail::<18, BN2048>();
 }
 
-// #[test(should_fail_with = "asssert_is_not_equal fail")]
-// fn test_assert_is_not_equal_overloaded_fail_2048() {
-//     assert_is_not_equal_overloaded_fail::<18, BN2048>();
-// }
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn test_assert_is_not_equal_overloaded_fail_2048() {
+    assert_is_not_equal_overloaded_fail::<18, BN2048>();
+}
 
 #[test]
 fn test_eq_U256() {
@@ -601,16 +599,15 @@ fn test_assert_is_not_equal_overloaded_rhs_fail_U256() {
     assert_is_not_equal_overloaded_rhs_fail::<3, BN256>();
 }
 
-// #[test(should_fail_with = "asssert_is_not_equal fail")]
-// fn test_assert_is_not_equal_overloaded_fail_U256() {
-//     assert_is_not_equal_overloaded_fail::<3, BN256>();
-// }
+#[test(should_fail_with = "asssert_is_not_equal fail")]
+fn test_assert_is_not_equal_overloaded_fail_U256() {
+    assert_is_not_equal_overloaded_fail::<3, BN256>();
+}
 
 type U256 = BN256;
 
 #[test]
 fn test_udiv_mod_U256() {
-    // let a: U256 = BigNum::derive_from_seed([1, 2, 3, 4]);
     let a: U256 = BigNum::from_slice([
         0xec0ca0c0adce359af6fcea1a7ab2dc,
         0xdd52c4aa3fde93685d3f7cc285de32,

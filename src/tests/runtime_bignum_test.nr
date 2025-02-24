@@ -553,7 +553,7 @@ fn test_sqrt_BN() {
 
     let x = RuntimeBigNum { limbs: [9, 0, 0], params };
 
-    let maybe_sqrt_x = unsafe { x.__tonelli_shanks_sqrt() };
+    let maybe_sqrt_x =  x.__tonelli_shanks_sqrt();
 
     let sqrt_x = maybe_sqrt_x.unwrap();
 

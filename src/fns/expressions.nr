@@ -68,16 +68,13 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, le
     let mut mulout_n: [Field; 2 * N] = [0; 2 * N];
     let mut relation_result: [u128; 2 * N] = split_bits::__normalize_limbs(mulout_p, 2 * N);
 
-    let modulus: [u128; N] = params.modulus;
-    let modulus_bits = MOD_BITS;
-    // everything is the same up to here.
     let (quotient, remainder) =
-        __barrett_reduction(relation_result, params.redc_param, modulus_bits, modulus);
+        __barrett_reduction(relation_result, params.redc_param, MOD_BITS, params.modulus);
     // real quotient should be 2 but we get 1 here.
     assert(remainder == [0; N]);
     for i in 0..N {
         for j in 0..N {
-            mulout_n[i + j] += quotient[i] as Field * modulus[j] as Field;
+            mulout_n[i + j] += quotient[i] as Field * params.modulus[j] as Field;
         }
     }
 

@@ -247,17 +247,6 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     }
 
     // Then, split the accumulated values and propagate higher bits
-    // for i in 0..(N + N) {
-    //     let (lo, hi) = split_bits::split_120_bits(quotient_mul_modulus_normalized[i]);
-    //     quotient_mul_modulus_normalized[i] = lo as Field;
-
-    //     // Propagate higher bits to the next index
-    //     // TODO: what is faster, leaving this if statement in or out?
-    //     // (array is size-1 too large so we can tolerate adding 0 into max element)
-    //     if (i + 1 < N + N) {
-    //         quotient_mul_modulus_normalized[i + 1] += hi as Field;
-    //     }
-    // }
     let long_quotient_mul_modulus_normalized: [u128; 2 * N] =
         __normalize_limbs(quotient_mul_modulus_normalized, 2 * N);
     let mut quotient_mul_modulus_normalized: [u128; N] = [0; N];
