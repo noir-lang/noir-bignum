@@ -2,10 +2,7 @@ use crate::fns::unconstrained_ops::{__add, __gte, __mul, __neg, __one, __pow};
 use crate::params::BigNumParams as P;
 use crate::utils::msb::get_msb64;
 use crate::utils::split_bits::__normalize_limbs;
-
-global TWO_POW_60: u128 = 0x1000000000000000;
-global TWO_POW_119: u128 = 0x800000000000000000000000000000;
-global TWO_POW_120: u128 = 0x1000000000000000000000000000000;
+use crate::constants::{TWO_POW_60, TWO_POW_119, TWO_POW_120};
 
 /**
  * In this file:

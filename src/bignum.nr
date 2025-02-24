@@ -93,8 +93,7 @@ where
     Params: BigNumParamsGetter<N, MOD_BITS>,
 {
     fn from(input: Field) -> Self {
-        let params = Params::get_params();
-        Self { limbs: from_field::<N, MOD_BITS>(params, input) }
+        Self { limbs: from_field::<N, MOD_BITS>(input) }
     }
 }
 

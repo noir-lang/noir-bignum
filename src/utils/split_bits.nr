@@ -1,4 +1,4 @@
-global TWO_POW_120: u128 = 0x1000000000000000000000000000000;
+use crate::constants::TWO_POW_120;
 
 unconstrained fn split_120_bits(mut x: Field) -> (u128, u128) {
     // Here we're taking advantage of truncating 128 bit limbs from the input field

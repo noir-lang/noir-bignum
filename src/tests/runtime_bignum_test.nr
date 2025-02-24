@@ -175,6 +175,7 @@ fn test_add_modulus_limit() {
 
     let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: p, params };
 
+    // Safety: test code
     let two_pow_modulus_bits_minus_one: [u128; $N] =  unsafe { $__helper_sub($__shl(one, $MOD_BITS), one) };
 
     let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: two_pow_modulus_bits_minus_one, params };
@@ -187,10 +188,13 @@ fn test_add_modulus_overflow() {
     let params = $typ ::get_params();
 
     let p: [u128; $N] = params.modulus;
+    // Safety: test code
     let one = unsafe{$__one()};
 
+    // Safety: test code
     let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: unsafe { $__helper_add(p, one) }, params };
 
+    // Safety: test code
     let mut two_pow_modulus_bits_minus_one: [u128; $N] =  unsafe { $__helper_sub($__shl(one, $MOD_BITS), one) };
 
     let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: two_pow_modulus_bits_minus_one, params };
@@ -289,6 +293,7 @@ fn assert_is_not_equal_overloaded_lhs_fail() {
 
     let t0: [u128; $N] = a.limbs;
     let t1: [u128; $N] = modulus;
+    // Safety: test code
     let a_plus_modulus: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: unsafe { $__helper_add(t0, t1) }, params };
 
     a_plus_modulus.assert_is_not_equal(b);
@@ -305,6 +310,7 @@ fn assert_is_not_equal_overloaded_rhs_fail() {
 
     let t0: [u128; $N] = b.limbs;
     let t1: [u128; $N] = modulus;
+    // Safety: test code
     let b_plus_modulus: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: unsafe { $__helper_add(t0, t1) }, params };
 
     a.assert_is_not_equal(b_plus_modulus);
@@ -323,7 +329,9 @@ fn assert_is_not_equal_overloaded_fail() {
     let t1: [u128; $N] = b.limbs;
     let t2: [u128; $N] = modulus;
 
+    // Safety: test code
     let a_plus_modulus: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: unsafe { $__helper_add(t0, t2) }, params };
+    // Safety: test code
     let b_plus_modulus: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: unsafe { $__helper_add(t1, t2) }, params };
 
     a_plus_modulus.assert_is_not_equal(b_plus_modulus);
@@ -353,6 +361,7 @@ fn test_eq() {
     let t0: [u128; $N] = modulus.limbs;
     let t1: [u128; $N] = b.limbs;
 
+    // Safety: test code
     let b_plus_modulus: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: unsafe { $__helper_add(t0, t1) }, params };
 
     assert_eq(a, b);
@@ -441,6 +450,7 @@ fn test_div_BN() {
 #[test]
 fn test_invmod_BN() {
     let params = BN254_Fq_Params::get_params();
+    // Safety: test code
     unsafe { test_invmod(params) };
 }
 
@@ -605,6 +615,7 @@ fn test_barrett_reduction_fix() {
         0x05,
     ];
 
+    // Safety: test code
     let (_quotient, remainder) =
         unsafe { __barrett_reduction(to_reduce, params.redc_param, 1024, params.modulus) };
     assert((remainder[8] as Field).lt(params.modulus[8] as Field));
