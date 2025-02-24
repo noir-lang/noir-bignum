@@ -94,9 +94,7 @@ pub(crate) unconstrained fn __neg_with_flags<let N: u32, let MOD_BITS: u32>(
 
         borrow_in = borrow;
         if ((i & 1) == 1) {
-            if i != 2 * N - 1 {
-                borrow_flags[i / 2] = borrow as bool;
-            }
+            borrow_flags[i / 2] = borrow as bool;
         }
     }
     let result = U60Repr::into(result_u60);
@@ -186,9 +184,7 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
             // Only set `borrow` and `carry` if they differ
             if (carry != borrow) {
                 carry_flags[i / 2] = carry as bool;
-                if i != 2 * N - 1 {
-                    borrow_flags[i / 2] = borrow as bool;
-                }
+                borrow_flags[i / 2] = borrow as bool;
             }
         }
     }
