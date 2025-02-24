@@ -1,7 +1,6 @@
 use crate::bignum::BigNum;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
-use crate::utils::u60_representation::U60Repr;
 
 pub struct U512Params {}
 
@@ -23,32 +22,5 @@ pub global U512_PARAMS: BigNumParams<5, 513> = BigNumParams {
         0xffffffffffffffffffffffffffffff,
         0x01ffffffff,
     ],
-    modulus_u60: U60Repr {
-        limbs: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0100000000, 0x00],
-    },
-    modulus_u60_x4: U60Repr {
-        limbs: [
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x0100000000,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-        ],
-    },
     redc_param: [0x00, 0x00, 0x00, 0x00, 0x4000000000],
 };

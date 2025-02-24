@@ -1,7 +1,6 @@
 use crate::bignum::BigNum;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
-use crate::utils::u60_representation::U60Repr;
 
 pub struct U256Params {}
 
@@ -21,9 +20,5 @@ pub global U256_PARAMS: BigNumParams<3, 257> = BigNumParams {
         0xffffffffffffffffffffffffffffff,
         0x01ffff,
     ],
-    modulus_u60: U60Repr { limbs: [0x00, 0x00, 0x00, 0x00, 0x010000, 0x00] },
-    modulus_u60_x4: U60Repr {
-        limbs: [0x00, 0x00, 0x00, 0x00, 0x010000, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
-    },
     redc_param: [0x00, 0x00, 0x400000],
 };

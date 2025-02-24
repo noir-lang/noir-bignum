@@ -5,6 +5,10 @@ use crate::fns::{
 };
 use crate::params::BigNumParams as P;
 
+global TWO_POW_120: u128 = 0x1000000000000000000000000000000;
+global TWO_POW_246: Field = 0x40000000000000000000000000000000000000000000000000000000000000;
+global TWO_POW_126: Field = 0x40000000000000000000000000000000;
+
 /**
  * In this file:
  *
@@ -40,15 +44,16 @@ use crate::params::BigNumParams as P;
 * @param linear_terms an array of BigNum
 * @param linear_flags an array of sign flags
 **/
+
 unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
     params: P<N, MOD_BITS>,
-    lhs_terms: [[[Field; N]; LHS_N]; NUM_PRODUCTS],
+    lhs_terms: [[[u128; N]; LHS_N]; NUM_PRODUCTS],
     lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
-    rhs_terms: [[[Field; N]; RHS_N]; NUM_PRODUCTS],
+    rhs_terms: [[[u128; N]; RHS_N]; NUM_PRODUCTS],
     rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
-    linear_terms: [[Field; N]; ADD_N],
+    linear_terms: [[u128; N]; ADD_N],
     linear_flags: [bool; ADD_N],
-) -> ([Field; N], [Field; N], [Field; 2 * N]) {
+) -> ([u128; N], [u128; N], [Field; 2 * N]) {
     // TODO, validate we do not overflow N2 when multiplying and N when adding
     let mut mulout_p = __compute_quadratic_expression_product(
         params,
@@ -59,32 +64,24 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, le
         linear_terms,
         linear_flags,
     );
+
     let mut mulout_n: [Field; 2 * N] = [0; 2 * N];
-    let mut relation_result: [Field; 2 * N] = split_bits::__normalize_limbs(mulout_p, 2 * N);
+    let mut relation_result: [u128; 2 * N] = split_bits::__normalize_limbs(mulout_p, 2 * N);
 
-    let modulus: [Field; N] = params.modulus;
-    let modulus_bits = MOD_BITS;
-    let (quotient, remainder) = __barrett_reduction(
-        relation_result,
-        params.redc_param,
-        modulus_bits,
-        modulus,
-        params.modulus_u60_x4,
-    );
+    let (quotient, remainder) =
+        __barrett_reduction(relation_result, params.redc_param, MOD_BITS, params.modulus);
     assert(remainder == [0; N]);
-
     for i in 0..N {
         for j in 0..N {
-            mulout_n[i + j] += quotient[i] * modulus[j];
+            mulout_n[i + j] += quotient[i] as Field * params.modulus[j] as Field;
         }
     }
 
     // compute borrow flags from mulout_p and mulout_n
     let mut borrow_flags: [Field; 2 * N] = [0; 2 * N];
-    let borrow_shift: Field = 0x40000000000000000000000000000000000000000000000000000000000000; // 2^{246}
-    let borrow_carry: Field = 0x40000000000000000000000000000000; // 2^{246 - 120} = 2^{126}
-    let two_pow_120: Field = 0x1000000000000000000000000000000;
-    let downshift: Field = 1 / two_pow_120;
+    let borrow_shift: Field = TWO_POW_246; // 2^{246}
+    let borrow_carry: Field = TWO_POW_126; // 2^{246 - 120} = 2^{126}
+    let downshift: Field = 1 / (TWO_POW_120 as Field);
 
     // determine whether we need to borrow from more significant limbs.
     // initial limb is "simple" comparison operation
@@ -92,7 +89,8 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, le
     borrow_flags[0] = mulout_p[0].lt(mulout_n[0]) as Field;
     // we have 2N - 2 borrow flags. The number of limbs from our product computation is 2N - 1
     // and there is nothing to borrow against for the final limb.
-    let mut hi_bits = (mulout_p[0] - mulout_n[0] + (borrow_flags[0] * borrow_shift)) * downshift;
+    let mut hi_bits =
+        (mulout_p[0] - mulout_n[0] + (borrow_flags[0] as Field * borrow_shift)) * downshift;
     for i in 1..(N + N - 2) {
         // compute the contribution from limb `i-1` that gets added into limb `i`, and add into limb `i`
         // let hi_bits = (mulout_p.get(i - 1) - mulout_n.get(i - 1) + (borrow_flags.get(i - 1) * borrow_shift))
@@ -124,17 +122,17 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, le
 // Finally, to ensure we do not underflow in the most significant limb, we use `2p` instead of `p`
 unconstrained fn __add_linear_expression<let N: u32, let MOD_BITS: u32, let M: u32>(
     params: P<N, MOD_BITS>,
-    x: [[Field; N]; M],
+    x: [[u128; N]; M],
     flags: [bool; M],
-) -> ([Field; N]) {
+) -> ([u128; N]) {
     // TODO, validate we do not overflow N2 when multiplying and N when adding
-    let mut sum: [Field; N] = [0; N];
+    let mut sum: [u128; N] = [0; N];
     // TODO: ugly! Will fail if input array is empty
-    let modulus2: [Field; N] = params.double_modulus;
+    let modulus2: [u128; N] = params.double_modulus;
     for i in 0..M {
         if (flags[i]) {
             for j in 0..N {
-                sum[j] = sum[j] + modulus2[j] - x[i][j];
+                sum[j] = sum[j] + (modulus2[j] as Field - x[i][j] as Field) as u128;
                 // assert(x[i][j].lt(modulus2[j]));
             }
         } else {
@@ -153,34 +151,33 @@ unconstrained fn __add_linear_expression<let N: u32, let MOD_BITS: u32, let M: u
 **/
 unconstrained fn __compute_quadratic_expression_product<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
     params: P<N, MOD_BITS>,
-    lhs_terms: [[[Field; N]; LHS_N]; NUM_PRODUCTS],
+    lhs_terms: [[[u128; N]; LHS_N]; NUM_PRODUCTS],
     lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
-    rhs_terms: [[[Field; N]; RHS_N]; NUM_PRODUCTS],
+    rhs_terms: [[[u128; N]; RHS_N]; NUM_PRODUCTS],
     rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
-    linear_terms: [[Field; N]; ADD_N],
+    linear_terms: [[u128; N]; ADD_N],
     linear_flags: [bool; ADD_N],
 ) -> [Field; 2 * N] {
     // TODO, validate we do not overflow N2 when multiplying and N when adding
-    let mut lhs: [[Field; N]; NUM_PRODUCTS] = [[0; N]; NUM_PRODUCTS];
-    let mut rhs: [[Field; N]; NUM_PRODUCTS] = [[0; N]; NUM_PRODUCTS];
-    let mut add: [Field; N] = [0; N];
+    let mut lhs: [[u128; N]; NUM_PRODUCTS] = [[0; N]; NUM_PRODUCTS];
+    let mut rhs: [[u128; N]; NUM_PRODUCTS] = [[0; N]; NUM_PRODUCTS];
 
     for i in 0..NUM_PRODUCTS {
         lhs[i] = __add_linear_expression(params, lhs_terms[i], lhs_flags[i]);
         rhs[i] = __add_linear_expression(params, rhs_terms[i], rhs_flags[i]);
     }
 
-    let add: [Field; N] = __add_linear_expression(params, linear_terms, linear_flags);
+    let add: [u128; N] = __add_linear_expression(params, linear_terms, linear_flags);
 
     let mut mulout: [Field; 2 * N] = [0; 2 * N];
 
     for i in 0..N {
         for j in 0..N {
             for k in 0..NUM_PRODUCTS {
-                mulout[i + j] += (lhs[k][i] * rhs[k][j]);
+                mulout[i + j] += (lhs[k][i] as Field * rhs[k][j] as Field);
             }
         }
-        mulout[i] += add[i];
+        mulout[i] += add[i] as Field;
     }
     mulout
 }
@@ -191,15 +188,15 @@ unconstrained fn __compute_quadratic_expression_product<let N: u32, let MOD_BITS
 **/
 pub(crate) unconstrained fn __compute_quadratic_expression<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
     params: P<N, MOD_BITS>,
-    lhs_terms: [[[Field; N]; LHS_N]; NUM_PRODUCTS],
+    lhs_terms: [[[u128; N]; LHS_N]; NUM_PRODUCTS],
     lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
-    rhs_terms: [[[Field; N]; RHS_N]; NUM_PRODUCTS],
+    rhs_terms: [[[u128; N]; RHS_N]; NUM_PRODUCTS],
     rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
-    linear_terms: [[Field; N]; ADD_N],
+    linear_terms: [[u128; N]; ADD_N],
     linear_flags: [bool; ADD_N],
-) -> ([Field; N], [Field; N]) {
+) -> ([u128; N], [u128; N]) {
     // TODO, validate we do not overflow N2 when multiplying and N when adding
-    let mulout = __compute_quadratic_expression_product(
+    let mulout: [Field; (N * 2)] = __compute_quadratic_expression_product(
         params,
         lhs_terms,
         lhs_flags,
@@ -208,20 +205,15 @@ pub(crate) unconstrained fn __compute_quadratic_expression<let N: u32, let MOD_B
         linear_terms,
         linear_flags,
     );
-    let mut relation_result: [Field; 2 * N] = split_bits::__normalize_limbs(mulout, 2 * N);
+    let mut relation_result: [u128; 2 * N] = split_bits::__normalize_limbs(mulout, 2 * N);
 
     // size 4
     // a[3] * b[3] = a[6] = 7
     // TODO: ugly! Will fail if input slice is empty
     let k = MOD_BITS;
 
-    let (quotient, remainder) = __barrett_reduction(
-        relation_result,
-        params.redc_param,
-        k,
-        params.modulus,
-        params.modulus_u60_x4,
-    );
+    let (quotient, remainder) =
+        __barrett_reduction(relation_result, params.redc_param, k, params.modulus);
 
     let mut q = quotient;
     let mut r = remainder;
@@ -267,15 +259,15 @@ pub(crate) unconstrained fn __compute_quadratic_expression<let N: u32, let MOD_B
 **/
 pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
     params: P<N, MOD_BITS>,
-    lhs_terms: [[[Field; N]; LHS_N]; NUM_PRODUCTS],
+    lhs_terms: [[[u128; N]; LHS_N]; NUM_PRODUCTS],
     lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
-    rhs_terms: [[[Field; N]; RHS_N]; NUM_PRODUCTS],
+    rhs_terms: [[[u128; N]; RHS_N]; NUM_PRODUCTS],
     rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
-    linear_terms: [[Field; N]; ADD_N],
+    linear_terms: [[u128; N]; ADD_N],
     linear_flags: [bool; ADD_N],
 ) {
     // use an unconstrained function to compute the value of the quotient
-    let (quotient, _, borrow_flags): ([Field; N], [Field; N], [Field; 2 * N]) = unsafe {
+    let (quotient, _, borrow_flags): ([u128; N], [u128; N], [Field; 2 * N]) = unsafe {
         __compute_quadratic_expression_with_borrow_flags::<_, MOD_BITS, _, _, _, _>(
             params,
             lhs_terms,
@@ -286,6 +278,7 @@ pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let L
             linear_flags,
         )
     };
+
     // constrain the quotient to be in the range [0, ..., 2^{m} - 1], where `m` is log2(modulus) rounded up.
     // Additionally, validate quotient limbs are also in the range [0, ..., 2^{120} - 1]
     validate_quotient_in_range::<_, MOD_BITS>(quotient);
@@ -297,24 +290,25 @@ pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let L
     let mut t4: [Field; N] = [0; N];
 
     // TODO: this is super nasty as it requires a multiplication
-    let double_modulus: [Field; N] = params.double_modulus;
+    let double_modulus: [u128; N] = params.double_modulus;
+
     for k in 0..NUM_PRODUCTS {
         for i in 0..N {
             for j in 0..LHS_N {
                 // note: if is_negative is not known at comptime this is very expensive
                 if (lhs_flags[k][j]) {
-                    t0[k][i] -= lhs_terms[k][j][i];
-                    t0[k][i] += double_modulus[i];
+                    t0[k][i] -= lhs_terms[k][j][i] as Field;
+                    t0[k][i] += double_modulus[i] as Field;
                 } else {
-                    t0[k][i] += lhs_terms[k][j][i];
+                    t0[k][i] += lhs_terms[k][j][i] as Field;
                 }
             }
             for j in 0..RHS_N {
                 if (rhs_flags[k][j]) {
-                    t1[k][i] -= rhs_terms[k][j][i];
-                    t1[k][i] += double_modulus[i];
+                    t1[k][i] -= rhs_terms[k][j][i] as Field;
+                    t1[k][i] += double_modulus[i] as Field;
                 } else {
-                    t1[k][i] += rhs_terms[k][j][i];
+                    t1[k][i] += rhs_terms[k][j][i] as Field;
                 }
             }
         }
@@ -322,10 +316,10 @@ pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let L
     for i in 0..N {
         for j in 0..ADD_N {
             if (linear_flags[j]) {
-                t4[i] -= linear_terms[j][i];
-                t4[i] += double_modulus[i];
+                t4[i] -= linear_terms[j][i] as Field;
+                t4[i] += double_modulus[i] as Field;
             } else {
-                t4[i] += linear_terms[j][i];
+                t4[i] += linear_terms[j][i] as Field;
             }
         }
     }
@@ -341,15 +335,16 @@ pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let L
         for j in 0..N {
             for k in 0..NUM_PRODUCTS {
                 if k == 0 {
-                    let new_term = t0[k][i] * t1[k][j] - quotient[i] * params.modulus[j];
+                    let new_term =
+                        t0[k][i] * t1[k][j] - quotient[i] as Field * params.modulus[j] as Field;
                     std::as_witness(new_term); // width-4 optimization (n.b. might not be optimal if t2, t3 input arrays are nonzero)
                     product_limbs[i + j] += new_term;
                 } else {
-                    product_limbs[i + j] += t0[k][i] * t1[k][j];
+                    product_limbs[i + j] += t0[k][i] * t1[k][j] as Field;
                 }
             }
             if (NUM_PRODUCTS == 0) {
-                product_limbs[i + j] -= quotient[i] * params.modulus[j];
+                product_limbs[i + j] -= quotient[i] as Field * params.modulus[j] as Field;
             }
         }
         product_limbs[i] += t4[i];
@@ -374,7 +369,7 @@ pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let L
         borrow_flags[i].assert_max_bit_size::<1>();
         product_limbs[i] += (borrow_flags[i] * borrow_shift - borrow_flags[i - 1] * borrow_carry);
     }
-    product_limbs[N + N - 2] -= borrow_flags[N + N - 3] * borrow_carry;
+    product_limbs[N + N - 2] -= borrow_flags[N + N - 3] as Field * borrow_carry;
 
     // Final step: Validate `product_limbs` represents the integer value `0`
     // Each element `i` in `product_limbs` overlaps in bitrange with element `i+1`, EXCEPT for the low 120 bits

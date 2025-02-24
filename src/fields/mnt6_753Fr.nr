@@ -22,7 +22,6 @@
 use crate::bignum::BigNum;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
-use crate::utils::u60_representation::U60Repr;
 
 pub struct MNT6_753_Fr_Params {}
 
@@ -54,56 +53,6 @@ pub global MNT6_753_Fr_PARAMS: BigNumParams<7, 753> = BigNumParams {
         0x01882220452045ddc59b5b6ff32ea0b6,
         0x03898c5b24,
     ],
-    modulus_u60: U60Repr {
-        limbs: [
-            0x0e9063de245e8001,
-            0x09d54522cdd119f5,
-            0x0810719ac425f0e3,
-            0x0cce9767254a4638,
-            0x0da5cb537e38685a,
-            0x076f218059db80f0,
-            0x09a15af79db117e7,
-            0x0e8a0ed8d99d124d,
-            0x0c97d87307fdb925,
-            0x08fafed5eb7e8f96,
-            0x02cdadb7f997505b,
-            0x0c41110229022eee,
-            0x01c4c62d92,
-            0x00,
-        ],
-    },
-    modulus_u60_x4: U60Repr {
-        limbs: [
-            0x0e9063de245e8001,
-            0x09d54522cdd119f5,
-            0x0810719ac425f0e3,
-            0x0cce9767254a4638,
-            0x0da5cb537e38685a,
-            0x076f218059db80f0,
-            0x09a15af79db117e7,
-            0x0e8a0ed8d99d124d,
-            0x0c97d87307fdb925,
-            0x08fafed5eb7e8f96,
-            0x02cdadb7f997505b,
-            0x0c41110229022eee,
-            0x01c4c62d92,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-        ],
-    },
     redc_param: [
         0x5dcc95da918349f4965a2aee8fd750,
         0x82372b75580c27c4d1f1f57a96a114,
