@@ -23,9 +23,6 @@ pub struct BigNum<let N: u32, let MOD_BITS: u32, Params> {
 // We aim to avoid needing to add a generic parameter to this trait, for this reason we do not allow
 // accessing the limbs of the bignum except through slices.
 pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
-    // TODO: this crashes the compiler? v0.32
-    // fn default() -> Self { std::default::Default::default  () }
-    fn new() -> Self;
     fn zero() -> Self;
     fn one() -> Self;
     fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
@@ -111,12 +108,6 @@ impl<let N: u32, let MOD_BITS: u32, Params> BigNumTrait for BigNum<N, MOD_BITS, 
 where
     Params: BigNumParamsGetter<N, MOD_BITS>,
 {
-
-    #[deprecated("`BigNum::zero()` is preferred")]
-    fn new() -> Self {
-        Self::zero()
-    }
-
     fn zero() -> Self {
         Self { limbs: [0; N] }
     }
