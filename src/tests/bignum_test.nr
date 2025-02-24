@@ -7,7 +7,7 @@ use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 
 use crate::fields::bls12_381Fq::BLS12_381_Fq;
-use crate::fields::bls12_381Fr::BLS12_381_Fr_Params;
+use crate::fields::bls12_381Fr::BLS12_381_Fr;
 use crate::fields::bn254Fq::{BN254_Fq, BN254_Fq_Params};
 use crate::fields::U256::U256;
 
@@ -90,7 +90,6 @@ impl BigNumParamsGetter<18, 2048> for Test2048Params {
 }
 
 type BN2048 = BigNum<18, 2048, Test2048Params>;
-type BLS_FR = BigNum<3, 255, BLS12_381_Fr_Params>;
 
 /**
  * @brief this example was failing - sanity test to validate it now works
@@ -122,7 +121,7 @@ fn test_bls_reduction() {
 #[test]
 fn test_derive_from_seed() {
     let seed = [1, 2, 3, 4];
-    let result_bn = Fq::derive_from_seed(seed);
+    let result_bn = BN254_Fq::derive_from_seed(seed);
     result_bn.validate_in_field();
 }
 
@@ -303,7 +302,7 @@ fn test_add_BN() {
 
     b.limbs[0] -= 1;
 
-    let mut expected: Fq = BigNum::modulus();
+    let mut expected: BN254_Fq = BigNum::modulus();
     expected.limbs[0] -= 2;
 
     let c = a + b;
@@ -312,9 +311,9 @@ fn test_add_BN() {
 
 #[test]
 fn test_add_test_BN_wrap_around() {
-    let mut a: Fq = BigNum::modulus();
-    let mut b: Fq = Fq { limbs: [3, 0, 0] };
-    let mut expected: Fq = Fq::one();
+    let mut a: BN254_Fq = BigNum::modulus();
+    let mut b: BN254_Fq = BN254_Fq { limbs: [3, 0, 0] };
+    let mut expected: BN254_Fq = BN254_Fq::one();
     a.limbs[0] -= 2;
 
     let c = a + b;
@@ -335,8 +334,8 @@ fn test_sub_test_BN() {
 
 #[test]
 fn test_eq_wrap() {
-    let a: Fq = BigNum::modulus();
-    let b = Fq::zero();
+    let a: BN254_Fq = BigNum::modulus();
+    let b = BN254_Fq::zero();
     assert(a == b);
 }
 
@@ -405,19 +404,9 @@ fn test_add_BN2() {
 
 #[test]
 fn test_mul_BN_with_one() {
-    let a: Fq = BigNum::modulus() - (BigNum::one() + BigNum::one());
+    let a: BN254_Fq = BN254_Fq::modulus() - (BN254_Fq::one() + BN254_Fq::one());
 
-    let b: Fq = BigNum::one();
-
-    let c = a * b;
-    assert(c == a);
-}
-
-#[test]
-fn test_mul_BN_with_one() {
-    let a: Fq = BigNum::modulus() - (BigNum::one() + BigNum::one());
-
-    let b: Fq = BigNum::one();
+    let b: BN254_Fq = BN254_Fq::one();
 
     let c = a * b;
     assert(c == a);
@@ -765,8 +754,8 @@ fn test_from_field_3_digits() {
 
 #[test]
 fn test_do_nothing() {
-    let a: Fq = BigNum { limbs: [1, 2, 0] };
-    let b: Fq = BigNum { limbs: [1, 2, 0] };
+    let a: BN254_Fq = BigNum { limbs: [1, 2, 0] };
+    let b: BN254_Fq = BigNum { limbs: [1, 2, 0] };
     //@safty: this is a test
     let c = unsafe { __helper_add(a.limbs, b.limbs) };
     let d = unsafe { a.__add(b) };
@@ -907,15 +896,15 @@ unconstrained fn test_batch_inversion_slice_BN381(seeds: [[u8; 2]; 3]) {
 
 #[test]
 unconstrained fn test_batch_inversion_BN381_regression(seeds: [[u8; 2]; 5]) {
-    let fields = seeds.map(|seed| BN381::derive_from_seed(seed));
+    let fields = seeds.map(|seed| BLS12_381_Fr::derive_from_seed(seed));
     test_batch_inversion(fields)
 }
 
 #[test]
 fn test_sub_underflow_regression() {
     let limbs = [605231426910671071918217543292637230, 925169190305713195541137574269511054, 4915];
-    let a = BLS_FR { limbs: limbs };
-    let b = BLS_FR { limbs: limbs };
+    let a = BLS12_381_Fr { limbs: limbs };
+    let b = BLS12_381_Fr { limbs: limbs };
     let c = b - a;
     assert(c.limbs == [0, 0, 0]);
 }
