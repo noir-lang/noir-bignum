@@ -1,10 +1,10 @@
 use crate::utils::split_bits;
 
+use crate::constants::{TWO_POW_120, TWO_POW_126, TWO_POW_246};
 use crate::fns::{
     constrained_ops::validate_quotient_in_range, unconstrained_helpers::__barrett_reduction,
 };
 use crate::params::BigNumParams as P;
-use crate::constants::{TWO_POW_120, TWO_POW_126, TWO_POW_246};
 
 /**
 * @brief Given a degree-2 BigNum expression that is equal to 0 mod p, compute the quotient and borrow flags 
