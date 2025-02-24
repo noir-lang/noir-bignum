@@ -8,27 +8,6 @@ use crate::params::BigNumParams as P;
 use crate::utils::split_bits;
 use super::unconstrained_helpers::__shr1;
 
-/**
- * In this file:
- *
- * __one
- * __derive_from_seed
- * __eq
- * __is_zero
- * __neg
- * __add
- * __add_u128
- * __sub
- * __mul_with_quotient
- * __mul
- * __div
- * __udiv_mod
- * __invmod
- * __pow
- * __batch_invert
- * __batch_invert_slice
- */
-
 pub(crate) unconstrained fn __one<let N: u32>() -> [u128; N] {
     let mut limbs: [u128; N] = [0; N];
     limbs[0] = 1;

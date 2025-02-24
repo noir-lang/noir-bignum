@@ -4,18 +4,6 @@ use crate::params::BigNumParams as P;
 use crate::utils::msb::get_msb64;
 use crate::utils::split_bits::__normalize_limbs;
 
-/**
- * In this file:
- *
- * __validate_in_field_compute_borrow_flags
- * __validate_gt_remainder
- * __neg_with_flags
- * __add_with_flags
- * __sub_with_flags
- * __barrett_reduction
- * __tonelli_shanks_sqrt
- */
-
 pub(crate) unconstrained fn __from_field<let N: u32>(field: Field) -> [u128; N] {
     let mut x = field;
     let x_first_u128 = (x as u128);

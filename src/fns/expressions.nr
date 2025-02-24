@@ -4,20 +4,7 @@ use crate::fns::{
     constrained_ops::validate_quotient_in_range, unconstrained_helpers::__barrett_reduction,
 };
 use crate::params::BigNumParams as P;
-
-global TWO_POW_120: u128 = 0x1000000000000000000000000000000;
-global TWO_POW_246: Field = 0x40000000000000000000000000000000000000000000000000000000000000;
-global TWO_POW_126: Field = 0x40000000000000000000000000000000;
-
-/**
- * In this file:
- *
- * __compute_quadratic_expression_with_borrow_flags
- * __add_linear_expression
- * __compute_quadratic_expression_product
- * __compute_quadratic_expression
- * evaluate_quadratic_expression
- */
+use crate::constants::{TWO_POW_120, TWO_POW_126, TWO_POW_246};
 
 /**
 * @brief Given a degree-2 BigNum expression that is equal to 0 mod p, compute the quotient and borrow flags 
