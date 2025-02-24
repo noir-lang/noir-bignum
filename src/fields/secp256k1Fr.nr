@@ -1,6 +1,5 @@
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
-use crate::utils::u60_representation::U60Repr;
 
 pub struct Secp256k1_Fr_Params {}
 
@@ -18,31 +17,5 @@ global Secp256k1_Fr_PARAMS: BigNumParams<3, 256> = BigNumParams {
         0x01fffffffffffffffffffffffffffd74,
         0x01fffe,
     ],
-    modulus_u60: U60Repr {
-        limbs: [
-            0x0fd25e8cd0364141,
-            0x0aedce6af48a03bb,
-            0x0ffffffffffffeba,
-            0x0fffffffffffffff,
-            0xffff,
-            0x00,
-        ],
-    },
-    modulus_u60_x4: U60Repr {
-        limbs: [
-            0x0fd25e8cd0364141,
-            0x0aedce6af48a03bb,
-            0x0ffffffffffffeba,
-            0x0fffffffffffffff,
-            0xffff,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-        ],
-    },
     redc_param: [0x1231950b75fc4402da1732fc9bec09, 0x1455, 0x100000],
 };

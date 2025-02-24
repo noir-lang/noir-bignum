@@ -16,21 +16,16 @@ use crate::fns::{
 use std::ops::Neg;
 
 pub struct RuntimeBigNum<let N: u32, let MOD_BITS: u32> {
-    pub limbs: [Field; N],
+    pub limbs: [u128; N],
     pub params: BigNumParams<N, MOD_BITS>,
 }
 
-impl<let N: u32, let MOD_BITS: u32> Neg for RuntimeBigNum<N, MOD_BITS> {
-    fn neg(self) -> Self {
-        let params = self.params;
-        Self { limbs: neg::<_, MOD_BITS>(params, self.limbs), params }
-    }
-}
-
+// All functions prefixed `__` are unconstrained!
+// They're not actually decorated as `unconstrained` because to return the `params` (as part of Self) from an `unconstrained` fn would cause range constraints. Instead, each `__` fn wraps a call to an unconstrained fn, so that the already-range-constrained `params` can be inserted into Self after the unconstrained call.
 impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
 
     pub fn zero(params: BigNumParams<N, MOD_BITS>) -> Self {
-        let limbs: [Field; N] = [0; N];
+        let limbs: [u128; N] = [0; N];
         Self { limbs, params }
     }
 
@@ -57,11 +52,11 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
         Self { limbs, params }
     }
 
-    pub fn from_slice(params: BigNumParams<N, MOD_BITS>, limbs: [Field]) -> Self {
+    pub fn from_slice(params: BigNumParams<N, MOD_BITS>, limbs: [u128]) -> Self {
         Self { limbs: limbs.as_array(), params }
     }
 
-    pub fn from_array(params: BigNumParams<N, MOD_BITS>, limbs: [Field; N]) -> Self {
+    pub fn from_array(params: BigNumParams<N, MOD_BITS>, limbs: [u128; N]) -> Self {
         Self { limbs, params }
     }
 
@@ -93,15 +88,15 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     //     self.get_limbs()
     // }
 
-    pub fn get_limbs(self) -> [Field; N] {
+    pub fn get_limbs(self) -> [u128; N] {
         self.limbs
     }
 
-    pub fn get_limb(self, idx: u32) -> Field {
+    pub fn get_limb(self, idx: u32) -> u128 {
         self.limbs[idx]
     }
 
-    pub fn set_limb(&mut self, idx: u32, value: Field) {
+    pub fn set_limb(&mut self, idx: u32, value: u128) {
         self.limbs[idx] = value;
     }
 
@@ -255,7 +250,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     }
 
     pub fn validate_in_range(self) {
-        validate_in_range::<_, MOD_BITS>(self.limbs);
+        validate_in_range::<_, _, MOD_BITS>(self.limbs);
     }
 
     pub fn assert_is_not_equal(self, other: Self) {
@@ -332,6 +327,13 @@ impl<let N: u32, let MOD_BITS: u32> std::ops::Div for RuntimeBigNum<N, MOD_BITS>
         let params = self.params;
         assert(params == divisor.params);
         Self { limbs: div::<_, MOD_BITS>(params, self.limbs, divisor.limbs), params }
+    }
+}
+
+impl<let N: u32, let MOD_BITS: u32> Neg for RuntimeBigNum<N, MOD_BITS> {
+    fn neg(self) -> Self {
+        let params = self.params;
+        Self { limbs: neg::<_, MOD_BITS>(params, self.limbs), params }
     }
 }
 
