@@ -263,7 +263,7 @@ pub(crate) fn assert_is_not_equal<let N: u32, let MOD_BITS: u32>(
     // rhs can be either Y mod N or P + Y mod N
     // If lhs - rhs = 0 mod P then lhs - rhs = 0, P or -P mod N
     let diff = l - r;
-    let target = diff * (diff as Field + modulus_mod_n) * (diff - modulus_mod_n);
+    let target = diff * (diff + modulus_mod_n) * (diff - modulus_mod_n);
     assert(target != 0, "asssert_is_not_equal fail");
 }
 
