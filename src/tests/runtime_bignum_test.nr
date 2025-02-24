@@ -1,6 +1,6 @@
 use crate::fns::unconstrained_helpers::__barrett_reduction;
 use crate::params::{BigNumParams, BigNumParamsGetter};
-use crate::runtime_bignum::{RuntimeBigNum, RuntimeBigNumTrait};
+use crate::runtime_bignum::RuntimeBigNum;
 
 use crate::fields::bn254Fq::BN254_Fq_Params;
 
@@ -122,7 +122,7 @@ fn test_sub() {
     let params = $typ ::get_params();
 
     // 0 - 1 should equal p - 1
-    let mut a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::new(params);
+    let mut a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::zero(params);
     let mut b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::one(params);
     let mut expected: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: params.modulus, params };
 
@@ -139,9 +139,9 @@ fn test_sub_modulus_limit() {
     // if we underflow, maximum result should be ...
     // 0 - 1 = o-1
     // 0 - p = 0
-    let mut a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::new(params);
+    let mut a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::zero(params);
     let mut b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: params.modulus, params };
-    let mut expected: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::new(params);
+    let mut expected: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::zero(params);
 
     let result = a - b;
     assert(result == expected);
@@ -153,7 +153,7 @@ fn test_sub_modulus_underflow() {
     let params = $typ ::get_params();
 
     // 0 - (p + 1) is smaller than p and should produce unsatisfiable constraints
-    let mut a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::new(params);
+    let mut a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::zero(params);
     let mut b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: params.modulus, params };
     b.limbs[0] += 1;
     let mut expected: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::one(params);
@@ -365,7 +365,7 @@ fn test_eq() {
 fn test_is_zero() {
     let params = $typ ::get_params();
 
-    let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::new(params);
+    let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::zero(params);
     let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
 
     assert(a.is_zero() == true);
@@ -378,43 +378,36 @@ fn test_is_zero() {
 #[make_test(3, 254, quote {crate::fields::bn254Fq::BN254_Fq_Params})]
 pub mod BNTests {
     use crate::params::BigNumParamsGetter;
-    use crate::runtime_bignum::RuntimeBigNumTrait;
 }
 
 #[make_test(3, 256, quote {crate::fields::secp256k1Fq::Secp256k1_Fq_Params})]
 pub mod Secp256K1FqTests {
     use crate::params::BigNumParamsGetter;
-    use crate::runtime_bignum::RuntimeBigNumTrait;
 }
 
 #[make_test(4, 381, quote {crate::fields::bls12_381Fq::BLS12_381_Fq_Params})]
 pub mod BLS12_381FqTests {
     use crate::params::BigNumParamsGetter;
-    use crate::runtime_bignum::RuntimeBigNumTrait;
 }
 
 #[make_test(18, 2048, quote {super::Test2048Params})]
 pub mod Test2048Tests {
     use crate::params::BigNumParamsGetter;
-    use crate::runtime_bignum::RuntimeBigNumTrait;
 }
 
 #[make_test(3, 255, quote {crate::fields::bls12_381Fr::BLS12_381_Fr_Params})]
 pub mod BLS12_381_Fr_ParamsTests {
     use crate::params::BigNumParamsGetter;
-    use crate::runtime_bignum::RuntimeBigNumTrait;
 }
 
 #[make_test(4, 377, quote {crate::fields::bls12_377Fq::BLS12_377_Fq_Params})]
 pub mod BLS12_377_Fq_ParamsTests {
     use crate::params::BigNumParamsGetter;
-    use crate::runtime_bignum::RuntimeBigNumTrait;
 }
 
 #[make_test(3, 253, quote {crate::fields::bls12_377Fr::BLS12_377_Fr_Params})]
 pub mod BLS12_377_Fr_ParamsTests {
     use crate::params::BigNumParamsGetter;
-    use crate::runtime_bignum::RuntimeBigNumTrait;
 }
 
 // 98760
