@@ -1,3 +1,4 @@
+use crate::constants::TWO_POW_120;
 use crate::fns::{
     expressions::evaluate_quadratic_expression,
     unconstrained_helpers::{
@@ -7,7 +8,6 @@ use crate::fns::{
     unconstrained_ops::{__add, __div, __mul, __neg, __sub, __udiv_mod},
 };
 use crate::params::BigNumParams as P;
-use crate::constants::TWO_POW_120;
 
 /**
  * In this file:
