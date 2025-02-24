@@ -1,8 +1,8 @@
-// BigNum
-pub mod bignum;
-
-// RuntimeBigNum
-pub mod runtime_bignum;
+mod bignum;
+mod runtime_bignum;
+mod tests;
+mod benchmarks;
+mod constants;
 
 // Pre-defined fields and bignums for people to use:
 pub mod fields;
@@ -15,17 +15,8 @@ pub(crate) mod fns;
 pub(crate) mod utils;
 
 // Re-export the main structs so that users don't have to specify the paths
-pub use bignum::BigNum;
-pub use bignum::BigNumTrait; // So that external code can operate on a generic BigNum, `where BigNum: BigNumTrait`.
+pub use bignum::{BigNum, BigNumTrait};
 pub use runtime_bignum::RuntimeBigNum;
-
-mod constants;
-
-// Tests
-mod tests;
-
-// Benchmarks
-mod benchmarks;
 
 // Re-export the pre-defined bignum types, for easier access:
 pub use fields::bls12_377Fq::BLS12_377_Fq;
