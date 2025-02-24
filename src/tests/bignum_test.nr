@@ -105,6 +105,7 @@ fn test_bls_reduction() {
         ],
     };
     X1.validate_in_field();
+    // Safety: test code
     let mut (_, XX_mul_3): (BLS12_381_Fq, BLS12_381_Fq) = unsafe {
         BigNum::__compute_quadratic_expression(
             [[X1, X1, X1]],
@@ -206,12 +207,12 @@ where
     BN: BigNumTrait,
 {
     let u = BN::derive_from_seed([1, 2, 3, 4]);
-    for _ in 0..1 {
-        let v = unsafe { u.__invmod() };
-        let result = unsafe { u.__mul(v) };
-        let expected = BN::one();
-        assert(result == expected);
-    }
+    // Safety: test code
+    let v = unsafe { u.__invmod() };
+    // Safety: test code
+    let result = unsafe { u.__mul(v) };
+    let expected = BN::one();
+    assert(result == expected);
 }
 
 fn assert_is_not_equal<let N: u32, BN>()
@@ -245,6 +246,7 @@ where
 
     let t0: [u128; N] = a.get_limbs_slice().as_array();
     let t1: [u128; N] = modulus.get_limbs_slice().as_array();
+    // Safety: test code
     let a_plus_modulus = BN::from_slice(unsafe { __helper_add(t0, t1) });
     a_plus_modulus.assert_is_not_equal(b);
 }
@@ -260,6 +262,7 @@ where
 
     let t0: [u128; N] = b.get_limbs_slice().as_array();
     let t1: [u128; N] = modulus.get_limbs_slice().as_array();
+    // Safety: test code
     let b_plus_modulus = BN::from_slice(unsafe { __helper_add(t0, t1) });
     a.assert_is_not_equal(b_plus_modulus);
 }
@@ -276,7 +279,9 @@ where
     let t0: [u128; N] = a.get_limbs_slice().as_array();
     let t1: [u128; N] = b.get_limbs_slice().as_array();
     let t2: [u128; N] = modulus.get_limbs_slice().as_array();
+    // Safety: test code
     let a_plus_modulus: BN = BN::from_slice(unsafe { __helper_add(t0, t2) });
+    // Safety: test code
     let b_plus_modulus: BN = BN::from_slice(unsafe { __helper_add(t1, t2) });
     a_plus_modulus.assert_is_not_equal(b_plus_modulus);
 }
@@ -386,6 +391,7 @@ fn test_add_modulus_overflow() {
     let two_pow_254_minus_1: [u128; 3] =
         [0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x3fff];
     let one = [1, 0, 0];
+    // Safety: test code
     let a = BN254_Fq { limbs: unsafe { __helper_add(p, one) } };
     let b = BN254_Fq { limbs: two_pow_254_minus_1 };
     let result = a + b;
@@ -548,7 +554,7 @@ fn test_udiv_mod_U256() {
 
     let (q, r) = a.udiv_mod(b);
 
-    // let qb = q.__mul(b);
+    // Safety: test code
     let product = unsafe { q.__mul(b).__add(r) };
     assert(product == a);
 }
@@ -647,6 +653,7 @@ fn test_2048_bit_quadratic_expression() {
 
     let a_bn: BN2048 = BigNum { limbs: a };
     let b_bn: BN2048 = BigNum { limbs: b };
+    // Safety: test code
     let c_bn = unsafe { a_bn.__mul(b_bn) };
     assert(c_bn.limbs == c_expected);
 
@@ -668,6 +675,7 @@ fn test_expressions() {
 
     let y = BN254_Fq { limbs: [0x1, 0x1, 0x0] };
     let z = BN254_Fq { limbs: [0x2, 0x2, 0x0] };
+    // Safety: test code
     let yy = unsafe { y.__add(y) };
 
     assert(yy.limbs == z.limbs);
@@ -700,9 +708,13 @@ fn test_expressions() {
             0x0000000000000000000000000000000000000000000000000000000000000f93,
         ],
     };
+    // Safety: test code
     let wx = unsafe { w.__mul(x) };
+    // Safety: test code
     let uv = unsafe { uu.__mul(vv) };
+    // Safety: test code
     let y = unsafe { (uv.__add(wx)).__neg() };
+    // Safety: test code
     let z = unsafe { uv.__add(wx) };
 
     BigNum::evaluate_quadratic_expression(
@@ -754,10 +766,11 @@ fn test_from_field_3_digits() {
 
 #[test]
 fn test_do_nothing() {
-    let a: BN254_Fq = BigNum { limbs: [1, 2, 0] };
-    let b: BN254_Fq = BigNum { limbs: [1, 2, 0] };
-    //@safty: this is a test
+    let a: BN254_Fq = BN254_Fq { limbs: [1, 2, 0] };
+    let b: BN254_Fq = BN254_Fq { limbs: [1, 2, 0] };
+    // Safety: test code
     let c = unsafe { __helper_add(a.limbs, b.limbs) };
+    // Safety: test code
     let d = unsafe { a.__add(b) };
     let e = a + b;
     assert(c == d.limbs);

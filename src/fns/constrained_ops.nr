@@ -1,3 +1,4 @@
+use crate::constants::TWO_POW_120;
 use crate::fns::{
     expressions::evaluate_quadratic_expression,
     unconstrained_helpers::{
@@ -7,8 +8,6 @@ use crate::fns::{
     unconstrained_ops::{__add, __div, __mul, __neg, __sub, __udiv_mod},
 };
 use crate::params::BigNumParams as P;
-
-global TWO_POW_120: u128 = 0x1000000000000000000000000000000;
 
 /**
  * In this file:
@@ -34,7 +33,6 @@ pub(crate) fn limbs_to_field<let N: u32, let MOD_BITS: u32>(
     _params: P<N, MOD_BITS>,
     limbs: [u128; N],
 ) -> Field {
-    let TWO_POW_120: u128 = 0x1000000000000000000000000000000;
     if N > 2 {
         // validate that the limbs is less than the modulus the grumpkin modulus
         let mut grumpkin_modulus = [0; N];
@@ -61,17 +59,13 @@ pub(crate) fn limbs_to_field<let N: u32, let MOD_BITS: u32>(
     }
 }
 
-pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
-    _params: P<N, MOD_BITS>,
-    field: Field,
-) -> [u128; N] {
+pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(field: Field) -> [u128; N] {
     // Safety: we check that the resulting limbs represent the intended field element
     // we check the bit length, the limbs being max 120 bits, and the value in total is less than the field modulus
     let result: [u128; N] = unsafe { __from_field::<N>(field) };
     if !std::runtime::is_unconstrained() {
         // validate the limbs are in range and the value in total is less than 2^254
 
-        let TWO_POW_120 = 0x1000000000000000000000000000000;
         // validate that the last limb is less than the modulus
         if N > 2 {
             // validate that the result is less than the modulus
@@ -84,18 +78,19 @@ pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
             validate_in_range::<_, N, MOD_BITS>(result);
         }
         // validate the limbs sum up to the field value
+        let TWO_POW_120_FIELD = TWO_POW_120 as Field;
         let field_val = if N < 2 {
             result[0] as Field
         } else if N == 2 {
             validate_in_range::<_, N, MOD_BITS>(result);
-            result[0] as Field + result[1] as Field * TWO_POW_120 as Field
+            result[0] as Field + result[1] as Field * TWO_POW_120_FIELD
         } else {
             validate_in_range::<_, N, MOD_BITS>(result);
             result[0] as Field
-                + result[1] as Field * TWO_POW_120 as Field
-                + result[2] as Field * TWO_POW_120 * TWO_POW_120 as Field
+                + result[1] as Field * TWO_POW_120_FIELD
+                + result[2] as Field * TWO_POW_120_FIELD * TWO_POW_120_FIELD
         };
-        assert(field_val == field);
+        assert_eq(field_val, field);
     }
 
     result
