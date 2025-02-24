@@ -27,7 +27,7 @@ use crate::utils::u60_representation::U60Repr;
  * __batch_invert_slice
  */
 
-pub(crate) unconstrained fn __one<let N: u32>() -> [Field; N] {
+pub(crate) fn __one<let N: u32>() -> [Field; N] {
     let mut limbs: [Field; N] = [0; N];
     limbs[0] = 1;
     limbs
