@@ -13,103 +13,11 @@ use crate::fns::{
         __is_zero, __mul, __neg, __pow, __sub, __tonelli_shanks_sqrt, __udiv_mod,
     },
 };
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::Neg;
 
 pub struct RuntimeBigNum<let N: u32, let MOD_BITS: u32> {
     pub limbs: [Field; N],
     pub params: BigNumParams<N, MOD_BITS>,
-}
-
-impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {}
-
-// All functions prefixed `__` are unconstrained!
-// They're not actually decorated as `unconstrained` because to return the `params` (as part of Self) from an `unconstrained` fn would cause range constraints. Instead, each `__` fn wraps a call to an unconstrained fn, so that the already-range-constrained `params` can be inserted into Self after the unconstrained call.
-pub trait RuntimeBigNumTrait<let N: u32, let MOD_BITS: u32>: Neg + Add + Sub + Mul + Div + Eq {
-    fn new(params: BigNumParams<N, MOD_BITS>) -> Self;
-    fn one(params: BigNumParams<N, MOD_BITS>) -> Self;
-    fn derive_from_seed<let SeedBytes: u32>(
-        params: BigNumParams<N, MOD_BITS>,
-        seed: [u8; SeedBytes],
-    ) -> Self;
-    unconstrained fn __derive_from_seed<let SeedBytes: u32>(
-        params: BigNumParams<N, MOD_BITS>,
-        seed: [u8; SeedBytes],
-    ) -> Self;
-    fn from_slice(params: BigNumParams<N, MOD_BITS>, limbs: [Field]) -> Self;
-    fn from_array(params: BigNumParams<N, MOD_BITS>, limbs: [Field; N]) -> Self;
-    fn from_be_bytes<let NBytes: u32>(params: BigNumParams<N, MOD_BITS>, x: [u8; NBytes]) -> Self;
-
-    fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes];
-
-    fn modulus(self) -> Self;
-    fn modulus_bits() -> u32;
-    fn num_limbs() -> u32;
-    // pub fn get(self) -> [Field];
-    fn get_limbs(self) -> [Field; N];
-    fn get_limb(self, idx: u32) -> Field;
-    fn set_limb(&mut self, idx: u32, value: Field);
-
-    unconstrained fn __eq(self, other: Self) -> bool;
-    unconstrained fn __is_zero(self) -> bool;
-
-    // unconstrained
-    fn __neg(self) -> Self;
-    // unconstrained
-    fn __add(self, other: Self) -> Self;
-    // unconstrained
-    fn __sub(self, other: Self) -> Self;
-    // unconstrained
-    fn __mul(self, other: Self) -> Self;
-    // unconstrained
-    fn __div(self, other: Self) -> Self;
-    // unconstrained
-    fn __udiv_mod(self, divisor: Self) -> (Self, Self);
-    // unconstrained
-    fn __invmod(self) -> Self;
-    // unconstrained
-    fn __pow(self, exponent: Self) -> Self;
-
-    // unconstrained
-    fn __batch_invert<let M: u32>(x: [Self; M]) -> [Self; M];
-    unconstrained fn __batch_invert_slice<let M: u32>(to_invert: [Self]) -> [Self];
-
-    fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self>;
-
-    // unconstrained
-    fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
-        params: BigNumParams<N, MOD_BITS>,
-        lhs_terms: [[Self; LHS_N]; NUM_PRODUCTS],
-        lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
-        rhs_terms: [[Self; RHS_N]; NUM_PRODUCTS],
-        rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
-        linear_terms: [Self; ADD_N],
-        linear_flags: [bool; ADD_N],
-    ) -> (Self, Self);
-
-    fn evaluate_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
-        params: BigNumParams<N, MOD_BITS>,
-        lhs_terms: [[Self; LHS_N]; NUM_PRODUCTS],
-        lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
-        rhs_terms: [[Self; RHS_N]; NUM_PRODUCTS],
-        rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
-        linear_terms: [Self; ADD_N],
-        linear_flags: [bool; ADD_N],
-    );
-
-    fn eq(lhs: Self, rhs: Self) -> bool {
-        lhs == rhs
-    }
-    fn assert_is_not_equal(self, other: Self);
-    fn validate_in_field(self);
-    fn validate_in_range(self);
-    // pub fn validate_gt(self, lhs: Self, rhs: Self);
-
-    fn udiv_mod(numerator: Self, divisor: Self) -> (Self, Self);
-    fn udiv(numerator: Self, divisor: Self) -> Self;
-    fn umod(numerator: Self, divisor: Self) -> Self;
-
-    fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self;
-    fn is_zero(self) -> bool;
 }
 
 impl<let N: u32, let MOD_BITS: u32> Neg for RuntimeBigNum<N, MOD_BITS> {
@@ -119,7 +27,7 @@ impl<let N: u32, let MOD_BITS: u32> Neg for RuntimeBigNum<N, MOD_BITS> {
     }
 }
 
-impl<let N: u32, let MOD_BITS: u32> RuntimeBigNumTrait<N, MOD_BITS> for RuntimeBigNum<N, MOD_BITS> {
+impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
 
     fn new(params: BigNumParams<N, MOD_BITS>) -> Self {
         let limbs: [Field; N] = [0; N];

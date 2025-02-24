@@ -1,6 +1,6 @@
 use crate::fns::unconstrained_helpers::__barrett_reduction;
 use crate::params::{BigNumParams, BigNumParamsGetter};
-use crate::runtime_bignum::{RuntimeBigNum, RuntimeBigNumTrait};
+use crate::runtime_bignum::RuntimeBigNum;
 use crate::utils::u60_representation::U60Repr;
 
 use crate::fields::bn254Fq::BN254_Fq_Params;
@@ -493,43 +493,36 @@ fn test_is_zero() {
 #[make_test(3, 254, quote {crate::fields::bn254Fq::BN254_Fq_Params})]
 pub mod BNTests {
     use crate::params::BigNumParamsGetter;
-    use crate::runtime_bignum::RuntimeBigNumTrait;
 }
 
 #[make_test(3, 256, quote {crate::fields::secp256k1Fq::Secp256k1_Fq_Params})]
 pub mod Secp256K1FqTests {
     use crate::params::BigNumParamsGetter;
-    use crate::runtime_bignum::RuntimeBigNumTrait;
 }
 
 #[make_test(4, 381, quote {crate::fields::bls12_381Fq::BLS12_381_Fq_Params})]
 pub mod BLS12_381FqTests {
     use crate::params::BigNumParamsGetter;
-    use crate::runtime_bignum::RuntimeBigNumTrait;
 }
 
 #[make_test(18, 2048, quote {super::Test2048Params})]
 pub mod Test2048Tests {
     use crate::params::BigNumParamsGetter;
-    use crate::runtime_bignum::RuntimeBigNumTrait;
 }
 
 #[make_test(3, 255, quote {crate::fields::bls12_381Fr::BLS12_381_Fr_Params})]
 pub mod BLS12_381_Fr_ParamsTests {
     use crate::params::BigNumParamsGetter;
-    use crate::runtime_bignum::RuntimeBigNumTrait;
 }
 
 #[make_test(4, 377, quote {crate::fields::bls12_377Fq::BLS12_377_Fq_Params})]
 pub mod BLS12_377_Fq_ParamsTests {
     use crate::params::BigNumParamsGetter;
-    use crate::runtime_bignum::RuntimeBigNumTrait;
 }
 
 #[make_test(3, 253, quote {crate::fields::bls12_377Fr::BLS12_377_Fr_Params})]
 pub mod BLS12_377_Fr_ParamsTests {
     use crate::params::BigNumParamsGetter;
-    use crate::runtime_bignum::RuntimeBigNumTrait;
 }
 
 // 98760
