@@ -89,7 +89,7 @@ comptime fn make_test(_m: Module, N: u32, MOD_BITS: u32, typ: Quoted) -> Quoted 
     let RuntimeBigNum = quote { crate::RuntimeBigNum };
     let __helper_add = quote { crate::fns::unconstrained_helpers::__helper_add };
     let __helper_sub = quote { crate::fns::unconstrained_helpers::__helper_sub };
-    let __one = quote { crate::fns::unconstrained_helpers::__one };
+    let __one = quote { crate::fns::unconstrained_ops::__one };
     let __shl = quote { crate::fns::unconstrained_helpers::__shl };
     quote {
 #[test]
@@ -219,8 +219,8 @@ fn test_quadratic_expression() {
         let Y1: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [i as u8, i as u8, 6, 7]);
         let Z1: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::one(params);
 
-        let (_, YY_mul_2): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = unsafe{ $RuntimeBigNum::__compute_quadratic_expression(params, [[Y1]], [[false]], [[Y1, Y1]], [[false, false]], [], []) };
-        let mut (_, XX_mul_3): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = unsafe{ $RuntimeBigNum::__compute_quadratic_expression(
+        let (_, YY_mul_2): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = $RuntimeBigNum::__compute_quadratic_expression(params, [[Y1]], [[false]], [[Y1, Y1]], [[false, false]], [], []);
+        let mut (_, XX_mul_3): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = $RuntimeBigNum::__compute_quadratic_expression(
             params,
             [[X1]],
             [[false]],
@@ -228,9 +228,9 @@ fn test_quadratic_expression() {
             [[false, false, false]],
             [],
             []
-        ) };
-        let (_, D): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = unsafe{ $RuntimeBigNum::__compute_quadratic_expression(params, [[X1, X1]], [[false, false]], [[YY_mul_2]], [[false]], [], []) };
-        let mut (_, X3) = unsafe{ $RuntimeBigNum::__compute_quadratic_expression(
+        );
+        let (_, D): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = $RuntimeBigNum::__compute_quadratic_expression(params, [[X1, X1]], [[false, false]], [[YY_mul_2]], [[false]], [], []);
+        let mut (_, X3) =  $RuntimeBigNum::__compute_quadratic_expression(
             params,
             [[XX_mul_3]],
             [[false]],
@@ -238,8 +238,8 @@ fn test_quadratic_expression() {
             [[false]],
             [D, D],
             [true, true]
-        ) };
-        let (_, Y3): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = unsafe{ $RuntimeBigNum::__compute_quadratic_expression(
+        );
+        let (_, Y3): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = $RuntimeBigNum::__compute_quadratic_expression(
             params,
             [[XX_mul_3], [YY_mul_2]],
             [[false], [true]],
@@ -247,10 +247,10 @@ fn test_quadratic_expression() {
             [[false, true], [false, false]],
             [],
             []
-        ) };
+        );
         // 3XX * (D - X3) - 8YYYY
 
-        let (_, Z3): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = unsafe{ $RuntimeBigNum::__compute_quadratic_expression(params, [[Y1]], [[false]], [[Z1, Z1]], [[false, false]], [], []) };
+        let (_, Z3): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = $RuntimeBigNum::__compute_quadratic_expression(params, [[Y1]], [[false]], [[Z1, Z1]], [[false, false]], [], []);
 
         X3.validate_in_field();
         Y3.validate_in_field();
