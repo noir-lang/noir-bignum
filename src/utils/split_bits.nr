@@ -1,6 +1,6 @@
 global TWO_POW_120: u128 = 0x1000000000000000000000000000000;
 
-pub unconstrained fn split_120_bits(mut x: Field) -> (u128, u128) {
+unconstrained fn split_120_bits(mut x: Field) -> (u128, u128) {
     // Here we're taking advantage of truncating 128 bit limbs from the input field
     // and then subtracting them from the input such that the field division is equivalent to integer division.
     let low = (x as u128) % TWO_POW_120;
