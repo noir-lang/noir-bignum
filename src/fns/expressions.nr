@@ -70,7 +70,6 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, le
 
     let (quotient, remainder) =
         __barrett_reduction(relation_result, params.redc_param, MOD_BITS, params.modulus);
-    // real quotient should be 2 but we get 1 here.
     assert(remainder == [0; N]);
     for i in 0..N {
         for j in 0..N {
