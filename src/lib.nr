@@ -19,6 +19,8 @@ pub use bignum::BigNum;
 pub use bignum::BigNumTrait; // So that external code can operate on a generic BigNum, `where BigNum: BigNumTrait`.
 pub use runtime_bignum::RuntimeBigNum;
 
+mod constants;
+
 // Tests
 mod tests;
 
