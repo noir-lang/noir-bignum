@@ -16,7 +16,6 @@
 //! * G2 curve equation: y^2 = x^3 + Fq2(4, 4)
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
-use crate::utils::u60_representation::U60Repr;
 
 pub struct BLS12_381_Fq_Params {}
 
@@ -40,38 +39,6 @@ global BLS12_381_Fq_PARAMS: BigNumParams<4, 381> = BigNumParams {
         0x01d472ffcd3496374f6c869759aec8ed,
         0x340222,
     ],
-    modulus_u60: U60Repr {
-        limbs: [
-            0x09feffffffffaaab,
-            0x0abfffeb153ffffb,
-            0xd2a0f6b0f6241e,
-            0x04b84f38512bf673,
-            0x07b6434bacd76477,
-            0x0ea397fe69a4b1ba,
-            0x1a0111,
-            0x00,
-        ],
-    },
-    modulus_u60_x4: U60Repr {
-        limbs: [
-            0x09feffffffffaaab,
-            0x0abfffeb153ffffb,
-            0xd2a0f6b0f6241e,
-            0x04b84f38512bf673,
-            0x07b6434bacd76477,
-            0x0ea397fe69a4b1ba,
-            0x1a0111,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-        ],
-    },
     redc_param: [
         0x5c59e8163c701ec4f881fd59646e8b,
         0x9d07fda82a52f7d1dc780a19de74e6,

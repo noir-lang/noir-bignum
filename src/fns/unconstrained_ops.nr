@@ -1,34 +1,15 @@
 use crate::fns::constrained_ops::derive_from_seed;
 use crate::fns::unconstrained_helpers::{
-    __barrett_reduction, __multiplicative_generator, __primitive_root_log_size,
+    __barrett_reduction, __get_bit, __get_msb, __helper_add, __helper_sub, __increment,
+    __multiplicative_generator, __primitive_root_log_size, __shl, __shr,
     __tonelli_shanks_sqrt_inner_loop_check,
 };
 use crate::params::BigNumParams as P;
 use crate::utils::split_bits;
-use crate::utils::u60_representation::U60Repr;
+use super::unconstrained_helpers::__shr1;
 
-/**
- * In this file:
- *
- * __one
- * __derive_from_seed
- * __eq
- * __is_zero
- * __neg
- * __add
- * __sub
- * __mul_with_quotient
- * __mul
- * __div
- * __udiv_mod
- * __invmod
- * __pow
- * __batch_invert
- * __batch_invert_slice
- */
-
-pub(crate) unconstrained fn __one<let N: u32>() -> [Field; N] {
-    let mut limbs: [Field; N] = [0; N];
+pub(crate) unconstrained fn __one<let N: u32>() -> [u128; N] {
+    let mut limbs: [u128; N] = [0; N];
     limbs[0] = 1;
     limbs
 }
@@ -48,16 +29,16 @@ pub(crate) unconstrained fn __one<let N: u32>() -> [Field; N] {
 pub(crate) unconstrained fn __derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(
     params: P<N, MOD_BITS>,
     seed: [u8; SeedBytes],
-) -> [Field; N] {
+) -> [u128; N] {
     let out = derive_from_seed::<N, MOD_BITS, SeedBytes>(params, seed);
     out
 }
 
-pub(crate) unconstrained fn __eq<let N: u32>(lhs: [Field; N], rhs: [Field; N]) -> bool {
+pub(crate) unconstrained fn __eq<let N: u32>(lhs: [u128; N], rhs: [u128; N]) -> bool {
     lhs == rhs
 }
 
-pub(crate) unconstrained fn __is_zero<let N: u32>(limbs: [Field; N]) -> bool {
+pub(crate) unconstrained fn __is_zero<let N: u32>(limbs: [u128; N]) -> bool {
     let mut result: bool = true;
     for i in 0..N {
         result = result & (limbs[i] == 0);
@@ -78,27 +59,31 @@ pub(crate) unconstrained fn __is_zero<let N: u32>(limbs: [Field; N]) -> bool {
 */
 pub(crate) unconstrained fn __neg<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
-    limbs: [Field; N],
-) -> [Field; N] {
-    let f: [Field; N] = limbs;
-    let x_u60: U60Repr<N, 2> = U60Repr::from(f);
-    U60Repr::into(params.modulus_u60 - x_u60)
+    limbs: [u128; N],
+) -> [u128; N] {
+    let f: [u128; N] = limbs;
+    __helper_sub(params.modulus, f)
 }
 
 pub(crate) unconstrained fn __add<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
-    lhs: [Field; N],
-    rhs: [Field; N],
-) -> [Field; N] {
-    let x_u60: U60Repr<N, 2> = U60Repr::from(lhs);
-    let y_u60: U60Repr<N, 2> = U60Repr::from(rhs);
-
-    let mut z_u60 = x_u60 + y_u60;
-
-    if z_u60.gte(params.modulus_u60) {
-        z_u60 = z_u60 - params.modulus_u60;
+    lhs: [u128; N],
+    rhs: [u128; N],
+) -> [u128; N] {
+    let mut result: [u128; N] = [0; N];
+    let mut carry: u128 = 0;
+    for i in 0..N {
+        let mut add_term = (lhs[i] + rhs[i] + carry);
+        carry = add_term >> 120;
+        add_term = add_term - (carry << 120);
+        result[i] = add_term;
     }
-    U60Repr::into(z_u60)
+    // check if the result is greater than the modulus
+    if __gte(result, params.modulus) {
+        __helper_sub(result, params.modulus)
+    } else {
+        result
+    }
 }
 
 /**
@@ -107,50 +92,44 @@ pub(crate) unconstrained fn __add<let N: u32, let MOD_BITS: u32>(
 **/
 pub(crate) unconstrained fn __sub<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
-    lhs: [Field; N],
-    rhs: [Field; N],
-) -> [Field; N] {
+    lhs: [u128; N],
+    rhs: [u128; N],
+) -> [u128; N] {
     __add(params, lhs, __neg(params, rhs))
 }
 
 pub(crate) unconstrained fn __mul_with_quotient<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
-    lhs: [Field; N],
-    rhs: [Field; N],
-) -> ([Field; N], [Field; N]) {
+    lhs: [u128; N],
+    rhs: [u128; N],
+) -> ([u128; N], [u128; N]) {
     let mut mul: [Field; 2 * N] = [0; 2 * N];
     for i in 0..N {
         for j in 0..N {
-            mul[i + j] += lhs[i] * rhs[j];
+            mul[i + j] += (lhs[i] as Field * rhs[j] as Field);
         }
     }
-    let to_reduce = split_bits::__normalize_limbs(mul, 2 * N);
-    let (q, r) = __barrett_reduction(
-        to_reduce,
-        params.redc_param,
-        MOD_BITS,
-        params.modulus,
-        params.modulus_u60_x4,
-    );
-
+    let to_reduce: [u128; (N * 2)] = split_bits::__normalize_limbs(mul, 2 * N);
+    let (q, r) = __barrett_reduction(to_reduce, params.redc_param, MOD_BITS, params.modulus);
+    // ([0; N], [0; N])
     (q, r)
 }
 
 pub(crate) unconstrained fn __mul<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
-    lhs: [Field; N],
-    rhs: [Field; N],
-) -> [Field; N] {
+    lhs: [u128; N],
+    rhs: [u128; N],
+) -> [u128; N] {
     let (_, b) = __mul_with_quotient::<_, MOD_BITS>(params, lhs, rhs);
     b
 }
 
 pub(crate) unconstrained fn __div<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
-    numerator: [Field; N],
-    divisor: [Field; N],
-) -> [Field; N] {
-    let inv_divisor = __invmod::<_, MOD_BITS>(params, divisor);
+    numerator: [u128; N],
+    divisor: [u128; N],
+) -> [u128; N] {
+    let inv_divisor: [u128; N] = __invmod::<_, MOD_BITS>(params, divisor);
     __mul::<_, MOD_BITS>(params, numerator, inv_divisor)
 }
 
@@ -162,76 +141,70 @@ pub(crate) unconstrained fn __div<let N: u32, let MOD_BITS: u32>(
 *      3. divisor * quotient + remainder = numerator
 **/
 pub(crate) unconstrained fn __udiv_mod<let N: u32>(
-    numerator: [Field; N],
-    divisor: [Field; N],
-) -> ([Field; N], [Field; N]) {
-    let mut quotient_u60: U60Repr<N, 2> = U60Repr::from([0; N]);
-    let mut remainder_u60: U60Repr<N, 2> = U60Repr::from(numerator);
+    numerator: [u128; N],
+    divisor: [u128; N],
+) -> ([u128; N], [u128; N]) {
+    let mut quotient: [u128; N] = [0; N];
+    let mut remainder: [u128; N] = numerator;
 
-    let mut divisor_u60: U60Repr<N, 2> = U60Repr::from(divisor);
-    let b = divisor_u60;
-
-    let numerator_msb = remainder_u60.get_msb();
-    let divisor_msb = divisor_u60.get_msb();
+    let b = divisor;
+    let numerator_msb = __get_msb(numerator);
+    let divisor_msb = __get_msb(divisor);
     if divisor_msb > numerator_msb {
         ([0; N], numerator)
     } else {
-        let mut bit_difference = numerator_msb - divisor_msb;
+        let mut bit_difference = __get_msb(remainder) - __get_msb(divisor);
+        let mut accumulator: [u128; N] = __one();
+        let mut divisor = __shl(divisor, bit_difference);
+        accumulator = __shl(accumulator, bit_difference);
 
-        let mut accumulator_u60: U60Repr<N, 2> = U60Repr::one();
-        divisor_u60 = divisor_u60.shl(bit_difference);
-        accumulator_u60 = accumulator_u60.shl(bit_difference);
-
-        // if divisor > remainder
-        if (!remainder_u60.gte(divisor_u60)) {
-            divisor_u60.shr1();
-            accumulator_u60.shr1();
+        if (__gte(divisor, __increment(remainder))) {
+            divisor = __shr1(divisor);
+            accumulator = __shr1(accumulator);
         }
+
         for _ in 0..(N * 120) {
-            if (remainder_u60.gte(b) == false) {
+            if (__gte(remainder, b) == false) {
                 break;
             }
-
             // we've shunted 'divisor' up to have the same bit length as our remainder.
             // If remainder >= divisor, then a is at least '1 << bit_difference' multiples of b
-            if (remainder_u60.gte(divisor_u60)) {
-                remainder_u60 -= divisor_u60;
+            if (__gte(remainder, divisor)) {
+                remainder = __helper_sub(remainder, divisor);
                 // we can use OR here instead of +, as
                 // accumulator is always a nice power of two
-                quotient_u60 = quotient_u60 + accumulator_u60;
+                quotient = __helper_add(quotient, accumulator);
             }
-            divisor_u60.shr1(); // >>= 1;
-            accumulator_u60.shr1(); //  >>= 1;
+            divisor = __shr1(divisor); // >>= 1;
+            accumulator = __shr1(accumulator); //  >>= 1;
         }
 
-        (U60Repr::into(quotient_u60), U60Repr::into(remainder_u60))
+        (quotient, remainder)
     }
 }
 
 pub(crate) unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
-    val: [Field; N],
-) -> [Field; N] {
-    let one_u60: U60Repr<N, 2> = U60Repr::one();
-    let exp_u60 = params.modulus_u60 - (one_u60 + one_u60);
-    let exp = U60Repr::into(exp_u60);
+    val: [u128; N],
+) -> [u128; N] {
+    let one = __one();
+    let exp = __helper_sub(params.modulus, __helper_add(one, one));
     __pow::<_, MOD_BITS>(params, val, exp)
 }
 
 pub(crate) unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
-    val: [Field; N],
-    exponent: [Field; N],
-) -> [Field; N] {
-    let x: U60Repr<N, 2> = U60Repr::from(exponent);
-
+    val: [u128; N],
+    exponent: [u128; N],
+) -> [u128; N] {
+    let x = exponent;
     let num_bits = MOD_BITS + 1;
 
-    let mut accumulator: [Field; N] = __one::<N>();
+    let mut accumulator: [u128; N] = __one::<N>();
 
     for i in 0..num_bits {
         accumulator = __mul::<_, MOD_BITS>(params, accumulator, accumulator);
-        if x.get_bit(num_bits - i - 1) {
+        if __get_bit(x, num_bits - i - 1) {
             accumulator = __mul::<_, MOD_BITS>(params, accumulator, val);
         }
     }
@@ -240,11 +213,13 @@ pub(crate) unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
 
 pub(crate) unconstrained fn __batch_invert<let N: u32, let MOD_BITS: u32, let M: u32>(
     params: P<N, MOD_BITS>,
-    x: [[Field; N]; M],
-) -> [[Field; N]; M] {
+    x: [[u128; N]; M],
+) -> [[u128; N]; M] {
     // TODO: ugly! Will fail if input slice is empty
-    let mut accumulator: [Field; N] = __one::<N>();
-    let mut temporaries: [[Field; N]; M] = std::mem::zeroed();
+
+    let mut accumulator: [u128; N] = __one::<N>();
+    let mut temporaries: [[u128; N]; M] = std::mem::zeroed();
+
     for i in 0..M {
         temporaries[i] = accumulator;
         if (!__is_zero(x[i])) {
@@ -252,7 +227,7 @@ pub(crate) unconstrained fn __batch_invert<let N: u32, let MOD_BITS: u32, let M:
         }
     }
 
-    let mut result: [[Field; N]; M] = [[0; N]; M];
+    let mut result: [[u128; N]; M] = [[0; N]; M];
     accumulator = __invmod::<_, MOD_BITS>(params, accumulator);
     for i in 0..M {
         let idx = M - 1 - i;
@@ -267,11 +242,11 @@ pub(crate) unconstrained fn __batch_invert<let N: u32, let MOD_BITS: u32, let M:
 
 pub(crate) unconstrained fn __batch_invert_slice<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
-    x: [[Field; N]],
-) -> [[Field; N]] {
+    x: [[u128; N]],
+) -> [[u128; N]] {
     // TODO: ugly! Will fail if input slice is empty
-    let mut accumulator: [Field; N] = __one::<N>();
-    let mut temporaries: [[Field; N]] = &[];
+    let mut accumulator: [u128; N] = __one::<N>();
+    let mut temporaries: [[u128; N]] = &[];
     for i in 0..x.len() {
         temporaries = temporaries.push_back(accumulator);
         if (!__is_zero(x[i])) {
@@ -279,7 +254,7 @@ pub(crate) unconstrained fn __batch_invert_slice<let N: u32, let MOD_BITS: u32>(
         }
     }
 
-    let mut result: [[Field; N]] = [];
+    let mut result: [[u128; N]] = [];
     accumulator = __invmod::<_, MOD_BITS>(params, accumulator);
     for i in 0..x.len() {
         let idx = x.len() - 1 - i;
@@ -303,8 +278,8 @@ pub(crate) unconstrained fn __batch_invert_slice<let N: u32, let MOD_BITS: u32>(
 **/
 pub(crate) unconstrained fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
-    input: [Field; N],
-) -> std::option::Option<[Field; N]> {
+    input: [u128; N],
+) -> std::option::Option<[u128; N]> {
     // Tonelli-shanks algorithm begins by finding a field element Q and integer S,
     // such that (p - 1) = Q.2^{s}
     // We can compute the square root of a, by considering a^{(Q + 1) / 2} = R
@@ -330,21 +305,23 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>
     // We can iteratively transform t into ever smaller subgroups, until t = 1.
     // At each iteration, we need to find a new value for b, which we can obtain
     // by repeatedly squaring z^{Q}
-    let one_u60: U60Repr<N, 2> = U60Repr::one();
+    let one = __one();
     let primitive_root_log_size = __primitive_root_log_size::<_, MOD_BITS>(params);
-    let mut Q = (params.modulus_u60 - one_u60).shr(primitive_root_log_size - 1);
-    let Q_minus_one_over_two_u60 = (Q - one_u60).shr(2);
-    let Q_minus_one_over_two: [Field; N] = U60Repr::into(Q_minus_one_over_two_u60);
+    let Q = __shr(
+        __helper_sub(params.modulus, one),
+        primitive_root_log_size - 1,
+    );
+    let two = __helper_add(one, one);
+    let Q_minus_one_over_two = __shr(__helper_sub(Q, two), 2);
     let mut z = __multiplicative_generator::<_, MOD_BITS>(params); // the generator is a non-residue
     let mut b = __pow::<_, MOD_BITS>(params, input, Q_minus_one_over_two);
     let mut r = __mul::<_, MOD_BITS>(params, input, b);
     let mut t = __mul::<_, MOD_BITS>(params, r, b);
-    let mut check: [Field; N] = t;
+    let mut check: [u128; N] = t;
     for _ in 0..primitive_root_log_size - 1 {
         check = __mul::<_, MOD_BITS>(params, check, check);
     }
     let mut result = Option::none();
-    let one: [Field; N] = __one::<N>();
     if (__eq(check, one)) {
         let mut t1 = __pow::<_, MOD_BITS>(params, z, Q_minus_one_over_two);
         let mut t2 = __mul::<_, MOD_BITS>(params, t1, z);
@@ -379,4 +356,27 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>
         }
     }
     result
+}
+
+pub(crate) unconstrained fn __gte<let N: u32, let MOD_BITS: u32>(
+    lhs: [u128; N],
+    rhs: [u128; N],
+) -> bool {
+    let mut result = false;
+    let mut early_exit = false;
+    for i in 0..(N) {
+        let idx = (N) - 1 - i;
+        if (rhs[idx] == lhs[idx]) {
+            continue;
+        }
+
+        result = rhs[idx] < lhs[idx];
+        early_exit = true;
+        break;
+    }
+    if early_exit {
+        result
+    } else {
+        lhs[0] == rhs[0]
+    }
 }
