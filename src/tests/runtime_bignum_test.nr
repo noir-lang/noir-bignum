@@ -1,4 +1,4 @@
-use crate::fns::constrained_ops::udiv;
+use crate::fns::constrained_ops::{sub, udiv};
 use crate::fns::unconstrained_helpers::__barrett_reduction;
 use crate::params::{BigNumParams, BigNumParamsGetter};
 use crate::runtime_bignum::RuntimeBigNum;
@@ -93,6 +93,7 @@ comptime fn make_test(_m: Module, N: u32, MOD_BITS: u32, typ: Quoted) -> Quoted 
     let __one = quote { crate::fns::unconstrained_ops::__one };
     let __shl = quote { crate::fns::unconstrained_helpers::__shl };
     let udiv = quote { crate::fns::constrained_ops::udiv };
+    let sub = quote { crate::fns::constrained_ops::sub };
     quote {
 #[test]
 fn test_add() {
@@ -443,12 +444,14 @@ fn test_cmp_fuzz(seed: [u8; 2]){
     let mut half_modulus = $RuntimeBigNum::zero(params);
     let mut two = [0; $N]; 
     two[0] = 2;
+    let mut one = [0; $N];
+    one[0] = 1;
     if modulus[0] % 2 == 0 {
         // if modulus is even, half_modulus is modulus / 2
         half_modulus = $RuntimeBigNum {limbs: $udiv(params, modulus, two), params};
     } else {
         // if modulus is odd, half_modulus is (modulus - 1) / 2
-        half_modulus = (- $RuntimeBigNum::one(params)) / ($RuntimeBigNum::one(params) + $RuntimeBigNum::one(params));
+        half_modulus = $RuntimeBigNum {limbs: $udiv(params, $sub(params,modulus, one), two), params};
     }
 
 
