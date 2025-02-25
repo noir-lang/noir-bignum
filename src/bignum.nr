@@ -5,7 +5,7 @@ use crate::params::BigNumParamsGetter;
 
 use crate::fns::{
     constrained_ops::{
-        add, assert_is_not_equal, gt, conditional_select, derive_from_seed, div, eq, from_field,
+        add, assert_is_not_equal, conditional_select, derive_from_seed, div, eq, from_field, gt,
         is_zero, limbs_to_field, mul, neg, sub, udiv, udiv_mod, umod, validate_in_field,
         validate_in_range,
     },

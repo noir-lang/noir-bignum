@@ -3,7 +3,7 @@ use crate::utils::map::map;
 
 use crate::fns::{
     constrained_ops::{
-        add, assert_is_not_equal, gt, conditional_select, derive_from_seed, div, eq, is_zero, mul,
+        add, assert_is_not_equal, conditional_select, derive_from_seed, div, eq, gt, is_zero, mul,
         neg, sub, udiv, udiv_mod, umod, validate_in_field, validate_in_range,
     },
     expressions::{__compute_quadratic_expression, evaluate_quadratic_expression},
