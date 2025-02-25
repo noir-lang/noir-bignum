@@ -1,8 +1,5 @@
 # noir-bignum
 
-> [!WARNING]  
-> If you're updating from release 0.3.7 to 0.4.0, please read these [migration notes](./migration_notes.md), because there are significant breaking changes.
-
 An optimized big number library for Noir.
 
 noir-bignum evaluates modular arithmetic for large integers of any length.
