@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.6.0](https://github.com/noir-lang/noir-bignum/compare/v0.5.4...v0.6.0) (2025-02-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* refactor library to work on u128 limbs ([#120](https://github.com/noir-lang/noir-bignum/issues/120))
+* remove the `RuntimeBignumTrait` and impl the methods directly for the `RuntimeBignum` struct.  ([#134](https://github.com/noir-lang/noir-bignum/issues/134))
+
+### Features
+
+* Export pre-defined bignum types ([#125](https://github.com/noir-lang/noir-bignum/issues/125)) ([41c3882](https://github.com/noir-lang/noir-bignum/commit/41c38828dbb6277eff99cea9e2d0901a601b943b))
+* Refactor library to work on u128 limbs ([#120](https://github.com/noir-lang/noir-bignum/issues/120)) ([78e7216](https://github.com/noir-lang/noir-bignum/commit/78e7216b019db27530322ae9bba5d0bb6e7c6b6a))
+
+
+### Bug Fixes
+
+* Bugs on border cases of udiv_mod ([#128](https://github.com/noir-lang/noir-bignum/issues/128)) ([86a9492](https://github.com/noir-lang/noir-bignum/commit/86a9492b063de8b9ce29382445f84efff46a372e))
+
+
+### Miscellaneous Chores
+
+* Remove the `RuntimeBignumTrait` and impl the methods directly for the `RuntimeBignum` struct.  ([#134](https://github.com/noir-lang/noir-bignum/issues/134)) ([954dcf6](https://github.com/noir-lang/noir-bignum/commit/954dcf6bf5335c20d4c75f99cb9f9c448c6d6996))
+
 ## [0.5.4](https://github.com/noir-lang/noir-bignum/compare/v0.5.3...v0.5.4) (2025-02-08)
 
 
