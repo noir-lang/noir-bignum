@@ -110,74 +110,73 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
-    pub fn __neg(self) -> Self {
+    pub unconstrained fn __neg(self) -> Self {
         let params = self.params;
-        let limbs = unsafe { __neg(params, self.limbs) };
+        let limbs = __neg(params, self.limbs);
         Self { params, limbs }
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
-    pub fn __add(self, other: Self) -> Self {
-        let params = self.params;
-        assert(params == other.params);
-        let limbs = unsafe { __add(params, self.limbs, other.limbs) };
-        Self { params, limbs }
-    }
-
-    // UNCONSTRAINED! (Hence `__` prefix).
-    pub fn __sub(self, other: Self) -> Self {
+    pub unconstrained fn __add(self, other: Self) -> Self {
         let params = self.params;
         assert(params == other.params);
-        let limbs = unsafe { __sub(params, self.limbs, other.limbs) };
+        let limbs = __add(params, self.limbs, other.limbs);
         Self { params, limbs }
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
-    pub fn __mul(self, other: Self) -> Self {
+    pub unconstrained fn __sub(self, other: Self) -> Self {
         let params = self.params;
         assert(params == other.params);
-        let limbs = unsafe { __mul::<_, MOD_BITS>(params, self.limbs, other.limbs) };
+        let limbs = __sub(params, self.limbs, other.limbs);
         Self { params, limbs }
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
-    pub fn __div(self, divisor: Self) -> Self {
+    pub unconstrained fn __mul(self, other: Self) -> Self {
+        let params = self.params;
+        assert(params == other.params);
+        let limbs = __mul::<_, MOD_BITS>(params, self.limbs, other.limbs);
+        Self { params, limbs }
+    }
+
+    // UNCONSTRAINED! (Hence `__` prefix).
+    pub unconstrained fn __div(self, divisor: Self) -> Self {
         let params = self.params;
         assert(params == divisor.params);
-        let limbs = unsafe { __div::<_, MOD_BITS>(params, self.limbs, divisor.limbs) };
+        let limbs = __div::<_, MOD_BITS>(params, self.limbs, divisor.limbs);
         Self { params, limbs }
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
-    pub fn __udiv_mod(self, divisor: Self) -> (Self, Self) {
+    pub unconstrained fn __udiv_mod(self, divisor: Self) -> (Self, Self) {
         let params = self.params;
         assert(params == divisor.params);
-        let (q, r) = unsafe { __udiv_mod(self.limbs, divisor.limbs) };
+        let (q, r) = __udiv_mod(self.limbs, divisor.limbs);
         (Self { limbs: q, params }, Self { limbs: r, params })
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
-    pub fn __invmod(self) -> Self {
+    pub unconstrained fn __invmod(self) -> Self {
         let params = self.params;
         assert(params.has_multiplicative_inverse);
-        let limbs = unsafe { __invmod::<_, MOD_BITS>(params, self.limbs) };
+        let limbs = __invmod::<_, MOD_BITS>(params, self.limbs);
         Self { limbs, params }
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
-    pub fn __pow(self, exponent: Self) -> Self {
+    pub unconstrained fn __pow(self, exponent: Self) -> Self {
         let params = self.params;
         assert(params == exponent.params);
-        let limbs = unsafe { __pow::<_, MOD_BITS>(params, self.limbs, exponent.limbs) };
+        let limbs = __pow::<_, MOD_BITS>(params, self.limbs, exponent.limbs);
         Self { limbs, params }
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
-    pub fn __batch_invert<let M: u32>(x: [Self; M]) -> [Self; M] {
+    pub unconstrained fn __batch_invert<let M: u32>(x: [Self; M]) -> [Self; M] {
         let params = x[0].params;
         assert(params.has_multiplicative_inverse);
-        let all_limbs =
-            unsafe { __batch_invert::<_, MOD_BITS, _>(params, x.map(|bn| Self::get_limbs(bn))) };
+        let all_limbs = __batch_invert::<_, MOD_BITS, _>(params, x.map(|bn| Self::get_limbs(bn)));
         all_limbs.map(|limbs| Self { limbs, params })
     }
 
@@ -194,14 +193,14 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
-    pub fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self> {
+    pub unconstrained fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self> {
         let params = self.params;
-        let maybe_limbs = unsafe { __tonelli_shanks_sqrt(params, self.limbs) };
+        let maybe_limbs = __tonelli_shanks_sqrt(params, self.limbs);
         maybe_limbs.map(|limbs| Self { limbs, params })
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
-    pub fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
+    pub unconstrained fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
         params: BigNumParams<N, MOD_BITS>,
         lhs_terms: [[Self; LHS_N]; NUM_PRODUCTS],
         lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
@@ -210,17 +209,15 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
         linear_terms: [Self; ADD_N],
         linear_flags: [bool; ADD_N],
     ) -> (Self, Self) {
-        let (q_limbs, r_limbs) = unsafe {
-            __compute_quadratic_expression::<_, MOD_BITS, _, _, _, _>(
-                params,
-                map(lhs_terms, |bns| map(bns, |bn| Self::get_limbs(bn))),
-                lhs_flags,
-                map(rhs_terms, |bns| map(bns, |bn| Self::get_limbs(bn))),
-                rhs_flags,
-                map(linear_terms, |bn| Self::get_limbs(bn)),
-                linear_flags,
-            )
-        };
+        let (q_limbs, r_limbs) = __compute_quadratic_expression::<_, MOD_BITS, _, _, _, _>(
+            params,
+            map(lhs_terms, |bns| map(bns, |bn| Self::get_limbs(bn))),
+            lhs_flags,
+            map(rhs_terms, |bns| map(bns, |bn| Self::get_limbs(bn))),
+            rhs_flags,
+            map(linear_terms, |bn| Self::get_limbs(bn)),
+            linear_flags,
+        );
         (Self { limbs: q_limbs, params }, Self { limbs: r_limbs, params })
     }
 
