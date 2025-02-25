@@ -41,7 +41,6 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, le
     linear_terms: [[u128; N]; ADD_N],
     linear_flags: [bool; ADD_N],
 ) -> ([u128; N], [u128; N], [Field; 2 * N]) {
-
     // TODO, validate we do not overflow N2 when multiplying and N when adding
     let mut mulout_p = __compute_quadratic_expression_product(
         params,
@@ -71,7 +70,6 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, le
     let borrow_shift: Field = TWO_POW_246; // 2^{246}
     let borrow_carry: Field = TWO_POW_126; // 2^{246 - 120} = 2^{126}
     let downshift: Field = 1 / (TWO_POW_120 as Field);
-
 
     // determine whether we need to borrow from more significant limbs.
     // initial limb is "simple" comparison operation

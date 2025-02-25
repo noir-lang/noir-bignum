@@ -121,4 +121,3 @@ fn bench_validate_in_field_Fq(a: Fq) {
 fn bench_validate_in_field_BN256(a: BN256) {
     a.validate_in_field()
 }
-
