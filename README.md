@@ -1,8 +1,5 @@
 # noir-bignum
 
-> [!WARNING]  
-> If you're updating from release 0.3.7 to 0.4.0, please read these [migration notes](./migration_notes.md), because there are significant breaking changes.
-
 An optimized big number library for Noir.
 
 noir-bignum evaluates modular arithmetic for large integers of any length.
@@ -15,15 +12,29 @@ bignum can evaluate large integer arithmetic by defining a modulus() that is a p
 
 ## High level overview
 
-This library provides modular arithmetic operations for big numbers. The Noir std library provides integers up to 128 bits and a field type up to 254 bits; this library supports arbitrary length numbers. 
+This library provides modular arithmetic operations for big numbers. The Noir std library provides integers up to 128 bits and a field type up to 254 bits; this library supports arbitrary length numbers.
+
+A number of pre-defined bignum and finite field types are provided. If you need a bignum or finite field that's not on this list, this repo also provides the tools you'll need to generate your own.
+
+See `./src/lib.nr` for the list of exported bignums.
+
+See `./src/fields/` for files which shows how those bignums were created; you can copy this approach to generate your own bignums.
 
 More details about this library are described in the rest of this document, this is just a quick high level overview. 
 
-To start using the library you need to do 2 things:
+To start using the library:
+
+If the bignum you need is in the pre-defined list, import it and use it:
+
+```rust
+use dep::bignum::U256;
+```
+
+If the bignum you need is not in the pre-defined list, you'll need to create it:
 1. Define or import a **parameter set** with info about your modulus
 2. Define the correct **type** for your big number
 
-For step 1, the library contains parameters for predefined fields or integer types. Otherwise, you can define your own parameters; instructions on how to do this can be found below.
+Instructions on how to do this can be found below.
 
 Step 2 depends on when you know your modulus; this can be either at compile-time or runtime. Use the correct type for your situation:
 * `BigNum`, if modulus is known at compile-time
@@ -48,34 +59,45 @@ In your _Nargo.toml_ file, add the version of this library you would like to ins
 bignum = { tag = "v0.4.2", git = "https://github.com/noir-lang/noir-bignum" }
 ```
 
-### Import
+### Import a pre-defined bignum:
 
 Add imports at the top of your Noir code, for example:
 
 ```rust
-use bignum::fields::U256::U256Params;
-use bignum::BigNum;
+use dep::bignum::U256;
 ```
+
+### Create a custom bignum:
+
+> We use U256 as an illustrative example, even though it's actually a pre-defined bignum.
+
+Use the paramgen tool to generate your bignum's params (see below). Then define your custom bignum from those params:
+
+```rust
+use dep::bignum::fields::U256::U256Params;
+use dep::bignum::BigNum;
+
+// Define (compile-time) BigNum type
+// number of limbs, number of bits of modulus, parameter set
+type U256 = BigNum<3, 257, U256Params>;
+```
+
 ### Quick example: Addition in U256
 
 A simple 1 + 2 = 3 check in 256-bit unsigned integers. Note that for performing multiple arithmetic operations up to degree 2 it is recommended to use `evaluate_quadratic_expression` (see explanation below). 
 
 ```rust
-
-use bignum::fields::U256::U256Params;
-use bignum::BigNum;
-
-// Define (compile-time) BigNum type
-// number of limbs, number of bits of modulus, parameter set
-type U256 = BigNum<3, 257, U256Params>;
+use dep::bignum::U256;
 
 fn main() {
-    let one: U256 = BigNum::from_slice([1, 0, 0]);
-    let two: U256 = BigNum::from_slice([2, 0, 0]);
-    let three: U256 = BigNum::from_slice([3, 0, 0]);
+    let one = U256::from_slice([1, 0, 0]);
+    let two = U256::from_slice([2, 0, 0]);
+    let three = U256::from_slice([3, 0, 0]);
     assert((one + two) == three);
 }
 ```
+
+
 ## Types
 
 ### `BigNum` / `RuntimeBigNum` definition

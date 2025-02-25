@@ -27,10 +27,3 @@ pub mod U1024;
 pub mod U2048;
 pub mod U4096;
 pub mod U8192;
-
-// example typedef when using a defined bignum instance:
-//
-// use crate::bignum::BigNum;
-// use bn254Fq::BN254_Fq_Params;
-//
-// type Fq = BigNum<3, 254, BN254_Fq_Params>;
