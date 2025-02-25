@@ -1,3 +1,4 @@
+use crate::fns::constrained_ops::udiv;
 use crate::fns::unconstrained_helpers::__barrett_reduction;
 use crate::params::{BigNumParams, BigNumParamsGetter};
 use crate::runtime_bignum::RuntimeBigNum;
@@ -91,6 +92,7 @@ comptime fn make_test(_m: Module, N: u32, MOD_BITS: u32, typ: Quoted) -> Quoted 
     let __helper_sub = quote { crate::fns::unconstrained_helpers::__helper_sub };
     let __one = quote { crate::fns::unconstrained_ops::__one };
     let __shl = quote { crate::fns::unconstrained_helpers::__shl };
+    let udiv = quote { crate::fns::constrained_ops::udiv };
     quote {
 #[test]
 fn test_add() {
@@ -434,17 +436,28 @@ fn test_cmp_BN_fail_2() {
 }
 
 #[test]
-fn test_cmp_fuzz(seed: [u8;2]){
+fn test_cmp_fuzz(seed: [u8; 2]){
     let params = $typ ::get_params();
+    let modulus = params.modulus;
     let mut a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, seed);
-    let modulus_sub_1_div_2 = (- $RuntimeBigNum::one(params)) / ($RuntimeBigNum::one(params) + $RuntimeBigNum::one(params));
+    let mut half_modulus = $RuntimeBigNum::zero(params);
+    let mut two = [0; $N]; 
+    two[0] = 2;
+    if modulus[0] % 2 == 0 {
+        // if modulus is even, half_modulus is modulus / 2
+        half_modulus = $RuntimeBigNum {limbs: $udiv(params, modulus, two), params};
+    } else {
+        // if modulus is odd, half_modulus is (modulus - 1) / 2
+        half_modulus = (- $RuntimeBigNum::one(params)) / ($RuntimeBigNum::one(params) + $RuntimeBigNum::one(params));
+    }
 
-    a = if a > modulus_sub_1_div_2 {
+
+    a = if a > half_modulus {
         - a 
     } else {
         a
     }; 
-    assert(a < modulus_sub_1_div_2);
+    assert(a < half_modulus);
 }
 
 
