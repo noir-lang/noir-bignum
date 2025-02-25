@@ -16,11 +16,13 @@
 //! * G1 curve equation: y^2 = x^3 + 1
 //! * G2 curve equation: y^2 = x^3 + B, where
 //!    * B = Fq2(0, 155198655607781456406391640216936120121836107652948796323930557600032281009004493664981332883744016074664192874906)
+use crate::bignum::BigNum;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
-use crate::utils::u60_representation::U60Repr;
 
 pub struct BLS12_377_Fq_Params {}
+
+pub type BLS12_377_Fq = BigNum<4, 377, BLS12_377_Fq_Params>;
 
 impl BigNumParamsGetter<4, 377> for BLS12_377_Fq_Params {
     fn get_params() -> BigNumParams<4, 377> {
@@ -42,38 +44,6 @@ pub global BLS12_377_Fq_PARAMS: BigNumParams<4, 377> = BigNumParams {
         0x018c2f8a21d58c760b80d94292763444,
         0x035c73,
     ],
-    modulus_u60: U60Repr {
-        limbs: [
-            0x0508c00000000001,
-            0xb5d44300000008,
-            0x03622fba09480017,
-            0x0d9f300f5138f1ef,
-            0x05c06ca1493b1a22,
-            0x04617c510eac63b0,
-            0x01ae3a,
-            0x00,
-        ],
-    },
-    modulus_u60_x4: U60Repr {
-        limbs: [
-            0x0508c00000000001,
-            0xb5d44300000008,
-            0x03622fba09480017,
-            0x0d9f300f5138f1ef,
-            0x05c06ca1493b1a22,
-            0x04617c510eac63b0,
-            0x01ae3a,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-        ],
-    },
     redc_param: [
         0xd687789c42a591f9fd58c5e4daffcc,
         0x0de6776b1a06af2d488d85a6d02d0e,

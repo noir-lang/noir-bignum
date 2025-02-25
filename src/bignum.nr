@@ -19,7 +19,7 @@ use crate::fns::{
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 pub struct BigNum<let N: u32, let MOD_BITS: u32, Params> {
-    pub limbs: [Field; N],
+    pub limbs: [u128; N],
 }
 // We aim to avoid needing to add a generic parameter to this trait, for this reason we do not allow
 // accessing the limbs of the bignum except through slices.
@@ -31,16 +31,16 @@ pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
     fn one() -> Self;
     fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
     unconstrained fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
-    fn from_slice(limbs: [Field]) -> Self;
+    fn from_slice(limbs: [u128]) -> Self;
     fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> Self;
     fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes];
 
     fn modulus() -> Self;
     fn modulus_bits(self) -> u32;
     fn num_limbs(self) -> u32;
-    fn get_limbs_slice(self) -> [Field];
-    fn get_limb(self, idx: u32) -> Field;
-    fn set_limb(&mut self, idx: u32, value: Field);
+    fn get_limbs_slice(self) -> [u128];
+    fn get_limb(self, idx: u32) -> u128;
+    fn set_limb(&mut self, idx: u32, value: u128);
 
     unconstrained fn __eq(self, other: Self) -> bool;
     unconstrained fn __is_zero(self) -> bool;
@@ -94,8 +94,7 @@ where
     Params: BigNumParamsGetter<N, MOD_BITS>,
 {
     fn from(input: Field) -> Self {
-        let params = Params::get_params();
-        Self { limbs: from_field::<N, MOD_BITS>(params, input) }
+        Self { limbs: from_field::<N, MOD_BITS>(input) }
     }
 }
 
@@ -139,7 +138,7 @@ where
         Self { limbs: __derive_from_seed::<_, MOD_BITS, _>(params, seed) }
     }
 
-    fn from_slice(limbs: [Field]) -> Self {
+    fn from_slice(limbs: [u128]) -> Self {
         Self { limbs: limbs.as_array() }
     }
 
@@ -163,15 +162,15 @@ where
         N
     }
 
-    fn get_limbs_slice(self) -> [Field] {
+    fn get_limbs_slice(self) -> [u128] {
         self.limbs
     }
 
-    fn get_limb(self, idx: u32) -> Field {
+    fn get_limb(self, idx: u32) -> u128 {
         self.limbs[idx]
     }
 
-    fn set_limb(&mut self, idx: u32, value: Field) {
+    fn set_limb(&mut self, idx: u32, value: u128) {
         self.limbs[idx] = value;
     }
 
@@ -293,7 +292,7 @@ where
     }
 
     fn validate_in_range(self) {
-        validate_in_range::<_, MOD_BITS>(self.limbs);
+        validate_in_range::<_, _, MOD_BITS>(self.limbs);
     }
 
     fn assert_is_not_equal(self, other: Self) {
@@ -423,4 +422,3 @@ where
 {
     limbs_to_field(Params::get_params(), input.limbs)
 }
-
