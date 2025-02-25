@@ -5,7 +5,7 @@ use crate::params::BigNumParamsGetter;
 
 use crate::fns::{
     constrained_ops::{
-        add, assert_is_not_equal, cmp, conditional_select, derive_from_seed, div, eq, from_field,
+        add, assert_is_not_equal, gt, conditional_select, derive_from_seed, div, eq, from_field,
         is_zero, limbs_to_field, mul, neg, sub, udiv, udiv_mod, umod, validate_in_field,
         validate_in_range,
     },
@@ -398,7 +398,7 @@ where
     Params: BigNumParamsGetter<N, MOD_BITS>,
 {
     fn cmp(self, other: Self) -> Ordering {
-        let comp_result: bool = cmp::<_, MOD_BITS>(self.limbs, other.limbs);
+        let comp_result: bool = gt::<_, MOD_BITS>(self.limbs, other.limbs);
         if self.limbs == other.limbs {
             Ordering::equal()
         } else if comp_result {

@@ -27,7 +27,7 @@ use crate::params::BigNumParams as P;
  * udiv_mod
  * udiv
  * umod
- * cmp 
+ * gt 
  * check_gt_with_flags
  */
 
@@ -587,7 +587,7 @@ pub(crate) fn umod<let N: u32, let MOD_BITS: u32>(
 }
 
 // a comparison function. returns true if lhs > rhs and false otherwise
-pub(crate) fn cmp<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N]) -> bool {
+pub(crate) fn gt<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N]) -> bool {
     let (underflow, result, carry_flags, borrow_flags) =
         unsafe { __validate_gt_remainder(lhs, rhs) };
     // if underflow is true, swap lhs and rhs
