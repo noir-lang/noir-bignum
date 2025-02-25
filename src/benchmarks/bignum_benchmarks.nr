@@ -1,123 +1,119 @@
 use crate::bignum::BigNum;
 use crate::bignum::BigNumTrait;
 
+use crate::fields::bls12_381Fq::BLS12_381_Fq_Params;
 use crate::fields::bn254Fq::BN254_Fq_Params;
+use crate::fields::U2048::U2048Params;
 use crate::fields::U256::U256Params;
 
+comptime fn make_bench(_m: Module, N: u32, MOD_BITS: u32, params: Quoted) -> Quoted {
+    let module_name = _m.name();
+    let add_bench_name = f"add_{module_name}".quoted_contents();
+    let sub_bench_name = f"sub_{module_name}".quoted_contents();
+    let mul_bench_name = f"mul_{module_name}".quoted_contents();
+    let div_bench_name = f"div_{module_name}".quoted_contents();
+    let udiv_mod_bench_name = f"udiv_mod_{module_name}".quoted_contents();
+    let udiv_bench_name = f"udiv_{module_name}".quoted_contents();
+    let from_field_bench_name = f"from_field_{module_name}".quoted_contents();
+    let validate_in_field_bench_name = f"validate_in_field_{module_name}".quoted_contents();
+    let evaluate_quadratic_expression_3_elements_bench_name =
+        f"evaluate_quadratic_expression_3_elements_{module_name}".quoted_contents();
+    let evaluate_quadratic_expression_12_elements_bench_name =
+        f"evaluate_quadratic_expression_12_elements_{module_name}".quoted_contents();
+
+    let BigNum = quote { crate::bignum::BigNum };
+    let BigNumTrait = quote { crate::bignum::BigNumTrait };
+
+    quote {
+        #[export]
+        fn $add_bench_name(a: $BigNum<$N, $MOD_BITS, $params>, b: $BigNum<$N, $MOD_BITS, $params>) -> $BigNum<$N, $MOD_BITS, $params> {
+            a + b
+        }
+
+        #[export] 
+        fn $sub_bench_name(a: $BigNum<$N, $MOD_BITS, $params>, b: $BigNum<$N, $MOD_BITS, $params>) -> $BigNum<$N, $MOD_BITS, $params> {
+            a - b
+        }
+
+        #[export]
+        fn $mul_bench_name(a: $BigNum<$N, $MOD_BITS, $params>, b: $BigNum<$N, $MOD_BITS, $params>) -> $BigNum<$N, $MOD_BITS, $params> {
+            a * b
+        }
+
+        #[export]
+        fn $div_bench_name(a: $BigNum<$N, $MOD_BITS, $params>, b: $BigNum<$N, $MOD_BITS, $params>) -> $BigNum<$N, $MOD_BITS, $params> {
+            a / b
+        }
+
+        #[export]  
+        fn $udiv_mod_bench_name(a: $BigNum<$N, $MOD_BITS, $params>, b: $BigNum<$N, $MOD_BITS, $params>) -> ($BigNum<$N, $MOD_BITS, $params>, $BigNum<$N, $MOD_BITS, $params>) {
+            a.udiv_mod(b)
+        }
+
+        #[export]
+        fn $udiv_bench_name(a: $BigNum<$N, $MOD_BITS, $params>, b: $BigNum<$N, $MOD_BITS, $params>) -> $BigNum<$N, $MOD_BITS, $params> {
+            a.udiv(b)
+        }
+        
+        #[export]
+        fn $from_field_bench_name(a: Field) -> $BigNum<$N, $MOD_BITS, $params> {
+            $BigNum::from(a)
+        }
+
+        #[export]
+        fn $validate_in_field_bench_name(a: $BigNum<$N, $MOD_BITS, $params>) {
+            a.validate_in_field()
+        }        
+
+        #[export]
+        fn $evaluate_quadratic_expression_3_elements_bench_name(
+            lhs: [[$BigNum<$N, $MOD_BITS, $params>; 3]; 3],
+            lhs_flags: [[bool; 3]; 3],
+            rhs: [[$BigNum<$N, $MOD_BITS, $params>; 3]; 3],
+            rhs_flags: [[bool; 3]; 3],
+            add: [$BigNum<$N, $MOD_BITS, $params>; 3],
+            add_flags: [bool; 3],
+        ) {
+            $BigNum::evaluate_quadratic_expression(lhs, lhs_flags, rhs, rhs_flags, add, add_flags)
+        }
+
+        #[export]
+        fn $evaluate_quadratic_expression_12_elements_bench_name(
+            lhs: [[$BigNum<$N, $MOD_BITS, $params>; 3]; 12],
+            lhs_flags: [[bool; 3]; 12],
+            rhs: [[$BigNum<$N, $MOD_BITS, $params>; 3]; 12],
+            rhs_flags: [[bool; 3]; 12],
+            add: [$BigNum<$N, $MOD_BITS, $params>; 3],
+            add_flags: [bool; 3],
+        ) {
+            $BigNum::evaluate_quadratic_expression(lhs, lhs_flags, rhs, rhs_flags, add, add_flags)
+        }
+        
+    }
+}
+
 // the types we will be benchmarking
-
-type Fq = BigNum<3, 254, BN254_Fq_Params>;
-type BN256 = BigNum<3, 257, U256Params>;
-
-// type Fq
-// type BN256
-// type BN381
-// type BN2048
-#[export]
-fn bench_add_Fq(a: Fq, b: Fq) -> Fq {
-    a + b
+// type BN254Fq
+// type U256
+// type BLS12_381Fq
+// type U2048
+#[make_bench(3, 254, quote { BN254_Fq_Params })]
+pub mod BN254_Fq_Bench {
+    use crate::fields::bn254Fq::BN254_Fq_Params;
 }
 
-#[export]
-fn bench_sub_Fq(a: Fq, b: Fq) -> Fq {
-    a - b
+#[make_bench(3, 257, quote { U256Params })]
+pub mod U256_Bench {
+    use crate::fields::U256::U256Params;
 }
 
-#[export]
-fn bench_mul_Fq(a: Fq, b: Fq) -> Fq {
-    a * b
+#[make_bench(4, 381, quote { BLS12_381_Fq_Params })]
+pub mod BLS12_381Fq_Bench {
+
+    use crate::fields::bls12_381Fq::BLS12_381_Fq_Params;
 }
 
-#[export]
-fn bench_div_Fq(a: Fq, b: Fq) -> Fq {
-    a / b
-}
-
-#[export]
-fn bench_add_BN256(a: BN256, b: BN256) -> BN256 {
-    a + b
-}
-
-#[export]
-fn bench_sub_BN256(a: BN256, b: BN256) -> BN256 {
-    a - b
-}
-
-#[export]
-fn bench_mul_BN256(a: BN256, b: BN256) -> BN256 {
-    a * b
-}
-
-#[export]
-fn bench_div_BN256(a: BN256, b: BN256) -> BN256 {
-    a / b
-}
-
-#[export]
-fn bench_from_field_Fq(a: Field) -> Fq {
-    Fq::from(a)
-}
-
-#[export]
-fn bench_from_field_BN256(a: Field) -> BN256 {
-    BN256::from(a)
-}
-
-// #[export]
-// fn bench_cmp_Fq(a: Fq, b: Fq) -> bool {
-//     a > b
-// }
-
-#[export]
-fn bench_udiv_mod_Fq(a: Fq, b: Fq) -> (Fq, Fq) {
-    a.udiv_mod(b)
-}
-
-#[export]
-fn bench_udiv_mod_BN256(a: BN256, b: BN256) -> (BN256, BN256) {
-    a.udiv_mod(b)
-}
-
-#[export]
-fn bench_udiv_Fq(a: Fq, b: Fq) -> Fq {
-    a.udiv(b)
-}
-
-#[export]
-fn bench_udiv_BN256(a: BN256, b: BN256) -> BN256 {
-    a.udiv(b)
-}
-
-#[export]
-fn bench_evaluate_quadratic_expression_3_elements(
-    lhs: [[Fq; 3]; 3],
-    lhs_flags: [[bool; 3]; 3],
-    rhs: [[Fq; 3]; 3],
-    rhs_flags: [[bool; 3]; 3],
-    add: [Fq; 3],
-    add_flags: [bool; 3],
-) {
-    Fq::evaluate_quadratic_expression(lhs, lhs_flags, rhs, rhs_flags, add, add_flags)
-}
-
-#[export]
-fn bench_compute_quadratic_expression_12_elemepts(
-    lhs: [[Fq; 3]; 12],
-    lhs_flags: [[bool; 3]; 12],
-    rhs: [[Fq; 3]; 12],
-    rhs_flags: [[bool; 3]; 12],
-    add: [Fq; 3],
-    add_flags: [bool; 3],
-) {
-    Fq::evaluate_quadratic_expression(lhs, lhs_flags, rhs, rhs_flags, add, add_flags)
-}
-
-#[export]
-fn bench_validate_in_field_Fq(a: Fq) {
-    a.validate_in_field()
-}
-
-#[export]
-fn bench_validate_in_field_BN256(a: BN256) {
-    a.validate_in_field()
+#[make_bench(18, 2049, quote { U2048Params })]
+pub mod U2048_Bench {
+    use crate::fields::U2048::U2048Params;
 }
