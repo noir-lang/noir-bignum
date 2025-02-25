@@ -433,6 +433,20 @@ fn test_cmp_BN_fail_2() {
     assert(a > b);
 }
 
+#[test]
+fn test_cmp_fuzz(seed: [u8;2]){
+    let params = $typ ::get_params();
+    let mut a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, seed);
+    let modulus_sub_1_div_2 = (- $RuntimeBigNum::one(params)) / ($RuntimeBigNum::one(params) + $RuntimeBigNum::one(params));
+
+    a = if a > modulus_sub_1_div_2 {
+        - a 
+    } else {
+        a
+    }; 
+    assert(a < modulus_sub_1_div_2);
+}
+
 
 }
 }

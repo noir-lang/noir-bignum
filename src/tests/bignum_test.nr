@@ -965,3 +965,12 @@ fn test_cmp_BN_fail_2() {
 
     assert(a > b);
 }
+
+#[test]
+fn test_gt_BN_fuzz(seed: [u8; 2]) {
+    let mut a: BN254_Fq = BigNum::derive_from_seed(seed);
+    let modulus_sub_1_div_2 = (BN254_Fq::modulus() - BN254_Fq::one()) / BN254_Fq::from(2);
+
+    a = if a > modulus_sub_1_div_2 { -a } else { a };
+    assert(a < modulus_sub_1_div_2);
+}
