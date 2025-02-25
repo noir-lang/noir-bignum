@@ -65,6 +65,7 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, le
     }
 
     // compute borrow flags from mulout_p and mulout_n
+
     let mut borrow_flags: [Field; 2 * N] = [0; 2 * N];
     let borrow_shift: Field = TWO_POW_246; // 2^{246}
     let borrow_carry: Field = TWO_POW_126; // 2^{246 - 120} = 2^{126}
