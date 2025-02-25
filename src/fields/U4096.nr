@@ -1,7 +1,10 @@
+use crate::bignum::BigNum;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 
 pub struct U4096Params {}
+
+pub type U4096 = BigNum<35, 4097, U4096Params>;
 
 impl BigNumParamsGetter<35, 4097> for U4096Params {
     fn get_params() -> BigNumParams<35, 4097> {
@@ -9,7 +12,7 @@ impl BigNumParamsGetter<35, 4097> for U4096Params {
     }
 }
 
-global U4096_PARAMS: BigNumParams<35, 4097> = BigNumParams {
+pub global U4096_PARAMS: BigNumParams<35, 4097> = BigNumParams {
     has_multiplicative_inverse: false,
     modulus: [
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,

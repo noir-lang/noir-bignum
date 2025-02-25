@@ -14,10 +14,13 @@
 //! * valuation(r - 1, 2) = 32
 //! * G1 curve equation: y^2 = x^3 + 4
 //! * G2 curve equation: y^2 = x^3 + Fq2(4, 4)
+use crate::bignum::BigNum;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 
 pub struct BLS12_381_Fq_Params {}
+
+pub type BLS12_381_Fq = BigNum<4, 381, BLS12_381_Fq_Params>;
 
 impl BigNumParamsGetter<4, 381> for BLS12_381_Fq_Params {
     fn get_params() -> BigNumParams<4, 381> {
@@ -25,7 +28,7 @@ impl BigNumParamsGetter<4, 381> for BLS12_381_Fq_Params {
     }
 }
 
-global BLS12_381_Fq_PARAMS: BigNumParams<4, 381> = BigNumParams {
+pub global BLS12_381_Fq_PARAMS: BigNumParams<4, 381> = BigNumParams {
     has_multiplicative_inverse: true,
     modulus: [
         0xabfffeb153ffffb9feffffffffaaab,

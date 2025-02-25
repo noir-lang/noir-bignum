@@ -1,7 +1,10 @@
+use crate::bignum::BigNum;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 
 pub struct Secp384r1_Fq_Params {}
+
+pub type Secp384r1_Fq = BigNum<4, 384, Secp384r1_Fq_Params>;
 
 impl BigNumParamsGetter<4, 384> for Secp384r1_Fq_Params {
     fn get_params() -> BigNumParams<4, 384> {
@@ -9,7 +12,7 @@ impl BigNumParamsGetter<4, 384> for Secp384r1_Fq_Params {
     }
 }
 
-global Secp384r1_Fq_PARAMS: BigNumParams<4, 384> = BigNumParams {
+pub global Secp384r1_Fq_PARAMS: BigNumParams<4, 384> = BigNumParams {
     has_multiplicative_inverse: true,
     modulus: [
         0xffffff0000000000000000ffffffff,
