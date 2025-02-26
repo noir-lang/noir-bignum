@@ -40,7 +40,7 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, le
     rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
     linear_terms: [[u128; N]; ADD_N],
     linear_flags: [bool; ADD_N],
-) -> ([u128; N], [u128; N], [Field; 2 * N]) {
+) -> ([u128; N], [u128; N], [Field; 2 * N - 2]) {
     // TODO, validate we do not overflow N2 when multiplying and N when adding
     let mut mulout_p = __compute_quadratic_expression_product(
         params,
@@ -65,7 +65,7 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, le
     }
 
     // compute borrow flags from mulout_p and mulout_n
-    let mut borrow_flags: [Field; 2 * N] = [0; 2 * N];
+    let mut borrow_flags: [Field; 2 * N - 2] = [0; 2 * N - 2];
     let borrow_shift: Field = TWO_POW_246; // 2^{246}
     let borrow_carry: Field = TWO_POW_126; // 2^{246 - 120} = 2^{126}
     let downshift: Field = 1 / (TWO_POW_120 as Field);
@@ -254,7 +254,7 @@ pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let L
     linear_flags: [bool; ADD_N],
 ) {
     // use an unconstrained function to compute the value of the quotient
-    let (quotient, _, borrow_flags): ([u128; N], [u128; N], [Field; 2 * N]) = unsafe {
+    let (quotient, _, borrow_flags): ([u128; N], [u128; N], [Field; 2 * N - 2]) = unsafe {
         __compute_quadratic_expression_with_borrow_flags::<_, MOD_BITS, _, _, _, _>(
             params,
             lhs_terms,
