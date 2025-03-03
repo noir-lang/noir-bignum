@@ -1,10 +1,4 @@
 use crate::bignum::BigNum;
-use crate::bignum::BigNumTrait;
-
-use crate::fields::bls12_381Fq::BLS12_381_Fq_Params;
-use crate::fields::bn254Fq::BN254_Fq_Params;
-use crate::fields::U2048::U2048Params;
-use crate::fields::U256::U256Params;
 
 comptime fn make_bench(_m: Module, N: u32, MOD_BITS: u32, params: Quoted) -> Quoted {
     let module_name = _m.name();
@@ -47,12 +41,12 @@ comptime fn make_bench(_m: Module, N: u32, MOD_BITS: u32, params: Quoted) -> Quo
 
         #[export]  
         fn $udiv_mod_bench_name(a: $BigNum<$N, $MOD_BITS, $params>, b: $BigNum<$N, $MOD_BITS, $params>) -> ($BigNum<$N, $MOD_BITS, $params>, $BigNum<$N, $MOD_BITS, $params>) {
-            a.udiv_mod(b)
+            $BigNumTrait::udiv_mod(a, b)
         }
 
         #[export]
         fn $udiv_bench_name(a: $BigNum<$N, $MOD_BITS, $params>, b: $BigNum<$N, $MOD_BITS, $params>) -> $BigNum<$N, $MOD_BITS, $params> {
-            a.udiv(b)
+            $BigNumTrait::udiv(a, b)
         }
         
         #[export]
@@ -62,7 +56,7 @@ comptime fn make_bench(_m: Module, N: u32, MOD_BITS: u32, params: Quoted) -> Quo
 
         #[export]
         fn $validate_in_field_bench_name(a: $BigNum<$N, $MOD_BITS, $params>) {
-            a.validate_in_field()
+            $BigNumTrait::validate_in_field(a)
         }        
 
         #[export]
@@ -74,7 +68,7 @@ comptime fn make_bench(_m: Module, N: u32, MOD_BITS: u32, params: Quoted) -> Quo
             add: [$BigNum<$N, $MOD_BITS, $params>; 3],
             add_flags: [bool; 3],
         ) {
-            $BigNum::evaluate_quadratic_expression(lhs, lhs_flags, rhs, rhs_flags, add, add_flags)
+            $BigNumTrait::evaluate_quadratic_expression(lhs, lhs_flags, rhs, rhs_flags, add, add_flags)
         }
 
         #[export]
@@ -86,7 +80,7 @@ comptime fn make_bench(_m: Module, N: u32, MOD_BITS: u32, params: Quoted) -> Quo
             add: [$BigNum<$N, $MOD_BITS, $params>; 3],
             add_flags: [bool; 3],
         ) {
-            $BigNum::evaluate_quadratic_expression(lhs, lhs_flags, rhs, rhs_flags, add, add_flags)
+            $BigNumTrait::evaluate_quadratic_expression(lhs, lhs_flags, rhs, rhs_flags, add, add_flags)
         }
         
     }
