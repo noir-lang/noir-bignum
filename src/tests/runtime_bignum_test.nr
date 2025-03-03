@@ -1,3 +1,4 @@
+use crate::fns::constrained_ops::{sub, udiv};
 use crate::fns::unconstrained_helpers::__barrett_reduction;
 use crate::params::{BigNumParams, BigNumParamsGetter};
 use crate::runtime_bignum::RuntimeBigNum;
@@ -91,6 +92,8 @@ comptime fn make_test(_m: Module, N: u32, MOD_BITS: u32, typ: Quoted) -> Quoted 
     let __helper_sub = quote { crate::fns::unconstrained_helpers::__helper_sub };
     let __one = quote { crate::fns::unconstrained_ops::__one };
     let __shl = quote { crate::fns::unconstrained_helpers::__shl };
+    let udiv = quote { crate::fns::constrained_ops::udiv };
+    let sub = quote { crate::fns::constrained_ops::sub };
     quote {
 #[test]
 fn test_add() {
@@ -380,6 +383,86 @@ fn test_is_zero() {
     assert(a.is_zero() == true);
     assert(b.is_zero() == false);
 }
+
+#[test]
+fn test_cmp() {
+    let modulus = $typ ::get_params().modulus;
+    let params = $typ ::get_params();
+    let mut a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: modulus, params };
+    let mut b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: modulus, params };
+
+    a.limbs[0] -= 1;
+    b.limbs[0] -= 2;
+    assert(a > b);
+}
+
+#[test(should_fail_with = "Failed constraint")]
+fn test_cmp_BN_fail() {
+    let modulus = $typ ::get_params().modulus;
+    let params = $typ ::get_params();
+    let mut a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: modulus, params };
+    let mut b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: modulus, params };
+
+    a.limbs[0] -= 1;
+    b.limbs[0] -= 2;
+
+    assert(a < b);
+}
+
+
+#[test]
+fn test_cmp_BN_2() {
+    let modulus = $typ ::get_params().modulus;
+    let params = $typ ::get_params();
+    let mut a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: modulus, params };
+    let mut b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: modulus, params };
+
+    a.limbs[0] -= 1;
+    b.limbs[0] -= 2;
+
+    assert(a > b);
+}
+
+#[test(should_fail_with = "Failed constraint")]
+fn test_cmp_BN_fail_2() {
+    let modulus = $typ ::get_params().modulus;
+    let params = $typ ::get_params();
+    let mut a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: modulus, params };
+    let mut b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: modulus, params };
+
+    a.limbs[0] -= 2;
+    b.limbs[0] -= 1;
+
+    assert(a > b);
+}
+
+#[test]
+fn test_cmp_fuzz(seed: [u8; 2]){
+    let params = $typ ::get_params();
+    let modulus = params.modulus;
+    let mut a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, seed);
+    let mut half_modulus = $RuntimeBigNum::zero(params);
+    let mut two = [0; $N]; 
+    two[0] = 2;
+    let mut one = [0; $N];
+    one[0] = 1;
+    if modulus[0] % 2 == 0 {
+        // if modulus is even, half_modulus is modulus / 2
+        half_modulus = $RuntimeBigNum {limbs: $udiv(params, modulus, two), params};
+    } else {
+        // if modulus is odd, half_modulus is (modulus - 1) / 2
+        half_modulus = $RuntimeBigNum {limbs: $udiv(params, $sub(params,modulus, one), two), params};
+    }
+
+
+    a = if a > half_modulus {
+        - a 
+    } else {
+        a
+    }; 
+    assert(a < half_modulus);
+}
+
 
 }
 }

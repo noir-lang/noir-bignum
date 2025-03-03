@@ -3,8 +3,8 @@ use crate::utils::map::map;
 
 use crate::fns::{
     constrained_ops::{
-        add, assert_is_not_equal, conditional_select, derive_from_seed, div, eq, is_zero, mul, neg,
-        sub, udiv, udiv_mod, umod, validate_in_field, validate_in_range,
+        add, assert_is_not_equal, conditional_select, derive_from_seed, div, eq, gt, is_zero, mul,
+        neg, sub, udiv, udiv_mod, umod, validate_in_field, validate_in_range,
     },
     expressions::{__compute_quadratic_expression, evaluate_quadratic_expression},
     serialization::{from_be_bytes, to_le_bytes},
@@ -13,7 +13,7 @@ use crate::fns::{
         __is_zero, __mul, __neg, __pow, __sub, __tonelli_shanks_sqrt, __udiv_mod,
     },
 };
-use std::ops::Neg;
+use std::{cmp::Ordering, ops::Neg};
 
 pub struct RuntimeBigNum<let N: u32, let MOD_BITS: u32> {
     pub limbs: [u128; N],
@@ -342,5 +342,20 @@ impl<let N: u32, let MOD_BITS: u32> std::cmp::Eq for RuntimeBigNum<N, MOD_BITS> 
         let params = self.params;
         assert(params == other.params);
         eq::<_, MOD_BITS>(params, self.limbs, other.limbs)
+    }
+}
+
+impl<let N: u32, let MOD_BITS: u32, Params> std::cmp::Ord for RuntimeBigNum<N, MOD_BITS> {
+    fn cmp(self, other: Self) -> Ordering {
+        let comp_result: bool = gt::<_, MOD_BITS>(self.limbs, other.limbs);
+        if self.limbs == other.limbs {
+            Ordering::equal()
+        } else if comp_result {
+            // there was an underflow
+            Ordering::greater()
+        } else {
+            // there was no underflow
+            Ordering::less()
+        }
     }
 }
