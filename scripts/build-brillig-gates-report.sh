@@ -26,20 +26,14 @@ for artifact in $artifacts; do
     # Get and format the opcode info
     OPT_CODE_INFO=$($INSPECTOR info --json "$artifacts_path/$artifact")
     
-    # Simplified jq expression to output only package_name and total_unconstrained_opcodes
+    # Simplified jq expression to output only package_name and opcodes from unconstrained_functions
     echo "$(echo $OPT_CODE_INFO | jq --arg name "$ARTIFACT_NAME_NO_EXT" '{
         package_name: $name,
-        total_unconstrained_opcodes: (
+        unconstrained_functions: (
             if .programs then
-                (.programs[] | 
-                    if .unconstrained_functions then
-                        (.unconstrained_functions | map(.opcodes) | add)
-                    else 
-                        0 
-                    end
-                )
+                (.programs[].unconstrained_functions | map({name: .name, opcodes: .opcodes}))
             else 
-                0 
+                []
             end
         )
     }')" >> opcode_report.json
