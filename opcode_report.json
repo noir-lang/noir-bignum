@@ -1,0 +1,51 @@
+{"programs": [
+{
+  "package_name": "bench_add_BN256",
+  "total_unconstrained_opcodes": 488
+}
+,
+{
+  "package_name": "bench_add_Fq",
+  "total_unconstrained_opcodes": 488
+}
+,
+{
+  "package_name": "bench_div_BN256",
+  "total_unconstrained_opcodes": 6914
+}
+,
+{
+  "package_name": "bench_div_Fq",
+  "total_unconstrained_opcodes": 6914
+}
+,
+{
+  "package_name": "bench_from_field_BN256",
+  "total_unconstrained_opcodes": 427
+}
+,
+{
+  "package_name": "bench_from_field_Fq",
+  "total_unconstrained_opcodes": 427
+}
+,
+{
+  "package_name": "bench_mul_BN256",
+  "total_unconstrained_opcodes": 4069
+}
+,
+{
+  "package_name": "bench_mul_Fq",
+  "total_unconstrained_opcodes": 4069
+}
+,
+{
+  "package_name": "bench_sub_BN256",
+  "total_unconstrained_opcodes": 404
+}
+,
+{
+  "package_name": "bench_sub_Fq",
+  "total_unconstrained_opcodes": 404
+}
+]}
