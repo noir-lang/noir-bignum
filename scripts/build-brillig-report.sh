@@ -8,37 +8,14 @@ artifacts_path="./export"
 artifacts=$(ls $artifacts_path)
 
 # Start the JSON array
-echo "{\"programs\": [" > opcode_report.json
+REPORTS=$(jq --null-input '[]')
 
-first=true
 for artifact in $artifacts; do    
-    ARTIFACT_NAME=$(basename "$artifact")
-    # Remove .json extension from the name
-    ARTIFACT_NAME_NO_EXT="${ARTIFACT_NAME%.json}"
-
-    # Add comma before object if not first item
-    if [ "$first" = true ]; then
-        first=false
-    else
-        echo "," >> opcode_report.json
-    fi
-
     # Get and format the opcode info
-    OPT_CODE_INFO=$($INSPECTOR info --json "$artifacts_path/$artifact")
-    
-    # Simplified jq expression to output only package_name and opcodes from unconstrained_functions
-    echo "$(echo $OPT_CODE_INFO | jq --arg name "$ARTIFACT_NAME_NO_EXT" '{
-        package_name: $name,
-        unconstrained_functions: (
-            if .programs then
-                (.programs[].unconstrained_functions | map({name: .name, opcodes: .opcodes}))
-            else 
-                []
-            end
-        )
-    }')" >> opcode_report.json
+    OP_CODE_INFO=$($INSPECTOR info --json "$artifacts_path/$artifact")
 
+    # Simplified jq expression to output only package_name and opcodes from unconstrained_functions
+    REPORTS=$(echo $OP_CODE_INFO | jq -c '.programs[0] | del(.functions)' | jq -c --argjson old_reports $REPORTS '$old_reports + [.]')
 done
 
-# Close the JSON structure
-echo "]}" >> brillig_report.json 
+echo $REPORTS | jq '{ programs: . }' > opcode_report.json
