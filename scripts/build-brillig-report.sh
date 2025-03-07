@@ -41,4 +41,4 @@ for artifact in $artifacts; do
 done
 
 # Close the JSON structure
-echo "]}" >> opcode_report.json 
+echo "]}" >> brillig_report.json 

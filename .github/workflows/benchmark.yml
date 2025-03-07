@@ -47,3 +47,27 @@ jobs:
           # delete the comment in case changes no longer impact circuit sizes
           delete: ${{ !steps.gates_diff.outputs.markdown }}
           message: ${{ steps.gates_diff.outputs.markdown }}
+
+      # Delete the export files
+      - name: Delete export files
+        run: rm -rf export
+      # Run nargo export again with force-brillig flag
+      - name: Build Brillig benchmark programs
+        run: nargo export --force-brillig
+
+      - name: Generate brillig report
+        run: ./scripts/build-brillig-report.sh
+      - name: Compare brillig reports
+        id: brillig_bytecode_diff
+        uses: noir-lang/noir-gates-diff@dbe920a8dcc3370af4be4f702ca9cef29317bec1
+        with:
+          report: brillig_report.json
+          summaryQuantile: 0.9 # only display the 10% most significant circuit size diffs in the summary (defaults to 20%)
+
+      - name: Add brillig diff to sticky comment
+        if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          # delete the comment in case changes no longer impact circuit sizes
+          delete: ${{ !steps.brillig_diff.outputs.markdown }}
+          message: ${{ steps.brillig_diff.outputs.markdown }}
