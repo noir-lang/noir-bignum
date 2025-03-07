@@ -62,6 +62,9 @@ jobs:
         uses: noir-lang/noir-gates-diff@dbe920a8dcc3370af4be4f702ca9cef29317bec1
         with:
           report: brillig_report.json
+          header: |
+            # Changes to Brillig bytecode sizes
+          brillig_report: true
           summaryQuantile: 0.9 # only display the 10% most significant circuit size diffs in the summary (defaults to 20%)
 
       - name: Add brillig diff to sticky comment
