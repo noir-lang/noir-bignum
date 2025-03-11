@@ -967,7 +967,7 @@ fn test_cmp_BN_fail_2() {
 }
 
 #[test]
-fn test_cmp_BN_fuzz(seed: [u8; 2]) {
+fn test_cmp_BN_fuzz(seed: [u8; 5]) {
     let mut a: BN254_Fq = BigNum::derive_from_seed(seed);
     let modulus_sub_1_div_2 = (BN254_Fq::modulus() - BN254_Fq::one()) / BN254_Fq::from(2);
 
