@@ -8,6 +8,7 @@ use crate::fns::{
     unconstrained_ops::{__add, __div, __mul, __neg, __sub, __udiv_mod},
 };
 use crate::params::BigNumParams as P;
+use std::cmp::Ordering;
 
 /**
  * In this file:
@@ -587,13 +588,19 @@ pub(crate) fn umod<let N: u32, let MOD_BITS: u32>(
 }
 
 // a comparison function. returns true if lhs > rhs and false otherwise
-pub(crate) fn gt<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N]) -> bool {
+pub(crate) fn cmp<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N]) -> Ordering {
     let (underflow, result, carry_flags, borrow_flags) =
         unsafe { __validate_gt_remainder(lhs, rhs) };
     // if underflow is true, swap lhs and rhs
     let (lhs, rhs) = if underflow { (rhs, lhs) } else { (lhs, rhs) };
     check_gt_with_flags::<N, MOD_BITS>(lhs, rhs, result, borrow_flags, carry_flags);
-    !underflow
+    if lhs == rhs {
+        Ordering::equal()
+    } else if underflow {
+        Ordering::less()
+    } else {
+        Ordering::greater()
+    }
 }
 
 // the constraining function for the results returned by __validate_gt_remainder. this is used in both comparisons and validate gt

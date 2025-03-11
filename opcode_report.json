@@ -1,0 +1,364 @@
+{
+  "programs": [
+    {
+      "package_name": "add_BLS12_381Fq_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "add_BLS12_381Fq_Bench",
+          "opcodes": 338
+        }
+      ]
+    },
+    {
+      "package_name": "add_BN254_Fq_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "add_BN254_Fq_Bench",
+          "opcodes": 329
+        }
+      ]
+    },
+    {
+      "package_name": "add_U2048_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "add_U2048_Bench",
+          "opcodes": 393
+        }
+      ]
+    },
+    {
+      "package_name": "add_U256_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "add_U256_Bench",
+          "opcodes": 327
+        }
+      ]
+    },
+    {
+      "package_name": "div_BLS12_381Fq_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "div_BLS12_381Fq_Bench",
+          "opcodes": 4570
+        }
+      ]
+    },
+    {
+      "package_name": "div_BN254_Fq_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "div_BN254_Fq_Bench",
+          "opcodes": 4398
+        }
+      ]
+    },
+    {
+      "package_name": "div_U2048_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "div_U2048_Bench",
+          "opcodes": 5022
+        }
+      ]
+    },
+    {
+      "package_name": "div_U256_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "div_U256_Bench",
+          "opcodes": 4400
+        }
+      ]
+    },
+    {
+      "package_name": "evaluate_quadratic_expression_12_elements_BLS12_381Fq_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "evaluate_quadratic_expression_12_elements_BLS12_381Fq_Bench",
+          "opcodes": 6093
+        }
+      ]
+    },
+    {
+      "package_name": "evaluate_quadratic_expression_12_elements_BN254_Fq_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "evaluate_quadratic_expression_12_elements_BN254_Fq_Bench",
+          "opcodes": 5920
+        }
+      ]
+    },
+    {
+      "package_name": "evaluate_quadratic_expression_12_elements_U2048_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "evaluate_quadratic_expression_12_elements_U2048_Bench",
+          "opcodes": 7370
+        }
+      ]
+    },
+    {
+      "package_name": "evaluate_quadratic_expression_12_elements_U256_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "evaluate_quadratic_expression_12_elements_U256_Bench",
+          "opcodes": 5916
+        }
+      ]
+    },
+    {
+      "package_name": "evaluate_quadratic_expression_3_elements_BLS12_381Fq_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "evaluate_quadratic_expression_3_elements_BLS12_381Fq_Bench",
+          "opcodes": 4321
+        }
+      ]
+    },
+    {
+      "package_name": "evaluate_quadratic_expression_3_elements_BN254_Fq_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "evaluate_quadratic_expression_3_elements_BN254_Fq_Bench",
+          "opcodes": 4201
+        }
+      ]
+    },
+    {
+      "package_name": "evaluate_quadratic_expression_3_elements_U2048_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "evaluate_quadratic_expression_3_elements_U2048_Bench",
+          "opcodes": 4841
+        }
+      ]
+    },
+    {
+      "package_name": "evaluate_quadratic_expression_3_elements_U256_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "evaluate_quadratic_expression_3_elements_U256_Bench",
+          "opcodes": 4197
+        }
+      ]
+    },
+    {
+      "package_name": "from_field_BLS12_381Fq_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "from_field_BLS12_381Fq_Bench",
+          "opcodes": 85
+        }
+      ]
+    },
+    {
+      "package_name": "from_field_BN254_Fq_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "from_field_BN254_Fq_Bench",
+          "opcodes": 82
+        }
+      ]
+    },
+    {
+      "package_name": "from_field_U2048_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "from_field_U2048_Bench",
+          "opcodes": 113
+        }
+      ]
+    },
+    {
+      "package_name": "from_field_U256_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "from_field_U256_Bench",
+          "opcodes": 82
+        }
+      ]
+    },
+    {
+      "package_name": "mul_BLS12_381Fq_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "mul_BLS12_381Fq_Bench",
+          "opcodes": 1656
+        }
+      ]
+    },
+    {
+      "package_name": "mul_BN254_Fq_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "mul_BN254_Fq_Bench",
+          "opcodes": 1577
+        }
+      ]
+    },
+    {
+      "package_name": "mul_U2048_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "mul_U2048_Bench",
+          "opcodes": 1837
+        }
+      ]
+    },
+    {
+      "package_name": "mul_U256_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "mul_U256_Bench",
+          "opcodes": 1573
+        }
+      ]
+    },
+    {
+      "package_name": "sub_BLS12_381Fq_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "sub_BLS12_381Fq_Bench",
+          "opcodes": 417
+        }
+      ]
+    },
+    {
+      "package_name": "sub_BN254_Fq_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "sub_BN254_Fq_Bench",
+          "opcodes": 406
+        }
+      ]
+    },
+    {
+      "package_name": "sub_U2048_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "sub_U2048_Bench",
+          "opcodes": 473
+        }
+      ]
+    },
+    {
+      "package_name": "sub_U256_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "sub_U256_Bench",
+          "opcodes": 404
+        }
+      ]
+    },
+    {
+      "package_name": "udiv_BLS12_381Fq_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "udiv_BLS12_381Fq_Bench",
+          "opcodes": 2029
+        }
+      ]
+    },
+    {
+      "package_name": "udiv_BN254_Fq_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "udiv_BN254_Fq_Bench",
+          "opcodes": 1943
+        }
+      ]
+    },
+    {
+      "package_name": "udiv_U2048_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "udiv_U2048_Bench",
+          "opcodes": 2090
+        }
+      ]
+    },
+    {
+      "package_name": "udiv_U256_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "udiv_U256_Bench",
+          "opcodes": 1943
+        }
+      ]
+    },
+    {
+      "package_name": "udiv_mod_BLS12_381Fq_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "udiv_mod_BLS12_381Fq_Bench",
+          "opcodes": 2052
+        }
+      ]
+    },
+    {
+      "package_name": "udiv_mod_BN254_Fq_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "udiv_mod_BN254_Fq_Bench",
+          "opcodes": 1966
+        }
+      ]
+    },
+    {
+      "package_name": "udiv_mod_U2048_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "udiv_mod_U2048_Bench",
+          "opcodes": 2113
+        }
+      ]
+    },
+    {
+      "package_name": "udiv_mod_U256_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "udiv_mod_U256_Bench",
+          "opcodes": 1966
+        }
+      ]
+    },
+    {
+      "package_name": "validate_in_field_BLS12_381Fq_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "validate_in_field_BLS12_381Fq_Bench",
+          "opcodes": 343
+        }
+      ]
+    },
+    {
+      "package_name": "validate_in_field_BN254_Fq_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "validate_in_field_BN254_Fq_Bench",
+          "opcodes": 221
+        }
+      ]
+    },
+    {
+      "package_name": "validate_in_field_U2048_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "validate_in_field_U2048_Bench",
+          "opcodes": 410
+        }
+      ]
+    },
+    {
+      "package_name": "validate_in_field_U256_Bench",
+      "unconstrained_functions": [
+        {
+          "name": "validate_in_field_U256_Bench",
+          "opcodes": 220
+        }
+      ]
+    }
+  ]
+}
