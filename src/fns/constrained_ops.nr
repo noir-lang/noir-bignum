@@ -8,6 +8,7 @@ use crate::fns::{
     unconstrained_ops::{__add, __div, __mul, __neg, __sub, __udiv_mod},
 };
 use crate::params::BigNumParams as P;
+use std::cmp::Ordering;
 
 /**
  * In this file:
@@ -27,6 +28,8 @@ use crate::params::BigNumParams as P;
  * udiv_mod
  * udiv
  * umod
+ * gt 
+ * check_gt_with_flags
  */
 
 pub(crate) fn limbs_to_field<let N: u32, let MOD_BITS: u32>(
@@ -340,30 +343,11 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u
     // so we do... p - x - r = 0 and there might be borrow flags
     // a - b = r
     // p + a - b - r = 0
-
-    let (result, carry_flags, borrow_flags) = unsafe { __validate_gt_remainder(lhs, rhs) };
+    let (underflow, result, carry_flags, borrow_flags) =
+        unsafe { __validate_gt_remainder(lhs, rhs) };
     validate_in_range::<_, _, MOD_BITS>(result);
-
-    let mut addend: [Field; N] = [0; N];
-    let result_limb = lhs[0] as Field - rhs[0] as Field + addend[0] - result[0] as Field - 1
-        + (borrow_flags[0] as Field - carry_flags[0] as Field) * TWO_POW_120 as Field;
-    assert(result_limb == 0);
-
-    for i in 1..N - 1 {
-        let prev_borrow_sub_carry = borrow_flags[i - 1] as Field - carry_flags[i - 1] as Field;
-        let borrow_sub_carry = borrow_flags[i] as Field - carry_flags[i] as Field;
-        let result_limb = lhs[i] as Field - rhs[i] as Field + addend[i]
-            - result[i] as Field
-            - prev_borrow_sub_carry
-            + borrow_sub_carry * TWO_POW_120 as Field;
-        assert(result_limb == 0);
-    }
-
-    let result_limb = lhs[N - 1] as Field - rhs[N - 1] as Field + addend[N - 1]
-        - result[N - 1] as Field
-        - borrow_flags[N - 2] as Field
-        + carry_flags[N - 2] as Field;
-    assert(result_limb == 0);
+    assert(!underflow, "BigNum::validate_gt check fails");
+    check_gt_with_flags::<N, MOD_BITS>(lhs, rhs, result, borrow_flags, carry_flags);
 }
 
 pub(crate) fn neg<let N: u32, let MOD_BITS: u32>(
@@ -601,4 +585,50 @@ pub(crate) fn umod<let N: u32, let MOD_BITS: u32>(
     divisor: [u128; N],
 ) -> [u128; N] {
     udiv_mod::<_, MOD_BITS>(params, numerator, divisor).1
+}
+
+// a comparison function. returns true if lhs > rhs and false otherwise
+pub(crate) fn cmp<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N]) -> Ordering {
+    let (underflow, result, carry_flags, borrow_flags) =
+        unsafe { __validate_gt_remainder(lhs, rhs) };
+    // if underflow is true, swap lhs and rhs
+    let (lhs, rhs) = if underflow { (rhs, lhs) } else { (lhs, rhs) };
+    check_gt_with_flags::<N, MOD_BITS>(lhs, rhs, result, borrow_flags, carry_flags);
+    if lhs == rhs {
+        Ordering::equal()
+    } else if underflow {
+        Ordering::less()
+    } else {
+        Ordering::greater()
+    }
+}
+
+// the constraining function for the results returned by __validate_gt_remainder. this is used in both comparisons and validate gt
+pub(crate) fn check_gt_with_flags<let N: u32, let MOD_BITS: u32>(
+    lhs: [u128; N],
+    rhs: [u128; N],
+    result: [u128; N],
+    borrow_flags: [bool; N],
+    carry_flags: [bool; N],
+) {
+    let mut addend: [Field; N] = [0; N];
+    let result_limb = lhs[0] as Field - rhs[0] as Field + addend[0] - result[0] as Field - 1
+        + (borrow_flags[0] as Field - carry_flags[0] as Field) * TWO_POW_120 as Field;
+    assert(result_limb == 0);
+
+    for i in 1..N - 1 {
+        let prev_borrow_sub_carry = borrow_flags[i - 1] as Field - carry_flags[i - 1] as Field;
+        let borrow_sub_carry = borrow_flags[i] as Field - carry_flags[i] as Field;
+        let result_limb = lhs[i] as Field - rhs[i] as Field + addend[i] as Field
+            - result[i] as Field
+            - prev_borrow_sub_carry
+            + borrow_sub_carry * TWO_POW_120 as Field;
+        assert(result_limb == 0);
+    }
+
+    let result_limb = lhs[N - 1] as Field - rhs[N - 1] as Field + addend[N - 1] as Field
+        - result[N - 1] as Field
+        - borrow_flags[N - 2] as Field
+        + carry_flags[N - 2] as Field;
+    assert(result_limb == 0);
 }
