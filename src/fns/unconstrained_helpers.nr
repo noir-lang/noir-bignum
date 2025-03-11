@@ -47,13 +47,14 @@ pub(crate) unconstrained fn __validate_in_field_compute_borrow_flags<let N: u32,
 pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
     lhs: [u128; N],
     rhs: [u128; N],
-) -> ([u128; N], [bool; N], [bool; N]) {
+) -> (bool, [u128; N], [bool; N], [bool; N]) {
     let mut a = lhs;
     let mut b = rhs;
     let underflow = !__gte(lhs, rhs);
-    assert(underflow == false, "BigNum::validate_gt check fails");
-    let mut result: [u128; N] = [0; N];
 
+    let mut result: [u128; N] = [0; N];
+    // swap a and b if there's an underflow
+    let (a, b) = if underflow { (b, a) } else { (a, b) };
     let mut carry_in: u128 = 0;
     let mut borrow_in: u128 = 1;
     let mut borrow_flags: [bool; N] = [false; N];
@@ -76,8 +77,7 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
             borrow_flags[i] = borrow as bool;
         }
     }
-
-    (result, carry_flags, borrow_flags)
+    (underflow, result, carry_flags, borrow_flags)
 }
 
 pub(crate) unconstrained fn __neg_with_flags<let N: u32, let MOD_BITS: u32>(
