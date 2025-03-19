@@ -921,3 +921,56 @@ fn test_sub_underflow_regression() {
     let c = b - a;
     assert(c.limbs == [0, 0, 0]);
 }
+
+#[test]
+fn test_cmp_BN() {
+    let mut a: BN254_Fq = BigNum::modulus();
+    let mut b: BN254_Fq = BigNum::modulus();
+
+    a.limbs[0] -= 2;
+    b.limbs[0] -= 1;
+
+    assert(a < b);
+}
+
+#[test(should_fail_with = "Failed constraint")]
+fn test_cmp_BN_fail() {
+    let mut a: BN254_Fq = BigNum::modulus();
+    let mut b: BN254_Fq = BigNum::modulus();
+
+    a.limbs[0] -= 1;
+    b.limbs[0] -= 2;
+
+    assert(a < b);
+}
+
+#[test]
+fn test_cmp_BN_2() {
+    let mut a: BN254_Fq = BigNum::modulus();
+    let mut b: BN254_Fq = BigNum::modulus();
+
+    a.limbs[0] -= 1;
+    b.limbs[0] -= 2;
+
+    assert(a > b);
+}
+
+#[test(should_fail_with = "Failed constraint")]
+fn test_cmp_BN_fail_2() {
+    let mut a: BN254_Fq = BigNum::modulus();
+    let mut b: BN254_Fq = BigNum::modulus();
+
+    a.limbs[0] -= 2;
+    b.limbs[0] -= 1;
+
+    assert(a > b);
+}
+
+#[test]
+fn test_cmp_BN_fuzz(seed: [u8; 5]) {
+    let mut a: BN254_Fq = BigNum::derive_from_seed(seed);
+    let modulus_sub_1_div_2 = (BN254_Fq::modulus() - BN254_Fq::one()) / BN254_Fq::from(2);
+
+    a = if a > modulus_sub_1_div_2 { -a } else { a };
+    assert(a < modulus_sub_1_div_2);
+}
