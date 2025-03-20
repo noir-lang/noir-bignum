@@ -18,4 +18,4 @@ for artifact in $artifacts; do
     REPORTS=$(echo $OP_CODE_INFO | jq -c '.programs[0] | del(.functions)' | jq -c --argjson old_reports $REPORTS '$old_reports + [.]')
 done
 
-echo $REPORTS | jq '{ programs: . }' > opcode_report.json
+echo $REPORTS | jq '{ programs: . }' > brillig_report.json
