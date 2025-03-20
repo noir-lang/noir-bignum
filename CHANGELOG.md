@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/noir-lang/noir-bignum/compare/v0.6.0...v0.6.1) (2025-03-11)
+
+
+### Features
+
+* Add comparison operators ([#130](https://github.com/noir-lang/noir-bignum/issues/130)) ([ad90979](https://github.com/noir-lang/noir-bignum/commit/ad9097927f7844dc4549e4e4322c8fed110342e8))
+
 ## [0.6.0](https://github.com/noir-lang/noir-bignum/compare/v0.5.4...v0.6.0) (2025-02-25)
 
 
