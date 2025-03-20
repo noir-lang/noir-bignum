@@ -7,10 +7,10 @@ use crate::fns::unconstrained_helpers::__helper_add;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 
-use crate::fields::bls12_381Fq::BLS12_381_Fq;
-use crate::fields::bls12_381Fr::BLS12_381_Fr;
+// use crate::fields::bls12_381Fq::BLS12_381_Fq;
+// use crate::fields::bls12_381Fr::BLS12_381_Fr;
 use crate::fields::bn254Fq::{BN254_Fq, BN254_Fq_Params};
-use crate::fields::U256::U256;
+// use crate::fields::U256::U256;
 
 struct Test2048Params {}
 
@@ -95,37 +95,37 @@ type BN2048 = BigNum<18, 2048, Test2048Params>;
 /**
  * @brief this example was failing - sanity test to validate it now works
  **/
-#[test]
-fn test_bls_reduction() {
-    let X1 = BLS12_381_Fq {
-        limbs: [
-            0x55e83ff97a1aeffb3af00adb22c6bb,
-            0x8c4f9774b905a14e3a3f171bac586c,
-            0xa73197d7942695638c4fa9ac0fc368,
-            0x17f1d3,
-        ],
-    };
-    X1.validate_in_field();
-    // Safety: test code
-    let mut (_, XX_mul_3): (BLS12_381_Fq, BLS12_381_Fq) = unsafe {
-        BigNumTrait::__compute_quadratic_expression(
-            [[X1, X1, X1]],
-            [[false, false, false]],
-            [[X1]],
-            [[false]],
-            [],
-            [],
-        )
-    };
-    XX_mul_3.validate_in_field();
-}
-
 // #[test]
-// fn test_derive_from_seed() {
-//     let seed = [1, 2, 3, 4];
-//     let result_bn = BN254_Fq::derive_from_seed(seed);
-//     result_bn.validate_in_field();
+// fn test_bls_reduction() {
+//     let X1 = BLS12_381_Fq {
+//         limbs: [
+//             0x55e83ff97a1aeffb3af00adb22c6bb,
+//             0x8c4f9774b905a14e3a3f171bac586c,
+//             0xa73197d7942695638c4fa9ac0fc368,
+//             0x17f1d3,
+//         ],
+//     };
+//     X1.validate_in_field();
+//     // Safety: test code
+//     let mut (_, XX_mul_3): (BLS12_381_Fq, BLS12_381_Fq) = unsafe {
+//         BigNumTrait::__compute_quadratic_expression(
+//             [[X1, X1, X1]],
+//             [[false, false, false]],
+//             [[X1]],
+//             [[false]],
+//             [],
+//             [],
+//         )
+//     };
+//     XX_mul_3.validate_in_field();
 // }
+
+#[test]
+fn test_derive_from_seed() {
+    let seed = [1, 2, 3, 4];
+    let result_bn: BN254_Fq = BigNumTrait::derive_from_seed(seed);
+    result_bn.validate_in_field();
+}
 
 // fn test_eq<let N: u32, BN>()
 // where

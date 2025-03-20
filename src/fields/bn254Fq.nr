@@ -28,7 +28,9 @@ pub struct BN254_Fq {
     limbs: [u128; 3],
 }
 
-#[make_bignum_impls(3, 254, quote {BN254_Fq}, quote {BN254_Fq_Params})]
+#[make_bignum_impls(3, 254, quote {BN254_Fq}, quote {BN254_Fq_PARAMS})]
 pub mod BN254_Fq_impls {
     use crate::bignum::BigNumTrait;
+    use super::BN254_Fq;
+    use super::BN254_Fq_PARAMS;
 }

@@ -33,8 +33,10 @@ impl BigNumParamsGetter<3, 256> for Secp256r1_Fr {
     }
 }
 
-#[make_bignum_impls(3, 256, quote {Secp256r1_Fr}, quote {Secp256r1_Fr_Params})]
+#[make_bignum_impls(3, 256, quote {Secp256r1_Fr}, quote {Secp256r1_Fr_PARAMS})]
 pub mod Secp256r1_Fr_impls {
     use crate::bignum::BigNumTrait;
-    use super::{Secp256r1_Fr, Secp256r1_Fr_Params};
+    use super::Secp256r1_Fr;
+    use super::Secp256r1_Fr_PARAMS;
+    // use super::{Secp256r1_Fr, Secp256r1_Fr_PARAMS};
 }
