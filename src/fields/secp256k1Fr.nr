@@ -1,10 +1,11 @@
 use crate::bignum::BigNum;
+use crate::bignum::make_bignum_impls;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 
 pub struct Secp256k1_Fr_Params {}
 
-pub type Secp256k1_Fr = BigNum<3, 256, Secp256k1_Fr_Params>;
+// pub type Secp256k1_Fr = BigNum<3, 256, Secp256k1_Fr_Params>;
 
 impl BigNumParamsGetter<3, 256> for Secp256k1_Fr_Params {
     fn get_params() -> BigNumParams<3, 256> {
@@ -22,3 +23,12 @@ pub global Secp256k1_Fr_PARAMS: BigNumParams<3, 256> = BigNumParams {
     ],
     redc_param: [0x1231950b75fc4402da1732fc9bec09, 0x1455, 0x100000],
 };
+
+pub struct Secp256k1_Fr {
+    limbs: [u128; 3],
+}
+
+#[make_bignum_impls(3, 256, quote {Secp256k1_Fr}, quote {Secp256k1_Fr_Params})]
+pub mod Secp256k1_Fr_impls {
+    use crate::bignum::BigNumTrait;
+}

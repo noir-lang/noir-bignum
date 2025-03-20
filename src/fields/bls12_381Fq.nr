@@ -15,12 +15,13 @@
 //! * G1 curve equation: y^2 = x^3 + 4
 //! * G2 curve equation: y^2 = x^3 + Fq2(4, 4)
 use crate::bignum::BigNum;
+use crate::bignum::make_bignum_impls;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 
 pub struct BLS12_381_Fq_Params {}
 
-pub type BLS12_381_Fq = BigNum<4, 381, BLS12_381_Fq_Params>;
+// pub type BLS12_381_Fq = BigNum<4, 381, BLS12_381_Fq_Params>;
 
 impl BigNumParamsGetter<4, 381> for BLS12_381_Fq_Params {
     fn get_params() -> BigNumParams<4, 381> {
@@ -49,3 +50,12 @@ pub global BLS12_381_Fq_PARAMS: BigNumParams<4, 381> = BigNumParams {
         0x02760d74,
     ],
 };
+
+pub struct BLS12_381_Fq {
+    limbs: [u128; 4],
+}
+
+#[make_bignum_impls(4, 381, quote {BLS12_381_Fq}, quote {BLS12_381_Fq_Params})]
+pub mod BLS12_381_Fq_impls {
+    use crate::bignum::BigNumTrait;
+}

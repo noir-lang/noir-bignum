@@ -1,10 +1,11 @@
 use crate::bignum::BigNum;
+use crate::bignum::make_bignum_impls;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 
 pub struct ED25519_Fr_Params {}
 
-pub type ED25519_Fr = BigNum<3, 255, ED25519_Fr_Params>;
+// pub type ED25519_Fr = BigNum<3, 255, ED25519_Fr_Params>;
 
 impl BigNumParamsGetter<3, 255> for ED25519_Fr_Params {
     fn get_params() -> BigNumParams<3, 255> {
@@ -22,3 +23,12 @@ pub global ED25519_Fr_PARAMS: BigNumParams<3, 255> = BigNumParams {
     ],
     redc_param: [0x4188574218ca69fb673968c28b04c6, 0xfffffffffffffffffffffffffffac8, 0x03ffff],
 };
+
+pub struct ED25519_Fr {
+    limbs: [u128; 3],
+}
+
+#[make_bignum_impls(3, 255, quote {ED25519_Fr}, quote {ED25519_Fr_Params})]
+pub mod ED25519_Fr_impls {
+    use crate::bignum::BigNumTrait;
+}
