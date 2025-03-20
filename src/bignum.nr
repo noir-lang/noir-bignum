@@ -1,7 +1,9 @@
 use crate::utils::map::map;
 use std::cmp::Ordering;
 
-use crate::params::BigNumParamsGetter;
+use crate::params::{BigNumParams, BigNumParamsGetter};
+
+use crate::fields::bn254Fq::BN254_Fq;
 
 use crate::fns::{
     constrained_ops::{
@@ -88,19 +90,17 @@ pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
     fn is_zero(self) -> bool;
 }
 
-pub(crate) trait LimbedObject<let N: u32> {
+pub(crate) trait LimbedObject<let N: u32, let MOD_BITS: u32> {
     fn from_limbs(limbs: [u128; N]) -> Self;
     fn get_limbs(self) -> [u128; N];
     fn set_limb(self: &mut Self, idx: u32, value: u128);
+    fn params() -> BigNumParams<N, MOD_BITS>;
 }
 
-impl<T, let N: u32, let MOD_BITS: u32, Params> BigNumTrait for T
+impl<T, let N: u32, let MOD_BITS: u32> BigNumTrait for T
 where
-    T: Neg + Add + Sub + Mul + Div + Eq + LimbedObject<N>,
-    T: BigNumTrait,
-    Params: BigNumParamsGetter<N, MOD_BITS>,
+    T: Neg + Add + Sub + Mul + Div + Eq + LimbedObject<N, MOD_BITS>,
 {
-
     fn new() -> Self {
         Self::zero()
     }
@@ -116,12 +116,12 @@ where
     }
 
     fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self {
-        let params = Params::get_params();
+        let params = T::params();
         T::from_limbs(derive_from_seed::<_, MOD_BITS, _>(params, seed))
     }
 
     unconstrained fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self {
-        let params = Params::get_params();
+        let params = T::params();
         T::from_limbs(__derive_from_seed::<_, MOD_BITS, _>(params, seed))
     }
 
@@ -138,7 +138,7 @@ where
     }
 
     fn modulus() -> Self {
-        T::from_limbs(Params::get_params().modulus)
+        T::from_limbs(T::params().modulus)
     }
 
     fn modulus_bits(_: Self) -> u32 {
@@ -166,29 +166,29 @@ where
     }
 
     unconstrained fn __neg(self) -> Self {
-        let params = Params::get_params();
+        let params = T::params();
         T::from_limbs(__neg(params, self.get_limbs()))
     }
 
     unconstrained fn __add(self, other: Self) -> Self {
-        let params = Params::get_params();
+        let params = T::params();
         T::from_limbs(__add(params, self.get_limbs(), other.get_limbs()))
     }
 
     unconstrained fn __sub(self, other: Self) -> Self {
-        let params = Params::get_params();
+        let params = T::params();
         T::from_limbs(__sub(params, self.get_limbs(), other.get_limbs()))
     }
 
     unconstrained fn __mul(self, other: Self) -> Self {
-        let params = Params::get_params();
+        let params = T::params();
         T::from_limbs(
             __mul::<_, MOD_BITS>(params, self.get_limbs(), other.get_limbs()),
         )
     }
 
     unconstrained fn __div(self, divisor: Self) -> Self {
-        let params = Params::get_params();
+        let params = T::params();
         T::from_limbs(
             __div::<_, MOD_BITS>(params, self.get_limbs(), divisor.get_limbs()),
         )
@@ -200,20 +200,20 @@ where
     }
 
     unconstrained fn __invmod(self) -> Self {
-        let params = Params::get_params();
+        let params = T::params();
         assert(params.has_multiplicative_inverse);
         T::from_limbs(__invmod::<_, MOD_BITS>(params, self.get_limbs()))
     }
 
     unconstrained fn __pow(self, exponent: Self) -> Self {
-        let params = Params::get_params();
+        let params = T::params();
         T::from_limbs(
             __pow::<_, MOD_BITS>(params, self.get_limbs(), exponent.get_limbs()),
         )
     }
 
     unconstrained fn __batch_invert<let M: u32>(x: [Self; M]) -> [Self; M] {
-        let params = Params::get_params();
+        let params = T::params();
         assert(params.has_multiplicative_inverse);
         __batch_invert::<_, MOD_BITS, _>(params, x.map(|bn: Self| bn.get_limbs())).map(|limbs| {
             T::from_limbs(limbs)
@@ -221,7 +221,7 @@ where
     }
 
     unconstrained fn __batch_invert_slice<let M: u32>(x: [Self]) -> [Self] {
-        let params = Params::get_params();
+        let params = T::params();
         assert(params.has_multiplicative_inverse);
         __batch_invert_slice::<_, MOD_BITS>(params, x.map(|bn: Self| bn.get_limbs())).map(|limbs| {
             T::from_limbs(limbs)
@@ -229,7 +229,7 @@ where
     }
 
     unconstrained fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self> {
-        let params = Params::get_params();
+        let params = T::params();
         let maybe_limbs = __tonelli_shanks_sqrt(params, self.get_limbs());
         maybe_limbs.map(|limbs| T::from_limbs(limbs))
     }
@@ -242,7 +242,7 @@ where
         linear_terms: [Self; ADD_N],
         linear_flags: [bool; ADD_N],
     ) -> (Self, Self) {
-        let params = Params::get_params();
+        let params = T::params();
         let (q_limbs, r_limbs) = __compute_quadratic_expression::<_, MOD_BITS, _, _, _, _>(
             params,
             map(lhs_terms, |bns| map(bns, |bn: Self| bn.get_limbs())),
@@ -263,7 +263,7 @@ where
         linear_terms: [Self; ADD_N],
         linear_flags: [bool; ADD_N],
     ) {
-        let params = Params::get_params();
+        let params = T::params();
         evaluate_quadratic_expression::<_, MOD_BITS, _, _, _, _>(
             params,
             map(lhs_terms, |bns| map(bns, |bn: Self| bn.get_limbs())),
@@ -276,7 +276,7 @@ where
     }
 
     fn validate_in_field(self: Self) {
-        let params = Params::get_params();
+        let params = T::params();
         validate_in_field::<_, MOD_BITS>(params, self.get_limbs());
     }
 
@@ -285,25 +285,25 @@ where
     }
 
     fn assert_is_not_equal(self, other: Self) {
-        let params = Params::get_params();
+        let params = T::params();
         assert_is_not_equal(params, self.get_limbs(), other.get_limbs());
     }
 
     fn udiv_mod(self, divisor: Self) -> (Self, Self) {
-        let params = Params::get_params();
+        let params = T::params();
         let (q, r) = udiv_mod::<_, MOD_BITS>(params, self.get_limbs(), divisor.get_limbs());
         (T::from_limbs(q), T::from_limbs(r))
     }
 
     fn udiv(self, divisor: Self) -> Self {
-        let params = Params::get_params();
+        let params = T::params();
         T::from_limbs(
             udiv::<_, MOD_BITS>(params, self.get_limbs(), divisor.get_limbs()),
         )
     }
 
     fn umod(self, divisor: Self) -> Self {
-        let params = Params::get_params();
+        let params = T::params();
         T::from_limbs(
             umod::<_, MOD_BITS>(params, self.get_limbs(), divisor.get_limbs()),
         )
@@ -322,10 +322,9 @@ where
 
 // we need macros that implement the LimbedObject, Default, From, Neg, Add, Sub, Mul, Div, Eq, Ord traits for BigNum
 pub(crate) comptime fn make_bignum_impls(
-    _m: Module,
+    strukt: TypeDefinition,
     N: u32,
     MOD_BITS: u32,
-    typ: Quoted,
     params: Quoted,
 ) -> Quoted {
     // let BigNumTrait = quote { crate::bignum::BigNumTrait };
@@ -340,12 +339,11 @@ pub(crate) comptime fn make_bignum_impls(
     let Ord = quote { std::cmp::Ord };
     let constrained_ops = quote { crate::fns::constrained_ops };
     let Ordering = quote { std::cmp::Ordering };
-    let BigNumTrait = quote { crate::bignum::BigNumTrait };
+    let typ = strukt.as_type();
 
     quote {
         // implement LimbedObject for BigNum 
-        impl $LimbedObject<$N> for $typ
-        {
+        impl $LimbedObject<$N, $MOD_BITS> for $typ {
             fn from_limbs(limbs: [u128; $N]) -> Self {
                 $typ { limbs }
             }
@@ -357,12 +355,16 @@ pub(crate) comptime fn make_bignum_impls(
             fn set_limb(self: &mut Self, idx: u32, value: u128) {
                 self.limbs[idx] = value;
             }
+
+            fn params() -> crate::params::BigNumParams<$N, $MOD_BITS> {
+                $params
+            }
         }
 
         // implement Default for BigNum
-        impl Default for $typ{
+        impl Default for $typ {
             fn default() -> Self {
-                $typ.zero()
+                $LimbedObject::from_limbs([0; $N])
             }
         }
 
