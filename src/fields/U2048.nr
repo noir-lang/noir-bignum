@@ -1,7 +1,7 @@
 use crate::bignum::BigNum;
+use crate::bignum::make_bignum_impls;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
-
 pub struct U2048Params {}
 
 pub type U2048 = BigNum<18, 2049, U2048Params>;
@@ -43,3 +43,12 @@ pub global U2048_PARAMS: BigNumParams<18, 2049> = BigNumParams {
         0x00, 0x00, 0x4000,
     ],
 };
+
+pub struct U2048 {
+    limbs: [u128; 18],
+}
+
+#[make_bignum_impls(18, 2049, quote {U2048}, quote {U2048Params})]
+pub mod U2048_impls {
+    use crate::bignum::BigNumTrait;
+}

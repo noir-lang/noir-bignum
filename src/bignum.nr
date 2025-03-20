@@ -40,7 +40,6 @@ pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
     fn num_limbs(self) -> u32;
     fn get_limbs_slice(self) -> [u128];
     fn get_limb(self, idx: u32) -> u128;
-    fn set_limb(&mut self, idx: u32, value: u128);
 
     unconstrained fn __eq(self, other: Self) -> bool;
     unconstrained fn __is_zero(self) -> bool;
@@ -89,69 +88,57 @@ pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
     fn is_zero(self) -> bool;
 }
 
-impl<let N: u32, let MOD_BITS: u32, Params> std::convert::From<Field> for BigNum<N, MOD_BITS, Params>
-where
-    Params: BigNumParamsGetter<N, MOD_BITS>,
-{
-    fn from(input: Field) -> Self {
-        Self { limbs: from_field::<N, MOD_BITS>(input) }
-    }
+pub(crate) trait LimbedObject<let N: u32> {
+    fn from_limbs(limbs: [u128; N]) -> Self;
+    fn get_limbs(self) -> [u128; N];
+    fn set_limb(self: &mut Self, idx: u32, value: u128);
 }
 
-impl<let N: u32, let MOD_BITS: u32, Params> Neg for BigNum<N, MOD_BITS, Params>
+impl<T, let N: u32, let MOD_BITS: u32, Params> BigNumTrait for T
 where
-    Params: BigNumParamsGetter<N, MOD_BITS>,
-{
-    fn neg(self) -> Self {
-        let params = Params::get_params();
-        Self { limbs: neg::<_, MOD_BITS>(params, self.limbs) }
-    }
-}
-
-impl<let N: u32, let MOD_BITS: u32, Params> BigNumTrait for BigNum<N, MOD_BITS, Params>
-where
+    T: Neg + Add + Sub + Mul + Div + Eq + LimbedObject<N>,
+    T: BigNumTrait,
     Params: BigNumParamsGetter<N, MOD_BITS>,
 {
 
-    #[deprecated("`BigNum::zero()` is preferred")]
     fn new() -> Self {
         Self::zero()
     }
 
     fn zero() -> Self {
-        Self { limbs: [0; N] }
+        T::from_limbs([0; N])
     }
 
     fn one() -> Self {
-        let mut result = BigNum::zero();
-        result.limbs[0] = 1;
-        result
+        let mut limbs = [0; N];
+        limbs[0] = 1;
+        T::from_limbs(limbs)
     }
 
     fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self {
         let params = Params::get_params();
-        Self { limbs: derive_from_seed::<_, MOD_BITS, _>(params, seed) }
+        T::from_limbs(derive_from_seed::<_, MOD_BITS, _>(params, seed))
     }
 
     unconstrained fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self {
         let params = Params::get_params();
-        Self { limbs: __derive_from_seed::<_, MOD_BITS, _>(params, seed) }
+        T::from_limbs(__derive_from_seed::<_, MOD_BITS, _>(params, seed))
     }
 
     fn from_slice(limbs: [u128]) -> Self {
-        Self { limbs: limbs.as_array() }
+        T::from_limbs(limbs.as_array())
     }
 
     fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> Self {
-        Self { limbs: from_be_bytes::<_, MOD_BITS, _>(x) }
+        T::from_limbs(from_be_bytes::<_, MOD_BITS, _>(x))
     }
 
-    fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes] {
-        to_le_bytes::<_, MOD_BITS, _>(self.limbs)
+    fn to_le_bytes<let NBytes: u32>(self: Self) -> [u8; NBytes] {
+        to_le_bytes::<_, MOD_BITS, _>(self.get_limbs())
     }
 
     fn modulus() -> Self {
-        Self { limbs: Params::get_params().modulus }
+        T::from_limbs(Params::get_params().modulus)
     }
 
     fn modulus_bits(_: Self) -> u32 {
@@ -162,87 +149,89 @@ where
         N
     }
 
-    fn get_limbs_slice(self) -> [u128] {
-        self.limbs
+    fn get_limbs_slice(self: T) -> [u128] {
+        self.get_limbs()
     }
 
-    fn get_limb(self, idx: u32) -> u128 {
-        self.limbs[idx]
-    }
-
-    fn set_limb(&mut self, idx: u32, value: u128) {
-        self.limbs[idx] = value;
+    fn get_limb(self: T, idx: u32) -> u128 {
+        self.get_limbs()[idx]
     }
 
     unconstrained fn __eq(self, other: Self) -> bool {
-        __eq(self.limbs, other.limbs)
+        __eq(self.get_limbs(), other.get_limbs())
     }
 
     unconstrained fn __is_zero(self) -> bool {
-        __is_zero(self.limbs)
+        __is_zero(self.get_limbs())
     }
 
     unconstrained fn __neg(self) -> Self {
         let params = Params::get_params();
-        Self { limbs: __neg(params, self.limbs) }
+        T::from_limbs(__neg(params, self.get_limbs()))
     }
 
     unconstrained fn __add(self, other: Self) -> Self {
         let params = Params::get_params();
-        Self { limbs: __add(params, self.limbs, other.limbs) }
+        T::from_limbs(__add(params, self.get_limbs(), other.get_limbs()))
     }
 
     unconstrained fn __sub(self, other: Self) -> Self {
         let params = Params::get_params();
-        Self { limbs: __sub(params, self.limbs, other.limbs) }
+        T::from_limbs(__sub(params, self.get_limbs(), other.get_limbs()))
     }
 
     unconstrained fn __mul(self, other: Self) -> Self {
         let params = Params::get_params();
-        Self { limbs: __mul::<_, MOD_BITS>(params, self.limbs, other.limbs) }
+        T::from_limbs(
+            __mul::<_, MOD_BITS>(params, self.get_limbs(), other.get_limbs()),
+        )
     }
 
     unconstrained fn __div(self, divisor: Self) -> Self {
         let params = Params::get_params();
-        Self { limbs: __div::<_, MOD_BITS>(params, self.limbs, divisor.limbs) }
+        T::from_limbs(
+            __div::<_, MOD_BITS>(params, self.get_limbs(), divisor.get_limbs()),
+        )
     }
 
     unconstrained fn __udiv_mod(self, divisor: Self) -> (Self, Self) {
-        let (q, r) = __udiv_mod(self.limbs, divisor.limbs);
-        (Self { limbs: q }, Self { limbs: r })
+        let (q, r) = __udiv_mod(self.get_limbs(), divisor.get_limbs());
+        (T::from_limbs(q), T::from_limbs(r))
     }
 
     unconstrained fn __invmod(self) -> Self {
         let params = Params::get_params();
         assert(params.has_multiplicative_inverse);
-        Self { limbs: __invmod::<_, MOD_BITS>(params, self.limbs) }
+        T::from_limbs(__invmod::<_, MOD_BITS>(params, self.get_limbs()))
     }
 
     unconstrained fn __pow(self, exponent: Self) -> Self {
         let params = Params::get_params();
-        Self { limbs: __pow::<_, MOD_BITS>(params, self.limbs, exponent.limbs) }
+        T::from_limbs(
+            __pow::<_, MOD_BITS>(params, self.get_limbs(), exponent.get_limbs()),
+        )
     }
 
     unconstrained fn __batch_invert<let M: u32>(x: [Self; M]) -> [Self; M] {
         let params = Params::get_params();
         assert(params.has_multiplicative_inverse);
-        __batch_invert::<_, MOD_BITS, _>(params, x.map(|bn: Self| bn.limbs)).map(|limbs| {
-            Self { limbs }
+        __batch_invert::<_, MOD_BITS, _>(params, x.map(|bn: Self| bn.get_limbs())).map(|limbs| {
+            T::from_limbs(limbs)
         })
     }
 
     unconstrained fn __batch_invert_slice<let M: u32>(x: [Self]) -> [Self] {
         let params = Params::get_params();
         assert(params.has_multiplicative_inverse);
-        __batch_invert_slice::<_, MOD_BITS>(params, x.map(|bn: Self| bn.limbs)).map(|limbs| {
-            Self { limbs }
+        __batch_invert_slice::<_, MOD_BITS>(params, x.map(|bn: Self| bn.get_limbs())).map(|limbs| {
+            T::from_limbs(limbs)
         })
     }
 
     unconstrained fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self> {
         let params = Params::get_params();
-        let maybe_limbs = __tonelli_shanks_sqrt(params, self.limbs);
-        maybe_limbs.map(|limbs| Self { limbs })
+        let maybe_limbs = __tonelli_shanks_sqrt(params, self.get_limbs());
+        maybe_limbs.map(|limbs| T::from_limbs(limbs))
     }
 
     unconstrained fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
@@ -256,14 +245,14 @@ where
         let params = Params::get_params();
         let (q_limbs, r_limbs) = __compute_quadratic_expression::<_, MOD_BITS, _, _, _, _>(
             params,
-            map(lhs_terms, |bns| map(bns, |bn: Self| bn.limbs)),
+            map(lhs_terms, |bns| map(bns, |bn: Self| bn.get_limbs())),
             lhs_flags,
-            map(rhs_terms, |bns| map(bns, |bn: Self| bn.limbs)),
+            map(rhs_terms, |bns| map(bns, |bn: Self| bn.get_limbs())),
             rhs_flags,
-            map(linear_terms, |bn: Self| bn.limbs),
+            map(linear_terms, |bn: Self| bn.get_limbs()),
             linear_flags,
         );
-        (Self { limbs: q_limbs }, Self { limbs: r_limbs })
+        (T::from_limbs(q_limbs), T::from_limbs(r_limbs))
     }
 
     fn evaluate_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
@@ -277,139 +266,166 @@ where
         let params = Params::get_params();
         evaluate_quadratic_expression::<_, MOD_BITS, _, _, _, _>(
             params,
-            map(lhs_terms, |bns| map(bns, |bn: Self| bn.limbs)),
+            map(lhs_terms, |bns| map(bns, |bn: Self| bn.get_limbs())),
             lhs_flags,
-            map(rhs_terms, |bns| map(bns, |bn: Self| bn.limbs)),
+            map(rhs_terms, |bns| map(bns, |bn: Self| bn.get_limbs())),
             rhs_flags,
-            map(linear_terms, |bn: Self| bn.limbs),
+            map(linear_terms, |bn: Self| bn.get_limbs()),
             linear_flags,
         )
     }
 
     fn validate_in_field(self: Self) {
         let params = Params::get_params();
-        validate_in_field::<_, MOD_BITS>(params, self.limbs);
+        validate_in_field::<_, MOD_BITS>(params, self.get_limbs());
     }
 
     fn validate_in_range(self) {
-        validate_in_range::<_, _, MOD_BITS>(self.limbs);
+        validate_in_range::<_, _, MOD_BITS>(self.get_limbs());
     }
 
     fn assert_is_not_equal(self, other: Self) {
         let params = Params::get_params();
-        assert_is_not_equal(params, self.limbs, other.limbs);
+        assert_is_not_equal(params, self.get_limbs(), other.get_limbs());
     }
 
     fn udiv_mod(self, divisor: Self) -> (Self, Self) {
         let params = Params::get_params();
-        let (q, r) = udiv_mod::<_, MOD_BITS>(params, self.limbs, divisor.limbs);
-        (Self { limbs: q }, Self { limbs: r })
+        let (q, r) = udiv_mod::<_, MOD_BITS>(params, self.get_limbs(), divisor.get_limbs());
+        (T::from_limbs(q), T::from_limbs(r))
     }
 
     fn udiv(self, divisor: Self) -> Self {
         let params = Params::get_params();
-        Self { limbs: udiv::<_, MOD_BITS>(params, self.limbs, divisor.limbs) }
+        T::from_limbs(
+            udiv::<_, MOD_BITS>(params, self.get_limbs(), divisor.get_limbs()),
+        )
     }
 
     fn umod(self, divisor: Self) -> Self {
         let params = Params::get_params();
-        Self { limbs: umod::<_, MOD_BITS>(params, self.limbs, divisor.limbs) }
+        T::from_limbs(
+            umod::<_, MOD_BITS>(params, self.get_limbs(), divisor.get_limbs()),
+        )
     }
 
     fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self {
-        Self { limbs: conditional_select(lhs.limbs, rhs.limbs, predicate) }
+        T::from_limbs(
+            conditional_select(lhs.get_limbs(), rhs.get_limbs(), predicate),
+        )
     }
 
     fn is_zero(self) -> bool {
-        is_zero::<N, MOD_BITS>(self.limbs)
+        is_zero::<N, MOD_BITS>(self.get_limbs())
     }
 }
 
-impl<let N: u32, let MOD_BITS: u32, Params> Default for BigNum<N, MOD_BITS, Params>
-where
-    Params: BigNumParamsGetter<N, MOD_BITS>,
-{
-    fn default() -> Self {
-        Self::zero()
+// we need macros that implement the LimbedObject, Default, From, Neg, Add, Sub, Mul, Div, Eq, Ord traits for BigNum
+pub(crate) comptime fn make_bignum_impls(
+    _m: Module,
+    N: u32,
+    MOD_BITS: u32,
+    typ: Quoted,
+    params: Quoted,
+) -> Quoted {
+    // let BigNumTrait = quote { crate::bignum::BigNumTrait };
+    let LimbedObject = quote { crate::bignum::LimbedObject };
+    let From = quote { std::convert::From };
+    let Neg = quote { std::ops::Neg };
+    let Add = quote { std::ops::Add };
+    let Sub = quote { std::ops::Sub };
+    let Mul = quote { std::ops::Mul };
+    let Div = quote { std::ops::Div };
+    let Eq = quote { std::cmp::Eq };
+    let Ord = quote { std::cmp::Ord };
+    let constrained_ops = quote { crate::fns::constrained_ops };
+    let Ordering = quote { std::cmp::Ordering };
+    let BigNumTrait = quote { crate::bignum::BigNumTrait };
+
+    quote {
+        // implement LimbedObject for BigNum 
+        impl $LimbedObject<$N> for $typ
+        {
+            fn from_limbs(limbs: [u128; $N]) -> Self {
+                $typ { limbs }
+            }
+
+            fn get_limbs(self: Self) -> [u128; $N] {
+                self.limbs
+            }
+
+            fn set_limb(self: &mut Self, idx: u32, value: u128) {
+                self.limbs[idx] = value;
+            }
+        }
+
+        // implement Default for BigNum
+        impl Default for $typ{
+            fn default() -> Self {
+                $typ.zero()
+            }
+        }
+
+        // implement From for BigNum
+        impl $From<[u128; $N]> for $typ {
+            fn from(limbs: [u128; $N]) -> Self {
+                $typ { limbs }
+            }
+        }
+
+        impl $From<Field> for $typ {
+            fn from(input: Field) -> Self {
+                $typ { limbs: $constrained_ops::from_field::<$N, $MOD_BITS>(input) }
+            }
+        }
+
+        impl $Neg for $typ {
+            fn neg(self) -> Self {
+                $typ { limbs: $constrained_ops::neg::<$N, $MOD_BITS>($params, self.limbs) }
+            }
+        }
+
+        impl $Add for $typ {
+            fn add(self, other: Self) -> Self {
+                $typ { limbs: $constrained_ops::add::<$N, $MOD_BITS>($params, self.limbs, other.limbs) }
+            }
+        }
+
+        impl $Sub for $typ {
+            fn sub(self, other: Self) -> Self {
+                $typ { limbs: $constrained_ops::sub::<$N, $MOD_BITS>($params, self.limbs, other.limbs) }
+            }
+        }
+
+        impl $Mul for $typ {
+            fn mul(self, other: Self) -> Self {
+                $typ { limbs: $constrained_ops::mul::<$N, $MOD_BITS>($params, self.limbs, other.limbs) }
+            }
+        }
+
+        impl $Div for $typ {
+            fn div(self, other: Self) -> Self {
+                $typ { limbs: $constrained_ops::div::<$N, $MOD_BITS>($params, self.limbs, other.limbs) }
+            }
+        }
+
+        impl $Eq for $typ {
+            fn eq(self, other: Self) -> bool {
+                self.limbs == other.limbs
+            }
+        }
+
+        impl $Ord for $typ {
+            fn cmp(self, other: Self) -> $Ordering {
+                $constrained_ops::cmp::<$N, $MOD_BITS>(self.limbs, other.limbs)
+            }
+        }
+
+        
+
     }
 }
 
-impl<let N: u32, let MOD_BITS: u32, Params> std::ops::Add for BigNum<N, MOD_BITS, Params>
-where
-    Params: BigNumParamsGetter<N, MOD_BITS>,
-{
-    // Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
-    //       via evaluate_quadratic_expression
-    fn add(self, other: Self) -> Self {
-        let params = Params::get_params();
-        Self { limbs: add::<_, MOD_BITS>(params, self.limbs, other.limbs) }
-    }
-}
-
-impl<let N: u32, let MOD_BITS: u32, Params> std::ops::Sub for BigNum<N, MOD_BITS, Params>
-where
-    Params: BigNumParamsGetter<N, MOD_BITS>,
-{
-    // Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
-    //       via evaluate_quadratic_expression
-    fn sub(self, other: Self) -> Self {
-        let params = Params::get_params();
-        Self { limbs: sub::<_, MOD_BITS>(params, self.limbs, other.limbs) }
-    }
-}
-
-impl<let N: u32, let MOD_BITS: u32, Params> std::ops::Mul for BigNum<N, MOD_BITS, Params>
-where
-    Params: BigNumParamsGetter<N, MOD_BITS>,
-{
-    // Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
-    //       via evaluate_quadratic_expression
-    // e.g. performing a sum of multiple multiplications and additions via `evaluate_quadratic_expression`
-    //      will create much fewer constraints than calling `mul` and `add` directly
-    fn mul(self, other: Self) -> Self {
-        let params = Params::get_params();
-        Self { limbs: mul::<_, MOD_BITS>(params, self.limbs, other.limbs) }
-    }
-}
-
-impl<let N: u32, let MOD_BITS: u32, Params> std::ops::Div for BigNum<N, MOD_BITS, Params>
-where
-    Params: BigNumParamsGetter<N, MOD_BITS>,
-{
-    // Note: this method is expensive! Witness computation is extremely expensive as it requires modular exponentiation
-    fn div(self, other: Self) -> Self {
-        let params = Params::get_params();
-        Self { limbs: div::<_, MOD_BITS>(params, self.limbs, other.limbs) }
-    }
-}
-
-impl<let N: u32, let MOD_BITS: u32, Params> std::cmp::Eq for BigNum<N, MOD_BITS, Params>
-where
-    Params: BigNumParamsGetter<N, MOD_BITS>,
-{
-    fn eq(self, other: Self) -> bool {
-        let params = Params::get_params();
-        eq::<_, MOD_BITS>(params, self.limbs, other.limbs)
-    }
-}
-
-impl<let N: u32, let MOD_BITS: u32, Params> std::cmp::Ord for BigNum<N, MOD_BITS, Params>
-where
-    Params: BigNumParamsGetter<N, MOD_BITS>,
-{
-    fn cmp(self, other: Self) -> Ordering {
-        cmp::<_, MOD_BITS>(self.limbs, other.limbs)
-    }
-}
-
-/// `to_field` converts a BigNum to a Field, conditioned on the bignum fitting in a field element
-///
-/// we have opted to not add this to the BigNumTrait as it might lead to bad usage of it
-/// i.e. using this function with modulus larger than the Grumpkin modulus would lead to runtime errors, if the bignum is not deliberately picked to be in range, e.g. the bignum is the output of a hash function.
-/// for such use cases we advise developers to use comptime assertions to ensure the modulus is not larger than the Grumpkin modulus
-pub fn to_field<let N: u32, let MOD_BITS: u32, Params>(input: BigNum<N, MOD_BITS, Params>) -> Field
-where
-    Params: BigNumParamsGetter<N, MOD_BITS>,
-{
-    limbs_to_field(Params::get_params(), input.limbs)
-}
+// pub fn to_field<let N: u32, let MOD_BITS: u32, Params>(bn: BigNum<N, MOD_BITS, Params>) -> Field {
+//     to_field::<N, MOD_BITS, Params>(bn.get_limbs())
+// }

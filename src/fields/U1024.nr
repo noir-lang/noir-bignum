@@ -1,10 +1,11 @@
 use crate::bignum::BigNum;
+use crate::bignum::make_bignum_impls;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 
 pub struct U1024Params {}
 
-pub type U1024 = BigNum<9, 1025, U1024Params>;
+// pub type U1024 = BigNum<9, 1025, U1024Params>;
 
 impl BigNumParamsGetter<9, 1025> for U1024Params {
     fn get_params() -> BigNumParams<9, 1025> {
@@ -28,3 +29,12 @@ pub global U1024_PARAMS: BigNumParams<9, 1025> = BigNumParams {
     ],
     redc_param: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x400000000000000000],
 };
+
+pub struct U1024 {
+    limbs: [u128; 9],
+}
+
+#[make_bignum_impls(9, 1025, quote {U1024}, quote {U1024Params})]
+pub mod U1024_impls {
+    use crate::bignum::BigNumTrait;
+}
