@@ -41,13 +41,7 @@ pub global BLS12_377_Fr_PARAMS: BigNumParams<3, 253> = BigNumParams {
     redc_param: [0xa180b8d69e258f5204c21151e79ea1, 0x91ec40b2c9ee4e51e49faa80548fd0, 0x036d94],
 };
 
+#[make_bignum_impls(3, 253, quote {BLS12_377_Fr_PARAMS})]
 pub struct BLS12_377_Fr {
     limbs: [u128; 3],
 }
-
-#[make_bignum_impls(3, 253, quote {BLS12_377_Fr}, quote {BLS12_377_Fr_Params})]
-pub mod BLS12_377_Fr_impls {
-    use crate::bignum::BigNumTrait;
-}
-
-// pub type BLS12_377_Fr = BigNum<3, 253, BLS12_377_Fr_Params>;

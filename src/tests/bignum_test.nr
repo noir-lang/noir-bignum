@@ -1,16 +1,15 @@
-use crate::bignum::BigNum;
 use crate::bignum::BigNumTrait;
-// use crate::bignum::to_field;
-
+use crate::bignum::make_bignum_impls;
+use crate::bignum::to_field;
 use crate::fns::unconstrained_helpers::__helper_add;
 
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 
-// use crate::fields::bls12_381Fq::BLS12_381_Fq;
-// use crate::fields::bls12_381Fr::BLS12_381_Fr;
-use crate::fields::bn254Fq::{BN254_Fq, BN254_Fq_Params};
-// use crate::fields::U256::U256;
+use crate::fields::bls12_381Fq::BLS12_381_Fq;
+use crate::fields::bls12_381Fr::BLS12_381_Fr;
+use crate::fields::bn254Fq::BN254_Fq;
+use crate::fields::U256::U256;
 
 struct Test2048Params {}
 
@@ -90,35 +89,38 @@ impl BigNumParamsGetter<18, 2048> for Test2048Params {
     }
 }
 
-type BN2048 = BigNum<18, 2048, Test2048Params>;
+#[make_bignum_impls(18, 2048, quote {TEST_2048_PARAMS})]
+pub struct Test2048 {
+    limbs: [u128; 18],
+}
 
 /**
  * @brief this example was failing - sanity test to validate it now works
  **/
-// #[test]
-// fn test_bls_reduction() {
-//     let X1 = BLS12_381_Fq {
-//         limbs: [
-//             0x55e83ff97a1aeffb3af00adb22c6bb,
-//             0x8c4f9774b905a14e3a3f171bac586c,
-//             0xa73197d7942695638c4fa9ac0fc368,
-//             0x17f1d3,
-//         ],
-//     };
-//     X1.validate_in_field();
-//     // Safety: test code
-//     let mut (_, XX_mul_3): (BLS12_381_Fq, BLS12_381_Fq) = unsafe {
-//         BigNumTrait::__compute_quadratic_expression(
-//             [[X1, X1, X1]],
-//             [[false, false, false]],
-//             [[X1]],
-//             [[false]],
-//             [],
-//             [],
-//         )
-//     };
-//     XX_mul_3.validate_in_field();
-// }
+#[test]
+fn test_bls_reduction() {
+    let X1 = BLS12_381_Fq {
+        limbs: [
+            0x55e83ff97a1aeffb3af00adb22c6bb,
+            0x8c4f9774b905a14e3a3f171bac586c,
+            0xa73197d7942695638c4fa9ac0fc368,
+            0x17f1d3,
+        ],
+    };
+    X1.validate_in_field();
+    // Safety: test code
+    let mut (_, XX_mul_3): (BLS12_381_Fq, BLS12_381_Fq) = unsafe {
+        BigNumTrait::__compute_quadratic_expression(
+            [[X1, X1, X1]],
+            [[false, false, false]],
+            [[X1]],
+            [[false]],
+            [],
+            [],
+        )
+    };
+    XX_mul_3.validate_in_field();
+}
 
 #[test]
 fn test_derive_from_seed() {
@@ -127,171 +129,170 @@ fn test_derive_from_seed() {
     result_bn.validate_in_field();
 }
 
-// fn test_eq<let N: u32, BN>()
-// where
-//     BN: BigNumTrait,
-// {
-//     let a = BN::derive_from_seed([1, 2, 3, 4]);
-//     let b = BN::derive_from_seed([1, 2, 3, 4]);
-//     let c = BN::derive_from_seed([2, 2, 3, 4]);
+fn test_eq<let N: u32, BN>()
+where
+    BN: BigNumTrait,
+{
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let b = BN::derive_from_seed([1, 2, 3, 4]);
+    let c = BN::derive_from_seed([2, 2, 3, 4]);
 
-//     assert(a.eq(b) == true);
-//     assert(c.eq(b) == false);
-//     assert(c.eq(a) == false);
-// }
+    assert(a.eq(b) == true);
+    assert(c.eq(b) == false);
+    assert(c.eq(a) == false);
+}
 
-// fn test_is_zero<let N: u32, BN>()
-// where
-//     BN: BigNumTrait,
-// {
-//     let a = BN::derive_from_seed([1, 2, 3, 4]);
-//     let zero = BN::zero();
-//     assert(a.is_zero() == false);
-//     assert(zero.is_zero() == true);
-// }
+fn test_is_zero<let N: u32, BN>()
+where
+    BN: BigNumTrait,
+{
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let zero = BN::zero();
+    assert(a.is_zero() == false);
+    assert(zero.is_zero() == true);
+}
 
-// // // // 98760
-// // // // 99689
-// // // // 929 gates for a 2048 bit mul
-// fn test_mul<let N: u32, BN>()
-// where
-//     BN: BigNumTrait,
-// {
-//     let a: BN = BN::derive_from_seed([1, 2, 3, 4]);
-//     let b: BN = BN::derive_from_seed([4, 5, 6, 7]);
-//     let c = (a + b) * (a + b);
-//     let d = (a * a) + (b * b) + (a * b) + (a * b);
-//     assert(c.eq(d));
-// }
+// // // 98760
+// // // 99689
+// // // 929 gates for a 2048 bit mul
+fn test_mul<let N: u32, BN>()
+where
+    BN: BigNumTrait,
+{
+    let a: BN = BN::derive_from_seed([1, 2, 3, 4]);
+    let b: BN = BN::derive_from_seed([4, 5, 6, 7]);
+    let c = (a + b) * (a + b);
+    let d = (a * a) + (b * b) + (a * b) + (a * b);
+    assert(c.eq(d));
+}
 
-// fn test_add<let N: u32, BN>()
-// where
-//     BN: BigNumTrait,
-// {
-//     let a = BN::derive_from_seed([1, 2, 3, 4]);
-//     let b: BN = BN::derive_from_seed([4, 5, 6, 7]);
-//     let one = BN::one();
-//     a.validate_in_range();
-//     a.validate_in_field();
-//     b.validate_in_range();
-//     b.validate_in_field();
-//     let mut c = (a + b);
-//     c += c;
-//     let d = (a + b) * (one + one);
-//     assert(c == (d));
-//     let e = one + one;
-//     let limbs: [u128; N] = e.get_limbs_slice().as_array();
-//     let mut first: bool = true;
-//     for limb in limbs {
-//         if first {
-//             first = false;
-//             assert(limb == 2);
-//         } else {
-//             assert(limb == 0);
-//         }
-//     }
-// }
+fn test_add<let N: u32, BN>()
+where
+    BN: BigNumTrait,
+{
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let b: BN = BN::derive_from_seed([4, 5, 6, 7]);
+    let one = BN::one();
+    a.validate_in_range();
+    a.validate_in_field();
+    b.validate_in_range();
+    b.validate_in_field();
+    let mut c = (a + b);
+    c += c;
+    let d = (a + b) * (one + one);
+    assert(c == (d));
+    let e = one + one;
+    let limbs: [u128; N] = e.get_limbs_slice().as_array();
+    let mut first: bool = true;
+    for limb in limbs {
+        if first {
+            first = false;
+            assert(limb == 2);
+        } else {
+            assert(limb == 0);
+        }
+    }
+}
 
-// fn test_div<let N: u32, BN>()
-// where
-//     BN: BigNumTrait,
-// {
-//     let a = BN::derive_from_seed([1, 2, 3, 4]);
-//     let b = BN::derive_from_seed([4, 5, 6, 7]);
+fn test_div<let N: u32, BN>()
+where
+    BN: BigNumTrait,
+{
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let b = BN::derive_from_seed([4, 5, 6, 7]);
 
-//     let c = a / b;
-//     assert((b * c) == (a));
-// }
+    let c = a / b;
+    assert((b * c) == (a));
+}
 
-// fn test_invmod<let N: u32, BN>()
-// where
-//     BN: BigNumTrait,
-// {
-//     let u = BN::derive_from_seed([1, 2, 3, 4]);
-//     // Safety: test code
-//     let v = unsafe { u.__invmod() };
-//     // Safety: test code
-//     let result = unsafe { u.__mul(v) };
-//     let expected = BN::one();
-//     assert(result == expected);
-// }
+fn test_invmod<let N: u32, BN>()
+where
+    BN: BigNumTrait,
+{
+    let u = BN::derive_from_seed([1, 2, 3, 4]);
+    // Safety: test code
+    let v = unsafe { u.__invmod() };
+    // Safety: test code
+    let result = unsafe { u.__mul(v) };
+    let expected = BN::one();
+    assert(result == expected);
+}
 
-// fn assert_is_not_equal<let N: u32, BN>()
-// where
-//     BN: BigNumTrait,
-// {
-//     let a = BN::derive_from_seed([1, 2, 3, 4]);
-//     let b = BN::derive_from_seed([4, 5, 6, 7]);
+fn assert_is_not_equal<let N: u32, BN>()
+where
+    BN: BigNumTrait,
+{
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let b = BN::derive_from_seed([4, 5, 6, 7]);
 
-//     a.assert_is_not_equal(b);
-// }
+    a.assert_is_not_equal(b);
+}
 
-// fn assert_is_not_equal_fail<let N: u32, BN>()
-// where
-//     BN: BigNumTrait,
-// {
-//     let a = BN::derive_from_seed([1, 2, 3, 4]);
-//     let b = BN::derive_from_seed([1, 2, 3, 4]);
+fn assert_is_not_equal_fail<let N: u32, BN>()
+where
+    BN: BigNumTrait,
+{
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let b = BN::derive_from_seed([1, 2, 3, 4]);
 
-//     a.assert_is_not_equal(b);
-// }
+    a.assert_is_not_equal(b);
+}
 
-// fn assert_is_not_equal_overloaded_lhs_fail<let N: u32, BN>()
-// where
-//     BN: BigNumTrait,
-// {
-//     let a = BN::derive_from_seed([1, 2, 3, 4]);
-//     let b = BN::derive_from_seed([1, 2, 3, 4]);
+fn assert_is_not_equal_overloaded_lhs_fail<let N: u32, BN>()
+where
+    BN: BigNumTrait,
+{
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let b = BN::derive_from_seed([1, 2, 3, 4]);
 
-//     let modulus = BN::modulus();
+    let modulus = BN::modulus();
 
-//     let t0: [u128; N] = a.get_limbs_slice().as_array();
-//     let t1: [u128; N] = modulus.get_limbs_slice().as_array();
-//     // Safety: test code
-//     let a_plus_modulus = BN::from_slice(unsafe { __helper_add(t0, t1) });
-//     a_plus_modulus.assert_is_not_equal(b);
-// }
+    let t0: [u128; N] = a.get_limbs_slice().as_array();
+    let t1: [u128; N] = modulus.get_limbs_slice().as_array();
+    // Safety: test code
+    let a_plus_modulus = BN::from_slice(unsafe { __helper_add(t0, t1) });
+    a_plus_modulus.assert_is_not_equal(b);
+}
 
-// fn assert_is_not_equal_overloaded_rhs_fail<let N: u32, BN>()
-// where
-//     BN: BigNumTrait,
-// {
-//     let a = BN::derive_from_seed([1, 2, 3, 4]);
-//     let b = BN::derive_from_seed([1, 2, 3, 4]);
+fn assert_is_not_equal_overloaded_rhs_fail<let N: u32, BN>()
+where
+    BN: BigNumTrait,
+{
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let b = BN::derive_from_seed([1, 2, 3, 4]);
 
-//     let modulus = BN::modulus();
+    let modulus = BN::modulus();
 
-//     let t0: [u128; N] = b.get_limbs_slice().as_array();
-//     let t1: [u128; N] = modulus.get_limbs_slice().as_array();
-//     // Safety: test code
-//     let b_plus_modulus = BN::from_slice(unsafe { __helper_add(t0, t1) });
-//     a.assert_is_not_equal(b_plus_modulus);
-// }
+    let t0: [u128; N] = b.get_limbs_slice().as_array();
+    let t1: [u128; N] = modulus.get_limbs_slice().as_array();
+    // Safety: test code
+    let b_plus_modulus = BN::from_slice(unsafe { __helper_add(t0, t1) });
+    a.assert_is_not_equal(b_plus_modulus);
+}
 
-// fn assert_is_not_equal_overloaded_fail<let N: u32, BN>()
-// where
-//     BN: BigNumTrait,
-// {
-//     let a = BN::derive_from_seed([1, 2, 3, 4]);
-//     let b = BN::derive_from_seed([1, 2, 3, 4]);
+fn assert_is_not_equal_overloaded_fail<let N: u32, BN>()
+where
+    BN: BigNumTrait,
+{
+    let a = BN::derive_from_seed([1, 2, 3, 4]);
+    let b = BN::derive_from_seed([1, 2, 3, 4]);
 
-//     let modulus = BN::modulus();
+    let modulus = BN::modulus();
 
-//     let t0: [u128; N] = a.get_limbs_slice().as_array();
-//     let t1: [u128; N] = b.get_limbs_slice().as_array();
-//     let t2: [u128; N] = modulus.get_limbs_slice().as_array();
-//     // Safety: test code
-//     let a_plus_modulus: BN = BN::from_slice(unsafe { __helper_add(t0, t2) });
-//     // Safety: test code
-//     let b_plus_modulus: BN = BN::from_slice(unsafe { __helper_add(t1, t2) });
-//     a_plus_modulus.assert_is_not_equal(b_plus_modulus);
-// }
+    let t0: [u128; N] = a.get_limbs_slice().as_array();
+    let t1: [u128; N] = b.get_limbs_slice().as_array();
+    let t2: [u128; N] = modulus.get_limbs_slice().as_array();
+    // Safety: test code
+    let a_plus_modulus: BN = BN::from_slice(unsafe { __helper_add(t0, t2) });
+    // Safety: test code
+    let b_plus_modulus: BN = BN::from_slice(unsafe { __helper_add(t1, t2) });
+    a_plus_modulus.assert_is_not_equal(b_plus_modulus);
+}
 
-// #[test]
-// fn test_eq_BN() {
-//     // let stub = BN254_Fq::new();
-//     test_eq::<3, BN254_Fq>();
-// }
+#[test]
+fn test_eq_BN() {
+    test_eq::<3, BN254_Fq>();
+}
 
 // #[test]
 // fn test_is_zero_BN() {

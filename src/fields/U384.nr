@@ -1,4 +1,4 @@
-use crate::bignum::BigNum;
+use crate::bignum::BigNumTrait;
 use crate::bignum::make_bignum_impls;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
@@ -25,11 +25,7 @@ pub global U384_PARAMS: BigNumParams<4, 385> = BigNumParams {
     redc_param: [0x00, 0x00, 0x00, 0x40000000],
 };
 
+#[make_bignum_impls(4, 385, quote {U384_PARAMS})]
 pub struct U384 {
     limbs: [u128; 4],
-}
-
-#[make_bignum_impls(4, 385, quote {U384}, quote {U384Params})]
-pub mod U384_impls {
-    use crate::bignum::BigNumTrait;
 }

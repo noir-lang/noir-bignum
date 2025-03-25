@@ -19,14 +19,12 @@
 //!    * B = Fq3(b * NON_RESIDUE, 0, 0)
 //!    * NON_RESIDUE = 11 is the cubic non-residue used to conpub struct  the
 //!      extension field Fq3
-use crate::bignum::BigNum;
+use crate::bignum::BigNumTrait;
 use crate::bignum::make_bignum_impls;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 
 pub struct MNT6_753_Fr_Params {}
-
-// pub type MNT6_753_Fr = BigNum<7, 753, MNT6_753_Fr_Params>;
 
 impl BigNumParamsGetter<7, 753> for MNT6_753_Fr_Params {
     fn get_params() -> BigNumParams<7, 753> {
@@ -65,11 +63,7 @@ pub global MNT6_753_Fr_PARAMS: BigNumParams<7, 753> = BigNumParams {
     ],
 };
 
+#[make_bignum_impls(7, 753, quote {MNT6_753_Fr_PARAMS})]
 pub struct MNT6_753_Fr {
     limbs: [u128; 7],
-}
-
-#[make_bignum_impls(7, 753, quote {MNT6_753_Fr}, quote {MNT6_753_Fr_Params})]
-pub mod MNT6_753_Fr_impls {
-    use crate::bignum::BigNumTrait;
 }

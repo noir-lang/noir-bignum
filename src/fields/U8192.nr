@@ -1,4 +1,4 @@
-use crate::bignum::BigNum;
+use crate::bignum::BigNumTrait;
 use crate::bignum::make_bignum_impls;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
@@ -229,11 +229,7 @@ global U8192_PARAMS: BigNumParams<69, 8193> = BigNumParams {
     ],
 };
 
+#[make_bignum_impls(69, 8193, quote {U8192_PARAMS})]
 pub struct U8192 {
     limbs: [u128; 69],
-}
-
-#[make_bignum_impls(69, 8193, quote {U8192}, quote {U8192Params})]
-pub mod U8192_impls {
-    use crate::bignum::BigNumTrait;
 }

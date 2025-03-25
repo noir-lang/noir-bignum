@@ -1,4 +1,5 @@
-use crate::bignum::BigNum;
+// use crate::bignum::BigNumTrait;
+use crate::bignum::BigNumTrait;
 use crate::bignum::make_bignum_impls;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
