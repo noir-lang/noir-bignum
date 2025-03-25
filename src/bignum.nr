@@ -391,7 +391,7 @@ pub(crate) comptime fn make_bignum_impls(
 
         impl $Eq for $typ {
             fn eq(self, other: Self) -> bool {
-                self.limbs == other.limbs
+                $constrained_ops::eq::<$N, $MOD_BITS>($params, self.limbs, other.limbs)
             }
         }
 

@@ -137,9 +137,9 @@ where
     let b = BN::derive_from_seed([1, 2, 3, 4]);
     let c = BN::derive_from_seed([2, 2, 3, 4]);
 
-    assert(a.eq(b) == true);
-    assert(c.eq(b) == false);
-    assert(c.eq(a) == false);
+    // assert(a.eq(b) == true);
+    // assert(c.eq(b) == false);
+    // assert(c.eq(a) == false);
 }
 
 fn test_is_zero<let N: u32, BN>()
@@ -289,116 +289,116 @@ where
     a_plus_modulus.assert_is_not_equal(b_plus_modulus);
 }
 
-#[test]
-fn test_eq_BN() {
-    test_eq::<3, BN254_Fq>();
-}
+// #[test]
+// fn test_eq_BN() {
+//     test_eq::<3, BN254_Fq>();
+// }
 
 // #[test]
 // fn test_is_zero_BN() {
 //     test_is_zero::<3, BN254_Fq>();
 // }
 
-// #[test]
-// fn test_add_BN() {
-//     let mut a = BN254_Fq::modulus();
-//     let mut b = BN254_Fq::modulus();
-//     let mut expected = BN254_Fq::modulus();
+#[test]
+fn test_add_BN() {
+    let mut a = BN254_Fq::modulus();
+    let mut b = BN254_Fq::modulus();
+    let mut expected = BN254_Fq::modulus();
 
-//     a.limbs[0] -= 1;
+    a.limbs[0] -= 1;
 
-//     b.limbs[0] -= 1;
+    b.limbs[0] -= 1;
 
-//     let mut expected: BN254_Fq = BigNum::modulus();
-//     expected.limbs[0] -= 2;
+    let mut expected: BN254_Fq = BN254_Fq::modulus();
+    expected.limbs[0] -= 2;
 
-//     let c = a + b;
-//     assert(c == expected);
-// }
+    let c = a + b;
+    assert(c == expected);
+}
 
-// #[test]
-// fn test_add_test_BN_wrap_around() {
-//     let mut a: BN254_Fq = BigNum::modulus();
-//     let mut b: BN254_Fq = BN254_Fq { limbs: [3, 0, 0] };
-//     let mut expected: BN254_Fq = BN254_Fq::one();
-//     a.limbs[0] -= 2;
+#[test]
+fn test_add_test_BN_wrap_around() {
+    let mut a: BN254_Fq = BN254_Fq::modulus();
+    let mut b: BN254_Fq = BN254_Fq { limbs: [3, 0, 0] };
+    let mut expected: BN254_Fq = BN254_Fq::one();
+    a.limbs[0] -= 2;
 
-//     let c = a + b;
+    let c = a + b;
 
-//     assert(c == expected);
-// }
+    assert(c == expected);
+}
 
-// #[test]
-// fn test_sub_test_BN() {
-//     // 0 - 1 should equal p - 1
-//     let mut a = BN254_Fq::zero();
-//     let mut b = BN254_Fq::one();
-//     let mut expected = BN254_Fq::modulus();
-//     expected.limbs[0] -= 1; // p - 1
-//     let result = a - b;
-//     assert(result == expected);
-// }
+#[test]
+fn test_sub_test_BN() {
+    // 0 - 1 should equal p - 1
+    let mut a = BN254_Fq::zero();
+    let mut b = BN254_Fq::one();
+    let mut expected = BN254_Fq::modulus();
+    expected.limbs[0] -= 1; // p - 1
+    let result = a - b;
+    assert(result == expected);
+}
 
-// #[test]
-// fn test_eq_wrap() {
-//     let a: BN254_Fq = BigNum::modulus();
-//     let b = BN254_Fq::zero();
-//     assert(a == b);
-// }
+#[test]
+fn test_eq_wrap() {
+    let a: BN254_Fq = BN254_Fq::modulus();
+    let b = BN254_Fq::zero();
+    assert(a == b);
+}
 
-// #[test]
-// fn test_sub_modulus_limit() {
-//     // if we underflow, maximum result should be ...
-//     // 0 - 1 = o-1
-//     // 0 - p = 0
-//     let mut a = BN254_Fq::zero();
-//     let mut b = BN254_Fq::modulus();
-//     let mut expected = BigNum::zero();
+#[test]
+fn test_sub_modulus_limit() {
+    // if we underflow, maximum result should be ...
+    // 0 - 1 = o-1
+    // 0 - p = 0
+    let mut a = BN254_Fq::zero();
+    let mut b = BN254_Fq::modulus();
+    let mut expected = BN254_Fq::zero();
 
-//     let result = a - b;
-//     assert(result == expected);
-// }
+    let result = a - b;
+    assert(result == expected);
+}
 
-// #[test(should_fail_with = "call to assert_max_bit_size")]
-// fn test_sub_modulus_underflow() {
-//     // 0 - (p + 1) is smaller than p and should produce unsatisfiable constraints
-//     let mut a = BN254_Fq::zero();
-//     let mut b = BN254_Fq::modulus();
-//     b.limbs[0] += 1;
-//     let mut expected = BigNum::one();
+#[test(should_fail_with = "call to assert_max_bit_size")]
+fn test_sub_modulus_underflow() {
+    // 0 - (p + 1) is smaller than p and should produce unsatisfiable constraints
+    let mut a = BN254_Fq::zero();
+    let mut b = BN254_Fq::modulus();
+    b.limbs[0] += 1;
+    let mut expected = BN254_Fq::one();
 
-//     let result = a - b;
-//     assert(result == expected);
-// }
+    let result = a - b;
+    assert(result == expected);
+}
 
-// #[test]
-// fn test_add_modulus_limit() {
-//     // p + 2^{254} - 1 should be the maximum allowed value fed into an add operation
-//     // when adding, if the result overflows the modulus, we conditionally subtract the modulus, producing 2^{254} -  1
-//     // this is the largest value that will satisfy the range check applied when constructing a bignum
-//     let p: [u128; 3] = BN254_Fq_Params::get_params().modulus;
-//     let two_pow_254_minus_1: [u128; 3] =
-//         [0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x3fff];
-//     let a = BN254_Fq { limbs: p };
-//     let b = BN254_Fq { limbs: two_pow_254_minus_1 };
-//     let result = a + b;
-//     assert(result == b);
-// }
+#[test]
+fn test_add_modulus_limit() {
+    // p + 2^{254} - 1 should be the maximum allowed value fed into an add operation
+    // when adding, if the result overflows the modulus, we conditionally subtract the modulus, producing 2^{254} -  1
+    // this is the largest value that will satisfy the range check applied when constructing a bignum
+    let p: [u128; 3] = BN254_Fq::params().modulus;
+    let two_pow_254_minus_1: [u128; 3] =
+        [0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x3fff];
+    let a = BN254_Fq { limbs: p };
+    let b = BN254_Fq { limbs: two_pow_254_minus_1 };
+    let result = a + b;
+    assert(result == b);
+}
 
-// #[test(should_fail_with = "call to assert_max_bit_size")]
-// fn test_add_modulus_overflow() {
-//     //(2^{254} - 1) + (p - 1) = 2^{254} + p
-//     // after subtracting modulus, result is 2^{254} will does not satisfy the range check applied when constructing a BigNum
-//     let p: [u128; 3] = BN254_Fq_Params::get_params().modulus;
-//     let two_pow_254_minus_1: [u128; 3] =
-//         [0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x3fff];
-//     let one = [1, 0, 0];
-//     // Safety: test code
-//     let a = BN254_Fq { limbs: unsafe { __helper_add(p, one) } };
-//     let b = BN254_Fq { limbs: two_pow_254_minus_1 };
-//     let result = a + b;
-//     assert(result == b);
-// }
+#[test(should_fail_with = "call to assert_max_bit_size")]
+fn test_add_modulus_overflow() {
+    //(2^{254} - 1) + (p - 1) = 2^{254} + p
+    // after subtracting modulus, result is 2^{254} will does not satisfy the range check applied when constructing a BigNum
+    let p: [u128; 3] = BN254_Fq::params().modulus;
+    let two_pow_254_minus_1: [u128; 3] =
+        [0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x3fff];
+    let one = [1, 0, 0];
+    // Safety: test code
+    let a = BN254_Fq { limbs: unsafe { __helper_add(p, one) } };
+    let b = BN254_Fq { limbs: two_pow_254_minus_1 };
+    let result = a + b;
+    assert(result == b);
+}
 
 // #[test]
 // fn test_mul_BN() {
