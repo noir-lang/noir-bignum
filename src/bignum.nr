@@ -79,14 +79,7 @@ pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
     fn is_zero(self) -> bool;
 }
 
-pub trait LimbedObject<let N: u32, let MOD_BITS: u32> {
-    fn from_limbs(limbs: [u128; N]) -> Self;
-    fn get_limbs(self) -> [u128; N];
-    fn set_limb(self: &mut Self, idx: u32, value: u128);
-    fn params() -> BigNumParams<N, MOD_BITS>;
-}
-
-// we need macros that implement the LimbedObject, Default, From, Neg, Add, Sub, Mul, Div, Eq, Ord traits for BigNum
+// we need macros that implement the BigNumTrait, Default, From, Neg, Add, Sub, Mul, Div, Eq, Ord traits for each bignum type
 pub(crate) comptime fn make_bignum_impls(
     strukt: TypeDefinition,
     N: u32,

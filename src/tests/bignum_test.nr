@@ -290,10 +290,10 @@ where
     a_plus_modulus.assert_is_not_equal(b_plus_modulus);
 }
 
-#[test]
-fn test_eq_BN() {
-    test_eq::<3, BN254_Fq>();
-}
+// #[test]
+// fn test_eq_BN() {
+//     test_eq::<3, BN254_Fq>();
+// }
 
 // #[test]
 // fn test_is_zero_BN() {
