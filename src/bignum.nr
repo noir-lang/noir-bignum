@@ -122,7 +122,7 @@ pub(crate) comptime fn make_bignum_impls(
             }
 
             fn from_limbs(limbs: [u128; $N]) -> Self {
-                $typ { limbs }
+                Self { limbs }
             }
 
             fn get_limbs(self: Self) -> [u128; $N] {
@@ -145,6 +145,7 @@ pub(crate) comptime fn make_bignum_impls(
 
             fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self {
                 let params = Self::params();
+                // Self::from_limbs($constrained_ops::derive_from_seed::<_, $MOD_BITS, _>(params, seed))
                 $typ::from_limbs($constrained_ops::derive_from_seed::<_, $MOD_BITS, _>(params, seed))
             }
 
