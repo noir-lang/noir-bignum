@@ -133,9 +133,10 @@ fn test_eq<let N: u32, BN>()
 where
     BN: BigNumTrait,
 {
-    let a = BN::derive_from_seed([1, 2, 3, 4]);
-    let b = BN::derive_from_seed([1, 2, 3, 4]);
-    let c = BN::derive_from_seed([2, 2, 3, 4]);
+    println("test_eq");
+    // let a = BN::derive_from_seed([1, 2, 3, 4]);
+    // let b = BN::derive_from_seed([1, 2, 3, 4]);
+    // let c = BN::derive_from_seed([2, 2, 3, 4]);
 
     // assert(a.eq(b) == true);
     // assert(c.eq(b) == false);
@@ -289,10 +290,10 @@ where
     a_plus_modulus.assert_is_not_equal(b_plus_modulus);
 }
 
-// #[test]
-// fn test_eq_BN() {
-//     test_eq::<3, BN254_Fq>();
-// }
+#[test]
+fn test_eq_BN() {
+    test_eq::<3, BN254_Fq>();
+}
 
 // #[test]
 // fn test_is_zero_BN() {
