@@ -6,8 +6,6 @@ use crate::params::BigNumParamsGetter;
 
 pub struct BN254_Fq_Params {}
 
-// pub type BN254_Fq = BigNum<3, 254, BN254_Fq_Params>;
-
 impl BigNumParamsGetter<3, 254> for BN254_Fq_Params {
     fn get_params() -> BigNumParams<3, 254> {
         BN254_Fq_PARAMS

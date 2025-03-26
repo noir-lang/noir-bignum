@@ -4,8 +4,6 @@ use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 pub struct ED25519_Fq_Params {}
 
-// pub type ED25519_Fq = BigNum<3, 255, ED25519_Fq_Params>;
-
 impl BigNumParamsGetter<3, 255> for ED25519_Fq_Params {
     fn get_params() -> BigNumParams<3, 255> {
         ED25519_Fq_PARAMS

@@ -4,8 +4,6 @@ use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 pub struct Secp256r1_Fr_Params {}
 
-// pub type Secp256r1_Fr = BigNum<3, 256, Secp256r1_Fr_Params>;
-
 impl BigNumParamsGetter<3, 256> for Secp256r1_Fr_Params {
     fn get_params() -> BigNumParams<3, 256> {
         Secp256r1_Fr_PARAMS

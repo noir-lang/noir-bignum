@@ -21,8 +21,6 @@ use crate::params::BigNumParamsGetter;
 
 pub struct BLS12_381_Fq_Params {}
 
-// pub type BLS12_381_Fq = BigNum<4, 381, BLS12_381_Fq_Params>;
-
 impl BigNumParamsGetter<4, 381> for BLS12_381_Fq_Params {
     fn get_params() -> BigNumParams<4, 381> {
         BLS12_381_Fq_PARAMS

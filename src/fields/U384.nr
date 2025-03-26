@@ -5,8 +5,6 @@ use crate::params::BigNumParamsGetter;
 
 pub struct U384Params {}
 
-// pub type U384 = BigNum<4, 385, U384Params>;
-
 impl BigNumParamsGetter<4, 385> for U384Params {
     fn get_params() -> BigNumParams<4, 385> {
         U384_PARAMS

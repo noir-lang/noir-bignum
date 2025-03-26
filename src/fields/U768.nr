@@ -5,8 +5,6 @@ use crate::params::BigNumParamsGetter;
 
 pub struct U768Params {}
 
-// pub type U768 = BigNum<7, 769, U768Params>;
-
 impl BigNumParamsGetter<7, 769> for U768Params {
     fn get_params() -> BigNumParams<7, 769> {
         U768_PARAMS

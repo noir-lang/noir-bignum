@@ -26,8 +26,6 @@ use crate::params::BigNumParamsGetter;
 
 pub struct MNT4_753_Fr_Params {}
 
-// pub type MNT4_753_Fr = BigNum<7, 753, MNT4_753_Fr_Params>;
-
 impl BigNumParamsGetter<7, 753> for MNT4_753_Fr_Params {
     fn get_params() -> BigNumParams<7, 753> {
         MNT4_753_Fr_PARAMS

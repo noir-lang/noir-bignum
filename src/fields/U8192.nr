@@ -4,8 +4,6 @@ use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 pub struct U8192Params {}
 
-// pub type U8192 = BigNum<35, 4097, U8192Params>;
-
 impl BigNumParamsGetter<69, 8193> for U8192Params {
     fn get_params() -> BigNumParams<69, 8193> {
         U8192_PARAMS

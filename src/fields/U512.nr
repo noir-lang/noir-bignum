@@ -5,8 +5,6 @@ use crate::params::BigNumParamsGetter;
 
 pub struct U512Params {}
 
-// pub type U512 = BigNum<5, 513, U512Params>;
-
 impl BigNumParamsGetter<5, 513> for U512Params {
     fn get_params() -> BigNumParams<5, 513> {
         U512_PARAMS
