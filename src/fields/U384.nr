@@ -1,10 +1,9 @@
-use crate::bignum::BigNum;
+use crate::bignum::BigNumTrait;
+use crate::bignum::make_bignum_impls;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 
 pub struct U384Params {}
-
-pub type U384 = BigNum<4, 385, U384Params>;
 
 impl BigNumParamsGetter<4, 385> for U384Params {
     fn get_params() -> BigNumParams<4, 385> {
@@ -23,3 +22,8 @@ pub global U384_PARAMS: BigNumParams<4, 385> = BigNumParams {
     ],
     redc_param: [0x00, 0x00, 0x00, 0x40000000],
 };
+
+#[make_bignum_impls(4, 385, quote {U384_PARAMS})]
+pub struct U384 {
+    limbs: [u128; 4],
+}
