@@ -1,3 +1,13 @@
+unconstrained fn __field_to_u128(input: Field) -> u128 {
+    input as u128
+}
+
+fn field_to_u128(input: Field) -> u128 {
+    // Safety: convert to u128 and validate equality
+    let r = unsafe { __field_to_u128(input) };
+    assert_eq(r as Field, input);
+    r
+}
 /**
 * @brief construct a BigNum instance out of an array of bytes in BIG ENDIAN format
 * @description: each 120-bit limb represents 15 bytes, we require that the size of the byte array
@@ -14,23 +24,23 @@ pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32, let NBytes: u32>(
 
     let excess_bytes = N * 15 - NBytes;
     let final_limb_bytes = 15 - excess_bytes;
-    let mut limb: u128 = 0;
+    let mut limb: Field = 0;
     let mut k = 0;
     for _j in 0..final_limb_bytes {
         limb *= 256;
-        limb += x[k] as u128;
+        limb += x[k] as Field;
         k += 1;
     }
-    result[N - 1] = limb;
+    result[N - 1] = field_to_u128(limb);
 
     for i in 1..N {
-        let mut limb: u128 = 0;
+        let mut limb: Field = 0;
         for _j in 0..15 {
             limb *= 256;
-            limb += x[k] as u128;
+            limb += x[k] as Field;
             k += 1;
         }
-        result[N - i - 1] = limb;
+        result[N - i - 1] = field_to_u128(limb);
     }
 
     let most_significant_byte: Field = x[0] as Field;
