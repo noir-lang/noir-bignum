@@ -974,3 +974,20 @@ fn test_cmp_BN_fuzz(seed: [u8; 5]) {
     a = if a > modulus_sub_1_div_2 { -a } else { a };
     assert(a < modulus_sub_1_div_2);
 }
+
+#[test]
+fn fuzz_from_le_bytes(seed: [u8; 5]) {
+    let a = BN254_Fq::derive_from_seed(seed);
+    let bytes = a.to_le_bytes();
+    let b = BN254_Fq::from_le_bytes(bytes);
+    assert(a == b);
+}
+
+#[test]
+fn fuzz_to_be_bytes(seed: [u8; 5]) {
+    let a = BN254_Fq::derive_from_seed(seed);
+    let bytes = a.to_be_bytes();
+    let b = BN254_Fq::from_be_bytes(bytes);
+    println(b);
+    assert(a == b);
+}

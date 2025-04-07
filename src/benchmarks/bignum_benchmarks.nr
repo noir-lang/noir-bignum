@@ -1,4 +1,8 @@
-use crate::bignum::BigNum;
+use crate::bignum::{BigNum, BigNumTrait};
+use crate::fields::bls12_381Fq::BLS12_381_Fq;
+use crate::fields::bn254Fq::BN254_Fq;
+use crate::fields::U2048::U2048;
+use crate::fields::U256::U256;
 
 comptime fn make_bench(_m: Module, N: u32, MOD_BITS: u32, params: Quoted) -> Quoted {
     let module_name = _m.name();
@@ -14,7 +18,11 @@ comptime fn make_bench(_m: Module, N: u32, MOD_BITS: u32, params: Quoted) -> Quo
         f"evaluate_quadratic_expression_3_elements_{module_name}".quoted_contents();
     let evaluate_quadratic_expression_12_elements_bench_name =
         f"evaluate_quadratic_expression_12_elements_{module_name}".quoted_contents();
-
+    let to_be_bytes_bench_name = f"to_be_bytes_{module_name}".quoted_contents();
+    let from_be_bytes_bench_name = f"from_be_bytes_{module_name}".quoted_contents();
+    let to_le_bytes_bench_name = f"to_le_bytes_{module_name}".quoted_contents();
+    let from_le_bytes_bench_name = f"from_le_bytes_{module_name}".quoted_contents();
+    let BigNumTrait = quote { crate::bignum::BigNumTrait };
     let BigNum = quote { crate::bignum::BigNum };
     let BigNumTrait = quote { crate::bignum::BigNumTrait };
 
@@ -110,4 +118,25 @@ pub mod BLS12_381Fq_Bench {
 #[make_bench(18, 2049, quote { U2048Params })]
 pub mod U2048_Bench {
     use crate::fields::U2048::U2048Params;
+}
+
+// TODO: add the benchmarks for serialization to the macro (currently dealing with trait visibility issues)
+#[export]
+fn bench_to_be_bytes(a: BN254_Fq) -> [u8; 32] {
+    a.to_be_bytes()
+}
+
+#[export]
+fn bench_from_be_bytes(a: [u8; 32]) -> BN254_Fq {
+    BN254_Fq::from_be_bytes(a)
+}
+
+#[export]
+fn bench_to_le_bytes(a: BN254_Fq) -> [u8; 32] {
+    a.to_le_bytes()
+}
+
+#[export]
+fn bench_from_le_bytes(a: [u8; 32]) -> BN254_Fq {
+    BN254_Fq::from_le_bytes(a)
 }
