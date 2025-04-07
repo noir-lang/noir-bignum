@@ -988,6 +988,5 @@ fn fuzz_to_be_bytes(seed: [u8; 5]) {
     let a = BN254_Fq::derive_from_seed(seed);
     let bytes = a.to_be_bytes();
     let b = BN254_Fq::from_be_bytes(bytes);
-    println(b);
     assert(a == b);
 }

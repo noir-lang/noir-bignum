@@ -65,7 +65,7 @@ pub(crate) fn to_be_bytes<let N: u32, let MOD_BITS: u32>(
     // now we deal with the last limb
     let last_limb_bytes: [u8; ((MOD_BITS + 7) / 8 - (N - 1) * 15)] =
         (val[N - 1] as Field).to_be_bytes();
-    println(f"last_limb_bytes: {last_limb_bytes}");
+
     for i in 0..((MOD_BITS + 7) / 8 - (N - 1) * 15) {
         result[i] = last_limb_bytes[i];
     }
