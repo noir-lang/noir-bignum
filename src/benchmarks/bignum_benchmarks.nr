@@ -14,6 +14,7 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
     let evaluate_quadratic_expression_12_elements_bench_name =
         f"evaluate_quadratic_expression_12_elements_{module_name}".quoted_contents();
     let BigNumTrait = quote { crate::bignum::BigNumTrait };
+    let from_field_bench_name = f"from_field_{module_name}".quoted_contents();
     let typ = params.as_type();
 
     quote {
@@ -74,6 +75,11 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
             add_flags: [bool; 3],
         ) {
             $BigNumTrait::evaluate_quadratic_expression(lhs, lhs_flags, rhs, rhs_flags, add, add_flags)
+        }
+        
+        #[export]
+        fn $from_field_bench_name(a: Field) -> $typ {
+            $typ::from(a)
         }
         
     }
