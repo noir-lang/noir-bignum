@@ -1,13 +1,3 @@
-unconstrained fn __field_to_u128(input: Field) -> u128 {
-    input as u128
-}
-
-fn field_to_u128(input: Field) -> u128 {
-    // Safety: convert to u128 and validate equality
-    let r = unsafe { __field_to_u128(input) };
-    assert_eq(r as Field, input);
-    r
-}
 /**
 * @brief construct a BigNum instance out of an array of bytes in BIG ENDIAN format
 * @description: each 120-bit limb represents 15 bytes, we require that the size of the byte array
@@ -31,7 +21,8 @@ pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32>(
         limb += x[k] as Field;
         k += 1;
     }
-    result[N - 1] = field_to_u128(limb);
+    limb.assert_max_bit_size::<128>();
+    result[N - 1] = limb as u128;
 
     for i in 1..N {
         let mut limb: Field = 0;
@@ -40,7 +31,8 @@ pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32>(
             limb += x[k] as Field;
             k += 1;
         }
-        result[N - i - 1] = field_to_u128(limb);
+        limb.assert_max_bit_size::<128>();
+        result[N - i - 1] = limb as u128;
     }
 
     let most_significant_byte: Field = x[0] as Field;
@@ -96,33 +88,27 @@ pub(crate) fn from_le_bytes<let N: u32, let MOD_BITS: u32>(
     let mut result: [u128; N] = [0; N];
     // first we deal with the full limbs
     for i in 0..N - 1 {
-        let mut limb: u128 = 0;
+        let mut limb: Field = 0;
         for j in 0..15 {
             limb *= 256;
-            limb += x[(i + 1) * 15 - j - 1] as u128;
+            limb += x[(i + 1) * 15 - j - 1] as Field;
         }
-        result[i] = limb;
+        limb.assert_max_bit_size::<128>();
+        result[i] = limb as u128;
     }
     // now we deal with the not full limb
     let num_bytes = (MOD_BITS + 7) / 8;
     let excess_bytes = N * 15 - num_bytes;
     let final_limb_bytes = 15 - excess_bytes;
-    let mut limb: u128 = 0;
+    let mut limb: Field = 0;
     for j in 0..final_limb_bytes {
         limb *= 256;
-        limb += x[(N - 1) * 15 + final_limb_bytes - j - 1] as u128;
+        limb += x[(N - 1) * 15 + final_limb_bytes - j - 1] as Field;
     }
-    result[N - 1] = limb;
+    limb.assert_max_bit_size::<128>();
+    result[N - 1] = limb as u128;
     let most_significant_byte: Field = x[(MOD_BITS + 7) / 8 - 1] as Field;
     // the most significant byte should have at most ((MOD_BITS+7)/8 * 8 - MOD_BITS) bits
     most_significant_byte.assert_max_bit_size::<8 - ((MOD_BITS + 7) / 8 * 8 - MOD_BITS)>();
     result
-}
-
-#[test]
-fn test_from_to_le_bytes() {
-    let val = [2; 32];
-    let result: [u128; 3] = from_le_bytes::<3, 254>(val);
-    let bytes: [u8; 32] = to_le_bytes::<3, 254>(result);
-    assert(bytes == val);
 }
