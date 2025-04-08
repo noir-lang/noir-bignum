@@ -17,14 +17,6 @@
 use crate::bignum::BigNumTrait;
 use crate::bignum::derive_bignum_impl;
 use crate::params::BigNumParams;
-use crate::params::BigNumParamsGetter;
-pub struct Vesta_Fq_Params {}
-
-impl BigNumParamsGetter<3, 255> for Vesta_Fq_Params {
-    fn get_params() -> BigNumParams<3, 255> {
-        Vesta_Fq_PARAMS
-    }
-}
 
 pub global Vesta_Fq_PARAMS: BigNumParams<3, 255> = BigNumParams {
     has_multiplicative_inverse: true,

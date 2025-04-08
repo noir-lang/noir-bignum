@@ -1,15 +1,6 @@
 use crate::bignum::BigNumTrait;
 use crate::bignum::derive_bignum_impl;
 use crate::params::BigNumParams;
-use crate::params::BigNumParamsGetter;
-
-pub struct ED25519_Fr_Params {}
-
-impl BigNumParamsGetter<3, 255> for ED25519_Fr_Params {
-    fn get_params() -> BigNumParams<3, 255> {
-        ED25519_Fr_PARAMS
-    }
-}
 
 pub global ED25519_Fr_PARAMS: BigNumParams<3, 255> = BigNumParams {
     has_multiplicative_inverse: true,

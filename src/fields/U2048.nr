@@ -1,14 +1,6 @@
 use crate::bignum::BigNumTrait;
 use crate::bignum::derive_bignum_impl;
 use crate::params::BigNumParams;
-use crate::params::BigNumParamsGetter;
-pub struct U2048Params {}
-
-impl BigNumParamsGetter<18, 2049> for U2048Params {
-    fn get_params() -> BigNumParams<18, 2049> {
-        U2048_PARAMS
-    }
-}
 
 pub global U2048_PARAMS: BigNumParams<18, 2049> = BigNumParams {
     has_multiplicative_inverse: false,

@@ -19,15 +19,6 @@
 use crate::bignum::BigNumTrait;
 use crate::bignum::derive_bignum_impl;
 use crate::params::BigNumParams;
-use crate::params::BigNumParamsGetter;
-
-pub struct BLS12_377_Fq_Params {}
-
-impl BigNumParamsGetter<4, 377> for BLS12_377_Fq_Params {
-    fn get_params() -> BigNumParams<4, 377> {
-        BLS12_377_Fq_PARAMS
-    }
-}
 
 pub global BLS12_377_Fq_PARAMS: BigNumParams<4, 377> = BigNumParams {
     has_multiplicative_inverse: true,

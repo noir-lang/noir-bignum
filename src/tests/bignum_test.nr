@@ -4,7 +4,6 @@ use crate::bignum::to_field;
 use crate::fns::unconstrained_helpers::__helper_add;
 
 use crate::params::BigNumParams;
-use crate::params::BigNumParamsGetter;
 
 use crate::fields::bls12_381Fq::BLS12_381_Fq;
 use crate::fields::bls12_381Fr::BLS12_381_Fr;
@@ -82,12 +81,6 @@ global TEST_2048_PARAMS: BigNumParams<18, 2048> = BigNumParams {
         0x162f,
     ],
 };
-
-impl BigNumParamsGetter<18, 2048> for Test2048Params {
-    fn get_params() -> BigNumParams<18, 2048> {
-        TEST_2048_PARAMS
-    }
-}
 
 #[derive_bignum_impl(18, 2048, quote {TEST_2048_PARAMS})]
 pub struct BN2048 {

@@ -1,15 +1,6 @@
 use crate::bignum::BigNumTrait;
 use crate::bignum::derive_bignum_impl;
 use crate::params::BigNumParams;
-use crate::params::BigNumParamsGetter;
-
-pub struct U512Params {}
-
-impl BigNumParamsGetter<5, 513> for U512Params {
-    fn get_params() -> BigNumParams<5, 513> {
-        U512_PARAMS
-    }
-}
 
 pub global U512_PARAMS: BigNumParams<5, 513> = BigNumParams {
     has_multiplicative_inverse: false,
