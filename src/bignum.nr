@@ -13,6 +13,14 @@ pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
     let MOD_BITS: u32;
 
     fn params() -> BigNumParams<N, MOD_BITS>;
+    fn modulus_bits(_: Self) -> u32 {
+        BigNumTrait::MOD_BITS
+    }
+    fn num_limbs(_: Self) -> u32 {
+        BigNumTrait::N
+    }
+    fn modulus() -> Self;
+
     fn new() -> Self;
     fn zero() -> Self;
     fn one() -> Self;
@@ -25,14 +33,21 @@ pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
     fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> Self;
     fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes];
 
-    fn modulus() -> Self;
-    fn modulus_bits(self) -> u32;
-    fn num_limbs(self) -> u32;
-    fn get_limbs_slice(self) -> [u128];
-    fn get_limb(self, idx: u32) -> u128;
+    fn get_limbs_slice(self) -> [u128] {
+        self.get_limbs().as_slice()
+    }
 
-    unconstrained fn __eq(self, other: Self) -> bool;
-    unconstrained fn __is_zero(self) -> bool;
+    fn get_limb(self: Self, idx: u32) -> u128 {
+        self.get_limbs()[idx]
+    }
+
+    unconstrained fn __eq(self: Self, other: Self) -> bool {
+        crate::fns::unconstrained_ops::__eq(self.get_limbs(), other.get_limbs())
+    }
+
+    unconstrained fn __is_zero(self: Self) -> bool {
+        crate::fns::unconstrained_ops::__is_zero(self.get_limbs())
+    }
 
     unconstrained fn __neg(self) -> Self;
     unconstrained fn __add(self, other: Self) -> Self;
@@ -66,7 +81,15 @@ pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
         add_flags: [bool; ADD_N],
     );
 
-    fn assert_is_not_equal(self, other: Self);
+    fn assert_is_not_equal(self: Self, other: Self) {
+        let params = Self::params();
+        crate::fns::constrained_ops::assert_is_not_equal(
+            params,
+            self.get_limbs(),
+            other.get_limbs(),
+        );
+    }
+
     fn validate_in_range(self);
     fn validate_in_field(self);
 
@@ -108,8 +131,9 @@ pub(crate) comptime fn derive_bignum_impl(
         impl $BigNumTrait for $typ {
             let N: u32 = $N; 
             let MOD_BITS: u32 = $MOD_BITS;
+            
             fn modulus() -> Self {
-                Self {limbs: $params.modulus}
+                Self { limbs: Self::params().modulus }
             }
 
             fn new() -> Self {
@@ -162,30 +186,6 @@ pub(crate) comptime fn derive_bignum_impl(
 
             fn to_le_bytes<let NBytes: u32>(self: Self) -> [u8; NBytes] {
                 $serialization::to_le_bytes::<_, $MOD_BITS, _>(self.get_limbs())
-            }
-
-            fn modulus_bits(_: Self) -> u32 {
-                $MOD_BITS
-            }
-
-            fn num_limbs(_: Self) -> u32 {
-                $N
-            }
-
-            fn get_limbs_slice(self: Self) -> [u128] {
-                self.get_limbs()
-            }
-
-            fn get_limb(self: Self, idx: u32) -> u128 {
-                self.get_limbs()[idx]
-            }
-
-            unconstrained fn __eq(self: Self, other: Self) -> bool {
-                $unconstrained_ops::__eq(self.get_limbs(), other.get_limbs())
-            }
-
-            unconstrained fn __is_zero(self: Self) -> bool {
-                $unconstrained_ops::__is_zero(self.get_limbs())
             }
 
             unconstrained fn __neg(self: Self) -> Self {
@@ -299,11 +299,6 @@ pub(crate) comptime fn derive_bignum_impl(
 
             fn validate_in_range(self: Self) {
                 $constrained_ops::validate_in_range::<_, _, $MOD_BITS>(self.get_limbs());
-            }
-
-            fn assert_is_not_equal(self: Self, other: Self) {
-                let params = Self::params();
-                $constrained_ops::assert_is_not_equal(params, self.get_limbs(), other.get_limbs());
             }
 
             fn udiv_mod(self: Self, divisor: Self) -> (Self, Self) {
