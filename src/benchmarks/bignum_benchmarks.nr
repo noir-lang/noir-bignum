@@ -1,4 +1,3 @@
-
 comptime fn make_bench(_m: Module, N: u32, MOD_BITS: u32, params: Quoted) -> Quoted {
     let module_name = _m.name();
     let add_bench_name = f"add_{module_name}".quoted_contents();
@@ -13,8 +12,6 @@ comptime fn make_bench(_m: Module, N: u32, MOD_BITS: u32, params: Quoted) -> Quo
         f"evaluate_quadratic_expression_3_elements_{module_name}".quoted_contents();
     let evaluate_quadratic_expression_12_elements_bench_name =
         f"evaluate_quadratic_expression_12_elements_{module_name}".quoted_contents();
-    // let From = quote { std::convert::From }; 
-
     let BigNumTrait = quote { crate::bignum::BigNumTrait };
     let typ = params.as_type();
 
@@ -115,4 +112,3 @@ use crate::fields::U2048::U2048;
 pub mod U2048_Bench {
     use crate::fields::U2048::U2048;
 }
-
