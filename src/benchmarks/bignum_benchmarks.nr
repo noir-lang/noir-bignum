@@ -90,7 +90,7 @@ comptime fn make_bench(_m: Module, N: u32, MOD_BITS: u32, params: Quoted) -> Quo
         ) {
             $BigNumTrait::evaluate_quadratic_expression(lhs, lhs_flags, rhs, rhs_flags, add, add_flags)
         }
-        
+
     }
 }
 
@@ -101,22 +101,26 @@ comptime fn make_bench(_m: Module, N: u32, MOD_BITS: u32, params: Quoted) -> Quo
 // type U2048
 #[make_bench(3, 254, quote { BN254_Fq_Params })]
 pub mod BN254_Fq_Bench {
+    use crate::bignum::BigNumTrait;
     use crate::fields::bn254Fq::BN254_Fq_Params;
 }
 
 #[make_bench(3, 257, quote { U256Params })]
 pub mod U256_Bench {
+    use crate::bignum::BigNumTrait;
     use crate::fields::U256::U256Params;
 }
 
 #[make_bench(4, 381, quote { BLS12_381_Fq_Params })]
 pub mod BLS12_381Fq_Bench {
 
+    use crate::bignum::BigNumTrait;
     use crate::fields::bls12_381Fq::BLS12_381_Fq_Params;
 }
 
 #[make_bench(18, 2049, quote { U2048Params })]
 pub mod U2048_Bench {
+    use crate::bignum::BigNumTrait;
     use crate::fields::U2048::U2048Params;
 }
 
