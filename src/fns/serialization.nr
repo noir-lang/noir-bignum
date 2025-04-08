@@ -1,9 +1,7 @@
-/**
-* @brief construct a BigNum instance out of an array of bytes in BIG ENDIAN format
-* @description: each 120-bit limb represents 15 bytes, we require that the size of the byte array
-*               is precisely large enough to cover MOD_BITS
-* @param x: input byte array
-**/
+use crate::utils::map::invert_array;
+/// conversions between big endian and little endian byte arrays and BigNum instances
+/// the byte serialization should have `(MOD_BITS + 7) / 8` bytes.
+/// each 120-bit limb is represented by 15 bytes, and there are fewer bytes for covering the most significant limb
 pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32>(
     x: [u8; (MOD_BITS + 7) / 8],
 ) -> [u128; N] {
@@ -67,48 +65,15 @@ pub(crate) fn to_be_bytes<let N: u32, let MOD_BITS: u32>(
 pub(crate) fn to_le_bytes<let N: u32, let MOD_BITS: u32>(
     val: [u128; N],
 ) -> [u8; (MOD_BITS + 7) / 8] {
-    let mut result: [u8; (MOD_BITS + 7) / 8] = [0; (MOD_BITS + 7) / 8];
-    for i in 0..N - 1 {
-        let limb_bytes: [u8; 15] = (val[i] as Field).to_le_bytes();
-        for j in 0..15 {
-            result[i * 15 + j] = limb_bytes[j];
-        }
-    }
-    let last_limb_bytes: [u8; 15] = (val[N - 1] as Field).to_le_bytes();
-    let num_last_bytes = ((MOD_BITS + 7) / 8 - (N - 1) * 15);
-    for i in 0..num_last_bytes {
-        result[(N - 1) * 15 + i] = last_limb_bytes[i];
-    }
+    let result_be: [u8; (MOD_BITS + 7) / 8] = to_be_bytes(val);
+    let result = invert_array(result_be);
     result
 }
 
 pub(crate) fn from_le_bytes<let N: u32, let MOD_BITS: u32>(
     x: [u8; (MOD_BITS + 7) / 8],
 ) -> [u128; N] {
-    let mut result: [u128; N] = [0; N];
-    // first we deal with the full limbs
-    for i in 0..N - 1 {
-        let mut limb: Field = 0;
-        for j in 0..15 {
-            limb *= 256;
-            limb += x[(i + 1) * 15 - j - 1] as Field;
-        }
-        limb.assert_max_bit_size::<128>();
-        result[i] = limb as u128;
-    }
-    // now we deal with the not full limb
-    let num_bytes = (MOD_BITS + 7) / 8;
-    let excess_bytes = N * 15 - num_bytes;
-    let final_limb_bytes = 15 - excess_bytes;
-    let mut limb: Field = 0;
-    for j in 0..final_limb_bytes {
-        limb *= 256;
-        limb += x[(N - 1) * 15 + final_limb_bytes - j - 1] as Field;
-    }
-    limb.assert_max_bit_size::<128>();
-    result[N - 1] = limb as u128;
-    let most_significant_byte: Field = x[(MOD_BITS + 7) / 8 - 1] as Field;
-    // the most significant byte should have at most ((MOD_BITS+7)/8 * 8 - MOD_BITS) bits
-    most_significant_byte.assert_max_bit_size::<8 - ((MOD_BITS + 7) / 8 * 8 - MOD_BITS)>();
-    result
+    // make the bytes big endian
+    let be_x = invert_array(x);
+    from_be_bytes(be_x)
 }
