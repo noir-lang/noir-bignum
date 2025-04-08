@@ -358,10 +358,7 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>
     result
 }
 
-pub(crate) unconstrained fn __gte<let N: u32, let MOD_BITS: u32>(
-    lhs: [u128; N],
-    rhs: [u128; N],
-) -> bool {
+pub(crate) unconstrained fn __gte<let N: u32>(lhs: [u128; N], rhs: [u128; N]) -> bool {
     let mut result = false;
     let mut early_exit = false;
     for i in 0..(N) {
