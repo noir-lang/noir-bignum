@@ -144,7 +144,6 @@ pub(crate) comptime fn derive_bignum_impl(
 
             fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self {
                 let params = Self::params();
-                // Self::from_limbs($constrained_ops::derive_from_seed::<_, $MOD_BITS, _>(params, seed))
                 $typ::from_limbs($constrained_ops::derive_from_seed::<_, $MOD_BITS, _>(params, seed))
             }
 
@@ -339,12 +338,7 @@ pub(crate) comptime fn derive_bignum_impl(
             }
         }
 
-            // implement From for BigNum
-        impl $From<[u128; $N]> for $typ {
-            fn from(limbs: [u128; $N]) -> Self {
-                $typ { limbs }
-            }
-        }
+        
 
         impl $From<Field> for $typ {
             fn from(input: Field) -> Self {
