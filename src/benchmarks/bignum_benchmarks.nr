@@ -91,6 +91,26 @@ comptime fn make_bench(_m: Module, N: u32, MOD_BITS: u32, params: Quoted) -> Quo
             $BigNumTrait::evaluate_quadratic_expression(lhs, lhs_flags, rhs, rhs_flags, add, add_flags)
         }
 
+        #[export]
+        fn $to_be_bytes_bench_name(a: $BigNum<$N, $MOD_BITS, $params>) -> [u8; ($MOD_BITS+7) / 8] {
+            $BigNum::<$N, $MOD_BITS, $params> ::to_be_bytes(a)
+        }
+
+        #[export]
+        fn $from_be_bytes_bench_name(a: [u8; ($MOD_BITS+7) / 8]) -> $BigNum<$N, $MOD_BITS, $params> {
+            $BigNum::<$N, $MOD_BITS, $params> ::from_be_bytes(a)
+        }
+
+        #[export]
+        fn $to_le_bytes_bench_name(a: $BigNum<$N, $MOD_BITS, $params>) -> [u8; ($MOD_BITS+7) / 8] {
+            $BigNum::<$N, $MOD_BITS, $params> ::to_le_bytes(a)
+        }
+
+        #[export]
+        fn $from_le_bytes_bench_name(a: [u8; ($MOD_BITS+7) / 8]) -> $BigNum<$N, $MOD_BITS, $params> {
+            $BigNum::<$N, $MOD_BITS, $params> ::from_le_bytes(a)
+        }      
+
     }
 }
 
@@ -122,25 +142,4 @@ pub mod BLS12_381Fq_Bench {
 pub mod U2048_Bench {
     use crate::bignum::BigNumTrait;
     use crate::fields::U2048::U2048Params;
-}
-
-// TODO: add the benchmarks for serialization to the macro (currently dealing with trait visibility issues)
-#[export]
-fn bench_to_be_bytes(a: BN254_Fq) -> [u8; 32] {
-    a.to_be_bytes()
-}
-
-#[export]
-fn bench_from_be_bytes(a: [u8; 32]) -> BN254_Fq {
-    BN254_Fq::from_be_bytes(a)
-}
-
-#[export]
-fn bench_to_le_bytes(a: BN254_Fq) -> [u8; 32] {
-    a.to_le_bytes()
-}
-
-#[export]
-fn bench_from_le_bytes(a: [u8; 32]) -> BN254_Fq {
-    BN254_Fq::from_le_bytes(a)
 }
