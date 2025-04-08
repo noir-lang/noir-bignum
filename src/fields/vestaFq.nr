@@ -14,7 +14,7 @@
 //! * Curve equation: y^2 = x^3 + 5
 //! * Valuation(q - 1, 2) = 32
 //! * Valuation(r - 1, 2) = 32
-use crate::bignum::BigNumTrait;
+use crate::bignum::BigNum;
 use crate::bignum::derive_bignum_impl;
 use crate::params::BigNumParams;
 

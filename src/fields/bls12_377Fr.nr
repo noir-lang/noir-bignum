@@ -17,7 +17,7 @@
 //! * G2 curve equation: y^2 = x^3 + B, where
 //!    * B = Fq2(0, 155198655607781456406391640216936120121836107652948796323930557600032281009004493664981332883744016074664192874906)
 
-use crate::bignum::BigNumTrait;
+use crate::bignum::BigNum;
 use crate::bignum::derive_bignum_impl;
 use crate::params::BigNumParams;
 

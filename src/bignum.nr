@@ -5,16 +5,16 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 
 // We aim to avoid needing to add a generic parameter to this trait, for this reason we do not allow
 // accessing the limbs of the bignum except through slices.
-pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
+pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     let N: u32;
     let MOD_BITS: u32;
 
     fn params() -> BigNumParams<N, MOD_BITS>;
     fn modulus_bits(_: Self) -> u32 {
-        BigNumTrait::MOD_BITS
+        BigNum::MOD_BITS
     }
     fn num_limbs(_: Self) -> u32 {
-        BigNumTrait::N
+        BigNum::N
     }
     fn modulus() -> Self;
 
@@ -98,14 +98,14 @@ pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
     fn is_zero(self) -> bool;
 }
 
-// we need macros that implement the BigNumTrait, Default, From, Neg, Add, Sub, Mul, Div, Eq, Ord traits for each bignum type
+// we need macros that implement the BigNum, Default, From, Neg, Add, Sub, Mul, Div, Eq, Ord traits for each bignum type
 pub(crate) comptime fn derive_bignum_impl(
     strukt: TypeDefinition,
     N: u32,
     MOD_BITS: u32,
     params: Quoted,
 ) -> Quoted {
-    // let BigNumTrait = quote { crate::bignum::BigNumTrait };
+    // let BigNum = quote { crate::bignum::BigNum };
     let From = quote { std::convert::From };
     let Neg = quote { std::ops::Neg };
     let Add = quote { std::ops::Add };
@@ -114,7 +114,7 @@ pub(crate) comptime fn derive_bignum_impl(
     let Div = quote { std::ops::Div };
     let Eq = quote { std::cmp::Eq };
     let Ord = quote { std::cmp::Ord };
-    let BigNumTrait = quote { crate::bignum::BigNumTrait };
+    let BigNum = quote { crate::bignum::BigNum };
     let constrained_ops = quote { crate::fns::constrained_ops };
     let unconstrained_ops = quote { crate::fns::unconstrained_ops };
     let Ordering = quote { std::cmp::Ordering };
@@ -124,8 +124,8 @@ pub(crate) comptime fn derive_bignum_impl(
     let expressions = quote { crate::fns::expressions };
     quote {
 
-        // implement BigNumTrait for BigNum 
-        impl $BigNumTrait for $typ {
+        // implement BigNum for BigNum 
+        impl $BigNum for $typ {
             let N: u32 = $N; 
             let MOD_BITS: u32 = $MOD_BITS;
             
@@ -383,7 +383,7 @@ pub(crate) comptime fn derive_bignum_impl(
 
 pub fn to_field<T, let N: u32, let MOD_BITS: u32>(bn: T) -> Field
 where
-    T: BigNumTrait<N = N, MOD_BITS = MOD_BITS>,
+    T: BigNum<N = N, MOD_BITS = MOD_BITS>,
 {
     let params = T::params();
     limbs_to_field::<N, MOD_BITS>(params, bn.get_limbs())

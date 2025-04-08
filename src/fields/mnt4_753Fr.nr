@@ -19,7 +19,7 @@
 //!    * B = Fq2(0, b * NON_RESIDUE)
 //!    * NON_RESIDUE = 13 is the quadratic non-residue used to conpub struct  the
 //!      extension field Fq2
-use crate::bignum::BigNumTrait;
+use crate::bignum::BigNum;
 use crate::bignum::derive_bignum_impl;
 use crate::params::BigNumParams;
 

@@ -1,4 +1,4 @@
-use crate::bignum::BigNumTrait;
+use crate::bignum::BigNum;
 use crate::bignum::derive_bignum_impl;
 use crate::bignum::to_field;
 use crate::fns::unconstrained_helpers::__helper_add;
@@ -101,7 +101,7 @@ fn test_bls_reduction() {
     X1.validate_in_field();
     // Safety: test code
     let mut (_, XX_mul_3): (BLS12_381_Fq, BLS12_381_Fq) = unsafe {
-        BigNumTrait::__compute_quadratic_expression(
+        BigNum::__compute_quadratic_expression(
             [[X1, X1, X1]],
             [[false, false, false]],
             [[X1]],
@@ -116,13 +116,13 @@ fn test_bls_reduction() {
 #[test]
 fn test_derive_from_seed() {
     let seed = [1, 2, 3, 4];
-    let result_bn: BN254_Fq = BigNumTrait::derive_from_seed(seed);
+    let result_bn: BN254_Fq = BigNum::derive_from_seed(seed);
     result_bn.validate_in_field();
 }
 
 fn test_eq<let N: u32, BN>()
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let a = BN::derive_from_seed([1, 2, 3, 4]);
     let b = BN::derive_from_seed([1, 2, 3, 4]);
@@ -135,7 +135,7 @@ where
 
 fn test_is_zero<let N: u32, BN>()
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let a = BN::derive_from_seed([1, 2, 3, 4]);
     let zero = BN::zero();
@@ -148,7 +148,7 @@ where
 // // // 929 gates for a 2048 bit mul
 fn test_mul<let N: u32, BN>()
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let a: BN = BN::derive_from_seed([1, 2, 3, 4]);
     let b: BN = BN::derive_from_seed([4, 5, 6, 7]);
@@ -159,7 +159,7 @@ where
 
 fn test_add<let N: u32, BN>()
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let a = BN::derive_from_seed([1, 2, 3, 4]);
     let b: BN = BN::derive_from_seed([4, 5, 6, 7]);
@@ -187,7 +187,7 @@ where
 
 fn test_div<let N: u32, BN>()
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let a = BN::derive_from_seed([1, 2, 3, 4]);
     let b = BN::derive_from_seed([4, 5, 6, 7]);
@@ -198,7 +198,7 @@ where
 
 fn test_invmod<let N: u32, BN>()
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let u = BN::derive_from_seed([1, 2, 3, 4]);
     // Safety: test code
@@ -211,7 +211,7 @@ where
 
 fn assert_is_not_equal<let N: u32, BN>()
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let a = BN::derive_from_seed([1, 2, 3, 4]);
     let b = BN::derive_from_seed([4, 5, 6, 7]);
@@ -221,7 +221,7 @@ where
 
 fn assert_is_not_equal_fail<let N: u32, BN>()
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let a = BN::derive_from_seed([1, 2, 3, 4]);
     let b = BN::derive_from_seed([1, 2, 3, 4]);
@@ -231,7 +231,7 @@ where
 
 fn assert_is_not_equal_overloaded_lhs_fail<let N: u32, BN>()
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let a = BN::derive_from_seed([1, 2, 3, 4]);
     let b = BN::derive_from_seed([1, 2, 3, 4]);
@@ -247,7 +247,7 @@ where
 
 fn assert_is_not_equal_overloaded_rhs_fail<let N: u32, BN>()
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let a = BN::derive_from_seed([1, 2, 3, 4]);
     let b = BN::derive_from_seed([1, 2, 3, 4]);
@@ -263,7 +263,7 @@ where
 
 fn assert_is_not_equal_overloaded_fail<let N: u32, BN>()
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let a = BN::derive_from_seed([1, 2, 3, 4]);
     let b = BN::derive_from_seed([1, 2, 3, 4]);
@@ -703,7 +703,7 @@ fn test_expressions() {
     // Safety: test code
     let z = unsafe { uv.__add(wx) };
 
-    BigNumTrait::evaluate_quadratic_expression(
+    BigNum::evaluate_quadratic_expression(
         [[uu], [w]],
         [[false], [false]],
         [[vv], [x]],
@@ -711,7 +711,7 @@ fn test_expressions() {
         [z],
         [true],
     );
-    BigNumTrait::evaluate_quadratic_expression(
+    BigNum::evaluate_quadratic_expression(
         [[uu], [w]],
         [[false], [false]],
         [[vv], [x]],
@@ -884,7 +884,7 @@ fn test_to_from_field_2() {
 
 unconstrained fn test_batch_inversion<let N: u32, BN>(fields: [BN; N])
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let inverted_fields = BN::__batch_invert(fields);
     for i in 0..N {
@@ -900,7 +900,7 @@ unconstrained fn test_batch_inversion_BN381(seeds: [[u8; 2]; 3]) {
 
 unconstrained fn test_batch_inversion_slice<BN>(fields: [BN])
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let inverted_fields = BN::__batch_invert_slice(fields);
     assert_eq(fields.len(), inverted_fields.len());

@@ -19,7 +19,7 @@
 //!    * B = Fq3(b * NON_RESIDUE, 0, 0)
 //!    * NON_RESIDUE = 11 is the cubic non-residue used to conpub struct  the
 //!      extension field Fq3
-use crate::bignum::BigNumTrait;
+use crate::bignum::BigNum;
 use crate::bignum::derive_bignum_impl;
 use crate::params::BigNumParams;
 
