@@ -1,5 +1,5 @@
 use crate::bignum::BigNumTrait;
-use crate::bignum::make_bignum_impls;
+use crate::bignum::derive_bignum_impl;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 
@@ -28,7 +28,7 @@ pub global Secp384r1_Fr_PARAMS: BigNumParams<4, 384> = BigNumParams {
     redc_param: [0x5f24db74f58851313e695333ad68d0, 0x0389cb27e0bc8d220a7e, 0x00, 0x10000000],
 };
 
-#[make_bignum_impls(4, 384, quote {Secp384r1_Fr_PARAMS})]
+#[derive_bignum_impl(4, 384, quote {Secp384r1_Fr_PARAMS})]
 pub struct Secp384r1_Fr {
     limbs: [u128; 4],
 }

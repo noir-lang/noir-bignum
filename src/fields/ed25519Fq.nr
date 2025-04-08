@@ -1,5 +1,5 @@
 use crate::bignum::BigNumTrait;
-use crate::bignum::make_bignum_impls;
+use crate::bignum::derive_bignum_impl;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 pub struct ED25519_Fq_Params {}
@@ -21,7 +21,7 @@ pub global ED25519_Fq_PARAMS: BigNumParams<3, 255> = BigNumParams {
     redc_param: [0x0130, 0x00, 0x080000],
 };
 
-#[make_bignum_impls(3, 255, quote {ED25519_Fq_PARAMS})]
+#[derive_bignum_impl(3, 255, quote {ED25519_Fq_PARAMS})]
 pub struct ED25519_Fq {
     limbs: [u128; 3],
 }

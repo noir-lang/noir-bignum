@@ -14,7 +14,7 @@
 //! * Valuation(q - 1, 2) = 32
 //! * Valuation(r - 1, 2) = 32
 use crate::bignum::BigNumTrait;
-use crate::bignum::make_bignum_impls;
+use crate::bignum::derive_bignum_impl;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 
@@ -37,7 +37,7 @@ pub global Pallas_Fr_PARAMS: BigNumParams<3, 255> = BigNumParams {
     redc_param: [0x59c0fd9ad5c89cee4537bfffffffc4, 0xfffffffffffffffffffffffffff76e, 0x0fffff],
 };
 
-#[make_bignum_impls(3, 255, quote {Pallas_Fr_PARAMS})]
+#[derive_bignum_impl(3, 255, quote {Pallas_Fr_PARAMS})]
 pub struct Pallas_Fr {
     limbs: [u128; 3],
 }

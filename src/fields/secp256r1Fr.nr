@@ -1,5 +1,5 @@
 use crate::bignum::BigNumTrait;
-use crate::bignum::make_bignum_impls;
+use crate::bignum::derive_bignum_impl;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 pub struct Secp256r1_Fr_Params {}
@@ -27,7 +27,7 @@ impl BigNumParamsGetter<3, 256> for Secp256r1_Fr {
     }
 }
 
-#[make_bignum_impls(3, 256, quote {Secp256r1_Fr_PARAMS})]
+#[derive_bignum_impl(3, 256, quote {Secp256r1_Fr_PARAMS})]
 pub struct Secp256r1_Fr {
     limbs: [u128; 3],
 }

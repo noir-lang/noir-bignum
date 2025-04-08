@@ -1,5 +1,5 @@
 use crate::bignum::BigNumTrait;
-use crate::bignum::make_bignum_impls;
+use crate::bignum::derive_bignum_impl;
 use crate::bignum::to_field;
 use crate::fns::unconstrained_helpers::__helper_add;
 
@@ -89,7 +89,7 @@ impl BigNumParamsGetter<18, 2048> for Test2048Params {
     }
 }
 
-#[make_bignum_impls(18, 2048, quote {TEST_2048_PARAMS})]
+#[derive_bignum_impl(18, 2048, quote {TEST_2048_PARAMS})]
 pub struct BN2048 {
     limbs: [u128; 18],
 }

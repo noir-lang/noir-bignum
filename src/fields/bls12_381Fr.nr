@@ -15,7 +15,7 @@
 //! * G1 curve equation: y^2 = x^3 + 4
 //! * G2 curve equation: y^2 = x^3 + Fq2(4, 4)
 use crate::bignum::BigNumTrait;
-use crate::bignum::make_bignum_impls;
+use crate::bignum::derive_bignum_impl;
 use crate::params::BigNumParams;
 use crate::params::BigNumParamsGetter;
 
@@ -38,7 +38,7 @@ pub global BLS12_381_Fr_PARAMS: BigNumParams<3, 255> = BigNumParams {
     redc_param: [0x10fad2f92eb5c509cde80830358e4c, 0x53b7fb78ddf0e2d772dc1f823b4d94, 0x08d542],
 };
 
-#[make_bignum_impls(3, 255, quote {BLS12_381_Fr_PARAMS})]
+#[derive_bignum_impl(3, 255, quote {BLS12_381_Fr_PARAMS})]
 pub struct BLS12_381_Fr {
     limbs: [u128; 3],
 }
