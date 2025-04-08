@@ -1,12 +1,13 @@
-comptime fn make_bench(_m: Module, N: u32, MOD_BITS: u32, params: Quoted) -> Quoted {
-    let module_name = _m.name();
+use crate::fields::{bls12_381Fq::BLS12_381_Fq, bn254Fq::BN254_Fq, U2048::U2048, U256::U256};
+
+comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
+    let module_name = m.name();
     let add_bench_name = f"add_{module_name}".quoted_contents();
     let sub_bench_name = f"sub_{module_name}".quoted_contents();
     let mul_bench_name = f"mul_{module_name}".quoted_contents();
     let div_bench_name = f"div_{module_name}".quoted_contents();
     let udiv_mod_bench_name = f"udiv_mod_{module_name}".quoted_contents();
     let udiv_bench_name = f"udiv_{module_name}".quoted_contents();
-    let from_field_bench_name = f"from_field_{module_name}".quoted_contents();
     let validate_in_field_bench_name = f"validate_in_field_{module_name}".quoted_contents();
     let evaluate_quadratic_expression_3_elements_bench_name =
         f"evaluate_quadratic_expression_3_elements_{module_name}".quoted_contents();
@@ -45,11 +46,6 @@ comptime fn make_bench(_m: Module, N: u32, MOD_BITS: u32, params: Quoted) -> Quo
         fn $udiv_bench_name(a: $typ, b: $typ) -> $typ {
             $BigNumTrait::udiv(a, b)
         }
-        
-        // #[export]
-        // fn $from_field_bench_name(a: Field) -> $typ {
-        //     $From::from::<Field>(a)
-        // }
 
         #[export]
         fn $validate_in_field_bench_name(a: $typ) {
@@ -88,27 +84,14 @@ comptime fn make_bench(_m: Module, N: u32, MOD_BITS: u32, params: Quoted) -> Quo
 // type U256
 // type BLS12_381Fq
 // type U2048
-use crate::fields::bn254Fq::BN254_Fq;
-#[make_bench(3, 254, quote { BN254_Fq })]
-pub mod BN254_Fq_Bench {
-    use crate::fields::bn254Fq::BN254_Fq;
-}
+#[make_bench(quote { BN254_Fq })]
+mod BN254_Fq_Bench {}
 
-use crate::fields::U256::U256;
-#[make_bench(3, 257, quote { U256 })]
-pub mod U256_Bench {
-    use crate::fields::U256::U256;
-}
+#[make_bench(quote { U256 })]
+mod U256_Bench {}
 
-use crate::fields::bls12_381Fq::BLS12_381_Fq;
-#[make_bench(4, 381, quote { BLS12_381_Fq })]
-pub mod BLS12_381Fq_Bench {
+#[make_bench(quote { BLS12_381_Fq })]
+mod BLS12_381Fq_Bench {}
 
-    use crate::fields::bls12_381Fq::BLS12_381_Fq;
-}
-
-use crate::fields::U2048::U2048;
-#[make_bench(18, 2049, quote { U2048 })]
-pub mod U2048_Bench {
-    use crate::fields::U2048::U2048;
-}
+#[make_bench(quote { U2048 })]
+mod U2048_Bench {}
