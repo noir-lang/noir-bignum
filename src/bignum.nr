@@ -11,8 +11,7 @@ pub struct BigNum<let N: u32, let MOD_BITS: u32, Params> {
 pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
     let N: u32;
     let MOD_BITS: u32;
-    // TODO: this crashes the compiler? v0.32
-    // fn default() -> Self { std::default::Default::default  () }
+
     fn params() -> BigNumParams<N, MOD_BITS>;
     fn new() -> Self;
     fn zero() -> Self;
