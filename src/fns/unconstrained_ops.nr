@@ -111,7 +111,6 @@ pub(crate) unconstrained fn __mul_with_quotient<let N: u32, let MOD_BITS: u32>(
     }
     let to_reduce: [u128; (N * 2)] = split_bits::__normalize_limbs(mul, 2 * N);
     let (q, r) = __barrett_reduction(to_reduce, params.redc_param, MOD_BITS, params.modulus);
-    // ([0; N], [0; N])
     (q, r)
 }
 
