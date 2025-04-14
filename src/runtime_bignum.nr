@@ -7,7 +7,7 @@ use crate::fns::{
         neg, sub, udiv, udiv_mod, umod, validate_in_field, validate_in_range,
     },
     expressions::{__compute_quadratic_expression, evaluate_quadratic_expression},
-    serialization::{from_be_bytes, to_le_bytes},
+    serialization::{from_be_bytes, from_le_bytes, to_be_bytes, to_le_bytes},
     unconstrained_ops::{
         __add, __batch_invert, __batch_invert_slice, __derive_from_seed, __div, __eq, __invmod,
         __is_zero, __mul, __neg, __pow, __sub, __tonelli_shanks_sqrt, __udiv_mod,
@@ -60,15 +60,20 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
         Self { limbs, params }
     }
 
-    pub fn from_be_bytes<let NBytes: u32>(
-        params: BigNumParams<N, MOD_BITS>,
-        x: [u8; NBytes],
-    ) -> Self {
-        Self { limbs: from_be_bytes::<_, MOD_BITS, _>(x), params }
+    pub fn from_be_bytes(params: BigNumParams<N, MOD_BITS>, x: [u8; (MOD_BITS + 7) / 8]) -> Self {
+        Self { limbs: from_be_bytes::<_, MOD_BITS>(x), params }
     }
 
-    pub fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes] {
-        to_le_bytes::<_, MOD_BITS, _>(self.limbs)
+    pub fn from_le_bytes(params: BigNumParams<N, MOD_BITS>, x: [u8; (MOD_BITS + 7) / 8]) -> Self {
+        Self { limbs: from_le_bytes::<_, MOD_BITS>(x), params }
+    }
+
+    pub fn to_be_bytes(self) -> [u8; (MOD_BITS + 7) / 8] {
+        to_be_bytes::<_, MOD_BITS>(self.limbs)
+    }
+
+    pub fn to_le_bytes(self) -> [u8; (MOD_BITS + 7) / 8] {
+        to_le_bytes::<_, MOD_BITS>(self.limbs)
     }
 
     pub fn modulus(self) -> Self {

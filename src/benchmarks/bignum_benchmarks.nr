@@ -13,10 +13,16 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
         f"evaluate_quadratic_expression_3_elements_{module_name}".quoted_contents();
     let evaluate_quadratic_expression_12_elements_bench_name =
         f"evaluate_quadratic_expression_12_elements_{module_name}".quoted_contents();
+    let to_be_bytes_bench_name = f"to_be_bytes_{module_name}".quoted_contents();
+    let from_be_bytes_bench_name = f"from_be_bytes_{module_name}".quoted_contents();
+    let to_le_bytes_bench_name = f"to_le_bytes_{module_name}".quoted_contents();
+    let from_le_bytes_bench_name = f"from_le_bytes_{module_name}".quoted_contents();
     let BigNum = quote { crate::bignum::BigNum };
     let from_field_bench_name = f"from_field_{module_name}".quoted_contents();
     let typ = params.as_type();
 
+
+    
     quote {
         #[export]
         fn $add_bench_name(a: $typ, b: $typ) -> $typ {
@@ -81,7 +87,26 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
         fn $from_field_bench_name(a: Field) -> $typ {
             $typ::from(a)
         }
-        
+
+        // #[export]
+        // fn $to_be_bytes_bench_name(a: $typ) -> [u8; ($MOD_BITS+7) / 8] {
+        //     $BigNum::to_be_bytes(a)
+        // }
+
+        // #[export]
+        // fn $from_be_bytes_bench_name(a: [u8; ($MOD_BITS+7) / 8]) -> $typ {
+        //     $BigNum::from_be_bytes(a)
+        // }
+
+        // #[export]
+        // fn $to_le_bytes_bench_name(a: $typ) -> [u8; ($MOD_BITS+7) / 8] {
+        //     $BigNum::to_le_bytes(a)
+        // }
+
+        // #[export]
+        // fn $from_le_bytes_bench_name(a: [u8; ($MOD_BITS+7) / 8]) -> $typ {
+        //     $BigNum::from_le_bytes(a)
+        // }      
     }
 }
 

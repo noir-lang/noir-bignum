@@ -27,8 +27,10 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
     unconstrained fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
     fn from_slice(limbs: [u128]) -> Self;
-    fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> Self;
-    fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes];
+    fn from_be_bytes(x: [u8; (MOD_BITS + 7) / 8]) -> Self;
+    fn to_be_bytes(self) -> [u8; (MOD_BITS + 7) / 8];
+    fn from_le_bytes(x: [u8; (MOD_BITS + 7) / 8]) -> Self;
+    fn to_le_bytes(self) -> [u8; (MOD_BITS + 7) / 8];
 
     fn get_limbs_slice(self) -> [u128] {
         self.get_limbs().as_slice()
@@ -177,12 +179,20 @@ pub(crate) comptime fn derive_bignum_impl(
                 Self { limbs: limbs.as_array() }
             }
 
-            fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> Self {
-                Self { limbs: $serialization::from_be_bytes::<_, $MOD_BITS, _>(x) }
+            fn from_be_bytes(x: [u8; ($MOD_BITS + 7) / 8]) -> Self {
+                Self { limbs: $serialization::from_be_bytes::<_, $MOD_BITS>(x) }
+            }
+            
+            fn to_be_bytes(self) -> [u8; ($MOD_BITS + 7) / 8] {
+                $serialization::to_be_bytes::<_, $MOD_BITS>(self.limbs)
             }
 
-            fn to_le_bytes<let NBytes: u32>(self: Self) -> [u8; NBytes] {
-                $serialization::to_le_bytes::<_, $MOD_BITS, _>(self.get_limbs())
+            fn from_le_bytes(x: [u8; ($MOD_BITS + 7) / 8]) -> Self {
+                Self { limbs: $serialization::from_le_bytes::<_, $MOD_BITS>(x) }
+            }
+
+            fn to_le_bytes(self) -> [u8; ($MOD_BITS + 7) / 8] {
+                $serialization::to_le_bytes::<_, $MOD_BITS>(self.limbs)
             }
 
             unconstrained fn __neg(self: Self) -> Self {

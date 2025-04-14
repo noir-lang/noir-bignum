@@ -1,18 +1,21 @@
 mod bignum;
 mod runtime_bignum;
-mod tests;
+
 mod constants;
 
 // Pre-defined fields and bignums for people to use:
 pub mod fields;
 
-mod benchmarks;
 // Structs enabling people to define their own bignum params
 pub mod params;
+
 
 // Free functions and other utils, called by the BigNum and RuntimeBigNum structs
 pub(crate) mod fns;
 pub(crate) mod utils;
+
+mod benchmarks;
+mod tests;
 
 // Re-export the main structs so that users don't have to specify the paths
 pub use bignum::BigNum;
