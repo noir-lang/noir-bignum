@@ -15,18 +15,8 @@
 //! * Valuation(q - 1, 2) = 32
 //! * Valuation(r - 1, 2) = 32
 use crate::bignum::BigNum;
+use crate::bignum::derive_bignum_impl;
 use crate::params::BigNumParams;
-use crate::params::BigNumParamsGetter;
-
-pub struct Vesta_Fq_Params {}
-
-pub type Vesta_Fq = BigNum<3, 255, Vesta_Fq_Params>;
-
-impl BigNumParamsGetter<3, 255> for Vesta_Fq_Params {
-    fn get_params() -> BigNumParams<3, 255> {
-        Vesta_Fq_PARAMS
-    }
-}
 
 pub global Vesta_Fq_PARAMS: BigNumParams<3, 255> = BigNumParams {
     has_multiplicative_inverse: true,
@@ -38,3 +28,8 @@ pub global Vesta_Fq_PARAMS: BigNumParams<3, 255> = BigNumParams {
     ],
     redc_param: [0x59c0fd9ad5c89cee4537bfffffffc4, 0xfffffffffffffffffffffffffff76e, 0x0fffff],
 };
+
+#[derive_bignum_impl(3, 255, quote {Vesta_Fq_PARAMS})]
+pub struct Vesta_Fq {
+    limbs: [u128; 3],
+}

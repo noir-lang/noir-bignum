@@ -1,14 +1,13 @@
 use crate::bignum::BigNum;
-use crate::bignum::BigNumTrait;
+use crate::bignum::derive_bignum_impl;
 use crate::bignum::to_field;
 use crate::fns::unconstrained_helpers::__helper_add;
 
 use crate::params::BigNumParams;
-use crate::params::BigNumParamsGetter;
 
 use crate::fields::bls12_381Fq::BLS12_381_Fq;
 use crate::fields::bls12_381Fr::BLS12_381_Fr;
-use crate::fields::bn254Fq::{BN254_Fq, BN254_Fq_Params};
+use crate::fields::bn254Fq::BN254_Fq;
 use crate::fields::U256::U256;
 
 struct Test2048Params {}
@@ -83,27 +82,22 @@ global TEST_2048_PARAMS: BigNumParams<18, 2048> = BigNumParams {
     ],
 };
 
-impl BigNumParamsGetter<18, 2048> for Test2048Params {
-    fn get_params() -> BigNumParams<18, 2048> {
-        TEST_2048_PARAMS
-    }
+#[derive_bignum_impl(18, 2048, quote {TEST_2048_PARAMS})]
+pub struct BN2048 {
+    limbs: [u128; 18],
 }
-
-type BN2048 = BigNum<18, 2048, Test2048Params>;
 
 /**
  * @brief this example was failing - sanity test to validate it now works
  **/
 #[test]
 fn test_bls_reduction() {
-    let X1 = BLS12_381_Fq {
-        limbs: [
-            0x55e83ff97a1aeffb3af00adb22c6bb,
-            0x8c4f9774b905a14e3a3f171bac586c,
-            0xa73197d7942695638c4fa9ac0fc368,
-            0x17f1d3,
-        ],
-    };
+    let X1 = BLS12_381_Fq::from_limbs([
+        0x55e83ff97a1aeffb3af00adb22c6bb,
+        0x8c4f9774b905a14e3a3f171bac586c,
+        0xa73197d7942695638c4fa9ac0fc368,
+        0x17f1d3,
+    ]);
     X1.validate_in_field();
     // Safety: test code
     let mut (_, XX_mul_3): (BLS12_381_Fq, BLS12_381_Fq) = unsafe {
@@ -122,13 +116,13 @@ fn test_bls_reduction() {
 #[test]
 fn test_derive_from_seed() {
     let seed = [1, 2, 3, 4];
-    let result_bn = BN254_Fq::derive_from_seed(seed);
+    let result_bn: BN254_Fq = BigNum::derive_from_seed(seed);
     result_bn.validate_in_field();
 }
 
 fn test_eq<let N: u32, BN>()
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let a = BN::derive_from_seed([1, 2, 3, 4]);
     let b = BN::derive_from_seed([1, 2, 3, 4]);
@@ -141,7 +135,7 @@ where
 
 fn test_is_zero<let N: u32, BN>()
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let a = BN::derive_from_seed([1, 2, 3, 4]);
     let zero = BN::zero();
@@ -154,7 +148,7 @@ where
 // // // 929 gates for a 2048 bit mul
 fn test_mul<let N: u32, BN>()
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let a: BN = BN::derive_from_seed([1, 2, 3, 4]);
     let b: BN = BN::derive_from_seed([4, 5, 6, 7]);
@@ -165,7 +159,7 @@ where
 
 fn test_add<let N: u32, BN>()
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let a = BN::derive_from_seed([1, 2, 3, 4]);
     let b: BN = BN::derive_from_seed([4, 5, 6, 7]);
@@ -193,7 +187,7 @@ where
 
 fn test_div<let N: u32, BN>()
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let a = BN::derive_from_seed([1, 2, 3, 4]);
     let b = BN::derive_from_seed([4, 5, 6, 7]);
@@ -204,7 +198,7 @@ where
 
 fn test_invmod<let N: u32, BN>()
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let u = BN::derive_from_seed([1, 2, 3, 4]);
     // Safety: test code
@@ -217,7 +211,7 @@ where
 
 fn assert_is_not_equal<let N: u32, BN>()
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let a = BN::derive_from_seed([1, 2, 3, 4]);
     let b = BN::derive_from_seed([4, 5, 6, 7]);
@@ -227,7 +221,7 @@ where
 
 fn assert_is_not_equal_fail<let N: u32, BN>()
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let a = BN::derive_from_seed([1, 2, 3, 4]);
     let b = BN::derive_from_seed([1, 2, 3, 4]);
@@ -237,7 +231,7 @@ where
 
 fn assert_is_not_equal_overloaded_lhs_fail<let N: u32, BN>()
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let a = BN::derive_from_seed([1, 2, 3, 4]);
     let b = BN::derive_from_seed([1, 2, 3, 4]);
@@ -253,7 +247,7 @@ where
 
 fn assert_is_not_equal_overloaded_rhs_fail<let N: u32, BN>()
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let a = BN::derive_from_seed([1, 2, 3, 4]);
     let b = BN::derive_from_seed([1, 2, 3, 4]);
@@ -269,7 +263,7 @@ where
 
 fn assert_is_not_equal_overloaded_fail<let N: u32, BN>()
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let a = BN::derive_from_seed([1, 2, 3, 4]);
     let b = BN::derive_from_seed([1, 2, 3, 4]);
@@ -288,7 +282,6 @@ where
 
 #[test]
 fn test_eq_BN() {
-    // let stub = BN254_Fq::new();
     test_eq::<3, BN254_Fq>();
 }
 
@@ -303,12 +296,12 @@ fn test_add_BN() {
     let mut b = BN254_Fq::modulus();
     let mut expected = BN254_Fq::modulus();
 
-    a.limbs[0] -= 1;
+    a.set_limb(0, a.get_limb(0) - 1);
 
-    b.limbs[0] -= 1;
+    b.set_limb(0, b.get_limb(0) - 1);
 
-    let mut expected: BN254_Fq = BigNum::modulus();
-    expected.limbs[0] -= 2;
+    let mut expected: BN254_Fq = BN254_Fq::modulus();
+    expected.set_limb(0, expected.get_limb(0) - 2);
 
     let c = a + b;
     assert(c == expected);
@@ -316,10 +309,10 @@ fn test_add_BN() {
 
 #[test]
 fn test_add_test_BN_wrap_around() {
-    let mut a: BN254_Fq = BigNum::modulus();
-    let mut b: BN254_Fq = BN254_Fq { limbs: [3, 0, 0] };
+    let mut a: BN254_Fq = BN254_Fq::modulus();
+    let mut b: BN254_Fq = BN254_Fq::from_limbs([3, 0, 0]);
     let mut expected: BN254_Fq = BN254_Fq::one();
-    a.limbs[0] -= 2;
+    a.set_limb(0, a.get_limb(0) - 2);
 
     let c = a + b;
 
@@ -332,14 +325,14 @@ fn test_sub_test_BN() {
     let mut a = BN254_Fq::zero();
     let mut b = BN254_Fq::one();
     let mut expected = BN254_Fq::modulus();
-    expected.limbs[0] -= 1; // p - 1
+    expected.set_limb(0, expected.get_limb(0) - 1); // p - 1
     let result = a - b;
     assert(result == expected);
 }
 
 #[test]
 fn test_eq_wrap() {
-    let a: BN254_Fq = BigNum::modulus();
+    let a: BN254_Fq = BN254_Fq::modulus();
     let b = BN254_Fq::zero();
     assert(a == b);
 }
@@ -351,7 +344,7 @@ fn test_sub_modulus_limit() {
     // 0 - p = 0
     let mut a = BN254_Fq::zero();
     let mut b = BN254_Fq::modulus();
-    let mut expected = BigNum::zero();
+    let mut expected = BN254_Fq::zero();
 
     let result = a - b;
     assert(result == expected);
@@ -362,8 +355,8 @@ fn test_sub_modulus_underflow() {
     // 0 - (p + 1) is smaller than p and should produce unsatisfiable constraints
     let mut a = BN254_Fq::zero();
     let mut b = BN254_Fq::modulus();
-    b.limbs[0] += 1;
-    let mut expected = BigNum::one();
+    b.set_limb(0, b.get_limb(0) + 1);
+    let mut expected = BN254_Fq::one();
 
     let result = a - b;
     assert(result == expected);
@@ -374,11 +367,11 @@ fn test_add_modulus_limit() {
     // p + 2^{254} - 1 should be the maximum allowed value fed into an add operation
     // when adding, if the result overflows the modulus, we conditionally subtract the modulus, producing 2^{254} -  1
     // this is the largest value that will satisfy the range check applied when constructing a bignum
-    let p: [u128; 3] = BN254_Fq_Params::get_params().modulus;
+    let p: [u128; 3] = BN254_Fq::params().modulus;
     let two_pow_254_minus_1: [u128; 3] =
         [0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x3fff];
-    let a = BN254_Fq { limbs: p };
-    let b = BN254_Fq { limbs: two_pow_254_minus_1 };
+    let a = BN254_Fq::from_limbs(p);
+    let b = BN254_Fq::from_limbs(two_pow_254_minus_1);
     let result = a + b;
     assert(result == b);
 }
@@ -387,13 +380,13 @@ fn test_add_modulus_limit() {
 fn test_add_modulus_overflow() {
     //(2^{254} - 1) + (p - 1) = 2^{254} + p
     // after subtracting modulus, result is 2^{254} will does not satisfy the range check applied when constructing a BigNum
-    let p: [u128; 3] = BN254_Fq_Params::get_params().modulus;
+    let p: [u128; 3] = BN254_Fq::params().modulus;
     let two_pow_254_minus_1: [u128; 3] =
         [0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x3fff];
     let one = [1, 0, 0];
     // Safety: test code
-    let a = BN254_Fq { limbs: unsafe { __helper_add(p, one) } };
-    let b = BN254_Fq { limbs: two_pow_254_minus_1 };
+    let a = BN254_Fq::from_limbs(unsafe { __helper_add(p, one) });
+    let b = BN254_Fq::from_limbs(two_pow_254_minus_1);
     let result = a + b;
     assert(result == b);
 }
@@ -561,106 +554,106 @@ fn test_udiv_mod_U256() {
 
 #[test]
 fn test_1_udiv_mod_2() {
-    let _0: U256 = BigNum::zero();
-    let _1: U256 = BigNum::one();
+    let _0: U256 = U256::zero();
+    let _1: U256 = U256::one();
     assert(_1.udiv_mod(_1 + _1) == (_0, _1));
 }
 
 #[test]
 fn test_20_udiv_mod_11() {
-    let _1: U256 = BigNum::one();
-    let _2_POW_120: U256 = BigNum::from_slice([0, 1, 0]);
-    let _2_POW_121: U256 = BigNum::from_slice([0, 2, 0]);
+    let _1: U256 = U256::one();
+    let _2_POW_120: U256 = U256::from_slice([0, 1, 0]);
+    let _2_POW_121: U256 = U256::from_slice([0, 2, 0]);
     assert(_2_POW_121.udiv_mod(_2_POW_120 + _1) == (_1, _2_POW_120 - _1));
 }
 
-// // N.B. witness generation times make these tests take ~15 minutes each! Uncomment at your peril
+// // // N.B. witness generation times make these tests take ~15 minutes each! Uncomment at your peril
+// // #[test]
+// // fn test_div_2048() {
+// //     let stub: BN2048 = BigNum::new();
+// //     test_div(stub);
+// // }
+
+// // // N.B. witness generation times make these tests take ~15 minutes each! Uncomment at your peril
+// // #[test]
+// // fn test_invmod_2048() {
+// //     let stub: BN2048 = BigNum::new();
+// //     test_invmod(stub);
+// // }
+
 // #[test]
-// fn test_div_2048() {
-//     let stub: BN2048 = BigNum::new();
-//     test_div(stub);
+// fn test_2048_bit_quadratic_expression() {
+//     let a: [u128; 18] = [
+//         0x000000000000000000000000000000000083684820ff40795b8d9f1be2220cba,
+//         0x0000000000000000000000000000000000d4924fbdc522b07b6cd0ef5508fd66,
+//         0x0000000000000000000000000000000000d48f6c43c5930f3d70d6db09a48f4a,
+//         0x0000000000000000000000000000000000e7f72b2c0756704bea85be38352b34,
+//         0x00000000000000000000000000000000008337197826e2e9ea000ed5b05d5ac5,
+//         0x000000000000000000000000000000000040680101b43f6d17de8e3507f3d820,
+//         0x00000000000000000000000000000000000c6ba0cdcf77cff1c10355ea48d387,
+//         0x0000000000000000000000000000000000e51717a72902214a9dbeb90e4f225f,
+//         0x0000000000000000000000000000000000c1bd5bec78406b691f71cbcddb4574,
+//         0x00000000000000000000000000000000001ce5e532cfb306d7b52e7d9f1aa442,
+//         0x000000000000000000000000000000000019575932f75ddf00595b22782e1ba2,
+//         0x0000000000000000000000000000000000d630b3fbf0a9e55861e4399900feb9,
+//         0x0000000000000000000000000000000000d6b37aeb2daa8d2e2f7e29b0f7752a,
+//         0x0000000000000000000000000000000000e9cacdd93406256b9eb46b73948849,
+//         0x00000000000000000000000000000000001400e1f0a38695db66993fe042c48b,
+//         0x0000000000000000000000000000000000e1d829cb4fa8cabb7d0265efbd8527,
+//         0x000000000000000000000000000000000055f1a92a5dd099ef2bcd89ac175b52,
+//         0x00000000000000000000000000000000000000000000000000000000000000fc,
+//     ];
+//     let b: [u128; 18] = [
+//         0x0000000000000000000000000000000000c5694493e9bcc76e68dfcf73e0fde1,
+//         0x0000000000000000000000000000000000ede5e4b8b3e0dec1f4705c35521620,
+//         0x00000000000000000000000000000000007aa800bab1b33eda0f07695af6c583,
+//         0x000000000000000000000000000000000045892edea2c02bf0b8b1d2d9a4ebcc,
+//         0x00000000000000000000000000000000004dffb06bf396f3d0a5b67cff714bdd,
+//         0x00000000000000000000000000000000004d691db495235e1e032f1ef3e90274,
+//         0x0000000000000000000000000000000000d92c069d0f2675b2f46cb497aa62d4,
+//         0x00000000000000000000000000000000003d3f23584f113cef1a4b8b7d183f5c,
+//         0x0000000000000000000000000000000000289ba11d897837f9cec57dcc430bfc,
+//         0x0000000000000000000000000000000000765dc64f6ed4a6efd7b26c38f79e59,
+//         0x00000000000000000000000000000000008edf31fabf5c330ecf7f92fb6487cd,
+//         0x000000000000000000000000000000000053392f8b14dd78af702b3be2e0d557,
+//         0x000000000000000000000000000000000034abf357bfd56e9786a7e47ed9a5ae,
+//         0x0000000000000000000000000000000000a9ebb234064c8ab10d4e7900d4b973,
+//         0x00000000000000000000000000000000002a6850cce14a20463913002ddc0fa6,
+//         0x0000000000000000000000000000000000a97e3b06586bfa62325ef7557ab536,
+//         0x0000000000000000000000000000000000b942b0d26e5be2e08cd425107c59f7,
+//         0x0000000000000000000000000000000000000000000000000000000000000031,
+//     ];
+//     let c_expected: [u128; 18] = [
+//         0x00000000000000000000000000000000004518a874adebbcf963fed876dfcf78,
+//         0x00000000000000000000000000000000002b1535070c2deca63e2dc7145a9997,
+//         0x0000000000000000000000000000000000d9b738665a290c09f09202043d9387,
+//         0x0000000000000000000000000000000000c88853b11034fe12661eb7a5e41ca7,
+//         0x0000000000000000000000000000000000357cc4053e7eb127abc2c1430972a1,
+//         0x0000000000000000000000000000000000224df5e1be31a51562f8574027a992,
+//         0x000000000000000000000000000000000070ad9287e6326d534f1d2835e159ad,
+//         0x00000000000000000000000000000000000efa138f75f20b5117955e15bbb447,
+//         0x0000000000000000000000000000000000d9f45c310be1865ad23fbcdeb1d93f,
+//         0x00000000000000000000000000000000004f74ca4cf3df59a83f2df796fc9beb,
+//         0x0000000000000000000000000000000000ed1801428ebf7db771deb45f4311eb,
+//         0x00000000000000000000000000000000002ded3b46e3a84cda43157d4d927162,
+//         0x00000000000000000000000000000000009bcd6ac8f90601a44a84a026d4b383,
+//         0x0000000000000000000000000000000000ab098478b39031a1de85062fd5712b,
+//         0x00000000000000000000000000000000004432a79276f4375ff3ec2ced8b6cf6,
+//         0x0000000000000000000000000000000000a0922d75e96e3f9e31c0cbbcbd708a,
+//         0x00000000000000000000000000000000004013822c9e9aa5b5b1e9c33e4332b7,
+//         0x0000000000000000000000000000000000000000000000000000000000000058,
+//     ];
+
+//     let a_bn: BN2048 = BigNum { limbs: a };
+//     let b_bn: BN2048 = BigNum { limbs: b };
+//     // Safety: test code
+//     let c_bn = unsafe { a_bn.__mul(b_bn) };
+//     assert(c_bn.limbs == c_expected);
+
+//     a_bn.validate_in_range();
+
+//     BigNum::evaluate_quadratic_expression([[a_bn]], [[false]], [[b_bn]], [[false]], [c_bn], [true]);
 // }
-
-// // N.B. witness generation times make these tests take ~15 minutes each! Uncomment at your peril
-// #[test]
-// fn test_invmod_2048() {
-//     let stub: BN2048 = BigNum::new();
-//     test_invmod(stub);
-// }
-
-#[test]
-fn test_2048_bit_quadratic_expression() {
-    let a: [u128; 18] = [
-        0x000000000000000000000000000000000083684820ff40795b8d9f1be2220cba,
-        0x0000000000000000000000000000000000d4924fbdc522b07b6cd0ef5508fd66,
-        0x0000000000000000000000000000000000d48f6c43c5930f3d70d6db09a48f4a,
-        0x0000000000000000000000000000000000e7f72b2c0756704bea85be38352b34,
-        0x00000000000000000000000000000000008337197826e2e9ea000ed5b05d5ac5,
-        0x000000000000000000000000000000000040680101b43f6d17de8e3507f3d820,
-        0x00000000000000000000000000000000000c6ba0cdcf77cff1c10355ea48d387,
-        0x0000000000000000000000000000000000e51717a72902214a9dbeb90e4f225f,
-        0x0000000000000000000000000000000000c1bd5bec78406b691f71cbcddb4574,
-        0x00000000000000000000000000000000001ce5e532cfb306d7b52e7d9f1aa442,
-        0x000000000000000000000000000000000019575932f75ddf00595b22782e1ba2,
-        0x0000000000000000000000000000000000d630b3fbf0a9e55861e4399900feb9,
-        0x0000000000000000000000000000000000d6b37aeb2daa8d2e2f7e29b0f7752a,
-        0x0000000000000000000000000000000000e9cacdd93406256b9eb46b73948849,
-        0x00000000000000000000000000000000001400e1f0a38695db66993fe042c48b,
-        0x0000000000000000000000000000000000e1d829cb4fa8cabb7d0265efbd8527,
-        0x000000000000000000000000000000000055f1a92a5dd099ef2bcd89ac175b52,
-        0x00000000000000000000000000000000000000000000000000000000000000fc,
-    ];
-    let b: [u128; 18] = [
-        0x0000000000000000000000000000000000c5694493e9bcc76e68dfcf73e0fde1,
-        0x0000000000000000000000000000000000ede5e4b8b3e0dec1f4705c35521620,
-        0x00000000000000000000000000000000007aa800bab1b33eda0f07695af6c583,
-        0x000000000000000000000000000000000045892edea2c02bf0b8b1d2d9a4ebcc,
-        0x00000000000000000000000000000000004dffb06bf396f3d0a5b67cff714bdd,
-        0x00000000000000000000000000000000004d691db495235e1e032f1ef3e90274,
-        0x0000000000000000000000000000000000d92c069d0f2675b2f46cb497aa62d4,
-        0x00000000000000000000000000000000003d3f23584f113cef1a4b8b7d183f5c,
-        0x0000000000000000000000000000000000289ba11d897837f9cec57dcc430bfc,
-        0x0000000000000000000000000000000000765dc64f6ed4a6efd7b26c38f79e59,
-        0x00000000000000000000000000000000008edf31fabf5c330ecf7f92fb6487cd,
-        0x000000000000000000000000000000000053392f8b14dd78af702b3be2e0d557,
-        0x000000000000000000000000000000000034abf357bfd56e9786a7e47ed9a5ae,
-        0x0000000000000000000000000000000000a9ebb234064c8ab10d4e7900d4b973,
-        0x00000000000000000000000000000000002a6850cce14a20463913002ddc0fa6,
-        0x0000000000000000000000000000000000a97e3b06586bfa62325ef7557ab536,
-        0x0000000000000000000000000000000000b942b0d26e5be2e08cd425107c59f7,
-        0x0000000000000000000000000000000000000000000000000000000000000031,
-    ];
-    let c_expected: [u128; 18] = [
-        0x00000000000000000000000000000000004518a874adebbcf963fed876dfcf78,
-        0x00000000000000000000000000000000002b1535070c2deca63e2dc7145a9997,
-        0x0000000000000000000000000000000000d9b738665a290c09f09202043d9387,
-        0x0000000000000000000000000000000000c88853b11034fe12661eb7a5e41ca7,
-        0x0000000000000000000000000000000000357cc4053e7eb127abc2c1430972a1,
-        0x0000000000000000000000000000000000224df5e1be31a51562f8574027a992,
-        0x000000000000000000000000000000000070ad9287e6326d534f1d2835e159ad,
-        0x00000000000000000000000000000000000efa138f75f20b5117955e15bbb447,
-        0x0000000000000000000000000000000000d9f45c310be1865ad23fbcdeb1d93f,
-        0x00000000000000000000000000000000004f74ca4cf3df59a83f2df796fc9beb,
-        0x0000000000000000000000000000000000ed1801428ebf7db771deb45f4311eb,
-        0x00000000000000000000000000000000002ded3b46e3a84cda43157d4d927162,
-        0x00000000000000000000000000000000009bcd6ac8f90601a44a84a026d4b383,
-        0x0000000000000000000000000000000000ab098478b39031a1de85062fd5712b,
-        0x00000000000000000000000000000000004432a79276f4375ff3ec2ced8b6cf6,
-        0x0000000000000000000000000000000000a0922d75e96e3f9e31c0cbbcbd708a,
-        0x00000000000000000000000000000000004013822c9e9aa5b5b1e9c33e4332b7,
-        0x0000000000000000000000000000000000000000000000000000000000000058,
-    ];
-
-    let a_bn: BN2048 = BigNum { limbs: a };
-    let b_bn: BN2048 = BigNum { limbs: b };
-    // Safety: test code
-    let c_bn = unsafe { a_bn.__mul(b_bn) };
-    assert(c_bn.limbs == c_expected);
-
-    a_bn.validate_in_range();
-
-    BigNum::evaluate_quadratic_expression([[a_bn]], [[false]], [[b_bn]], [[false]], [c_bn], [true]);
-}
 
 #[test]
 fn test_expressions() {
@@ -673,41 +666,34 @@ fn test_expressions() {
         0,
     ];
 
-    let y = BN254_Fq { limbs: [0x1, 0x1, 0x0] };
-    let z = BN254_Fq { limbs: [0x2, 0x2, 0x0] };
+    let y = BN254_Fq::from_limbs([0x1, 0x1, 0x0]);
+    let z = BN254_Fq::from_limbs([0x2, 0x2, 0x0]);
     // Safety: test code
     let yy = unsafe { y.__add(y) };
 
-    assert(yy.limbs == z.limbs);
+    assert(yy.get_limbs() == z.get_limbs());
 
-    let uu = BN254_Fq {
-        limbs: [
-            0x0000000000000000000000000000000000b4a832748da6ad742a1fd81b787643,
-            0x00000000000000000000000000000000009575f594e04080471712c1d7f18e89,
-            0x000000000000000000000000000000000000000000000000000000000000063,
-        ],
-    };
-    let vv = BN254_Fq {
-        limbs: [
-            0x0000000000000000000000000000000000b4aec2748da6ad742a1fd81b787643,
-            0x00000000000000000000000000000000009575f594e0408047171a01d7f18e89,
-            0x0000000000000000000000000000000000000000000000000000000000000062,
-        ],
-    };
-    let w = BN254_Fq {
-        limbs: [
-            0x0000000000000000000000000000000000b4a832748da6ad742a1fd81b787643,
-            0x00000000000000000000000000000000009575f594e04080471712c1d7f18e89,
-            0x0000000000000000000000000000000000000000000000000000000000001f93,
-        ],
-    };
-    let x = BN254_Fq {
-        limbs: [
-            0x0000000000000000000000000000000000b4aec2748da6ad742a1fd81b787643,
-            0x00000000000000000000000000000000009575f594e0408047171a01d7f18e89,
-            0x0000000000000000000000000000000000000000000000000000000000000f93,
-        ],
-    };
+    let uu = BN254_Fq::from_limbs([
+        0x0000000000000000000000000000000000b4a832748da6ad742a1fd81b787643,
+        0x00000000000000000000000000000000009575f594e04080471712c1d7f18e89,
+        0x000000000000000000000000000000000000000000000000000000000000063,
+    ]);
+    let vv = BN254_Fq::from_limbs([
+        0x0000000000000000000000000000000000b4aec2748da6ad742a1fd81b787643,
+        0x00000000000000000000000000000000009575f594e0408047171a01d7f18e89,
+        0x0000000000000000000000000000000000000000000000000000000000000062,
+    ]);
+
+    let w = BN254_Fq::from_limbs([
+        0x0000000000000000000000000000000000b4a832748da6ad742a1fd81b787643,
+        0x00000000000000000000000000000000009575f594e04080471712c1d7f18e89,
+        0x0000000000000000000000000000000000000000000000000000000000001f93,
+    ]);
+    let x = BN254_Fq::from_limbs([
+        0x0000000000000000000000000000000000b4aec2748da6ad742a1fd81b787643,
+        0x00000000000000000000000000000000009575f594e0408047171a01d7f18e89,
+        0x0000000000000000000000000000000000000000000000000000000000000f93,
+    ]);
     // Safety: test code
     let wx = unsafe { w.__mul(x) };
     // Safety: test code
@@ -735,7 +721,7 @@ fn test_expressions() {
     );
 
     let wx_constrained = w * x;
-    assert(wx_constrained.limbs == wx.limbs);
+    assert(wx_constrained.get_limbs() == wx.get_limbs());
 }
 
 #[test]
@@ -749,8 +735,11 @@ fn test_from_field_1_digit() {
 fn test_from_field_2_digits() {
     let field: Field = 762576765071760201410184025311678064293966151975347778787092903729041075;
     let result = BN254_Fq::from(field);
-    let expected: BN254_Fq =
-        BigNum { limbs: [0xe88ed97f8f707abd3fa65763c80eb3, 0x6e7d8b5586595aa1fb2ee04d5cb4f5, 0x0] };
+    let expected: BN254_Fq = BN254_Fq::from_limbs([
+        0xe88ed97f8f707abd3fa65763c80eb3,
+        0x6e7d8b5586595aa1fb2ee04d5cb4f5,
+        0x0,
+    ]);
     assert(result == expected);
 }
 
@@ -758,32 +747,37 @@ fn test_from_field_2_digits() {
 fn test_from_field_3_digits() {
     let field: Field = -1;
     let result = BN254_Fq::from(field);
-    let expected = BN254_Fq {
-        limbs: [0x33e84879b9709143e1f593f0000000, 0x4e72e131a029b85045b68181585d28, 0x3064],
-    };
+    let expected: BN254_Fq = BN254_Fq::from_limbs([
+        0x33e84879b9709143e1f593f0000000,
+        0x4e72e131a029b85045b68181585d28,
+        0x3064,
+    ]);
     assert(result == expected);
 }
 
 #[test]
 fn test_do_nothing() {
-    let a: BN254_Fq = BN254_Fq { limbs: [1, 2, 0] };
-    let b: BN254_Fq = BN254_Fq { limbs: [1, 2, 0] };
+    let a: BN254_Fq = BN254_Fq::from_limbs([1, 2, 0]);
+    let b: BN254_Fq = BN254_Fq::from_limbs([1, 2, 0]);
     // Safety: test code
-    let c = unsafe { __helper_add(a.limbs, b.limbs) };
+    let c = unsafe { __helper_add(a.get_limbs(), b.get_limbs()) };
     // Safety: test code
     let d = unsafe { a.__add(b) };
     let e = a + b;
-    assert(c == d.limbs);
-    assert(c == e.limbs);
+    assert(c == d.get_limbs());
+    assert(c == e.get_limbs());
 }
 
 #[test]
 fn test_from_field_3_digits_BLS381() {
     let field: Field = -1;
     let result = BLS12_381_Fq::from(field);
-    let expected = BLS12_381_Fq {
-        limbs: [0x33e84879b9709143e1f593f0000000, 0x4e72e131a029b85045b68181585d28, 0x3064, 0x0],
-    };
+    let expected = BLS12_381_Fq::from_limbs([
+        0x33e84879b9709143e1f593f0000000,
+        0x4e72e131a029b85045b68181585d28,
+        0x3064,
+        0x0,
+    ]);
     assert(result == expected);
 }
 
@@ -798,7 +792,7 @@ fn test_to_field_one() {
 #[test]
 fn test_to_field_one_digit() {
     let field: Field = 1066513542066841864585910935480267774;
-    let bn = BN254_Fq { limbs: [0xcd672d695ef3129e4c40867a7173fe, 0x0, 0x0] };
+    let bn = BN254_Fq::from_limbs([0xcd672d695ef3129e4c40867a7173fe, 0x0, 0x0]);
     let result = to_field(bn);
     assert(result == field);
 }
@@ -806,9 +800,11 @@ fn test_to_field_one_digit() {
 #[test]
 fn test_to_field_two_digits() {
     let field: Field = 697955470585821007263499235110798476786097877002667034107578965871052378;
-    let bn = BN254_Fq {
-        limbs: [0x5a10b956d41840745e0a9f6e34465a, 0x65209b74583b912262843211905e41, 0x0],
-    };
+    let bn = BN254_Fq::from_limbs([
+        0x5a10b956d41840745e0a9f6e34465a,
+        0x65209b74583b912262843211905e41,
+        0x0,
+    ]);
     let result = to_field(bn);
     assert(result == field);
 }
@@ -816,49 +812,58 @@ fn test_to_field_two_digits() {
 #[test]
 fn test_to_field_three_digits() {
     let field: Field = 2330301921655783950764183713945533646391233209687308929386184468126823563744;
-    let bn = BN254_Fq {
-        limbs: [0x862cf8ea69d6c70c9cc8d8871b41e0, 0xe7763528201566c2fc8d93973cf1b4, 0x526],
-    };
+    let bn = BN254_Fq::from_limbs([
+        0x862cf8ea69d6c70c9cc8d8871b41e0,
+        0xe7763528201566c2fc8d93973cf1b4,
+        0x526,
+    ]);
     let result = to_field(bn);
     assert(result == field);
 }
 
 #[test(should_fail_with = "BigNum::validate_gt check fails")]
 fn test_to_field_three_digits_overflow() {
-    let bn = BN254_Fq {
-        limbs: [0x4e6405505a33bb9b9c0563df2bd59a, 0x48dbe03a9bb4865ba961e41ef9dded, 0x3a36],
-    };
+    let bn = BN254_Fq::from_limbs([
+        0x4e6405505a33bb9b9c0563df2bd59a,
+        0x48dbe03a9bb4865ba961e41ef9dded,
+        0x3a36,
+    ]);
     let _ = to_field(bn);
 }
 
 #[test(should_fail_with = "BigNum::validate_gt check fails")]
 fn test_to_field_too_many_digits() {
-    let bn = BLS12_381_Fq {
-        limbs: [0xea1742447ee9d92f9f18e1c80a481e, 0x3d89ad3d3ae85f3f482a08435c93ec, 0x1e9f, 0x1],
-    };
+    let bn = BLS12_381_Fq::from_limbs([
+        0xea1742447ee9d92f9f18e1c80a481e,
+        0x3d89ad3d3ae85f3f482a08435c93ec,
+        0x1e9f,
+        0x1,
+    ]);
     let _ = to_field(bn);
 }
 
 #[test]
 fn test_from_to_field_1() {
     let a = 20192735083400333763152317277081729935089452774154199134677444560763605803197;
-    let b = BN254_Fq::from(a);
+    let b: BN254_Fq = BN254_Fq::from(a);
     let c = to_field(b);
     assert(c == a);
 }
 
 #[test]
 fn test_from_to_field_fuzz(a: Field) {
-    let b = BLS12_381_Fq::from(a);
+    let b: BLS12_381_Fq = BLS12_381_Fq::from(a);
     let c = to_field(b);
     assert(c == a);
 }
 
 #[test]
 fn test_to_from_field_1() {
-    let a = BN254_Fq {
-        limbs: [0x3c768db7732ea1b536c06ae66bce70, 0xb9936c1401d91e7e9e1138375650b4, 0x8c8],
-    };
+    let a = BN254_Fq::from_limbs([
+        0x3c768db7732ea1b536c06ae66bce70,
+        0xb9936c1401d91e7e9e1138375650b4,
+        0x8c8,
+    ]);
     let b = to_field(a);
     let c = BN254_Fq::from(b);
     assert(a == c);
@@ -866,9 +871,12 @@ fn test_to_from_field_1() {
 
 #[test]
 fn test_to_from_field_2() {
-    let a = BLS12_381_Fq {
-        limbs: [0xd7562bf2b1fe13d458685c96a46d28, 0x2079950acd45bb43a9beeba69d5dc9, 0x18ca, 0x0],
-    };
+    let a = BLS12_381_Fq::from_limbs([
+        0xd7562bf2b1fe13d458685c96a46d28,
+        0x2079950acd45bb43a9beeba69d5dc9,
+        0x18ca,
+        0x0,
+    ]);
     let b = to_field(a);
     let c = BLS12_381_Fq::from(b);
     assert(a == c);
@@ -876,7 +884,7 @@ fn test_to_from_field_2() {
 
 unconstrained fn test_batch_inversion<let N: u32, BN>(fields: [BN; N])
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let inverted_fields = BN::__batch_invert(fields);
     for i in 0..N {
@@ -892,7 +900,7 @@ unconstrained fn test_batch_inversion_BN381(seeds: [[u8; 2]; 3]) {
 
 unconstrained fn test_batch_inversion_slice<BN>(fields: [BN])
 where
-    BN: BigNumTrait,
+    BN: BigNum,
 {
     let inverted_fields = BN::__batch_invert_slice(fields);
     assert_eq(fields.len(), inverted_fields.len());
@@ -916,59 +924,59 @@ unconstrained fn test_batch_inversion_BN381_regression(seeds: [[u8; 2]; 5]) {
 #[test]
 fn test_sub_underflow_regression() {
     let limbs = [605231426910671071918217543292637230, 925169190305713195541137574269511054, 4915];
-    let a = BLS12_381_Fr { limbs: limbs };
-    let b = BLS12_381_Fr { limbs: limbs };
+    let a = BLS12_381_Fr::from_limbs(limbs);
+    let b = BLS12_381_Fr::from_limbs(limbs);
     let c = b - a;
-    assert(c.limbs == [0, 0, 0]);
+    assert(c.get_limbs() == [0, 0, 0]);
 }
 
 #[test]
 fn test_cmp_BN() {
-    let mut a: BN254_Fq = BigNum::modulus();
-    let mut b: BN254_Fq = BigNum::modulus();
+    let mut a: BN254_Fq = BN254_Fq::modulus();
+    let mut b: BN254_Fq = BN254_Fq::modulus();
 
-    a.limbs[0] -= 2;
-    b.limbs[0] -= 1;
+    a.set_limb(0, a.get_limb(0) - 2);
+    b.set_limb(0, b.get_limb(0) - 1);
 
     assert(a < b);
 }
 
 #[test(should_fail_with = "Failed constraint")]
 fn test_cmp_BN_fail() {
-    let mut a: BN254_Fq = BigNum::modulus();
-    let mut b: BN254_Fq = BigNum::modulus();
+    let mut a: BN254_Fq = BN254_Fq::modulus();
+    let mut b: BN254_Fq = BN254_Fq::modulus();
 
-    a.limbs[0] -= 1;
-    b.limbs[0] -= 2;
+    a.set_limb(0, a.get_limb(0) - 1);
+    b.set_limb(0, b.get_limb(0) - 2);
 
     assert(a < b);
 }
 
 #[test]
 fn test_cmp_BN_2() {
-    let mut a: BN254_Fq = BigNum::modulus();
-    let mut b: BN254_Fq = BigNum::modulus();
+    let mut a: BN254_Fq = BN254_Fq::modulus();
+    let mut b: BN254_Fq = BN254_Fq::modulus();
 
-    a.limbs[0] -= 1;
-    b.limbs[0] -= 2;
+    a.set_limb(0, a.get_limb(0) - 1);
+    b.set_limb(0, b.get_limb(0) - 2);
 
     assert(a > b);
 }
 
 #[test(should_fail_with = "Failed constraint")]
 fn test_cmp_BN_fail_2() {
-    let mut a: BN254_Fq = BigNum::modulus();
-    let mut b: BN254_Fq = BigNum::modulus();
+    let mut a: BN254_Fq = BN254_Fq::modulus();
+    let mut b: BN254_Fq = BN254_Fq::modulus();
 
-    a.limbs[0] -= 2;
-    b.limbs[0] -= 1;
+    a.set_limb(0, a.get_limb(0) - 2);
+    b.set_limb(0, b.get_limb(0) - 1);
 
     assert(a > b);
 }
 
 #[test]
 fn test_cmp_BN_fuzz(seed: [u8; 5]) {
-    let mut a: BN254_Fq = BigNum::derive_from_seed(seed);
+    let mut a: BN254_Fq = BN254_Fq::derive_from_seed(seed);
     let modulus_sub_1_div_2 = (BN254_Fq::modulus() - BN254_Fq::one()) / BN254_Fq::from(2);
 
     a = if a > modulus_sub_1_div_2 { -a } else { a };
@@ -991,14 +999,11 @@ fn fuzz_to_be_bytes(seed: [u8; 5]) {
     assert(a == b);
 }
 
-struct SecP224r1_Params {}
-type SecP224r1 = BigNum<2, 224, SecP224r1_Params>;
-
-impl BigNumParamsGetter<2, 224> for SecP224r1_Params {
-    fn get_params() -> BigNumParams<2, 224> {
-        SecP224r1_PARAMS
-    }
+#[derive_bignum_impl(2, 224, quote {SecP224r1_PARAMS})]
+struct SecP224r1 {
+    limbs: [u128; 2],
 }
+
 global SecP224r1_PARAMS: BigNumParams<2, 224> = BigNumParams {
     has_multiplicative_inverse: true,
     modulus: [0xffffff000000000000000000000001, 0xffffffffffffffffffffffffff],
