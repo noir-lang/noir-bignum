@@ -999,10 +999,9 @@ fn fuzz_to_be_bytes(seed: [u8; 5]) {
     assert(a == b);
 }
 
-
 #[derive_bignum_impl(2, 224, quote {SecP224r1_PARAMS})]
 struct SecP224r1 {
-    limbs: [u128; 2]
+    limbs: [u128; 2],
 }
 
 global SecP224r1_PARAMS: BigNumParams<2, 224> = BigNumParams {

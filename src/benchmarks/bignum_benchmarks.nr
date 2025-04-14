@@ -21,8 +21,6 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
     let from_field_bench_name = f"from_field_{module_name}".quoted_contents();
     let typ = params.as_type();
 
-
-    
     quote {
         #[export]
         fn $add_bench_name(a: $typ, b: $typ) -> $typ {
