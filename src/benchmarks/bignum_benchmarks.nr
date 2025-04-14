@@ -1,4 +1,8 @@
-use crate::bignum::BigNum;
+use crate::bignum::{BigNum, BigNumTrait};
+use crate::fields::bls12_381Fq::BLS12_381_Fq;
+use crate::fields::bn254Fq::BN254_Fq;
+use crate::fields::U2048::U2048;
+use crate::fields::U256::U256;
 
 comptime fn make_bench(_m: Module, N: u32, MOD_BITS: u32, params: Quoted) -> Quoted {
     let module_name = _m.name();
@@ -14,7 +18,11 @@ comptime fn make_bench(_m: Module, N: u32, MOD_BITS: u32, params: Quoted) -> Quo
         f"evaluate_quadratic_expression_3_elements_{module_name}".quoted_contents();
     let evaluate_quadratic_expression_12_elements_bench_name =
         f"evaluate_quadratic_expression_12_elements_{module_name}".quoted_contents();
-
+    let to_be_bytes_bench_name = f"to_be_bytes_{module_name}".quoted_contents();
+    let from_be_bytes_bench_name = f"from_be_bytes_{module_name}".quoted_contents();
+    let to_le_bytes_bench_name = f"to_le_bytes_{module_name}".quoted_contents();
+    let from_le_bytes_bench_name = f"from_le_bytes_{module_name}".quoted_contents();
+    let BigNumTrait = quote { crate::bignum::BigNumTrait };
     let BigNum = quote { crate::bignum::BigNum };
     let BigNumTrait = quote { crate::bignum::BigNumTrait };
 
@@ -82,7 +90,27 @@ comptime fn make_bench(_m: Module, N: u32, MOD_BITS: u32, params: Quoted) -> Quo
         ) {
             $BigNumTrait::evaluate_quadratic_expression(lhs, lhs_flags, rhs, rhs_flags, add, add_flags)
         }
-        
+
+        #[export]
+        fn $to_be_bytes_bench_name(a: $BigNum<$N, $MOD_BITS, $params>) -> [u8; ($MOD_BITS+7) / 8] {
+            $BigNum::<$N, $MOD_BITS, $params> ::to_be_bytes(a)
+        }
+
+        #[export]
+        fn $from_be_bytes_bench_name(a: [u8; ($MOD_BITS+7) / 8]) -> $BigNum<$N, $MOD_BITS, $params> {
+            $BigNum::<$N, $MOD_BITS, $params> ::from_be_bytes(a)
+        }
+
+        #[export]
+        fn $to_le_bytes_bench_name(a: $BigNum<$N, $MOD_BITS, $params>) -> [u8; ($MOD_BITS+7) / 8] {
+            $BigNum::<$N, $MOD_BITS, $params> ::to_le_bytes(a)
+        }
+
+        #[export]
+        fn $from_le_bytes_bench_name(a: [u8; ($MOD_BITS+7) / 8]) -> $BigNum<$N, $MOD_BITS, $params> {
+            $BigNum::<$N, $MOD_BITS, $params> ::from_le_bytes(a)
+        }      
+
     }
 }
 
@@ -93,21 +121,25 @@ comptime fn make_bench(_m: Module, N: u32, MOD_BITS: u32, params: Quoted) -> Quo
 // type U2048
 #[make_bench(3, 254, quote { BN254_Fq_Params })]
 pub mod BN254_Fq_Bench {
+    use crate::bignum::BigNumTrait;
     use crate::fields::bn254Fq::BN254_Fq_Params;
 }
 
 #[make_bench(3, 257, quote { U256Params })]
 pub mod U256_Bench {
+    use crate::bignum::BigNumTrait;
     use crate::fields::U256::U256Params;
 }
 
 #[make_bench(4, 381, quote { BLS12_381_Fq_Params })]
 pub mod BLS12_381Fq_Bench {
 
+    use crate::bignum::BigNumTrait;
     use crate::fields::bls12_381Fq::BLS12_381_Fq_Params;
 }
 
 #[make_bench(18, 2049, quote { U2048Params })]
 pub mod U2048_Bench {
+    use crate::bignum::BigNumTrait;
     use crate::fields::U2048::U2048Params;
 }

@@ -10,7 +10,7 @@ use crate::fns::{
         validate_in_range,
     },
     expressions::{__compute_quadratic_expression, evaluate_quadratic_expression},
-    serialization::{from_be_bytes, to_le_bytes},
+    serialization::{from_be_bytes, from_le_bytes, to_be_bytes, to_le_bytes},
     unconstrained_ops::{
         __add, __batch_invert, __batch_invert_slice, __derive_from_seed, __div, __eq, __invmod,
         __is_zero, __mul, __neg, __pow, __sub, __tonelli_shanks_sqrt, __udiv_mod,
@@ -24,6 +24,7 @@ pub struct BigNum<let N: u32, let MOD_BITS: u32, Params> {
 // We aim to avoid needing to add a generic parameter to this trait, for this reason we do not allow
 // accessing the limbs of the bignum except through slices.
 pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
+    let MOD_BITS: u32;
     // TODO: this crashes the compiler? v0.32
     // fn default() -> Self { std::default::Default::default  () }
     fn new() -> Self;
@@ -32,8 +33,10 @@ pub trait BigNumTrait: Neg + Add + Sub + Mul + Div + Eq {
     fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
     unconstrained fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
     fn from_slice(limbs: [u128]) -> Self;
-    fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> Self;
-    fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes];
+    fn from_be_bytes(x: [u8; (MOD_BITS + 7) / 8]) -> Self;
+    fn to_be_bytes(self) -> [u8; (MOD_BITS + 7) / 8];
+    fn from_le_bytes(x: [u8; (MOD_BITS + 7) / 8]) -> Self;
+    fn to_le_bytes(self) -> [u8; (MOD_BITS + 7) / 8];
 
     fn modulus() -> Self;
     fn modulus_bits(self) -> u32;
@@ -112,7 +115,7 @@ impl<let N: u32, let MOD_BITS: u32, Params> BigNumTrait for BigNum<N, MOD_BITS, 
 where
     Params: BigNumParamsGetter<N, MOD_BITS>,
 {
-
+    let MOD_BITS: u32 = MOD_BITS;
     #[deprecated("`BigNum::zero()` is preferred")]
     fn new() -> Self {
         Self::zero()
@@ -142,12 +145,20 @@ where
         Self { limbs: limbs.as_array() }
     }
 
-    fn from_be_bytes<let NBytes: u32>(x: [u8; NBytes]) -> Self {
-        Self { limbs: from_be_bytes::<_, MOD_BITS, _>(x) }
+    fn from_be_bytes(x: [u8; (MOD_BITS + 7) / 8]) -> Self {
+        Self { limbs: from_be_bytes::<_, MOD_BITS>(x) }
     }
 
-    fn to_le_bytes<let NBytes: u32>(self) -> [u8; NBytes] {
-        to_le_bytes::<_, MOD_BITS, _>(self.limbs)
+    fn to_be_bytes(self) -> [u8; (MOD_BITS + 7) / 8] {
+        to_be_bytes::<_, MOD_BITS>(self.limbs)
+    }
+
+    fn from_le_bytes(x: [u8; (MOD_BITS + 7) / 8]) -> Self {
+        Self { limbs: from_le_bytes::<_, MOD_BITS>(x) }
+    }
+
+    fn to_le_bytes(self) -> [u8; (MOD_BITS + 7) / 8] {
+        to_le_bytes::<_, MOD_BITS>(self.limbs)
     }
 
     fn modulus() -> Self {
