@@ -9,7 +9,7 @@ use crate::fns::{
     serialization::{from_be_bytes, from_le_bytes, to_be_bytes, to_le_bytes},
     unconstrained_ops::{
         __add, __derive_from_seed, __div, __eq, __invmod, __is_zero, __mul, __neg, __pow, __sub,
-        __tonelli_shanks_sqrt, __udiv_mod, 
+        __tonelli_shanks_sqrt, __udiv_mod,
     },
 };
 use std::{cmp::Ordering, ops::Neg};
