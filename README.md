@@ -109,7 +109,7 @@ fn main() {
 A BigNum is a number modulo `modulus` and is represented as an array of 120-bit limbs in little endian format. When the `modulus` is known at compile-time, use `BigNum` type. For instance, to build a 5-limb bignum, you can use the following definition:
 
 ```rust
-pub struct my_bignum {
+pub struct MyBignum {
     pub limbs: [Field; 5],
 }
 ```
@@ -132,7 +132,7 @@ To implement the trait for your bignum type, you need to provide the number of l
 
 ```rust 
 #[derive_bignum_impl(4, 377, quote {BLS12_377_Fq_PARAMS})]
-pub struct my_bignum {
+pub struct MyBignum {
     pub limbs: [Field; 4],
 }
 ```
