@@ -220,7 +220,7 @@ These methods can be used using operators (`+`, `-`, `*`, `/`).
 
 ```rust
 let a: Field = 10;
-let my_bignum: Fq = Fq::from::<Field>(a);
+let my_bignum: Fq = Fq::from(a);
 ```
 We also support comparison operators (`==`, `!=`, `>`, `>=`, `<`, `<=`) for `BigNum` types.
 
