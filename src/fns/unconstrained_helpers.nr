@@ -200,7 +200,7 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
         }
     }
 
-    let mulout: [u128; 3 * N] = __normalize_limbs(mulout_field, 3 * N - 1);
+    let mulout: [u128; 3 * N] = __normalize_limbs(mulout_field, 3 * N);
 
     // When we apply the barrett reduction, the maximum value of the output will be
     // <= p * (1 + x/2^{2k})

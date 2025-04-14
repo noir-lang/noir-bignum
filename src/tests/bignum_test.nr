@@ -990,3 +990,29 @@ fn fuzz_to_be_bytes(seed: [u8; 5]) {
     let b = BN254_Fq::from_be_bytes(bytes);
     assert(a == b);
 }
+
+struct SecP224r1_Params {}
+type SecP224r1 = BigNum<2, 224, SecP224r1_Params>;
+
+impl BigNumParamsGetter<2, 224> for SecP224r1_Params {
+    fn get_params() -> BigNumParams<2, 224> {
+        SecP224r1_PARAMS
+    }
+}
+global SecP224r1_PARAMS: BigNumParams<2, 224> = BigNumParams {
+    has_multiplicative_inverse: true,
+    modulus: [0xffffff000000000000000000000001, 0xffffffffffffffffffffffffff],
+    double_modulus: [0x01fffffe000000000000000000000002, 0x01fffffffffffffffffffffffffe],
+    redc_param: [0x0ffffffffffffffffffffffff0, 0x1000000000000000000000000000],
+};
+
+#[test]
+fn test_SecP224r1_mul_regression() {
+    let mut x: SecP224r1 =
+        SecP224r1 { limbs: [0x03c1d356c21122343280d6115c1d21, 0xb70e0cbd6bb4bf7f321390b94a] };
+    let res = x * x;
+    let expected = unsafe { SecP224r1::__mul(x, x) };
+    res.validate_in_field();
+    expected.validate_in_field();
+    assert(res == expected);
+}
