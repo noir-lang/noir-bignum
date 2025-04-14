@@ -210,7 +210,7 @@ pub(crate) unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
     accumulator
 }
 
-pub(crate) unconstrained fn __batch_invert<let N: u32, let MOD_BITS: u32, let M: u32>(
+pub(crate) unconstrained fn batch_invert<let N: u32, let MOD_BITS: u32, let M: u32>(
     params: P<N, MOD_BITS>,
     x: [[u128; N]; M],
 ) -> [[u128; N]; M] {
@@ -239,7 +239,7 @@ pub(crate) unconstrained fn __batch_invert<let N: u32, let MOD_BITS: u32, let M:
     result
 }
 
-pub(crate) unconstrained fn __batch_invert_slice<let N: u32, let MOD_BITS: u32>(
+pub(crate) unconstrained fn batch_invert_slice<let N: u32, let MOD_BITS: u32>(
     params: P<N, MOD_BITS>,
     x: [[u128; N]],
 ) -> [[u128; N]] {

@@ -1,6 +1,6 @@
 use crate::bignum::BigNum;
+use crate::bignum::{compute_quadratic_expression, evaluate_quadratic_expression, to_field};
 use crate::bignum::derive_bignum_impl;
-use crate::bignum::to_field;
 use crate::fns::unconstrained_helpers::__helper_add;
 
 use crate::params::BigNumParams;
@@ -101,7 +101,7 @@ fn test_bls_reduction() {
     X1.validate_in_field();
     // Safety: test code
     let mut (_, XX_mul_3): (BLS12_381_Fq, BLS12_381_Fq) = unsafe {
-        BigNum::__compute_quadratic_expression(
+        compute_quadratic_expression(
             [[X1, X1, X1]],
             [[false, false, false]],
             [[X1]],
@@ -652,7 +652,7 @@ fn test_20_udiv_mod_11() {
 
 //     a_bn.validate_in_range();
 
-//     BigNum::evaluate_quadratic_expression([[a_bn]], [[false]], [[b_bn]], [[false]], [c_bn], [true]);
+//     evaluate_quadratic_expression([[a_bn]], [[false]], [[b_bn]], [[false]], [c_bn], [true]);
 // }
 
 #[test]
@@ -703,7 +703,7 @@ fn test_expressions() {
     // Safety: test code
     let z = unsafe { uv.__add(wx) };
 
-    BigNum::evaluate_quadratic_expression(
+    evaluate_quadratic_expression(
         [[uu], [w]],
         [[false], [false]],
         [[vv], [x]],
@@ -711,7 +711,7 @@ fn test_expressions() {
         [z],
         [true],
     );
-    BigNum::evaluate_quadratic_expression(
+    evaluate_quadratic_expression(
         [[uu], [w]],
         [[false], [false]],
         [[vv], [x]],
@@ -886,7 +886,7 @@ unconstrained fn test_batch_inversion<let N: u32, BN>(fields: [BN; N])
 where
     BN: BigNum,
 {
-    let inverted_fields = BN::__batch_invert(fields);
+    let inverted_fields = crate::bignum::batch_invert(fields);
     for i in 0..N {
         assert_eq(fields[i] * inverted_fields[i], BN::one());
     }
@@ -902,7 +902,7 @@ unconstrained fn test_batch_inversion_slice<BN>(fields: [BN])
 where
     BN: BigNum,
 {
-    let inverted_fields = BN::__batch_invert_slice(fields);
+    let inverted_fields = crate::bignum::batch_invert_slice(fields);
     assert_eq(fields.len(), inverted_fields.len());
     for i in 0..fields.len() {
         assert_eq(fields[i] * inverted_fields[i], BN::one());
