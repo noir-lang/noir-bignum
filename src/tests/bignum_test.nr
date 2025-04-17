@@ -10,14 +10,6 @@ use crate::fields::bls12_381Fr::BLS12_381_Fr;
 use crate::fields::bn254Fq::BN254_Fq;
 use crate::fields::U256::U256;
 
-struct Test2048Params {}
-
-// See https://github.com/noir-lang/noir/issues/6172
-#[test]
-fn silence_warning() {
-    let _ = Test2048Params {};
-}
-
 global TEST_2048_PARAMS: BigNumParams<18, 2048> = BigNumParams {
     has_multiplicative_inverse: false,
     modulus: [
