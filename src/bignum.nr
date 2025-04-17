@@ -1,6 +1,5 @@
 use crate::fns::constrained_ops::limbs_to_field;
 use crate::params::BigNumParams;
-use std::cmp::Ordering;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 // We aim to avoid needing to add a generic parameter to this trait, for this reason we do not allow
@@ -112,6 +111,7 @@ pub(crate) comptime fn derive_bignum_impl(
     let unconstrained_ops = quote { crate::fns::unconstrained_ops };
     let utils = quote { crate::utils };
     let typ = strukt.as_type();
+    let serialization = quote { crate::fns::serialization };
     let expressions = quote { crate::fns::expressions };
     quote {
 
