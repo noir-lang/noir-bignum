@@ -1,6 +1,5 @@
 use crate::fns::constrained_ops::limbs_to_field;
 use crate::params::BigNumParams;
-use std::cmp::Ordering;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
@@ -101,18 +100,8 @@ pub(crate) comptime fn derive_bignum_impl(
     params: Quoted,
 ) -> Quoted {
     // let BigNum = quote { crate::bignum::BigNum };
-    let From = quote { std::convert::From };
-    let Neg = quote { std::ops::Neg };
-    let Add = quote { std::ops::Add };
-    let Sub = quote { std::ops::Sub };
-    let Mul = quote { std::ops::Mul };
-    let Div = quote { std::ops::Div };
-    let Eq = quote { std::cmp::Eq };
-    let Ord = quote { std::cmp::Ord };
-    let BigNum = quote { crate::bignum::BigNum };
     let constrained_ops = quote { crate::fns::constrained_ops };
     let unconstrained_ops = quote { crate::fns::unconstrained_ops };
-    let Ordering = quote { std::cmp::Ordering };
     let utils = quote { crate::utils };
     let typ = strukt.as_type();
     let serialization = quote { crate::fns::serialization };
@@ -120,7 +109,7 @@ pub(crate) comptime fn derive_bignum_impl(
     quote {
 
         // implement BigNum for BigNum 
-        impl $BigNum for $typ {
+        impl crate::bignum::BigNum for $typ {
             let N: u32 = $N; 
             let MOD_BITS: u32 = $MOD_BITS;
             
@@ -331,50 +320,50 @@ pub(crate) comptime fn derive_bignum_impl(
             }
         }
 
-        impl $From<Field> for $typ {
+        impl std::convert::From<Field> for $typ {
             fn from(input: Field) -> Self {
                 $typ { limbs: $constrained_ops::from_field::<$N, $MOD_BITS>(input) }
             }
         }
 
-        impl $Neg for $typ {
+        impl std::ops::Neg for $typ {
             fn neg(self) -> Self {
                 $typ { limbs: $constrained_ops::neg::<$N, $MOD_BITS>($params, self.limbs) }
             }
         }
 
-        impl $Add for $typ {
+        impl std::ops::Add for $typ {
             fn add(self, other: Self) -> Self {
                 $typ { limbs: $constrained_ops::add::<$N, $MOD_BITS>($params, self.limbs, other.limbs) }
             }
         }
 
-        impl $Sub for $typ {
+        impl std::ops::Sub for $typ {
             fn sub(self, other: Self) -> Self {
                 $typ { limbs: $constrained_ops::sub::<$N, $MOD_BITS>($params, self.limbs, other.limbs) }
             }
         }
 
-        impl $Mul for $typ {
+        impl std::ops::Mul for $typ {
             fn mul(self, other: Self) -> Self {
                 $typ { limbs: $constrained_ops::mul::<$N, $MOD_BITS>($params, self.limbs, other.limbs) }
             }
         }
 
-        impl $Div for $typ {
+        impl std::ops::Div for $typ {
             fn div(self, other: Self) -> Self {
                 $typ { limbs: $constrained_ops::div::<$N, $MOD_BITS>($params, self.limbs, other.limbs) }
             }
         }
 
-        impl $Eq for $typ {
+        impl std::cmp::Eq for $typ {
             fn eq(self, other: Self) -> bool {
                 $constrained_ops::eq::<$N, $MOD_BITS>($params, self.limbs, other.limbs)
             }
         }
 
-        impl $Ord for $typ {
-            fn cmp(self, other: Self) -> $Ordering {
+        impl std::cmp::Ord for $typ {
+            fn cmp(self, other: Self) -> std::cmp::Ordering {
                 $constrained_ops::cmp::<$N, $MOD_BITS>(self.limbs, other.limbs)
             }
         }
