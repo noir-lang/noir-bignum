@@ -134,12 +134,12 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
     }
 
     let compressed =
-        std::hash::poseidon2::Poseidon2::hash(rolling_hash_fields, (SeedBytes / 31) + 1);
+        poseidon::poseidon2::Poseidon2::hash(rolling_hash_fields, (SeedBytes / 31) + 1);
     let mut rolling_hash: [Field; 2] = [compressed, 0];
 
     let num_hashes = (240 * N) / 254 + (((30 * N) % 32) != 0) as u32;
     for i in 0..num_hashes - 1 {
-        let hash: Field = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
+        let hash: Field = poseidon::poseidon2::Poseidon2::hash(rolling_hash, 2);
         let hash: [u8; 32] = hash.to_le_bytes();
         for j in 0..30 {
             hash_buffer[i * 30 + j] = hash[j];
@@ -148,7 +148,7 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
     }
 
     {
-        let hash: Field = std::hash::poseidon2::Poseidon2::hash(rolling_hash, 2);
+        let hash: Field = poseidon::poseidon2::Poseidon2::hash(rolling_hash, 2);
         let hash: [u8; 32] = hash.to_le_bytes();
         let remaining_bytes = 30 * N - (num_hashes - 1) * 30;
         for j in 0..remaining_bytes {
