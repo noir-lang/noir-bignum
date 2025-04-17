@@ -3,8 +3,6 @@ use crate::params::BigNumParams;
 use std::cmp::Ordering;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
-// We aim to avoid needing to add a generic parameter to this trait, for this reason we do not allow
-// accessing the limbs of the bignum except through slices.
 pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     let N: u32;
     let MOD_BITS: u32;
@@ -26,15 +24,10 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     fn set_limb(self: &mut Self, idx: u32, value: u128);
     fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
     unconstrained fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
-    fn from_slice(limbs: [u128]) -> Self;
     fn from_be_bytes(x: [u8; (MOD_BITS + 7) / 8]) -> Self;
     fn to_be_bytes(self) -> [u8; (MOD_BITS + 7) / 8];
     fn from_le_bytes(x: [u8; (MOD_BITS + 7) / 8]) -> Self;
     fn to_le_bytes(self) -> [u8; (MOD_BITS + 7) / 8];
-
-    fn get_limbs_slice(self) -> [u128] {
-        self.get_limbs().as_slice()
-    }
 
     fn get_limb(self: Self, idx: u32) -> u128 {
         self.get_limbs()[idx]
@@ -175,9 +168,7 @@ pub(crate) comptime fn derive_bignum_impl(
                 Self { limbs: $unconstrained_ops::__derive_from_seed::<_, $MOD_BITS, _>(params, seed) }
             }
 
-            fn from_slice(limbs: [u128]) -> Self {
-                Self { limbs: limbs.as_array() }
-            }
+         
 
             fn from_be_bytes(x: [u8; ($MOD_BITS + 7) / 8]) -> Self {
                 Self { limbs: $serialization::from_be_bytes::<_, $MOD_BITS>(x) }
