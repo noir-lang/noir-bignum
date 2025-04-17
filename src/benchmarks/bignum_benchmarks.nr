@@ -66,7 +66,7 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
             add: [$typ; 3],
             add_flags: [bool; 3],
         ) {
-            $BigNum::evaluate_quadratic_expression(lhs, lhs_flags, rhs, rhs_flags, add, add_flags)
+            crate::bignum::evaluate_quadratic_expression(lhs, lhs_flags, rhs, rhs_flags, add, add_flags)
         }
 
         #[export]
@@ -78,7 +78,7 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
             add: [$typ; 3],
             add_flags: [bool; 3],
         ) {
-            $BigNum::evaluate_quadratic_expression(lhs, lhs_flags, rhs, rhs_flags, add, add_flags)
+            crate::bignum::evaluate_quadratic_expression(lhs, lhs_flags, rhs, rhs_flags, add, add_flags)
         }
         
         #[export]

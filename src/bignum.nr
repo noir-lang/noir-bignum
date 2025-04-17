@@ -49,28 +49,7 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     unconstrained fn __invmod(self) -> Self;
     unconstrained fn __pow(self, exponent: Self) -> Self;
 
-    unconstrained fn __batch_invert<let M: u32>(to_invert: [Self; M]) -> [Self; M];
-    unconstrained fn __batch_invert_slice<let M: u32>(to_invert: [Self]) -> [Self];
-
     unconstrained fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self>;
-
-    unconstrained fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
-        lhs: [[Self; LHS_N]; NUM_PRODUCTS],
-        lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
-        rhs: [[Self; RHS_N]; NUM_PRODUCTS],
-        rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
-        add: [Self; ADD_N],
-        add_flags: [bool; ADD_N],
-    ) -> (Self, Self);
-
-    fn evaluate_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
-        lhs: [[Self; LHS_N]; NUM_PRODUCTS],
-        lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
-        rhs: [[Self; RHS_N]; NUM_PRODUCTS],
-        rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
-        add: [Self; ADD_N],
-        add_flags: [bool; ADD_N],
-    );
 
     fn assert_is_not_equal(self: Self, other: Self) {
         let params = Self::params();
@@ -88,7 +67,6 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     fn udiv(self, divisor: Self) -> Self;
     fn umod(self, divisor: Self) -> Self;
 
-    fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self;
     fn is_zero(self) -> bool;
 }
 
@@ -216,67 +194,10 @@ pub(crate) comptime fn derive_bignum_impl(
                 Self {limbs: $unconstrained_ops::__pow(params, self.get_limbs(), exponent.get_limbs())}
             }
 
-            unconstrained fn __batch_invert<let M: u32>(x: [Self; M]) -> [Self; M] {
-                let params = Self::params();
-                assert(params.has_multiplicative_inverse);
-                $unconstrained_ops::__batch_invert::<_, $MOD_BITS, _>(params, x.map(|bn: Self| bn.get_limbs())).map(|limbs| {
-                    Self {limbs: limbs} 
-                })
-            }
-
-            unconstrained fn __batch_invert_slice<let M: u32>(x: [Self]) -> [Self] {
-                let params = Self::params();
-                assert(params.has_multiplicative_inverse);
-                $unconstrained_ops::__batch_invert_slice::<_, $MOD_BITS>(params, x.map(|bn: Self| bn.get_limbs())).map(|limbs| {
-                    Self {limbs: limbs}
-                })
-            }
-
             unconstrained fn __tonelli_shanks_sqrt(self: Self) -> std::option::Option<Self> {
                 let params = Self::params();
                 let maybe_limbs = $unconstrained_ops::__tonelli_shanks_sqrt(params, self.get_limbs());
                 maybe_limbs.map(|limbs| Self {limbs: limbs})
-            }
-
-            unconstrained fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
-                lhs_terms: [[Self; LHS_N]; NUM_PRODUCTS],
-                lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
-                rhs_terms: [[Self; RHS_N]; NUM_PRODUCTS],
-                rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
-                linear_terms: [Self; ADD_N],
-                linear_flags: [bool; ADD_N],
-            ) -> (Self, Self) {
-                let params = Self::params();
-                let (q_limbs, r_limbs) = $expressions::__compute_quadratic_expression::<_, $MOD_BITS, _, _, _, _>(
-                    params,
-                    $utils::map::map(lhs_terms, |bns| $utils::map::map(bns, |bn: Self| bn.get_limbs())),
-                    lhs_flags,
-                    $utils::map::map(rhs_terms, |bns| $utils::map::map(bns, |bn: Self| bn.get_limbs())),
-                    rhs_flags,
-                    $utils::map::map(linear_terms, |bn: Self| bn.get_limbs()),
-                    linear_flags,
-                );
-                (Self {limbs: q_limbs}, Self {limbs: r_limbs}) 
-            }
-
-            fn evaluate_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
-                lhs_terms: [[Self; LHS_N]; NUM_PRODUCTS],
-                lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
-                rhs_terms: [[Self; RHS_N]; NUM_PRODUCTS],
-                rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
-                linear_terms: [Self; ADD_N],
-                linear_flags: [bool; ADD_N],
-            ) {
-                let params = Self::params();
-                $expressions::evaluate_quadratic_expression::<_, $MOD_BITS, _, _, _, _>(
-                    params,
-                    $utils::map::map(lhs_terms, |bns| $utils::map::map(bns, |bn: Self| bn.get_limbs())),
-                    lhs_flags,
-                    $utils::map::map(rhs_terms, |bns| $utils::map::map(bns, |bn: Self| bn.get_limbs())),
-                    rhs_flags,
-                    $utils::map::map(linear_terms, |bn: Self| bn.get_limbs()),
-                    linear_flags,
-                )
             }
 
             fn validate_in_field(self: Self) {
@@ -302,10 +223,6 @@ pub(crate) comptime fn derive_bignum_impl(
             fn umod(self: Self, divisor: Self) -> Self {
                 let params = Self::params();
                 Self {limbs: $constrained_ops::umod::<_, $MOD_BITS>(params, self.get_limbs(), divisor.get_limbs())}
-            }
-
-            fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self {
-                Self {limbs: $constrained_ops::conditional_select(lhs.get_limbs(), rhs.get_limbs(), predicate)}
             }
 
             fn is_zero(self: Self) -> bool {
@@ -371,10 +288,83 @@ pub(crate) comptime fn derive_bignum_impl(
     }
 }
 
-pub fn to_field<T, let N: u32, let MOD_BITS: u32>(bn: T) -> Field
-where
-    T: BigNum<N = N, MOD_BITS = MOD_BITS>,
-{
+pub fn conditional_select<T: BigNum>(lhs: T, rhs: T, predicate: bool) -> T {
+    T::from_limbs(crate::fns::constrained_ops::conditional_select(
+        lhs.get_limbs(),
+        rhs.get_limbs(),
+        predicate,
+    ))
+}
+
+pub unconstrained fn compute_quadratic_expression<T: BigNum, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
+    lhs_terms: [[T; LHS_N]; NUM_PRODUCTS],
+    lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
+    rhs_terms: [[T; RHS_N]; NUM_PRODUCTS],
+    rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
+    linear_terms: [T; ADD_N],
+    linear_flags: [bool; ADD_N],
+) -> (T, T) {
     let params = T::params();
-    limbs_to_field::<N, MOD_BITS>(params, bn.get_limbs())
+    let (q_limbs, r_limbs) = crate::fns::expressions::compute_quadratic_expression(
+        params,
+        crate::utils::map::map(
+            lhs_terms,
+            |bns| crate::utils::map::map(bns, |bn: T| bn.get_limbs()),
+        ),
+        lhs_flags,
+        crate::utils::map::map(
+            rhs_terms,
+            |bns| crate::utils::map::map(bns, |bn: T| bn.get_limbs()),
+        ),
+        rhs_flags,
+        crate::utils::map::map(linear_terms, |bn: T| bn.get_limbs()),
+        linear_flags,
+    );
+    (T::from_limbs(q_limbs), T::from_limbs(r_limbs))
+}
+
+pub fn evaluate_quadratic_expression<T: BigNum, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
+    lhs_terms: [[T; LHS_N]; NUM_PRODUCTS],
+    lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
+    rhs_terms: [[T; RHS_N]; NUM_PRODUCTS],
+    rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
+    linear_terms: [T; ADD_N],
+    linear_flags: [bool; ADD_N],
+) {
+    let params = T::params();
+    crate::fns::expressions::evaluate_quadratic_expression(
+        params,
+        crate::utils::map::map(
+            lhs_terms,
+            |bns| crate::utils::map::map(bns, |bn: T| bn.get_limbs()),
+        ),
+        lhs_flags,
+        crate::utils::map::map(
+            rhs_terms,
+            |bns| crate::utils::map::map(bns, |bn: T| bn.get_limbs()),
+        ),
+        rhs_flags,
+        crate::utils::map::map(linear_terms, |bn: T| bn.get_limbs()),
+        linear_flags,
+    )
+}
+
+pub unconstrained fn batch_invert<T: BigNum, let M: u32>(x: [T; M]) -> [T; M] {
+    let params = T::params();
+    assert(params.has_multiplicative_inverse);
+    crate::fns::unconstrained_ops::batch_invert(params, x.map(|bn: T| bn.get_limbs())).map(|limbs| {
+        T::from_limbs(limbs)
+    })
+}
+
+pub unconstrained fn batch_invert_slice<T: BigNum, let M: u32>(x: [T]) -> [T] {
+    let params = T::params();
+    assert(params.has_multiplicative_inverse);
+    crate::fns::unconstrained_ops::batch_invert_slice(params, x.map(|bn: T| bn.get_limbs()))
+        .map(|limbs| T::from_limbs(limbs))
+}
+
+pub fn to_field<T: BigNum, let N: u32, let MOD_BITS: u32>(bn: T) -> Field {
+    let params = T::params();
+    limbs_to_field(params, bn.get_limbs())
 }
