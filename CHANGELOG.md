@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.7.0](https://github.com/noir-lang/noir-bignum/compare/v0.6.1...v0.7.0) (2025-04-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* convert methods into free functions where appropriate ([#161](https://github.com/noir-lang/noir-bignum/issues/161))
+* implementing `BignumTrait` for each type using metaprogramming ([#151](https://github.com/noir-lang/noir-bignum/issues/151))
+* Fixing the bytesize for be, le byte serialization, adding new functionality and tests ([#157](https://github.com/noir-lang/noir-bignum/issues/157))
+
+### Features
+
+* Fixing the bytesize for be, le byte serialization, adding new functionality and tests ([#157](https://github.com/noir-lang/noir-bignum/issues/157)) ([3a2664e](https://github.com/noir-lang/noir-bignum/commit/3a2664e9fd02edc75f574159dfb6e89cdb752db0))
+* Implementing `BignumTrait` for each type using metaprogramming ([#151](https://github.com/noir-lang/noir-bignum/issues/151)) ([6a7cf5f](https://github.com/noir-lang/noir-bignum/commit/6a7cf5fa20f1e7b1c0ccad336f8dba5f64509967))
+
+
+### Bug Fixes
+
+* Fix warnings ([#167](https://github.com/noir-lang/noir-bignum/issues/167)) ([ddfb63a](https://github.com/noir-lang/noir-bignum/commit/ddfb63a4023e2d84f35fb1e7f99d07611d4b655d))
+* Fixed the array length bug when normalizing limbs in multiplication  ([#159](https://github.com/noir-lang/noir-bignum/issues/159)) ([98256f3](https://github.com/noir-lang/noir-bignum/commit/98256f3d9bdcfc58ef6e3939875bf19b6e86e912))
+* Remove usage of stdlib poseidon ([#166](https://github.com/noir-lang/noir-bignum/issues/166)) ([19c4a48](https://github.com/noir-lang/noir-bignum/commit/19c4a4849d4b550bde7224f29f586c1b90952330))
+
+
+### Miscellaneous Chores
+
+* Convert methods into free functions where appropriate ([#161](https://github.com/noir-lang/noir-bignum/issues/161)) ([7a851dd](https://github.com/noir-lang/noir-bignum/commit/7a851ddfdedc125d593f3bd161f56074f7ecf84a))
+
 ## [0.6.1](https://github.com/noir-lang/noir-bignum/compare/v0.6.0...v0.6.1) (2025-03-11)
 
 
