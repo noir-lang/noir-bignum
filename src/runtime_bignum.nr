@@ -318,7 +318,7 @@ pub fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let LHS_N: u
     linear_terms: [RuntimeBigNum<N, MOD_BITS>; ADD_N],
     linear_flags: [bool; ADD_N],
 ) {
-    crate::fns::constrained_ops::evaluate_quadratic_expression::<_, MOD_BITS, _, _, _, _>(
+    crate::fns::expressions::evaluate_quadratic_expression::<_, MOD_BITS, _, _, _, _>(
         params,
         map(lhs_terms, |bns| map(bns, |bn| RuntimeBigNum::get_limbs(bn))),
         lhs_flags,

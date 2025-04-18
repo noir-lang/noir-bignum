@@ -77,13 +77,10 @@ pub(crate) comptime fn derive_bignum_impl(
     MOD_BITS: u32,
     params: Quoted,
 ) -> Quoted {
-    // let BigNum = quote { crate::bignum::BigNum };
     let constrained_ops = quote { crate::fns::constrained_ops };
     let unconstrained_ops = quote { crate::fns::unconstrained_ops };
-    let utils = quote { crate::utils };
     let typ = strukt.as_type();
     let serialization = quote { crate::fns::serialization };
-    let expressions = quote { crate::fns::expressions };
     quote {
 
         // implement BigNum for BigNum 
