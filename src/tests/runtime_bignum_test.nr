@@ -1,5 +1,3 @@
-use crate::fields::bn254Fq::BigNum;
-use crate::fields::bn254Fq::BN254_Fq;
 use crate::fields::bn254Fq::BN254_Fq_PARAMS;
 use crate::fns::constrained_ops::{sub, udiv};
 use crate::fns::unconstrained_helpers::__barrett_reduction;
