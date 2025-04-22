@@ -1,6 +1,6 @@
 use crate::bignum::BigNum;
+use crate::bignum::{compute_quadratic_expression, evaluate_quadratic_expression, to_field};
 use crate::bignum::derive_bignum_impl;
-use crate::bignum::to_field;
 use crate::fns::unconstrained_helpers::__helper_add;
 
 use crate::params::BigNumParams;
@@ -9,14 +9,6 @@ use crate::fields::bls12_381Fq::BLS12_381_Fq;
 use crate::fields::bls12_381Fr::BLS12_381_Fr;
 use crate::fields::bn254Fq::BN254_Fq;
 use crate::fields::U256::U256;
-
-struct Test2048Params {}
-
-// See https://github.com/noir-lang/noir/issues/6172
-#[test]
-fn silence_warning() {
-    let _ = Test2048Params {};
-}
 
 global TEST_2048_PARAMS: BigNumParams<18, 2048> = BigNumParams {
     has_multiplicative_inverse: false,
@@ -101,7 +93,7 @@ fn test_bls_reduction() {
     X1.validate_in_field();
     // Safety: test code
     let mut (_, XX_mul_3): (BLS12_381_Fq, BLS12_381_Fq) = unsafe {
-        BigNum::__compute_quadratic_expression(
+        compute_quadratic_expression(
             [[X1, X1, X1]],
             [[false, false, false]],
             [[X1]],
@@ -173,7 +165,7 @@ where
     let d = (a + b) * (one + one);
     assert(c == (d));
     let e = one + one;
-    let limbs: [u128; N] = e.get_limbs_slice().as_array();
+    let limbs = e.get_limbs();
     let mut first: bool = true;
     for limb in limbs {
         if first {
@@ -238,10 +230,10 @@ where
 
     let modulus = BN::modulus();
 
-    let t0: [u128; N] = a.get_limbs_slice().as_array();
-    let t1: [u128; N] = modulus.get_limbs_slice().as_array();
+    let t0 = a.get_limbs();
+    let t1 = modulus.get_limbs();
     // Safety: test code
-    let a_plus_modulus = BN::from_slice(unsafe { __helper_add(t0, t1) });
+    let a_plus_modulus = BN::from_limbs(unsafe { __helper_add(t0, t1) });
     a_plus_modulus.assert_is_not_equal(b);
 }
 
@@ -254,10 +246,10 @@ where
 
     let modulus = BN::modulus();
 
-    let t0: [u128; N] = b.get_limbs_slice().as_array();
-    let t1: [u128; N] = modulus.get_limbs_slice().as_array();
+    let t0 = b.get_limbs();
+    let t1 = modulus.get_limbs();
     // Safety: test code
-    let b_plus_modulus = BN::from_slice(unsafe { __helper_add(t0, t1) });
+    let b_plus_modulus = BN::from_limbs(unsafe { __helper_add(t0, t1) });
     a.assert_is_not_equal(b_plus_modulus);
 }
 
@@ -270,13 +262,13 @@ where
 
     let modulus = BN::modulus();
 
-    let t0: [u128; N] = a.get_limbs_slice().as_array();
-    let t1: [u128; N] = b.get_limbs_slice().as_array();
-    let t2: [u128; N] = modulus.get_limbs_slice().as_array();
+    let t0 = a.get_limbs();
+    let t1 = b.get_limbs();
+    let t2 = modulus.get_limbs();
     // Safety: test code
-    let a_plus_modulus: BN = BN::from_slice(unsafe { __helper_add(t0, t2) });
+    let a_plus_modulus: BN = BN::from_limbs(unsafe { __helper_add(t0, t2) });
     // Safety: test code
-    let b_plus_modulus: BN = BN::from_slice(unsafe { __helper_add(t1, t2) });
+    let b_plus_modulus: BN = BN::from_limbs(unsafe { __helper_add(t1, t2) });
     a_plus_modulus.assert_is_not_equal(b_plus_modulus);
 }
 
@@ -538,12 +530,12 @@ fn test_assert_is_not_equal_overloaded_fail_U256() {
 
 #[test]
 fn test_udiv_mod_U256() {
-    let a = U256::from_slice([
+    let a = U256::from_limbs([
         0xec0ca0c0adce359af6fcea1a7ab2dc,
         0xdd52c4aa3fde93685d3f7cc285de32,
         0x6fea,
     ]);
-    let b = U256::from_slice([12, 0, 0]);
+    let b = U256::from_limbs([12, 0, 0]);
 
     let (q, r) = a.udiv_mod(b);
 
@@ -562,8 +554,8 @@ fn test_1_udiv_mod_2() {
 #[test]
 fn test_20_udiv_mod_11() {
     let _1: U256 = U256::one();
-    let _2_POW_120: U256 = U256::from_slice([0, 1, 0]);
-    let _2_POW_121: U256 = U256::from_slice([0, 2, 0]);
+    let _2_POW_120: U256 = U256::from_limbs([0, 1, 0]);
+    let _2_POW_121: U256 = U256::from_limbs([0, 2, 0]);
     assert(_2_POW_121.udiv_mod(_2_POW_120 + _1) == (_1, _2_POW_120 - _1));
 }
 
@@ -652,7 +644,7 @@ fn test_20_udiv_mod_11() {
 
 //     a_bn.validate_in_range();
 
-//     BigNum::evaluate_quadratic_expression([[a_bn]], [[false]], [[b_bn]], [[false]], [c_bn], [true]);
+//     evaluate_quadratic_expression([[a_bn]], [[false]], [[b_bn]], [[false]], [c_bn], [true]);
 // }
 
 #[test]
@@ -703,7 +695,7 @@ fn test_expressions() {
     // Safety: test code
     let z = unsafe { uv.__add(wx) };
 
-    BigNum::evaluate_quadratic_expression(
+    evaluate_quadratic_expression(
         [[uu], [w]],
         [[false], [false]],
         [[vv], [x]],
@@ -711,7 +703,7 @@ fn test_expressions() {
         [z],
         [true],
     );
-    BigNum::evaluate_quadratic_expression(
+    evaluate_quadratic_expression(
         [[uu], [w]],
         [[false], [false]],
         [[vv], [x]],
@@ -886,7 +878,7 @@ unconstrained fn test_batch_inversion<let N: u32, BN>(fields: [BN; N])
 where
     BN: BigNum,
 {
-    let inverted_fields = BN::__batch_invert(fields);
+    let inverted_fields = crate::bignum::batch_invert(fields);
     for i in 0..N {
         assert_eq(fields[i] * inverted_fields[i], BN::one());
     }
@@ -902,7 +894,7 @@ unconstrained fn test_batch_inversion_slice<BN>(fields: [BN])
 where
     BN: BigNum,
 {
-    let inverted_fields = BN::__batch_invert_slice(fields);
+    let inverted_fields = crate::bignum::batch_invert_slice(fields);
     assert_eq(fields.len(), inverted_fields.len());
     for i in 0..fields.len() {
         assert_eq(fields[i] * inverted_fields[i], BN::one());

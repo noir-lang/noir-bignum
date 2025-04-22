@@ -3,14 +3,13 @@ use crate::utils::map::map;
 
 use crate::fns::{
     constrained_ops::{
-        add, assert_is_not_equal, cmp, conditional_select, derive_from_seed, div, eq, is_zero, mul,
-        neg, sub, udiv, udiv_mod, umod, validate_in_field, validate_in_range,
+        add, assert_is_not_equal, cmp, derive_from_seed, div, eq, is_zero, mul, neg, sub, udiv,
+        udiv_mod, umod, validate_in_field, validate_in_range,
     },
-    expressions::{__compute_quadratic_expression, evaluate_quadratic_expression},
     serialization::{from_be_bytes, from_le_bytes, to_be_bytes, to_le_bytes},
     unconstrained_ops::{
-        __add, __batch_invert, __batch_invert_slice, __derive_from_seed, __div, __eq, __invmod,
-        __is_zero, __mul, __neg, __pow, __sub, __tonelli_shanks_sqrt, __udiv_mod,
+        __add, __derive_from_seed, __div, __eq, __invmod, __is_zero, __mul, __neg, __pow, __sub,
+        __tonelli_shanks_sqrt, __udiv_mod,
     },
 };
 use std::{cmp::Ordering, ops::Neg};
@@ -178,75 +177,10 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
-    pub fn __batch_invert<let M: u32>(x: [Self; M]) -> [Self; M] {
-        let params = x[0].params;
-        assert(params.has_multiplicative_inverse);
-        let all_limbs =
-            unsafe { __batch_invert::<_, MOD_BITS, _>(params, x.map(|bn| Self::get_limbs(bn))) };
-        all_limbs.map(|limbs| Self { limbs, params })
-    }
-
-    // Note: can't return a slice from this unconstrained to a constrained function.
-    pub unconstrained fn __batch_invert_slice<let M: u32>(x: [Self]) -> [Self] {
-        let params = x[0].params;
-        assert(params.has_multiplicative_inverse);
-        let all_limbs = {
-            let inv_slice =
-                __batch_invert_slice::<_, MOD_BITS>(params, x.map(|bn| Self::get_limbs(bn)));
-            inv_slice.as_array()
-        };
-        all_limbs.map(|limbs| Self { limbs, params })
-    }
-
-    // UNCONSTRAINED! (Hence `__` prefix).
     pub fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self> {
         let params = self.params;
         let maybe_limbs = unsafe { __tonelli_shanks_sqrt(params, self.limbs) };
         maybe_limbs.map(|limbs| Self { limbs, params })
-    }
-
-    // UNCONSTRAINED! (Hence `__` prefix).
-    pub fn __compute_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
-        params: BigNumParams<N, MOD_BITS>,
-        lhs_terms: [[Self; LHS_N]; NUM_PRODUCTS],
-        lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
-        rhs_terms: [[Self; RHS_N]; NUM_PRODUCTS],
-        rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
-        linear_terms: [Self; ADD_N],
-        linear_flags: [bool; ADD_N],
-    ) -> (Self, Self) {
-        let (q_limbs, r_limbs) = unsafe {
-            __compute_quadratic_expression::<_, MOD_BITS, _, _, _, _>(
-                params,
-                map(lhs_terms, |bns| map(bns, |bn| Self::get_limbs(bn))),
-                lhs_flags,
-                map(rhs_terms, |bns| map(bns, |bn| Self::get_limbs(bn))),
-                rhs_flags,
-                map(linear_terms, |bn| Self::get_limbs(bn)),
-                linear_flags,
-            )
-        };
-        (Self { limbs: q_limbs, params }, Self { limbs: r_limbs, params })
-    }
-
-    pub fn evaluate_quadratic_expression<let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
-        params: BigNumParams<N, MOD_BITS>,
-        lhs_terms: [[Self; LHS_N]; NUM_PRODUCTS],
-        lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
-        rhs_terms: [[Self; RHS_N]; NUM_PRODUCTS],
-        rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
-        linear_terms: [Self; ADD_N],
-        linear_flags: [bool; ADD_N],
-    ) {
-        evaluate_quadratic_expression::<_, MOD_BITS, _, _, _, _>(
-            params,
-            map(lhs_terms, |bns| map(bns, |bn| Self::get_limbs(bn))),
-            lhs_flags,
-            map(rhs_terms, |bns| map(bns, |bn| Self::get_limbs(bn))),
-            rhs_flags,
-            map(linear_terms, |bn| Self::get_limbs(bn)),
-            linear_flags,
-        )
     }
 
     pub fn validate_in_field(self: Self) {
@@ -281,12 +215,6 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
         let params = self.params;
         assert(params == divisor.params);
         Self { limbs: umod::<_, MOD_BITS>(params, self.limbs, divisor.limbs), params }
-    }
-
-    pub fn conditional_select(lhs: Self, rhs: Self, predicate: bool) -> Self {
-        let params = lhs.params;
-        assert(params == rhs.params);
-        Self { limbs: conditional_select(lhs.limbs, rhs.limbs, predicate), params }
     }
 
     pub fn is_zero(self) -> bool {
@@ -354,5 +282,91 @@ impl<let N: u32, let MOD_BITS: u32, Params> std::cmp::Ord for RuntimeBigNum<N, M
     fn cmp(self, other: Self) -> Ordering {
         assert(self.params == other.params);
         cmp::<_, MOD_BITS>(self.limbs, other.limbs)
+    }
+}
+
+// UNCONSTRAINED! (Hence `__` prefix).
+pub fn __compute_quadratic_expression<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
+    params: BigNumParams<N, MOD_BITS>,
+    lhs_terms: [[RuntimeBigNum<N, MOD_BITS>; LHS_N]; NUM_PRODUCTS],
+    lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
+    rhs_terms: [[RuntimeBigNum<N, MOD_BITS>; RHS_N]; NUM_PRODUCTS],
+    rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
+    linear_terms: [RuntimeBigNum<N, MOD_BITS>; ADD_N],
+    linear_flags: [bool; ADD_N],
+) -> (RuntimeBigNum<N, MOD_BITS>, RuntimeBigNum<N, MOD_BITS>) {
+    let (q_limbs, r_limbs) = unsafe {
+        crate::fns::expressions::compute_quadratic_expression::<_, MOD_BITS, _, _, _, _>(
+            params,
+            map(lhs_terms, |bns| map(bns, |bn| RuntimeBigNum::get_limbs(bn))),
+            lhs_flags,
+            map(rhs_terms, |bns| map(bns, |bn| RuntimeBigNum::get_limbs(bn))),
+            rhs_flags,
+            map(linear_terms, |bn| RuntimeBigNum::get_limbs(bn)),
+            linear_flags,
+        )
+    };
+    (RuntimeBigNum { limbs: q_limbs, params }, RuntimeBigNum { limbs: r_limbs, params })
+}
+
+pub fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
+    params: BigNumParams<N, MOD_BITS>,
+    lhs_terms: [[RuntimeBigNum<N, MOD_BITS>; LHS_N]; NUM_PRODUCTS],
+    lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
+    rhs_terms: [[RuntimeBigNum<N, MOD_BITS>; RHS_N]; NUM_PRODUCTS],
+    rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
+    linear_terms: [RuntimeBigNum<N, MOD_BITS>; ADD_N],
+    linear_flags: [bool; ADD_N],
+) {
+    crate::fns::expressions::evaluate_quadratic_expression::<_, MOD_BITS, _, _, _, _>(
+        params,
+        map(lhs_terms, |bns| map(bns, |bn| RuntimeBigNum::get_limbs(bn))),
+        lhs_flags,
+        map(rhs_terms, |bns| map(bns, |bn| RuntimeBigNum::get_limbs(bn))),
+        rhs_flags,
+        map(linear_terms, |bn| RuntimeBigNum::get_limbs(bn)),
+        linear_flags,
+    )
+}
+
+// UNCONSTRAINED! (Hence `__` prefix).
+pub fn __batch_invert<let N: u32, let MOD_BITS: u32, let M: u32>(
+    x: [RuntimeBigNum<N, MOD_BITS>; M],
+) -> [RuntimeBigNum<N, MOD_BITS>; M] {
+    let params = x[0].params;
+    assert(params.has_multiplicative_inverse);
+    let all_limbs = unsafe {
+        crate::fns::unconstrained_ops::batch_invert::<_, MOD_BITS, _>(
+            params,
+            x.map(|bn| RuntimeBigNum::get_limbs(bn)),
+        )
+    };
+    all_limbs.map(|limbs| RuntimeBigNum { limbs, params })
+}
+
+// Note: can't return a slice from this unconstrained to a constrained function.
+pub unconstrained fn __batch_invert_slice<let N: u32, let MOD_BITS: u32, let M: u32>(
+    x: [RuntimeBigNum<N, MOD_BITS>],
+) -> [RuntimeBigNum<N, MOD_BITS>] {
+    let params = x[0].params;
+    assert(params.has_multiplicative_inverse);
+    let all_limbs = crate::fns::unconstrained_ops::batch_invert_slice::<_, MOD_BITS>(
+        params,
+        x.map(|bn| RuntimeBigNum::get_limbs(bn)),
+    );
+
+    all_limbs.map(|limbs| RuntimeBigNum { limbs, params }).as_array()
+}
+
+pub fn conditional_select<let N: u32, let MOD_BITS: u32>(
+    lhs: RuntimeBigNum<N, MOD_BITS>,
+    rhs: RuntimeBigNum<N, MOD_BITS>,
+    predicate: bool,
+) -> RuntimeBigNum<N, MOD_BITS> {
+    let params = lhs.params;
+    assert(params == rhs.params);
+    RuntimeBigNum {
+        limbs: crate::fns::constrained_ops::conditional_select(lhs.limbs, rhs.limbs, predicate),
+        params,
     }
 }
