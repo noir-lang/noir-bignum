@@ -442,7 +442,7 @@ pub(crate) fn sub<let N: u32, let MOD_BITS: u32>(
         // a - b = r
         // p + a - b - r = 0
         let (result, carry_flags, borrow_flags, underflow) =
-            unsafe { __sub_with_flags(params, lhs, rhs) };
+            unsafe { __sub_with_flags(params.modulus, lhs, rhs) };
 
         validate_in_range::<_, _, MOD_BITS>(result);
         let modulus = params.modulus;
