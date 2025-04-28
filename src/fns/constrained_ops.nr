@@ -393,7 +393,7 @@ pub(crate) fn add<let N: u32, let MOD_BITS: u32>(
     } else {
         // so we do... p - x - r = 0 and there might be borrow flags
         let (result, carry_flags, borrow_flags, overflow_modulus) =
-            unsafe { __add_with_flags(params, lhs, rhs) };
+            unsafe { __add_with_flags(params.modulus, lhs, rhs) };
         validate_in_range::<_, _, MOD_BITS>(result);
         let modulus = params.modulus;
 

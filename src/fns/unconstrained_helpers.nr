@@ -102,18 +102,18 @@ pub(crate) unconstrained fn __neg_with_flags<let N: u32, let MOD_BITS: u32>(
 }
 
 pub(crate) unconstrained fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
+    modulus: [u128;N],
     lhs: [u128; N],
     rhs: [u128; N],
 ) -> ([u128; N], [bool; N], [bool; N - 1], bool) {
     let add_res = __helper_add(lhs, rhs);
-    let overflow = __gte(add_res, params.modulus);
+    let overflow = __gte(add_res, modulus);
 
     let mut subtrahend: [u128; N] = [0; N];
     let mut result: [u128; N] = [0; N];
 
     if overflow {
-        subtrahend = params.modulus;
+        subtrahend = modulus;
     }
 
     let mut carry_in: u128 = 0;
