@@ -593,6 +593,7 @@ pub(crate) fn cmp<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N])
         unsafe { __validate_gt_remainder(lhs, rhs) };
     // if underflow is true, swap lhs and rhs
     let (lhs, rhs) = if underflow { (rhs, lhs) } else { (lhs, rhs) };
+
     check_gt_with_flags::<N, MOD_BITS>(lhs, rhs, result, borrow_flags, carry_flags);
     if lhs == rhs {
         Ordering::equal()
@@ -612,7 +613,7 @@ pub(crate) fn check_gt_with_flags<let N: u32, let MOD_BITS: u32>(
     carry_flags: [bool; N],
 ) {
     let mut addend: [Field; N] = [0; N];
-    let result_limb = lhs[0] as Field - rhs[0] as Field + addend[0] - result[0] as Field - 1
+    let result_limb = lhs[0] as Field - rhs[0] as Field + addend[0] - result[0] as Field
         + (borrow_flags[0] as Field - carry_flags[0] as Field) * TWO_POW_120 as Field;
     assert(result_limb == 0);
 

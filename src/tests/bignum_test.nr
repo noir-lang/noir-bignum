@@ -1013,3 +1013,19 @@ fn test_SecP224r1_mul_regression() {
     expected.validate_in_field();
     assert(res == expected);
 }
+
+#[test]
+fn test_cmp_equal() {
+    let a: BN254_Fq = BN254_Fq::derive_from_seed([1, 2, 3]);
+    let b: BN254_Fq = BN254_Fq::derive_from_seed([1, 2, 3]);
+    let c: bool = a < b;
+    assert(c == false);
+}
+
+#[test]
+fn fuzz_cmp_equal(seed: [u8; 5]) {
+    let a: BN254_Fq = BN254_Fq::derive_from_seed(seed);
+    let b: BN254_Fq = BN254_Fq::derive_from_seed(seed);
+    let c: bool = a < b;
+    assert(c == false);
+}

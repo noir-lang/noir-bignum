@@ -56,7 +56,7 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
     // swap a and b if there's an underflow
     let (a, b) = if underflow { (b, a) } else { (a, b) };
     let mut carry_in: u128 = 0;
-    let mut borrow_in: u128 = 1;
+    let mut borrow_in: u128 = 0;
     let mut borrow_flags: [bool; N] = [false; N];
     let mut carry_flags: [bool; N] = [false; N];
     for i in 0..N {
