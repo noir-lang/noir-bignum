@@ -361,7 +361,7 @@ pub(crate) fn neg<let N: u32, let MOD_BITS: u32>(
         }
     } else {
         // so we do... p - x - r = 0 and there might be borrow flags
-        let (result, borrow_flags) = unsafe { __neg_with_flags(params, val) };
+        let (result, borrow_flags) = unsafe { __neg_with_flags(params.modulus, val) };
         validate_in_range::<_, _, MOD_BITS>(result);
         let modulus = params.modulus;
         let result_limb = modulus[0] + (borrow_flags[0] as u128 * TWO_POW_120) - val[0] - result[0];
