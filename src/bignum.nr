@@ -161,7 +161,7 @@ pub(crate) comptime fn derive_bignum_impl(
 
             unconstrained fn __add(self: Self, other: Self) -> Self {
                 let params = Self::params();
-                Self {limbs: $unconstrained_ops::__add(params, self.get_limbs(), other.get_limbs())}
+                Self {limbs: $unconstrained_ops::__add(params.modulus, self.get_limbs(), other.get_limbs())}
             }
 
             unconstrained fn __sub(self: Self, other: Self) -> Self {

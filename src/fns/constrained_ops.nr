@@ -388,7 +388,7 @@ pub(crate) fn add<let N: u32, let MOD_BITS: u32>(
         // Safety: not need to constrain in unconstrained runtime
         unsafe {
             // __add_u128(params, lhs, rhs)
-            __add(params, lhs, rhs)
+            __add(params.modulus, lhs, rhs)
         }
     } else {
         // so we do... p - x - r = 0 and there might be borrow flags

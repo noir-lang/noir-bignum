@@ -64,8 +64,8 @@ pub(crate) unconstrained fn __neg<let N: u32>(
     __helper_sub(modulus, limbs)
 }
 
-pub(crate) unconstrained fn __add<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
+pub(crate) unconstrained fn __add<let N: u32>(
+    modulus: [u128;N],
     lhs: [u128; N],
     rhs: [u128; N],
 ) -> [u128; N] {
@@ -78,8 +78,8 @@ pub(crate) unconstrained fn __add<let N: u32, let MOD_BITS: u32>(
         result[i] = add_term;
     }
     // check if the result is greater than the modulus
-    if __gte(result, params.modulus) {
-        __helper_sub(result, params.modulus)
+    if __gte(result, modulus) {
+        __helper_sub(result, modulus)
     } else {
         result
     }
@@ -94,7 +94,7 @@ pub(crate) unconstrained fn __sub<let N: u32, let MOD_BITS: u32>(
     lhs: [u128; N],
     rhs: [u128; N],
 ) -> [u128; N] {
-    __add(params, lhs, __neg(params.modulus, rhs))
+    __add(params.modulus, lhs, __neg(params.modulus, rhs))
 }
 
 pub(crate) unconstrained fn __mul_with_quotient<let N: u32, let MOD_BITS: u32>(

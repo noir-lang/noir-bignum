@@ -306,7 +306,7 @@ unconstrained fn __recursively_find_multiplicative_generator<let N: u32, let MOD
     let found = exped == neg_one;
     let mut result: (bool, [u128; N]) = (found, target);
     if (!found) {
-        let _target: [u128; N] = __add(params, target, one);
+        let _target: [u128; N] = __add(params.modulus, target, one);
         result = __recursively_find_multiplicative_generator::<_, MOD_BITS>(
             params,
             _target,
