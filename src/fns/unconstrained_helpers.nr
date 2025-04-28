@@ -101,7 +101,7 @@ pub(crate) unconstrained fn __neg_with_flags<let N: u32, let MOD_BITS: u32>(
     (result, borrow_flags)
 }
 
-pub(crate) unconstrained fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
+pub(crate) unconstrained fn __add_with_flags<let N: u32>(
     modulus: [u128;N],
     lhs: [u128; N],
     rhs: [u128; N],
