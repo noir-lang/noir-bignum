@@ -302,7 +302,7 @@ unconstrained fn __recursively_find_multiplicative_generator<let N: u32, let MOD
 ) -> (bool, [u128; N]) {
     let exped = __pow(params, target, p_minus_one_over_two);
     let one: [u128; N] = __one();
-    let neg_one = __neg(params, one);
+    let neg_one = __neg(params.modulus, one);
     let found = exped == neg_one;
     let mut result: (bool, [u128; N]) = (found, target);
     if (!found) {

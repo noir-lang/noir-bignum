@@ -357,7 +357,7 @@ pub(crate) fn neg<let N: u32, let MOD_BITS: u32>(
     if std::runtime::is_unconstrained() {
         // Safety: not need to constrain in unconstrained runtime
         unsafe {
-            __neg(params, val)
+            __neg(params.modulus, val)
         }
     } else {
         // so we do... p - x - r = 0 and there might be borrow flags

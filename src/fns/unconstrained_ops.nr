@@ -57,12 +57,11 @@ pub(crate) unconstrained fn __is_zero<let N: u32>(limbs: [u128; N]) -> bool {
 *              N.B. constrained BigNum operations do not fully constrain outputs to be in the range [0, p-1]
 *              because such a check is expensive and usually unneccesary.
 */
-pub(crate) unconstrained fn __neg<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
+pub(crate) unconstrained fn __neg<let N: u32>(
+    modulus: [u128;N],
     limbs: [u128; N],
 ) -> [u128; N] {
-    let f: [u128; N] = limbs;
-    __helper_sub(params.modulus, f)
+    __helper_sub(modulus, limbs)
 }
 
 pub(crate) unconstrained fn __add<let N: u32, let MOD_BITS: u32>(
@@ -95,7 +94,7 @@ pub(crate) unconstrained fn __sub<let N: u32, let MOD_BITS: u32>(
     lhs: [u128; N],
     rhs: [u128; N],
 ) -> [u128; N] {
-    __add(params, lhs, __neg(params, rhs))
+    __add(params, lhs, __neg(params.modulus, rhs))
 }
 
 pub(crate) unconstrained fn __mul_with_quotient<let N: u32, let MOD_BITS: u32>(

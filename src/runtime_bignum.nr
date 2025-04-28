@@ -116,7 +116,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     // UNCONSTRAINED! (Hence `__` prefix).
     pub fn __neg(self) -> Self {
         let params = self.params;
-        let limbs = unsafe { __neg(params, self.limbs) };
+        let limbs = unsafe { __neg(params.modulus, self.limbs) };
         Self { params, limbs }
     }
 

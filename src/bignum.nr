@@ -156,7 +156,7 @@ pub(crate) comptime fn derive_bignum_impl(
 
             unconstrained fn __neg(self: Self) -> Self {
                 let params = Self::params();
-                Self {limbs: $unconstrained_ops::__neg(params, self.get_limbs())}
+                Self {limbs: $unconstrained_ops::__neg(params.modulus, self.get_limbs())}
             }
 
             unconstrained fn __add(self: Self, other: Self) -> Self {
