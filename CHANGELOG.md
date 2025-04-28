@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.1](https://github.com/noir-lang/noir-bignum/compare/v0.7.0...v0.7.1) (2025-04-28)
+
+
+### Bug Fixes
+
+* Fixing the bug when comparing two equal bignums ([#168](https://github.com/noir-lang/noir-bignum/issues/168)) ([7d02987](https://github.com/noir-lang/noir-bignum/commit/7d02987ce8d0575182a156b4707036b240cf0ab1))
+* Replace references to associated constants with macro-generated constants ([#169](https://github.com/noir-lang/noir-bignum/issues/169)) ([ed93f0b](https://github.com/noir-lang/noir-bignum/commit/ed93f0bc84c8a9bcc4ed434ce2aa80e28fd80055))
+
 ## [0.7.0](https://github.com/noir-lang/noir-bignum/compare/v0.6.1...v0.7.0) (2025-04-18)
 
 
