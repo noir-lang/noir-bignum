@@ -90,11 +90,11 @@ pub(crate) unconstrained fn __add<let N: u32>(
 * @description see `__neg` for why we use 2p instead of p
 **/
 pub(crate) unconstrained fn __sub<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
+   modulus: [u128;N],
     lhs: [u128; N],
     rhs: [u128; N],
 ) -> [u128; N] {
-    __add(params.modulus, lhs, __neg(params.modulus, rhs))
+    __add(modulus, lhs, __neg(modulus, rhs))
 }
 
 pub(crate) unconstrained fn __mul_with_quotient<let N: u32, let MOD_BITS: u32>(
