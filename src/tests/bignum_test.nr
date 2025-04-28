@@ -273,6 +273,17 @@ where
 }
 
 #[test]
+fn test_modulus_bits_BN() {
+    assert_eq(BN254_Fq::zero().modulus_bits(), 254)
+}
+
+#[test]
+fn test_num_limbs_BN() {
+    assert_eq(BN254_Fq::zero().num_limbs(), 3)
+}
+
+
+#[test]
 fn test_eq_BN() {
     test_eq::<3, BN254_Fq>();
 }
