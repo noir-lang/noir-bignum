@@ -7,12 +7,8 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     let MOD_BITS: u32;
 
     fn params() -> BigNumParams<N, MOD_BITS>;
-    fn modulus_bits(_: Self) -> u32 {
-        BigNum::MOD_BITS
-    }
-    fn num_limbs(_: Self) -> u32 {
-        BigNum::N
-    }
+    fn modulus_bits(_: Self) -> u32;
+    fn num_limbs(_: Self) -> u32;
     fn modulus() -> Self;
 
     fn new() -> Self;
@@ -88,6 +84,14 @@ pub(crate) comptime fn derive_bignum_impl(
             let N: u32 = $N; 
             let MOD_BITS: u32 = $MOD_BITS;
             
+            fn modulus_bits(_: Self) -> u32 {
+                $MOD_BITS
+            }
+            
+            fn num_limbs(_: Self) -> u32 {
+                $N
+            }
+
             fn modulus() -> Self {
                 Self { limbs: Self::params().modulus }
             }
