@@ -80,8 +80,8 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
     (underflow, result, carry_flags, borrow_flags)
 }
 
-pub(crate) unconstrained fn __neg_with_flags<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
+pub(crate) unconstrained fn __neg_with_flags<let N: u32>(
+    modulus: [u128; N],
     val: [u128; N],
 ) -> ([u128; N], [bool; N - 1]) {
     let mut result: [u128; N] = [0; N];
@@ -90,8 +90,8 @@ pub(crate) unconstrained fn __neg_with_flags<let N: u32, let MOD_BITS: u32>(
     let mut borrow_flags: [bool; N - 1] = [false; N - 1];
     for i in 0..N {
         let sub_term = val[i] + borrow_in;
-        let borrow = (sub_term > params.modulus[i]) as u128;
-        result[i] = borrow * TWO_POW_120 + params.modulus[i] - sub_term;
+        let borrow = (sub_term > modulus[i]) as u128;
+        result[i] = borrow * TWO_POW_120 + modulus[i] - sub_term;
 
         borrow_in = borrow;
         if (i < N - 1) {
@@ -101,19 +101,19 @@ pub(crate) unconstrained fn __neg_with_flags<let N: u32, let MOD_BITS: u32>(
     (result, borrow_flags)
 }
 
-pub(crate) unconstrained fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
+pub(crate) unconstrained fn __add_with_flags<let N: u32>(
+    modulus: [u128; N],
     lhs: [u128; N],
     rhs: [u128; N],
 ) -> ([u128; N], [bool; N], [bool; N - 1], bool) {
     let add_res = __helper_add(lhs, rhs);
-    let overflow = __gte(add_res, params.modulus);
+    let overflow = __gte(add_res, modulus);
 
     let mut subtrahend: [u128; N] = [0; N];
     let mut result: [u128; N] = [0; N];
 
     if overflow {
-        subtrahend = params.modulus;
+        subtrahend = modulus;
     }
 
     let mut carry_in: u128 = 0;
@@ -143,15 +143,15 @@ pub(crate) unconstrained fn __add_with_flags<let N: u32, let MOD_BITS: u32>(
     (result, carry_flags, borrow_flags, overflow)
 }
 
-pub(crate) unconstrained fn __sub_with_flags<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
+pub(crate) unconstrained fn __sub_with_flags<let N: u32>(
+    modulus: [u128; N],
     lhs: [u128; N],
     rhs: [u128; N],
 ) -> ([u128; N], [bool; N], [bool; N - 1], bool) {
     let mut one: [u128; N] = [0; N];
     one[0] = 1;
     let underflow = !__gte(lhs, rhs);
-    let addend: [u128; N] = if underflow { params.modulus } else { [0; N] };
+    let addend: [u128; N] = if underflow { modulus } else { [0; N] };
     let mut result: [u128; N] = [0; N];
 
     let mut carry_in: u128 = 0;
@@ -302,11 +302,11 @@ unconstrained fn __recursively_find_multiplicative_generator<let N: u32, let MOD
 ) -> (bool, [u128; N]) {
     let exped = __pow(params, target, p_minus_one_over_two);
     let one: [u128; N] = __one();
-    let neg_one = __neg(params, one);
+    let neg_one = __neg(params.modulus, one);
     let found = exped == neg_one;
     let mut result: (bool, [u128; N]) = (found, target);
     if (!found) {
-        let _target: [u128; N] = __add(params, target, one);
+        let _target: [u128; N] = __add(params.modulus, target, one);
         result = __recursively_find_multiplicative_generator::<_, MOD_BITS>(
             params,
             _target,
