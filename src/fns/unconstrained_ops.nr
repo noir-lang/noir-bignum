@@ -86,7 +86,7 @@ pub(crate) unconstrained fn __add<let N: u32>(
 * @brief given inputs `x, y` compute 2p + x - y (unconstrained)
 * @description see `__neg` for why we use 2p instead of p
 **/
-pub(crate) unconstrained fn __sub<let N: u32, let MOD_BITS: u32>(
+pub(crate) unconstrained fn __sub<let N: u32>(
     modulus: [u128; N],
     lhs: [u128; N],
     rhs: [u128; N],
