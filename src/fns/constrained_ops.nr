@@ -71,13 +71,13 @@ pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
     let result: [u128; N] = unsafe { __from_field::<N>(field) };
     if !std::runtime::is_unconstrained() {
         // validate the limbs are in range and the value in total is less than 2^254
+        let mut grumpkin_modulus = [0; N];
+        grumpkin_modulus[0] = 0x33e84879b9709143e1f593f0000001;
+        grumpkin_modulus[1] = 0x4e72e131a029b85045b68181585d28;
+        grumpkin_modulus[2] = 0x3064;
         if MOD_BITS > 253 {
             // this means that the field modulus is larger than grumpkin modulus so we have to check if the element fields in the field size are less than the grumpkin modulus.
             // also for correct params N is always larger than 3 here
-            let mut grumpkin_modulus = [0; N];
-            grumpkin_modulus[0] = 0x33e84879b9709143e1f593f0000001;
-            grumpkin_modulus[1] = 0x4e72e131a029b85045b68181585d28;
-            grumpkin_modulus[2] = 0x3064;
             validate_gt::<N, MOD_BITS>(grumpkin_modulus, result);
         } else if MOD_BITS < 253 {
             // this means that the field modulus is smaller than grumpkin modulus so we have to check if the element fields in the field size
@@ -90,15 +90,11 @@ pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
             let mut gt_grumpkin = false;
             for i in 0..3 {
                 if !gt_grumpkin {
-                    if _params.modulus[2 - i] < GRUMPKIN_MODULUS[2 - i] {
+                    if _params.modulus[2 - i] < grumpkin_modulus[2 - i] {
                         gt_grumpkin = true;
                     }
                 }
             }
-            let mut grumpkin_modulus = [0; N];
-            grumpkin_modulus[0] = GRUMPKIN_MODULUS[0];
-            grumpkin_modulus[1] = GRUMPKIN_MODULUS[1];
-            grumpkin_modulus[2] = GRUMPKIN_MODULUS[2];
             let result_2 = conditional_select::<N>(_params.modulus, grumpkin_modulus, gt_grumpkin);
             validate_gt::<N, MOD_BITS>(result_2, result);
         }
