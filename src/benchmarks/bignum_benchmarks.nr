@@ -3,7 +3,7 @@ use crate::fields::{
     U256::U256,
 };
 
-comptime fn make_bench(m: Module, params: Quoted, MOD_BITS: u32) -> Quoted {
+comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
     let module_name = m.name();
     let add_bench_name = f"add_{module_name}".quoted_contents();
     let sub_bench_name = f"sub_{module_name}".quoted_contents();
