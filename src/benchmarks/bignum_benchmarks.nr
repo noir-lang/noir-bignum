@@ -1,6 +1,6 @@
 use crate::fields::{
-    bls12_381Fq::BLS12_381_Fq, bls12_381Fr::BLS12_381_Fr, bn254Fq::BN254_Fq, U2048::U2048,
-    U256::U256,
+    bls12_377Fq::BLS12_377_Fq, bls12_377Fr::BLS12_377_Fr, bls12_381Fq::BLS12_381_Fq,
+    bls12_381Fr::BLS12_381_Fr, bn254Fq::BN254_Fq, U2048::U2048, U256::U256,
 };
 
 comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
@@ -128,5 +128,10 @@ mod BLS12_381Fq_Bench {}
 #[make_bench(quote { BLS12_381_Fr })]
 mod BLS12_381Fr_Bench {}
 
+#[make_bench(quote { BLS12_377_Fr })]
+mod BLS12_377Fr_Bench {}
+
+#[make_bench(quote { BLS12_377_Fq })]
+mod BLS12_377Fq_Bench {}
 #[make_bench(quote { U2048 })]
 mod U2048_Bench {}
