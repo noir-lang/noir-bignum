@@ -382,11 +382,11 @@ pub(crate) fn neg<let N: u32, let MOD_BITS: u32>(
     if std::runtime::is_unconstrained() {
         // Safety: not need to constrain in unconstrained runtime
         unsafe {
-            __neg(params, val)
+            __neg(params.modulus, val)
         }
     } else {
         // so we do... p - x - r = 0 and there might be borrow flags
-        let (result, borrow_flags) = unsafe { __neg_with_flags(params, val) };
+        let (result, borrow_flags) = unsafe { __neg_with_flags(params.modulus, val) };
         validate_in_range::<_, _, MOD_BITS>(result);
         let modulus = params.modulus;
         let result_limb = modulus[0] + (borrow_flags[0] as u128 * TWO_POW_120) - val[0] - result[0];
@@ -413,12 +413,12 @@ pub(crate) fn add<let N: u32, let MOD_BITS: u32>(
         // Safety: not need to constrain in unconstrained runtime
         unsafe {
             // __add_u128(params, lhs, rhs)
-            __add(params, lhs, rhs)
+            __add(params.modulus, lhs, rhs)
         }
     } else {
         // so we do... p - x - r = 0 and there might be borrow flags
         let (result, carry_flags, borrow_flags, overflow_modulus) =
-            unsafe { __add_with_flags(params, lhs, rhs) };
+            unsafe { __add_with_flags(params.modulus, lhs, rhs) };
         validate_in_range::<_, _, MOD_BITS>(result);
         let modulus = params.modulus;
 
@@ -460,14 +460,14 @@ pub(crate) fn sub<let N: u32, let MOD_BITS: u32>(
     if std::runtime::is_unconstrained() {
         // Safety: not need to constrain in unconstrained runtime
         unsafe {
-            __sub(params, lhs, rhs)
+            __sub(params.modulus, lhs, rhs)
         }
     } else {
         // so we do... p - x - r = 0 and there might be borrow flags
         // a - b = r
         // p + a - b - r = 0
         let (result, carry_flags, borrow_flags, underflow) =
-            unsafe { __sub_with_flags(params, lhs, rhs) };
+            unsafe { __sub_with_flags(params.modulus, lhs, rhs) };
 
         validate_in_range::<_, _, MOD_BITS>(result);
         let modulus = params.modulus;
