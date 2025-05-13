@@ -84,10 +84,10 @@ comptime fn make_bench(m: Module, params: Quoted, MOD_BITS: u32) -> Quoted {
             crate::bignum::evaluate_quadratic_expression(lhs, lhs_flags, rhs, rhs_flags, add, add_flags)
         }
         
-        // #[export]
-        // fn $from_field_bench_name(a: Field) -> $typ {
-        //     $typ::from(a)
-        // }
+        #[export]
+        fn $from_field_bench_name(a: Field) -> $typ {
+            $typ::from(a)
+        }
 
         // #[export]
         // fn $to_be_bytes_bench_name(a: $typ) -> [u8; ($MOD_BITS+7) / 8] {
