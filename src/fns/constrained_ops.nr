@@ -31,8 +31,6 @@ use std::cmp::Ordering;
  * gt 
  * check_gt_with_flags
  */
-pub global GRUMPKIN_MODULUS: [u128; 3] =
-    [0x33e84879b9709143e1f593f0000001, 0x4e72e131a029b85045b68181585d28, 0x3064];
 
 pub(crate) fn limbs_to_field<let N: u32, let MOD_BITS: u32>(
     _params: P<N, MOD_BITS>,
