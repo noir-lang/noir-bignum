@@ -1,6 +1,9 @@
-use crate::fields::{bls12_381Fq::BLS12_381_Fq, bn254Fq::BN254_Fq, U2048::U2048, U256::U256};
+use crate::fields::{
+    bls12_381Fq::BLS12_381_Fq, bls12_381Fr::BLS12_381_Fr, bn254Fq::BN254_Fq, U2048::U2048,
+    U256::U256,
+};
 
-comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
+comptime fn make_bench(m: Module, params: Quoted, MOD_BITS: u32) -> Quoted {
     let module_name = m.name();
     let add_bench_name = f"add_{module_name}".quoted_contents();
     let sub_bench_name = f"sub_{module_name}".quoted_contents();
@@ -81,10 +84,10 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
             crate::bignum::evaluate_quadratic_expression(lhs, lhs_flags, rhs, rhs_flags, add, add_flags)
         }
         
-        #[export]
-        fn $from_field_bench_name(a: Field) -> $typ {
-            $typ::from(a)
-        }
+        // #[export]
+        // fn $from_field_bench_name(a: Field) -> $typ {
+        //     $typ::from(a)
+        // }
 
         // #[export]
         // fn $to_be_bytes_bench_name(a: $typ) -> [u8; ($MOD_BITS+7) / 8] {
@@ -121,6 +124,9 @@ mod U256_Bench {}
 
 #[make_bench(quote { BLS12_381_Fq })]
 mod BLS12_381Fq_Bench {}
+
+#[make_bench(quote { BLS12_381_Fr })]
+mod BLS12_381Fr_Bench {}
 
 #[make_bench(quote { U2048 })]
 mod U2048_Bench {}
