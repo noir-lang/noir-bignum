@@ -358,14 +358,14 @@ pub unconstrained fn batch_invert<T: BigNum, let M: u32>(x: [T; M]) -> [T; M] {
     })
 }
 
-pub unconstrained fn batch_invert_slice<T: BigNum, let M: u32>(x: [T]) -> [T] {
+pub unconstrained fn batch_invert_slice<T: BigNum>(x: [T]) -> [T] {
     let params = T::params();
     assert(params.has_multiplicative_inverse);
     crate::fns::unconstrained_ops::batch_invert_slice(params, x.map(|bn: T| bn.get_limbs()))
         .map(|limbs| T::from_limbs(limbs))
 }
 
-pub fn to_field<T: BigNum, let N: u32, let MOD_BITS: u32>(bn: T) -> Field {
+pub fn to_field<T: BigNum>(bn: T) -> Field {
     let params = T::params();
     limbs_to_field(params, bn.get_limbs())
 }
