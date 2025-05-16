@@ -1039,3 +1039,8 @@ fn fuzz_cmp_equal(seed: [u8; 5]) {
     let c: bool = a < b;
     assert(c == false);
 }
+
+#[test]
+fn bls12_377_should_accept_small_values() {
+    let _ = crate::BLS12_377_Fr::from(1);
+}

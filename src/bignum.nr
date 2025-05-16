@@ -240,7 +240,7 @@ pub(crate) comptime fn derive_bignum_impl(
 
         impl std::convert::From<Field> for $typ {
             fn from(input: Field) -> Self {
-                $typ { limbs: $constrained_ops::from_field::<$N, $MOD_BITS>(input) }
+                $typ { limbs: $constrained_ops::from_field::<$N, $MOD_BITS>($params, input) }
             }
         }
 
