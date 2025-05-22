@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.7.2](https://github.com/noir-lang/noir-bignum/compare/v0.7.1...v0.7.2) (2025-05-22)
+
+
+### Bug Fixes
+
+* Fix the `from::&lt;Field&gt;` logic when the `MOD_BITS` is the same as the native field bitsize  ([#172](https://github.com/noir-lang/noir-bignum/issues/172)) ([aed8c3a](https://github.com/noir-lang/noir-bignum/commit/aed8c3a8390d0e9125d34e5a0884351160fe6d7d))
+* Remove unused generic in trait impl ([#176](https://github.com/noir-lang/noir-bignum/issues/176)) ([31189ce](https://github.com/noir-lang/noir-bignum/commit/31189ce7648e33787e364890aa47ec325bfb4d9b))
+* Remove unused generics ([#174](https://github.com/noir-lang/noir-bignum/issues/174)) ([ea51006](https://github.com/noir-lang/noir-bignum/commit/ea51006df70f8161bbe268182b617ca399b75824))
+
 ## [0.7.1](https://github.com/noir-lang/noir-bignum/compare/v0.7.0...v0.7.1) (2025-04-28)
 
 
