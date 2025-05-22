@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.3](https://github.com/noir-lang/noir-bignum/compare/v0.7.2...v0.7.3) (2025-05-22)
+
+
+### Bug Fixes
+
+* Bump poseidon to v0.1.1 ([#177](https://github.com/noir-lang/noir-bignum/issues/177)) ([bb978f6](https://github.com/noir-lang/noir-bignum/commit/bb978f66fe822f39332cab6aed452151597b2962))
+
 ## [0.7.2](https://github.com/noir-lang/noir-bignum/compare/v0.7.1...v0.7.2) (2025-05-22)
 
 
