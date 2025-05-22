@@ -278,7 +278,7 @@ impl<let N: u32, let MOD_BITS: u32> std::cmp::Eq for RuntimeBigNum<N, MOD_BITS> 
     }
 }
 
-impl<let N: u32, let MOD_BITS: u32, Params> std::cmp::Ord for RuntimeBigNum<N, MOD_BITS> {
+impl<let N: u32, let MOD_BITS: u32> std::cmp::Ord for RuntimeBigNum<N, MOD_BITS> {
     fn cmp(self, other: Self) -> Ordering {
         assert(self.params == other.params);
         cmp::<_, MOD_BITS>(self.limbs, other.limbs)
