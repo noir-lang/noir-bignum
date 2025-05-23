@@ -345,12 +345,10 @@ fn test_eq() {
     let c: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [2, 2, 3, 4]);
 
     let modulus = a.modulus();
-
-    let t0: [u128; $N] = modulus.limbs;
-    let t1: [u128; $N] = b.limbs;
-
+    let t0 = b.limbs;
+    let t1 = modulus;
     // Safety: test code
-    let b_plus_modulus: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: unsafe { $__helper_add(t0, t1) }, params };
+    let b_plus_modulus = $RuntimeBigNum { limbs: unsafe { $__helper_add(t0, t1) }, params };
 
     assert_eq(a, b);
     assert_eq(a, b_plus_modulus);
