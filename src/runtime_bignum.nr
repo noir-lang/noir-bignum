@@ -344,7 +344,6 @@ pub fn __batch_invert<let N: u32, let MOD_BITS: u32, let M: u32>(
     all_limbs.map(|limbs| RuntimeBigNum { limbs, params })
 }
 
-// Note: can't return a slice from this unconstrained to a constrained function.
 pub unconstrained fn __batch_invert_slice<let N: u32, let MOD_BITS: u32, let M: u32>(
     x: [RuntimeBigNum<N, MOD_BITS>],
 ) -> [RuntimeBigNum<N, MOD_BITS>] {
@@ -355,7 +354,7 @@ pub unconstrained fn __batch_invert_slice<let N: u32, let MOD_BITS: u32, let M: 
         x.map(|bn| RuntimeBigNum::get_limbs(bn)),
     );
 
-    all_limbs.map(|limbs| RuntimeBigNum { limbs, params }).as_array()
+    all_limbs.map(|limbs| RuntimeBigNum { limbs, params })
 }
 
 pub fn conditional_select<let N: u32, let MOD_BITS: u32>(
