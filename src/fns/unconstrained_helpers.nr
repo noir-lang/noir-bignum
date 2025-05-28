@@ -73,8 +73,8 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
 
         // Only set `borrow` and `carry` if they differ
         if (carry != borrow) {
-            carry_flags[i] = carry as bool;
-            borrow_flags[i] = borrow as bool;
+            carry_flags[i] = carry != 0;
+            borrow_flags[i] = borrow != 0;
         }
     }
     (underflow, result, carry_flags, borrow_flags)
@@ -95,7 +95,7 @@ pub(crate) unconstrained fn __neg_with_flags<let N: u32>(
 
         borrow_in = borrow;
         if (i < N - 1) {
-            borrow_flags[i] = borrow as bool;
+            borrow_flags[i] = borrow != 0;
         }
     }
     (result, borrow_flags)
@@ -134,9 +134,9 @@ pub(crate) unconstrained fn __add_with_flags<let N: u32>(
 
         // Only set `borrow` and `carry` if they differ
         if (carry != borrow) {
-            carry_flags[i] = carry as bool;
+            carry_flags[i] = carry != 0;
             if (i < N - 1) {
-                borrow_flags[i] = borrow as bool;
+                borrow_flags[i] = borrow != 0;
             }
         }
     }
@@ -171,9 +171,9 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32>(
 
         // Only set `borrow` and `carry` if they differ
         if (carry != borrow) {
-            carry_flags[i] = carry as bool;
+            carry_flags[i] = carry != 0;
             if (i < N - 1) {
-                borrow_flags[i] = borrow as bool;
+                borrow_flags[i] = borrow != 0;
             }
         }
     }
