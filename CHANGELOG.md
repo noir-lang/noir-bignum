@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.7.3](https://github.com/noir-lang/noir-bignum/compare/v0.7.2...v0.7.3) (2025-05-30)
+
+
+### Bug Fixes
+
+* Bump poseidon to v0.1.1 ([#177](https://github.com/noir-lang/noir-bignum/issues/177)) ([bb978f6](https://github.com/noir-lang/noir-bignum/commit/bb978f66fe822f39332cab6aed452151597b2962))
+* Do not cast numeric to bool ([#182](https://github.com/noir-lang/noir-bignum/issues/182)) ([e9b1985](https://github.com/noir-lang/noir-bignum/commit/e9b1985455dda46a01c7d07cecbb697bbc6214e8))
+* Refactor __get_msb to work on a single 128bit debrujin sequence ([#181](https://github.com/noir-lang/noir-bignum/issues/181)) ([3f4a7da](https://github.com/noir-lang/noir-bignum/commit/3f4a7da92e570aed393f5ffe425fd7a212a5d9ad))
+* Remove `as_array` call for which `N` cannot be deduced ([#180](https://github.com/noir-lang/noir-bignum/issues/180)) ([c7c7720](https://github.com/noir-lang/noir-bignum/commit/c7c77208f83af0a966177dbf9c7dedb61a45ff90))
+
 ## [0.7.2](https://github.com/noir-lang/noir-bignum/compare/v0.7.1...v0.7.2) (2025-05-22)
 
 
