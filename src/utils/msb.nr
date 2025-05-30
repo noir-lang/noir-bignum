@@ -184,7 +184,6 @@ fn test_get_msb_equivalence() {
     assert_eq(msb1_4, msb2_4);
 }
 
-/*
 #[test]
 unconstrained fn fuzz_get_msb(seed: [u128; 5]) {
     let mut seed_copy = seed;
@@ -197,4 +196,3 @@ unconstrained fn fuzz_get_msb(seed: [u128; 5]) {
     let msb2 = unsafe { __get_msb(seed_copy) };
     assert_eq(msb1, msb2);
 }
-*/
