@@ -108,32 +108,32 @@ mod tests {
 
     #[test]
     // To check that the msb functions are equivalent with de bruijn sequence for 64 bits and 128 bits
-    fn test_get_msb_equivalence() {
+    unconstrained fn test_get_msb_equivalence() {
         // Test single limb (64-bit number)
         let x = 0x8000000000000000;
         let arr = [0, 0, x as u128, 0];
-        let msb1 = unsafe { __get_msb64(arr) };
-        let msb2 = unsafe { __get_msb(arr) };
+        let msb1 = __get_msb64(arr);
+        let msb2 = __get_msb(arr);
         assert_eq(msb1, msb2);
 
         // Test multiple limbs (120-bit number)
         let x = 0x800000000000000000000000000000; // 120 bits number
         let arr = [0, 0, x as u128, 0];
-        let msb1 = unsafe { __get_msb64(arr) };
-        let msb2 = unsafe { __get_msb(arr) };
+        let msb1 = __get_msb64(arr);
+        let msb2 = __get_msb(arr);
         assert_eq(msb1, msb2);
 
         // Test zero
         let arr = [0, 0, 0, 0];
-        let msb1 = unsafe { __get_msb64(arr) };
-        let msb2 = unsafe { __get_msb(arr) };
+        let msb1 = __get_msb64(arr);
+        let msb2 = __get_msb(arr);
         assert_eq(msb1, msb2);
 
         // Test all bits set (120 bits)
         let x = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // 120 bits
         let arr = [0, x as u128, 0, 0];
-        let msb1 = unsafe { __get_msb64(arr) };
-        let msb2 = unsafe { __get_msb(arr) };
+        let msb1 = __get_msb64(arr);
+        let msb2 = __get_msb(arr);
         assert_eq(msb1, msb2);
 
         // Test systematic bit positions
@@ -141,8 +141,8 @@ mod tests {
             let x: u128 = 1;
             let shifted = x << i;
             let arr = [0, shifted, 0, 0];
-            let msb1 = unsafe { __get_msb64(arr) };
-            let msb2 = unsafe { __get_msb(arr) };
+            let msb1 = __get_msb64(arr);
+            let msb2 = __get_msb(arr);
             assert_eq(msb1, msb2);
         }
 
@@ -158,8 +158,8 @@ mod tests {
         ];
         for i in 0..patterns.len() {
             let arr = [0, patterns[i] as u128, 0, 0];
-            let msb1 = unsafe { __get_msb64(arr) };
-            let msb2 = unsafe { __get_msb(arr) };
+            let msb1 = __get_msb64(arr);
+            let msb2 = __get_msb(arr);
             assert_eq(msb1, msb2);
         }
 
@@ -169,20 +169,20 @@ mod tests {
         let arr2 = [0, x as u128, 0, 0];
         let arr3 = [0, 0, x as u128, 0];
         let arr4 = [0, 0, 0, x as u128];
-        let msb1_1 = unsafe { __get_msb64(arr1) };
-        let msb2_1 = unsafe { __get_msb(arr1) };
+        let msb1_1 = __get_msb64(arr1);
+        let msb2_1 = __get_msb(arr1);
         assert_eq(msb1_1, msb2_1);
 
-        let msb1_2 = unsafe { __get_msb64(arr2) };
-        let msb2_2 = unsafe { __get_msb(arr2) };
+        let msb1_2 = __get_msb64(arr2);
+        let msb2_2 = __get_msb(arr2);
         assert_eq(msb1_2, msb2_2);
 
-        let msb1_3 = unsafe { __get_msb64(arr3) };
-        let msb2_3 = unsafe { __get_msb(arr3) };
+        let msb1_3 = __get_msb64(arr3);
+        let msb2_3 = __get_msb(arr3);
         assert_eq(msb1_3, msb2_3);
 
-        let msb1_4 = unsafe { __get_msb64(arr4) };
-        let msb2_4 = unsafe { __get_msb(arr4) };
+        let msb1_4 = __get_msb64(arr4);
+        let msb2_4 = __get_msb(arr4);
         assert_eq(msb1_4, msb2_4);
     }
 
@@ -192,8 +192,8 @@ mod tests {
         for i in 0..5 {
             seed_copy[i] = seed_copy[i] & (TWO_POW_120 - 1);
         }
-        let msb1 = unsafe { __get_msb64(seed_copy) };
-        let msb2 = unsafe { __get_msb(seed_copy) };
+        let msb1 = __get_msb64(seed_copy);
+        let msb2 = __get_msb(seed_copy);
         assert_eq(msb1, msb2);
     }
 }
