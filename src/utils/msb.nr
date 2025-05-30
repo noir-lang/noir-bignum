@@ -86,7 +86,7 @@ fn test_get_msb() {
     assert_msb_equal(x);
 }
 
-pub(crate) unconstrained fn __get_msb64<let N: u32>(val: [u128; N]) -> u32 {
+unconstrained fn __get_msb64<let N: u32>(val: [u128; N]) -> u32 {
     let mut count = 0;
     for i in 0..N {
         let v = val[((N) - 1 - i)];
