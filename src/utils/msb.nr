@@ -190,9 +190,7 @@ mod tests {
     unconstrained fn fuzz_get_msb(seed: [u128; 5]) {
         let mut seed_copy = seed;
         for i in 0..5 {
-            if (seed_copy[i] as u128) >= TWO_POW_120 {
-                seed_copy[i] = seed_copy[i] & (TWO_POW_120 - 1);
-            }
+            seed_copy[i] = seed_copy[i] & (TWO_POW_120 - 1);
         }
         let msb1 = unsafe { __get_msb64(seed_copy) };
         let msb2 = unsafe { __get_msb(seed_copy) };
