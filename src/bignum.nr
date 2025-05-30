@@ -9,7 +9,7 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     fn params() -> BigNumParams<N, MOD_BITS>;
     fn modulus_bits(_: Self) -> u32;
     fn num_limbs(_: Self) -> u32;
-    fn modulus() -> Self;
+    fn modulus() -> [u128; N];
 
     fn new() -> Self;
     fn zero() -> Self;
@@ -92,8 +92,8 @@ pub(crate) comptime fn derive_bignum_impl(
                 $N
             }
 
-            fn modulus() -> Self {
-                Self { limbs: Self::params().modulus }
+            fn modulus() -> [u128; $N] {
+                $params.modulus
             }
 
             fn new() -> Self {
