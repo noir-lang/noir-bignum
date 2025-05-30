@@ -1,7 +1,7 @@
-use crate::constants::{TWO_POW_119, TWO_POW_120, TWO_POW_60};
+use crate::constants::{TWO_POW_119, TWO_POW_120};
 use crate::fns::unconstrained_ops::{__add, __gte, __mul, __neg, __one, __pow};
 use crate::params::BigNumParams as P;
-use crate::utils::msb::get_msb64;
+use crate::utils::msb::get_msb;
 use crate::utils::split_bits::__normalize_limbs;
 
 pub(crate) unconstrained fn __from_field<let N: u32>(field: Field) -> [u128; N] {
@@ -449,15 +449,9 @@ pub(crate) unconstrained fn __shr1<let N: u32>(mut input: [u128; N]) -> [u128; N
 pub(crate) unconstrained fn __get_msb<let N: u32>(val: [u128; N]) -> u32 {
     let mut count = 0;
     for i in 0..N {
-        let v = val[((N) - 1 - i)];
-        let v_low = v as u64 % TWO_POW_60 as u64;
-        let v_high = ((v - v_low as u128) / TWO_POW_60) as u64;
-        if (v_high > 0) {
-            count = 60 * ((2 * N) - 1 - (i * 2)) + get_msb64(v_high);
-            break;
-        }
-        if (v_low > 0) {
-            count = 60 * ((2 * N) - 1 - (i * 2 + 1)) + get_msb64(v_low);
+        let v = val[(N - 1 - i)];
+        if (v > 0) {
+            count = 120 * (N - 1 - i) + get_msb(v);
             break;
         }
     }
