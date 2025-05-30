@@ -1,7 +1,7 @@
 use crate::constants::{TWO_POW_119, TWO_POW_120};
 use crate::fns::unconstrained_ops::{__add, __gte, __mul, __neg, __one, __pow};
 use crate::params::BigNumParams as P;
-use crate::utils::msb::get_msb128;
+use crate::utils::msb::get_msb;
 use crate::utils::split_bits::__normalize_limbs;
 
 pub(crate) unconstrained fn __from_field<let N: u32>(field: Field) -> [u128; N] {
@@ -451,7 +451,7 @@ pub(crate) unconstrained fn __get_msb<let N: u32>(val: [u128; N]) -> u32 {
     for i in 0..N {
         let v = val[(N - 1 - i)];
         if (v > 0) {
-            count = 120 * (N - 1 - i) + get_msb128(v);
+            count = 120 * (N - 1 - i) + get_msb(v);
             break;
         }
     }

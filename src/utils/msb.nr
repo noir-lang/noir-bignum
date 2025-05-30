@@ -1,4 +1,4 @@
-global MUL_DE_BRUIJN_BIT_128: [u32; 128] = [
+global MUL_DE_BRUIJN_BIT: [u32; 128] = [
     1, 14, 2, 15, 26, 20, 3, 16, 68, 80, 27, 21, 56, 50, 4, 17, 65, 96, 69, 81, 105, 99, 28, 22, 86,
     90, 57, 51, 72, 42, 5, 126, 18, 66, 48, 94, 97, 84, 70, 124, 82, 122, 106, 100, 114, 108, 29,
     23, 77, 102, 87, 91, 119, 116, 58, 52, 61, 110, 73, 37, 43, 31, 6, 127, 13, 25, 19, 67, 79, 55,
@@ -7,7 +7,7 @@ global MUL_DE_BRUIJN_BIT_128: [u32; 128] = [
     45, 111, 74, 34, 10, 38, 44, 33, 9, 32, 8, 7, 128,
 ];
 
-pub(crate) unconstrained fn get_msb128(x: u128) -> u32 {
+pub(crate) unconstrained fn get_msb(x: u128) -> u32 {
     let result = if x == 0 {
         0
     } else {
@@ -21,7 +21,7 @@ pub(crate) unconstrained fn get_msb128(x: u128) -> u32 {
         v |= v >> 64;
         let index = (std::wrapping_mul(v, 0x1FC10C2FBCF471B913B14CD2595D6D5)) >> 121;
         (index as Field).assert_max_bit_size::<32>();
-        MUL_DE_BRUIJN_BIT_128[index as u32]
+        MUL_DE_BRUIJN_BIT[index as u32]
     };
     result
 }
@@ -29,7 +29,7 @@ pub(crate) unconstrained fn get_msb128(x: u128) -> u32 {
 mod tests {
     use crate::constants::{TWO_POW_120, TWO_POW_60};
     use crate::fns::unconstrained_helpers::__get_msb;
-    use super::get_msb128;
+    use super::get_msb as get_msb128;
 
     fn assert_msb_equal(x: u64) {
         let msb64 = unsafe { get_msb64(x) };
