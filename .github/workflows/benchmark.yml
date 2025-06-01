@@ -32,6 +32,9 @@ jobs:
         run: ./scripts/build-gates-report.sh
         env:
           BACKEND: /home/runner/.bb/bb
+      
+      - name: Convert gates report
+        run: ./scripts/convert-reports.sh gates_report.json
 
       - name: Compare gates reports
         id: gates_diff
@@ -39,6 +42,20 @@ jobs:
         with:
           report: gates_report.json
           summaryQuantile: 0.9 # only display the 10% most significant circuit size diffs in the summary (defaults to 20%)
+      
+      - name: Store gates benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: "Circuit Benchmark"
+          tool: "customSmallerIsBetter"
+          output-file-path: "benchmark-gates.json"
+          gh-pages-branch: "gh-pages"
+          benchmark-data-dir-path: "dev/bench"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+          comment-on-alert: true
+          alert-threshold: "110%"
+          fail-on-alert: true 
 
       - name: Add gates diff to sticky comment
         if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
@@ -57,6 +74,8 @@ jobs:
 
       - name: Generate brillig report
         run: ./scripts/build-brillig-report.sh
+      - name: Convert brillig report
+        run: ./scripts/convert-reports.sh brillig_report.json
       - name: Compare brillig reports
         id: brillig_bytecode_diff
         uses: noir-lang/noir-gates-diff@dbe920a8dcc3370af4be4f702ca9cef29317bec1
@@ -66,6 +85,20 @@ jobs:
             # Changes to Brillig bytecode sizes
           brillig_report: true
           summaryQuantile: 0.9 # only display the 10% most significant circuit size diffs in the summary (defaults to 20%)
+
+      - name: Store brillig benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: "Brillig Benchmark"
+          tool: "customSmallerIsBetter"
+          output-file-path: "benchmark-brillig.json"
+          gh-pages-branch: "gh-pages"
+          benchmark-data-dir-path: "dev/bench"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+          comment-on-alert: true
+          alert-threshold: "110%"
+          fail-on-alert: true 
 
       - name: Add brillig diff to sticky comment
         if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
