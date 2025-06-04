@@ -57,7 +57,6 @@ jobs:
           comment-on-alert: true
           alert-threshold: "101%"
           fail-on-alert: false 
-          alert-comment-cc-users: "@TomAFrench"
           max-items-in-chart: 50
       
       - name: Store gates benchmark result
@@ -74,8 +73,8 @@ jobs:
           comment-on-alert: true
           alert-threshold: "101%"
           fail-on-alert: false 
-          alert-comment-cc-users: "@TomAFrench"
           max-items-in-chart: 50
+          skip-fetch-gh-pages: true
 
       - name: Add gates diff to sticky comment
         if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
@@ -121,8 +120,8 @@ jobs:
           comment-on-alert: true
           alert-threshold: "101%"
           fail-on-alert: false 
-          alert-comment-cc-users: "@TomAFrench"
           max-items-in-chart: 50
+          skip-fetch-gh-pages: true
 
       - name: Add brillig diff to sticky comment
         if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
