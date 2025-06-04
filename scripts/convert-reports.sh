@@ -2,20 +2,24 @@
 set -e
 
 input_file=$1
-output_file_gates="benchmark-gates.json"
+output_file_opcodes="benchmark-opcodes.json"
+output_file_circuit="benchmark-circuit.json"
 output_file_brillig="benchmark-brillig.json"
 
 if [[ $input_file == *"gates_report.json"* ]]; then
-    # Convert gates report
+    # Convert gates report - opcodes
     jq -r '[.programs[] | {
-        "name": "\(.package_name)/main/acir_opcodes",
+        "name": "\(.package_name)/main",
         "unit": "acir_opcodes",
         "value": (.functions[0].acir_opcodes // 0)
-    }, {
-        "name": "\(.package_name)/main/circuit_size",
+    }]' $input_file > $output_file_opcodes
+
+    # Convert gates report - circuit size
+    jq -r '[.programs[] | {
+        "name": "\(.package_name)/main",
         "unit": "circuit_size",
         "value": (.functions[0].circuit_size // 0)
-    }]' $input_file > $output_file_gates
+    }]' $input_file > $output_file_circuit
 
 elif [[ $input_file == *"brillig_report.json"* ]]; then
     # Convert brillig report

@@ -43,19 +43,39 @@ jobs:
           report: gates_report.json
           summaryQuantile: 0.9 # only display the 10% most significant circuit size diffs in the summary (defaults to 20%)
       
-      - name: Store gates benchmark result
+      - name: Store ACIR opcode benchmark result
         uses: benchmark-action/github-action-benchmark@v1
         with:
-          name: "Circuit Benchmark"
+          name: "ACIR Opcodes"
           tool: "customSmallerIsBetter"
-          output-file-path: "benchmark-gates.json"
+          output-file-path: "benchmark-opcodes.json"
           gh-pages-branch: "gh-pages"
           benchmark-data-dir-path: "dev/bench"
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          auto-push: true
+          auto-push: ${{ github.ref == 'refs/heads/master' }}
+          comment-always: ${{ contains( github.event.pull_request.labels.*.name, 'bench-show') }}
           comment-on-alert: true
-          alert-threshold: "110%"
-          fail-on-alert: true 
+          alert-threshold: "101%"
+          fail-on-alert: false 
+          alert-comment-cc-users: "@TomAFrench"
+          max-items-in-chart: 50
+      
+      - name: Store gates benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: "Circuit Size"
+          tool: "customSmallerIsBetter"
+          output-file-path: "benchmark-circuit.json"
+          gh-pages-branch: "gh-pages"
+          benchmark-data-dir-path: "dev/bench"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: ${{ github.ref == 'refs/heads/master' }}
+          comment-always: ${{ contains( github.event.pull_request.labels.*.name, 'bench-show') }}
+          comment-on-alert: true
+          alert-threshold: "101%"
+          fail-on-alert: false 
+          alert-comment-cc-users: "@TomAFrench"
+          max-items-in-chart: 50
 
       - name: Add gates diff to sticky comment
         if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
@@ -76,6 +96,7 @@ jobs:
         run: ./scripts/build-brillig-report.sh
       - name: Convert brillig report
         run: ./scripts/convert-reports.sh brillig_report.json
+
       - name: Compare brillig reports
         id: brillig_bytecode_diff
         uses: noir-lang/noir-gates-diff@dbe920a8dcc3370af4be4f702ca9cef29317bec1
@@ -89,16 +110,19 @@ jobs:
       - name: Store brillig benchmark result
         uses: benchmark-action/github-action-benchmark@v1
         with:
-          name: "Brillig Benchmark"
+          name: "Brillig Bytecode Size"
           tool: "customSmallerIsBetter"
           output-file-path: "benchmark-brillig.json"
           gh-pages-branch: "gh-pages"
           benchmark-data-dir-path: "dev/bench"
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          auto-push: true
+          auto-push: ${{ github.ref == 'refs/heads/master' }}
+          comment-always: ${{ contains( github.event.pull_request.labels.*.name, 'bench-show') }}
           comment-on-alert: true
-          alert-threshold: "110%"
-          fail-on-alert: true 
+          alert-threshold: "101%"
+          fail-on-alert: false 
+          alert-comment-cc-users: "@TomAFrench"
+          max-items-in-chart: 50
 
       - name: Add brillig diff to sticky comment
         if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
