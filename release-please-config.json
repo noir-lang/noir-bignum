@@ -1,0 +1,16 @@
+{
+  "release-type": "simple",
+  "bump-minor-pre-major": true,
+  "bump-patch-for-minor-pre-major": true,
+  "pull-request-title-pattern": "chore: Release ${version}",
+  "group-pull-request-title-pattern": "chore: Release ${version}",
+  "packages": {
+    ".": {
+      "release-type": "simple",
+      "include-component-in-tag": false
+    }
+  },
+  "plugins": [
+    "sentence-case"
+  ]
+}
