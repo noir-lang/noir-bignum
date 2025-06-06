@@ -228,10 +228,8 @@ where
     let a = BN::derive_from_seed([1, 2, 3, 4]);
     let b = BN::derive_from_seed([1, 2, 3, 4]);
 
-    let modulus = BN::modulus();
-
     let t0 = a.get_limbs();
-    let t1 = modulus.get_limbs();
+    let t1 = BN::modulus();
     // Safety: test code
     let a_plus_modulus = BN::from_limbs(unsafe { __helper_add(t0, t1) });
     a_plus_modulus.assert_is_not_equal(b);
@@ -244,10 +242,8 @@ where
     let a = BN::derive_from_seed([1, 2, 3, 4]);
     let b = BN::derive_from_seed([1, 2, 3, 4]);
 
-    let modulus = BN::modulus();
-
     let t0 = b.get_limbs();
-    let t1 = modulus.get_limbs();
+    let t1 = BN::modulus();
     // Safety: test code
     let b_plus_modulus = BN::from_limbs(unsafe { __helper_add(t0, t1) });
     a.assert_is_not_equal(b_plus_modulus);
@@ -260,15 +256,13 @@ where
     let a = BN::derive_from_seed([1, 2, 3, 4]);
     let b = BN::derive_from_seed([1, 2, 3, 4]);
 
-    let modulus = BN::modulus();
-
     let t0 = a.get_limbs();
     let t1 = b.get_limbs();
-    let t2 = modulus.get_limbs();
+    let t2 = BN::modulus();
     // Safety: test code
-    let a_plus_modulus: BN = BN::from_limbs(unsafe { __helper_add(t0, t2) });
+    let a_plus_modulus = BN::from_limbs(unsafe { __helper_add(t0, t2) });
     // Safety: test code
-    let b_plus_modulus: BN = BN::from_limbs(unsafe { __helper_add(t1, t2) });
+    let b_plus_modulus = BN::from_limbs(unsafe { __helper_add(t1, t2) });
     a_plus_modulus.assert_is_not_equal(b_plus_modulus);
 }
 
@@ -294,15 +288,12 @@ fn test_is_zero_BN() {
 
 #[test]
 fn test_add_BN() {
-    let mut a = BN254_Fq::modulus();
-    let mut b = BN254_Fq::modulus();
-    let mut expected = BN254_Fq::modulus();
+    let mut a = BN254_Fq::from_limbs(BN254_Fq::modulus());
+    let mut b = BN254_Fq::from_limbs(BN254_Fq::modulus());
+    let mut expected = BN254_Fq::from_limbs(BN254_Fq::modulus());
 
     a.set_limb(0, a.get_limb(0) - 1);
-
     b.set_limb(0, b.get_limb(0) - 1);
-
-    let mut expected: BN254_Fq = BN254_Fq::modulus();
     expected.set_limb(0, expected.get_limb(0) - 2);
 
     let c = a + b;
@@ -311,7 +302,7 @@ fn test_add_BN() {
 
 #[test]
 fn test_add_test_BN_wrap_around() {
-    let mut a: BN254_Fq = BN254_Fq::modulus();
+    let mut a: BN254_Fq = BN254_Fq::from_limbs(BN254_Fq::modulus());
     let mut b: BN254_Fq = BN254_Fq::from_limbs([3, 0, 0]);
     let mut expected: BN254_Fq = BN254_Fq::one();
     a.set_limb(0, a.get_limb(0) - 2);
@@ -326,7 +317,7 @@ fn test_sub_test_BN() {
     // 0 - 1 should equal p - 1
     let mut a = BN254_Fq::zero();
     let mut b = BN254_Fq::one();
-    let mut expected = BN254_Fq::modulus();
+    let mut expected = BN254_Fq::from_limbs(BN254_Fq::modulus());
     expected.set_limb(0, expected.get_limb(0) - 1); // p - 1
     let result = a - b;
     assert(result == expected);
@@ -334,7 +325,7 @@ fn test_sub_test_BN() {
 
 #[test]
 fn test_eq_wrap() {
-    let a: BN254_Fq = BN254_Fq::modulus();
+    let a: BN254_Fq = BN254_Fq::from_limbs(BN254_Fq::modulus());
     let b = BN254_Fq::zero();
     assert(a == b);
 }
@@ -345,7 +336,7 @@ fn test_sub_modulus_limit() {
     // 0 - 1 = o-1
     // 0 - p = 0
     let mut a = BN254_Fq::zero();
-    let mut b = BN254_Fq::modulus();
+    let mut b = BN254_Fq::from_limbs(BN254_Fq::modulus());
     let mut expected = BN254_Fq::zero();
 
     let result = a - b;
@@ -356,7 +347,7 @@ fn test_sub_modulus_limit() {
 fn test_sub_modulus_underflow() {
     // 0 - (p + 1) is smaller than p and should produce unsatisfiable constraints
     let mut a = BN254_Fq::zero();
-    let mut b = BN254_Fq::modulus();
+    let mut b = BN254_Fq::from_limbs(BN254_Fq::modulus());
     b.set_limb(0, b.get_limb(0) + 1);
     let mut expected = BN254_Fq::one();
 
@@ -405,9 +396,12 @@ fn test_add_BN2() {
 
 #[test]
 fn test_mul_BN_with_one() {
-    let a: BN254_Fq = BN254_Fq::modulus() - (BN254_Fq::one() + BN254_Fq::one());
+    let modulus = BN254_Fq::from_limbs(BN254_Fq::modulus());
+    let one = BN254_Fq::one();
+    let two = one + one;
+    let a = modulus - two;
 
-    let b: BN254_Fq = BN254_Fq::one();
+    let b = BN254_Fq::one();
 
     let c = a * b;
     assert(c == a);
@@ -934,8 +928,8 @@ fn test_sub_underflow_regression() {
 
 #[test]
 fn test_cmp_BN() {
-    let mut a: BN254_Fq = BN254_Fq::modulus();
-    let mut b: BN254_Fq = BN254_Fq::modulus();
+    let mut a: BN254_Fq = BN254_Fq::from_limbs(BN254_Fq::modulus());
+    let mut b: BN254_Fq = BN254_Fq::from_limbs(BN254_Fq::modulus());
 
     a.set_limb(0, a.get_limb(0) - 2);
     b.set_limb(0, b.get_limb(0) - 1);
@@ -945,8 +939,8 @@ fn test_cmp_BN() {
 
 #[test(should_fail_with = "Failed constraint")]
 fn test_cmp_BN_fail() {
-    let mut a: BN254_Fq = BN254_Fq::modulus();
-    let mut b: BN254_Fq = BN254_Fq::modulus();
+    let mut a: BN254_Fq = BN254_Fq::from_limbs(BN254_Fq::modulus());
+    let mut b: BN254_Fq = BN254_Fq::from_limbs(BN254_Fq::modulus());
 
     a.set_limb(0, a.get_limb(0) - 1);
     b.set_limb(0, b.get_limb(0) - 2);
@@ -956,8 +950,8 @@ fn test_cmp_BN_fail() {
 
 #[test]
 fn test_cmp_BN_2() {
-    let mut a: BN254_Fq = BN254_Fq::modulus();
-    let mut b: BN254_Fq = BN254_Fq::modulus();
+    let mut a: BN254_Fq = BN254_Fq::from_limbs(BN254_Fq::modulus());
+    let mut b: BN254_Fq = BN254_Fq::from_limbs(BN254_Fq::modulus());
 
     a.set_limb(0, a.get_limb(0) - 1);
     b.set_limb(0, b.get_limb(0) - 2);
@@ -967,8 +961,8 @@ fn test_cmp_BN_2() {
 
 #[test(should_fail_with = "Failed constraint")]
 fn test_cmp_BN_fail_2() {
-    let mut a: BN254_Fq = BN254_Fq::modulus();
-    let mut b: BN254_Fq = BN254_Fq::modulus();
+    let mut a: BN254_Fq = BN254_Fq::from_limbs(BN254_Fq::modulus());
+    let mut b: BN254_Fq = BN254_Fq::from_limbs(BN254_Fq::modulus());
 
     a.set_limb(0, a.get_limb(0) - 2);
     b.set_limb(0, b.get_limb(0) - 1);
@@ -979,7 +973,9 @@ fn test_cmp_BN_fail_2() {
 #[test]
 fn test_cmp_BN_fuzz(seed: [u8; 5]) {
     let mut a: BN254_Fq = BN254_Fq::derive_from_seed(seed);
-    let modulus_sub_1_div_2 = (BN254_Fq::modulus() - BN254_Fq::one()) / BN254_Fq::from(2);
+    let modulus = BN254_Fq::from_limbs(BN254_Fq::modulus());
+    let one = BN254_Fq::one();
+    let modulus_sub_1_div_2 = (modulus - one) / BN254_Fq::from(2);
 
     a = if a > modulus_sub_1_div_2 { -a } else { a };
     assert(a < modulus_sub_1_div_2);
