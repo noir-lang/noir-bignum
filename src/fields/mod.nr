@@ -38,3 +38,6 @@ pub mod brainpoolP384r1Fr;
 pub mod brainpoolP384t1Fq;
 pub mod brainpoolP384t1Fr;
 pub mod brainpoolP512r1Fq;
+pub mod brainpoolP512r1Fr;
+pub mod brainpoolP512t1Fq;
+pub mod brainpoolP512t1Fr;
