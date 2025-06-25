@@ -95,7 +95,7 @@ pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
                     }
                 }
             }
-            let result_2 = conditional_select::<N>(_params.modulus, grumpkin_modulus, gt_grumpkin);
+            let result_2 = if gt_grumpkin {_params.modulus} else {grumpkin_modulus};
             validate_gt::<N, MOD_BITS>(result_2, result);
         }
 
@@ -230,24 +230,6 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
         result = add(params, result, bigfield_lhs_limbs);
     }
 
-    result
-}
-
-/**
-* @brief conditional_select given the value of `predicate` return either `self` (if 0) or `other` (if 1)
-* @description should be cheaper than using an IF statement (TODO: check!)
-**/
-pub(crate) fn conditional_select<let N: u32>(
-    lhs: [u128; N],
-    rhs: [u128; N],
-    predicate: bool,
-) -> [u128; N] {
-    let mut result: [u128; N] = lhs;
-    for i in 0..N {
-        // (lhs[i] - rhs[i]) * predicate + rhs[i]
-        // in case lhs < rhs, this will underflow so we have to do one extra multiplication to prevent it
-        result[i] = lhs[i] * predicate as u128 + rhs[i] * (1 - predicate as u128);
-    }
     result
 }
 
