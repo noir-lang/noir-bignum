@@ -22,7 +22,9 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
     let from_le_bytes_bench_name = f"from_le_bytes_{module_name}".quoted_contents();
     let BigNum = quote { crate::bignum::BigNum };
     let from_field_bench_name = f"from_field_{module_name}".quoted_contents();
+    let conditional_select_bench_name = f"conditional_select_{module_name}".quoted_contents();
     let typ = params.as_type();
+    let branching_select_bench_name = f"branching_select_{module_name}".quoted_contents();
 
     quote {
         #[export]
@@ -87,6 +89,20 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
         #[export]
         fn $from_field_bench_name(a: Field) -> $typ {
             $typ::from(a)
+        }
+
+        #[export]
+        fn $conditional_select_bench_name(a: $typ, b: $typ, predicate: bool) -> $typ {
+            crate::bignum::conditional_select(a, b, predicate)
+        }
+
+        #[export]
+        fn $branching_select_bench_name(a: $typ, b: $typ, predicate: bool) -> $typ {
+            if predicate {
+                a
+            } else {
+                b
+            }
         }
 
         // #[export]
