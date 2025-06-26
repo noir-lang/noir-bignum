@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.4](https://github.com/noir-lang/noir-bignum/compare/v0.7.3...v0.7.4) (2025-06-26)
+
+
+### Features
+
+* Remove conditional select from Bignum ([#185](https://github.com/noir-lang/noir-bignum/issues/185)) ([38c03e7](https://github.com/noir-lang/noir-bignum/commit/38c03e75b14a25c2321cd0a11186760fa403a106))
+
 ## [0.7.3](https://github.com/noir-lang/noir-bignum/compare/v0.7.2...v0.7.3) (2025-05-30)
 
 
