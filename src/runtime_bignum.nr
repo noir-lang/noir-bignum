@@ -75,9 +75,8 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
         to_le_bytes::<_, MOD_BITS>(self.limbs)
     }
 
-    pub fn modulus(self) -> Self {
-        let params = self.params;
-        Self { limbs: params.modulus, params }
+    pub fn modulus(self) -> [u128; N] {
+        self.params.modulus
     }
 
     pub fn modulus_bits() -> u32 {
