@@ -290,11 +290,11 @@ pub(crate) comptime fn derive_bignum_impl(
 }
 
 pub fn conditional_select<T: BigNum>(lhs: T, rhs: T, predicate: bool) -> T {
-    T::from_limbs(crate::fns::constrained_ops::conditional_select(
-        lhs.get_limbs(),
-        rhs.get_limbs(),
-        predicate,
-    ))
+    if predicate {
+        lhs
+    } else {
+        rhs
+    }
 }
 
 pub unconstrained fn compute_quadratic_expression<T: BigNum, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
