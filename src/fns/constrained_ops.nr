@@ -95,7 +95,11 @@ pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
                     }
                 }
             }
-            let result_2 = if gt_grumpkin {_params.modulus} else {grumpkin_modulus};
+            let result_2 = if gt_grumpkin {
+                _params.modulus
+            } else {
+                grumpkin_modulus
+            };
             validate_gt::<N, MOD_BITS>(result_2, result);
         }
 
