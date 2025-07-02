@@ -80,7 +80,7 @@ pub comptime fn derive_bignum_impl(
     quote {
 
         // implement BigNum for BigNum 
-        impl crate::bignum::BigNum for $typ {
+        impl $crate::bignum::BigNum for $typ {
             let N: u32 = $N; 
             let MOD_BITS: u32 = $MOD_BITS;
             
@@ -100,7 +100,7 @@ pub comptime fn derive_bignum_impl(
                 Self {limbs: [0; $N]}
             }
 
-            fn params() -> crate::params::BigNumParams<$N, $MOD_BITS> {
+            fn params() -> $crate::params::BigNumParams<$N, $MOD_BITS> {
                 $params
             }
 
@@ -135,8 +135,6 @@ pub comptime fn derive_bignum_impl(
                 let params = Self::params();
                 Self { limbs: $unconstrained_ops::__derive_from_seed::<_, $MOD_BITS, _>(params, seed) }
             }
-
-         
 
             fn from_be_bytes(x: [u8; ($MOD_BITS + 7) / 8]) -> Self {
                 Self { limbs: $serialization::from_be_bytes::<_, $MOD_BITS>(x) }
