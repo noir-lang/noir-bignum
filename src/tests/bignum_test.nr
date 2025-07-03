@@ -8,6 +8,7 @@ use crate::params::BigNumParams;
 use crate::fields::bls12_381Fq::BLS12_381_Fq;
 use crate::fields::bls12_381Fr::BLS12_381_Fr;
 use crate::fields::bn254Fq::BN254_Fq;
+use crate::fields::P192::P192;
 use crate::fields::U256::U256;
 
 global TEST_2048_PARAMS: BigNumParams<18, 2048> = BigNumParams {
@@ -1043,4 +1044,14 @@ fn fuzz_cmp_equal(seed: [u8; 5]) {
 #[test]
 fn bls12_377_should_accept_small_values() {
     let _ = crate::BLS12_377_Fr::from(1);
+}
+
+#[test]
+fn test_derive_from_seed_192() {
+    //let seed= [115, 35, 199, 103, 218, 172, 89, 203, 174, 180, 84, 175, 186, 54, 154, 241, 66, 167, 65, 103, 89, 120, 182, 195, 61, 87, 162, 202, 140, 52, 33, 8];
+    let seed = [3, 2];
+    let params = U768::params();
+    println(f"params: {params}");
+    let result_bn: U768 = U768::derive_from_seed(seed);
+    //result_bn.validate_in_field();
 }
