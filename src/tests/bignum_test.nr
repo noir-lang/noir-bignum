@@ -1048,10 +1048,10 @@ fn bls12_377_should_accept_small_values() {
 
 #[test]
 fn test_derive_from_seed_192() {
-    //let seed= [115, 35, 199, 103, 218, 172, 89, 203, 174, 180, 84, 175, 186, 54, 154, 241, 66, 167, 65, 103, 89, 120, 182, 195, 61, 87, 162, 202, 140, 52, 33, 8];
-    let seed = [3, 2];
-    let params = U768::params();
-    println(f"params: {params}");
-    let result_bn: U768 = U768::derive_from_seed(seed);
-    //result_bn.validate_in_field();
+    let seed = [
+        115, 35, 199, 103, 218, 172, 89, 203, 174, 180, 84, 175, 186, 54, 154, 241, 66, 167, 65,
+        103, 89, 120, 182, 195, 61, 87, 162, 202, 140, 52, 33, 8,
+    ];
+    let result_bn: P192 = P192::derive_from_seed(seed);
+    result_bn.validate_in_field();
 }
