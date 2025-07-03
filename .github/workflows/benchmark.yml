@@ -21,7 +21,7 @@ jobs:
 
       - name: Install bb
         run: |
-          npm install -g bbup
+          curl -L https://bbup.aztec.network | bash
           bbup -nv 1.0.0-beta.7
           sudo apt install libc++-dev
 
