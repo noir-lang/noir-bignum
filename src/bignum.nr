@@ -28,13 +28,9 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
         self.get_limbs()[idx]
     }
 
-    unconstrained fn __eq(self: Self, other: Self) -> bool {
-        crate::fns::unconstrained_ops::__eq(self.get_limbs(), other.get_limbs())
-    }
+    unconstrained fn __eq(self: Self, other: Self) -> bool;
 
-    unconstrained fn __is_zero(self: Self) -> bool {
-        crate::fns::unconstrained_ops::__is_zero(self.get_limbs())
-    }
+    unconstrained fn __is_zero(self: Self) -> bool;
 
     unconstrained fn __neg(self) -> Self;
     unconstrained fn __add(self, other: Self) -> Self;
@@ -47,14 +43,7 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
 
     unconstrained fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self>;
 
-    fn assert_is_not_equal(self: Self, other: Self) {
-        let params = Self::params();
-        crate::fns::constrained_ops::assert_is_not_equal(
-            params,
-            self.get_limbs(),
-            other.get_limbs(),
-        );
-    }
+    fn assert_is_not_equal(self: Self, other: Self);
 
     fn validate_in_range(self);
     fn validate_in_field(self);
@@ -152,6 +141,14 @@ pub comptime fn derive_bignum(
                 $serialization::to_le_bytes::<_, $MOD_BITS>(self.limbs)
             }
 
+            unconstrained fn __eq(self: Self, other: Self) -> bool {
+                $crate::fns::unconstrained_ops::__eq(self.get_limbs(), other.get_limbs())
+            }
+
+            unconstrained fn __is_zero(self: Self) -> bool {
+                $crate::fns::unconstrained_ops::__is_zero(self.get_limbs())
+            }
+
             unconstrained fn __neg(self: Self) -> Self {
                 let params = Self::params();
                 Self {limbs: $unconstrained_ops::__neg(params.modulus, self.get_limbs())}
@@ -197,6 +194,16 @@ pub comptime fn derive_bignum(
                 let params = Self::params();
                 let maybe_limbs = $unconstrained_ops::__tonelli_shanks_sqrt(params, self.get_limbs());
                 maybe_limbs.map(|limbs| Self {limbs: limbs})
+            }
+
+
+            fn assert_is_not_equal(self: Self, other: Self) {
+                let params = Self::params();
+                $crate::fns::constrained_ops::assert_is_not_equal(
+                    params,
+                    self.get_limbs(),
+                    other.get_limbs(),
+                );
             }
 
             fn validate_in_field(self: Self) {
