@@ -80,7 +80,7 @@ pub comptime fn derive_bignum_impl(
     quote {
 
         // implement BigNum for BigNum 
-        impl $crate::bignum::BigNum for $typ {
+        impl $crate::BigNum for $typ {
             let N: u32 = $N; 
             let MOD_BITS: u32 = $MOD_BITS;
             
