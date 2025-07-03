@@ -67,7 +67,7 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
 }
 
 // we need macros that implement the BigNum, Default, From, Neg, Add, Sub, Mul, Div, Eq, Ord traits for each bignum type
-pub comptime fn derive_bignum_impl(
+pub comptime fn derive_bignum(
     strukt: TypeDefinition,
     N: u32,
     MOD_BITS: u32,

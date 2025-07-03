@@ -18,7 +18,7 @@
 //!    * B = Fq2(0, 155198655607781456406391640216936120121836107652948796323930557600032281009004493664981332883744016074664192874906)
 
 use crate::bignum::BigNum;
-use crate::bignum::derive_bignum_impl;
+use crate::bignum::derive_bignum;
 use crate::params::BigNumParams;
 
 pub global BLS12_377_Fr_PARAMS: BigNumParams<3, 253> = BigNumParams {
@@ -32,7 +32,7 @@ pub global BLS12_377_Fr_PARAMS: BigNumParams<3, 253> = BigNumParams {
     redc_param: [0xa180b8d69e258f5204c21151e79ea1, 0x91ec40b2c9ee4e51e49faa80548fd0, 0x036d94],
 };
 
-#[derive_bignum_impl(3, 253, quote {BLS12_377_Fr_PARAMS})]
+#[derive_bignum(3, 253, quote {BLS12_377_Fr_PARAMS})]
 pub struct BLS12_377_Fr {
     limbs: [u128; 3],
 }

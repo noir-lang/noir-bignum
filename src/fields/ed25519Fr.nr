@@ -1,5 +1,5 @@
 use crate::bignum::BigNum;
-use crate::bignum::derive_bignum_impl;
+use crate::bignum::derive_bignum;
 use crate::params::BigNumParams;
 
 pub global ED25519_Fr_PARAMS: BigNumParams<3, 255> = BigNumParams {
@@ -13,7 +13,7 @@ pub global ED25519_Fr_PARAMS: BigNumParams<3, 255> = BigNumParams {
     redc_param: [0x4188574218ca69fb673968c28b04c6, 0xfffffffffffffffffffffffffffac8, 0x03ffff],
 };
 
-#[derive_bignum_impl(3, 255, quote {ED25519_Fr_PARAMS})]
+#[derive_bignum(3, 255, quote {ED25519_Fr_PARAMS})]
 pub struct ED25519_Fr {
     limbs: [u128; 3],
 }
