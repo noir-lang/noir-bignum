@@ -28,13 +28,9 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
         self.get_limbs()[idx]
     }
 
-    unconstrained fn __eq(self: Self, other: Self) -> bool {
-        crate::fns::unconstrained_ops::__eq(self.get_limbs(), other.get_limbs())
-    }
+    unconstrained fn __eq(self: Self, other: Self) -> bool;
 
-    unconstrained fn __is_zero(self: Self) -> bool {
-        crate::fns::unconstrained_ops::__is_zero(self.get_limbs())
-    }
+    unconstrained fn __is_zero(self: Self) -> bool;
 
     unconstrained fn __neg(self) -> Self;
     unconstrained fn __add(self, other: Self) -> Self;
@@ -47,14 +43,7 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
 
     unconstrained fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self>;
 
-    fn assert_is_not_equal(self: Self, other: Self) {
-        let params = Self::params();
-        crate::fns::constrained_ops::assert_is_not_equal(
-            params,
-            self.get_limbs(),
-            other.get_limbs(),
-        );
-    }
+    fn assert_is_not_equal(self: Self, other: Self);
 
     fn validate_in_range(self);
     fn validate_in_field(self);
@@ -67,20 +56,20 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
 }
 
 // we need macros that implement the BigNum, Default, From, Neg, Add, Sub, Mul, Div, Eq, Ord traits for each bignum type
-pub(crate) comptime fn derive_bignum_impl(
+pub comptime fn derive_bignum(
     strukt: TypeDefinition,
     N: u32,
     MOD_BITS: u32,
     params: Quoted,
 ) -> Quoted {
-    let constrained_ops = quote { crate::fns::constrained_ops };
-    let unconstrained_ops = quote { crate::fns::unconstrained_ops };
+    let constrained_ops = quote { $crate::fns::constrained_ops };
+    let unconstrained_ops = quote { $crate::fns::unconstrained_ops };
     let typ = strukt.as_type();
-    let serialization = quote { crate::fns::serialization };
+    let serialization = quote { $crate::fns::serialization };
     quote {
 
         // implement BigNum for BigNum 
-        impl crate::bignum::BigNum for $typ {
+        impl $crate::BigNum for $typ {
             let N: u32 = $N; 
             let MOD_BITS: u32 = $MOD_BITS;
             
@@ -100,7 +89,7 @@ pub(crate) comptime fn derive_bignum_impl(
                 Self {limbs: [0; $N]}
             }
 
-            fn params() -> crate::params::BigNumParams<$N, $MOD_BITS> {
+            fn params() -> $crate::params::BigNumParams<$N, $MOD_BITS> {
                 $params
             }
 
@@ -136,8 +125,6 @@ pub(crate) comptime fn derive_bignum_impl(
                 Self { limbs: $unconstrained_ops::__derive_from_seed::<_, $MOD_BITS, _>(params, seed) }
             }
 
-         
-
             fn from_be_bytes(x: [u8; ($MOD_BITS + 7) / 8]) -> Self {
                 Self { limbs: $serialization::from_be_bytes::<_, $MOD_BITS>(x) }
             }
@@ -152,6 +139,14 @@ pub(crate) comptime fn derive_bignum_impl(
 
             fn to_le_bytes(self) -> [u8; ($MOD_BITS + 7) / 8] {
                 $serialization::to_le_bytes::<_, $MOD_BITS>(self.limbs)
+            }
+
+            unconstrained fn __eq(self: Self, other: Self) -> bool {
+                $crate::fns::unconstrained_ops::__eq(self.get_limbs(), other.get_limbs())
+            }
+
+            unconstrained fn __is_zero(self: Self) -> bool {
+                $crate::fns::unconstrained_ops::__is_zero(self.get_limbs())
             }
 
             unconstrained fn __neg(self: Self) -> Self {
@@ -199,6 +194,16 @@ pub(crate) comptime fn derive_bignum_impl(
                 let params = Self::params();
                 let maybe_limbs = $unconstrained_ops::__tonelli_shanks_sqrt(params, self.get_limbs());
                 maybe_limbs.map(|limbs| Self {limbs: limbs})
+            }
+
+
+            fn assert_is_not_equal(self: Self, other: Self) {
+                let params = Self::params();
+                $crate::fns::constrained_ops::assert_is_not_equal(
+                    params,
+                    self.get_limbs(),
+                    other.get_limbs(),
+                );
             }
 
             fn validate_in_field(self: Self) {

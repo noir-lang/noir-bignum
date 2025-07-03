@@ -1,5 +1,5 @@
 use crate::bignum::BigNum;
-use crate::bignum::derive_bignum_impl;
+use crate::bignum::derive_bignum;
 use crate::params::BigNumParams;
 
 pub global U4096_PARAMS: BigNumParams<35, 4097> = BigNumParams {
@@ -53,7 +53,7 @@ pub global U4096_PARAMS: BigNumParams<35, 4097> = BigNumParams {
     ],
 };
 
-#[derive_bignum_impl(35, 4097, quote {U4096_PARAMS})]
+#[derive_bignum(35, 4097, quote {U4096_PARAMS})]
 pub struct U4096 {
     limbs: [u128; 35],
 }

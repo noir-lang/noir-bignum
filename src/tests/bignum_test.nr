@@ -1,6 +1,6 @@
 use crate::bignum::BigNum;
 use crate::bignum::{compute_quadratic_expression, evaluate_quadratic_expression, to_field};
-use crate::bignum::derive_bignum_impl;
+use crate::bignum::derive_bignum;
 use crate::fns::unconstrained_helpers::__helper_add;
 
 use crate::params::BigNumParams;
@@ -74,7 +74,7 @@ global TEST_2048_PARAMS: BigNumParams<18, 2048> = BigNumParams {
     ],
 };
 
-#[derive_bignum_impl(18, 2048, quote {TEST_2048_PARAMS})]
+#[derive_bignum(18, 2048, quote {TEST_2048_PARAMS})]
 pub struct BN2048 {
     limbs: [u128; 18],
 }
@@ -1001,7 +1001,7 @@ fn fuzz_to_be_bytes(seed: [u8; 5]) {
     assert(a == b);
 }
 
-#[derive_bignum_impl(2, 224, quote {SecP224r1_PARAMS})]
+#[derive_bignum(2, 224, quote {SecP224r1_PARAMS})]
 struct SecP224r1 {
     limbs: [u128; 2],
 }

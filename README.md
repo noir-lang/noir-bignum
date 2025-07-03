@@ -80,7 +80,7 @@ use dep::bignum::BigNum;
 // Define (compile-time) BigNum type
 // number of limbs, number of bits of modulus, parameter set
 // implement the BigNum trait for the custom bignum type
-#[derive_bignum_impl(3, 257, quote {U256_PARAMS})]
+#[derive_bignum(3, 257, quote {U256_PARAMS})]
 pub struct U256 {
     limbs: [u128; 3],
 }
@@ -113,10 +113,10 @@ pub struct MyBignum {
     pub limbs: [Field; 5],
 }
 ```
-The `BigNum` trait can be implemented for this type by using the `derive_bignum_impl` macro.
+The `BigNum` trait can be implemented for this type by using the `derive_bignum` macro.
 
 ```rust
-pub(crate) comptime fn derive_bignum_impl(
+pub(crate) comptime fn derive_bignum(
     strukt: TypeDefinition,
     N: u32,
     MOD_BITS: u32,
@@ -131,7 +131,7 @@ pub(crate) comptime fn derive_bignum_impl(
 To implement the trait for your bignum type, you need to provide the number of limbs and the number of bits of the modulus and the parameters. 
 
 ```rust 
-#[derive_bignum_impl(4, 377, quote {BLS12_377_Fq_PARAMS})]
+#[derive_bignum(4, 377, quote {BLS12_377_Fq_PARAMS})]
 pub struct MyBignum {
     pub limbs: [Field; 4],
 }
@@ -216,7 +216,7 @@ Constrained arithmetic operations. These perform the expected arithmetic operati
 
 These methods can be used using operators (`+`, `-`, `*`, `/`). 
 
-`derive_bignum_impl` will also implement conversions from a native `Field` type. For example, if you have a `Field` type `Fq`, you can convert it to your `BigNum` type `MyBigNum` by using the following syntax:
+`derive_bignum` will also implement conversions from a native `Field` type. For example, if you have a `Field` type `Fq`, you can convert it to your `BigNum` type `MyBigNum` by using the following syntax:
 
 ```rust
 let a: Field = 10;
