@@ -16,10 +16,10 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
         f"evaluate_quadratic_expression_3_elements_{module_name}".quoted_contents();
     let evaluate_quadratic_expression_12_elements_bench_name =
         f"evaluate_quadratic_expression_12_elements_{module_name}".quoted_contents();
-    let to_be_bytes_bench_name = f"to_be_bytes_{module_name}".quoted_contents();
-    let from_be_bytes_bench_name = f"from_be_bytes_{module_name}".quoted_contents();
-    let to_le_bytes_bench_name = f"to_le_bytes_{module_name}".quoted_contents();
-    let from_le_bytes_bench_name = f"from_le_bytes_{module_name}".quoted_contents();
+    // let to_be_bytes_bench_name = f"to_be_bytes_{module_name}".quoted_contents();
+    // let from_be_bytes_bench_name = f"from_be_bytes_{module_name}".quoted_contents();
+    // let to_le_bytes_bench_name = f"to_le_bytes_{module_name}".quoted_contents();
+    // let from_le_bytes_bench_name = f"from_le_bytes_{module_name}".quoted_contents();
     let BigNum = quote { crate::bignum::BigNum };
     let from_field_bench_name = f"from_field_{module_name}".quoted_contents();
     let typ = params.as_type();

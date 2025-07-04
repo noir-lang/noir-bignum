@@ -1,5 +1,5 @@
 use crate::bignum::BigNum;
-use crate::bignum::derive_bignum_impl;
+use crate::bignum::derive_bignum;
 use crate::params::BigNumParams;
 
 pub global Secp256r1_Fr_PARAMS: BigNumParams<3, 256> = BigNumParams {
@@ -13,7 +13,7 @@ pub global Secp256r1_Fr_PARAMS: BigNumParams<3, 256> = BigNumParams {
     redc_param: [0x90552df1a6c21012ffd85eedf9bfe6, 0x0fffffffffffffffeffffffff431, 0x100000],
 };
 
-#[derive_bignum_impl(3, 256, quote {Secp256r1_Fr_PARAMS})]
+#[derive_bignum(3, 256, quote {Secp256r1_Fr_PARAMS})]
 pub struct Secp256r1_Fr {
     limbs: [u128; 3],
 }
