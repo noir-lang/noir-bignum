@@ -1048,7 +1048,7 @@ fn bls12_377_should_accept_small_values() {
 }
 
 #[test]
-fn test_derive_from_seed_192() {
+fn test_derive_from_seed_P192() {
     let seed = [
         115, 35, 199, 103, 218, 172, 89, 203, 174, 180, 84, 175, 186, 54, 154, 241, 66, 167, 65,
         103, 89, 120, 182, 195, 61, 87, 162, 202, 140, 52, 33, 8,
