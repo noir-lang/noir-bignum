@@ -6,8 +6,21 @@ use crate::fns::unconstrained_helpers::__helper_add;
 use crate::params::BigNumParams;
 
 use crate::fields::bls12_381Fq::BLS12_381_Fq;
+use crate::fields::bls12_381Fq::BLS12_381_Fq;
 use crate::fields::bls12_381Fr::BLS12_381_Fr;
+use crate::fields::bls12_381Fr::Bls12_381_Fr;
 use crate::fields::bn254Fq::BN254_Fq;
+use crate::fields::bn254Fq::BN254_Fq;
+use crate::fields::BrainpoolP256r1_Fr::BrainpoolP256r1_Fr;
+use crate::fields::brainpoolP256r1Fq::BrainpoolP256r1_Fq;
+use crate::fields::brainpoolP256r1Fr::BrainpoolP256r1_Fr;
+use crate::fields::BrainpoolP256t1_Fq::BrainpoolP256t1_Fq;
+use crate::fields::BrainpoolP256t1_Fr::BrainpoolP256t1_Fr;
+use crate::fields::BrainpoolP384r1_Fq::BrainpoolP384r1_Fq;
+use crate::fields::P192Fq::P192;
+use crate::fields::P192Fr::P192Fr;
+use crate::fields::pallasFq::Pallas_Fq;
+use crate::fields::pallasFr::Pallas_Fr;
 use crate::fields::U256::U256;
 
 global TEST_2048_PARAMS: BigNumParams<18, 2048> = BigNumParams {
@@ -1043,4 +1056,14 @@ fn fuzz_cmp_equal(seed: [u8; 5]) {
 #[test]
 fn bls12_377_should_accept_small_values() {
     let _ = crate::BLS12_377_Fr::from(1);
+}
+
+#[test]
+fn test_derive_from_seed_P192() {
+    let seed = [
+        115, 35, 199, 103, 218, 172, 89, 203, 174, 180, 84, 175, 186, 54, 154, 241, 66, 167, 65,
+        103, 89, 120, 182, 195, 61, 87, 162, 202, 140, 52, 33, 8,
+    ];
+    let result_bn: P192 = P192::derive_from_seed(seed);
+    result_bn.validate_in_field();
 }
