@@ -1,5 +1,4 @@
-use crate::bignum::BigNum;
-use crate::bignum::derive_bignum_impl;
+use crate::bignum::derive_bignum;
 use crate::params::BigNumParams;
 
 pub global BrainpoolP384r1_Fr_PARAMS: BigNumParams<4, 384> = BigNumParams {
@@ -24,7 +23,7 @@ pub global BrainpoolP384r1_Fr_PARAMS: BigNumParams<4, 384> = BigNumParams {
     ],
 };
 
-#[derive_bignum_impl(4, 384, quote {BrainpoolP384r1_Fr_PARAMS})]
+#[derive_bignum(4, 384, quote {BrainpoolP384r1_Fr_PARAMS})]
 pub struct BrainpoolP384r1_Fr {
     limbs: [u128; 4],
 }

@@ -1,5 +1,4 @@
-use crate::bignum::BigNum;
-use crate::bignum::derive_bignum_impl;
+use crate::bignum::derive_bignum;
 use crate::params::BigNumParams;
 
 pub global BrainpoolP256r1_Fq_PARAMS: BigNumParams<3, 256> = BigNumParams {
@@ -13,7 +12,7 @@ pub global BrainpoolP256r1_Fq_PARAMS: BigNumParams<3, 256> = BigNumParams {
     redc_param: [0xf54a0ff6a2fa9b62ae6301180dd0c0, 0x131a1c55b7ebb73aba8322a7bf29b4, 0x1818c1],
 };
 
-#[derive_bignum_impl(3, 256, quote {BrainpoolP256r1_Fq_PARAMS})]
+#[derive_bignum(3, 256, quote {BrainpoolP256r1_Fq_PARAMS})]
 pub struct BrainpoolP256r1_Fq {
     limbs: [u128; 3],
 }

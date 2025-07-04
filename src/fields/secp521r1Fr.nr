@@ -1,5 +1,4 @@
-use crate::bignum::BigNum;
-use crate::bignum::derive_bignum_impl;
+use crate::bignum::derive_bignum;
 use crate::params::BigNumParams;
 
 pub global Secp521r1_Fr_PARAMS: BigNumParams<5, 521> = BigNumParams {
@@ -27,7 +26,7 @@ pub global Secp521r1_Fr_PARAMS: BigNumParams<5, 521> = BigNumParams {
     ],
 };
 
-#[derive_bignum_impl(5, 521, quote {Secp521r1_Fr_PARAMS})]
+#[derive_bignum(5, 521, quote {Secp521r1_Fr_PARAMS})]
 pub struct Secp521r1_Fr {
     limbs: [u128; 5],
 }

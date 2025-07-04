@@ -6,10 +6,21 @@ use crate::fns::unconstrained_helpers::__helper_add;
 use crate::params::BigNumParams;
 
 use crate::fields::bls12_381Fq::BLS12_381_Fq;
+use crate::fields::bls12_381Fq::BLS12_381_Fq;
 use crate::fields::bls12_381Fr::BLS12_381_Fr;
+use crate::fields::bls12_381Fr::Bls12_381_Fr;
 use crate::fields::bn254Fq::BN254_Fq;
+use crate::fields::bn254Fq::BN254_Fq;
+use crate::fields::BrainpoolP256r1_Fr::BrainpoolP256r1_Fr;
+use crate::fields::brainpoolP256r1Fq::BrainpoolP256r1_Fq;
 use crate::fields::brainpoolP256r1Fr::BrainpoolP256r1_Fr;
+use crate::fields::BrainpoolP256t1_Fq::BrainpoolP256t1_Fq;
+use crate::fields::BrainpoolP256t1_Fr::BrainpoolP256t1_Fr;
+use crate::fields::BrainpoolP384r1_Fq::BrainpoolP384r1_Fq;
 use crate::fields::P192Fq::P192;
+use crate::fields::P192Fr::P192Fr;
+use crate::fields::pallasFq::Pallas_Fq;
+use crate::fields::pallasFr::Pallas_Fr;
 use crate::fields::U256::U256;
 
 global TEST_2048_PARAMS: BigNumParams<18, 2048> = BigNumParams {

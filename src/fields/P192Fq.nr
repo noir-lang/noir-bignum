@@ -1,5 +1,5 @@
 use crate::bignum::BigNum;
-use crate::bignum::derive_bignum_impl;
+use crate::bignum::derive_bignum;
 use crate::params::BigNumParams;
 
 pub global P192_PARAMS: BigNumParams<2, 192> = BigNumParams {
@@ -9,7 +9,7 @@ pub global P192_PARAMS: BigNumParams<2, 192> = BigNumParams {
     redc_param: [0x100000000000000010, 0x10000000000000000000],
 };
 
-#[derive_bignum_impl(2, 192, quote {P192_PARAMS})]
+#[derive_bignum(2, 192, quote {P192_PARAMS})]
 pub struct P192 {
     limbs: [u128; 2],
 }

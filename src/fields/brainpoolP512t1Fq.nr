@@ -1,5 +1,5 @@
 use crate::bignum::BigNum;
-use crate::bignum::derive_bignum_impl;
+use crate::bignum::derive_bignum;
 use crate::params::BigNumParams;
 
 pub global BrainpoolP512t1_Fq_PARAMS: BigNumParams<5, 512> = BigNumParams {
@@ -27,7 +27,7 @@ pub global BrainpoolP512t1_Fq_PARAMS: BigNumParams<5, 512> = BigNumParams {
     ],
 };
 
-#[derive_bignum_impl(5, 512, quote {BrainpoolP512t1_Fq_PARAMS})]
+#[derive_bignum(5, 512, quote {BrainpoolP512t1_Fq_PARAMS})]
 pub struct BrainpoolP512t1_Fq {
     limbs: [u128; 5],
 }
