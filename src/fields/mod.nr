@@ -41,4 +41,5 @@ pub mod brainpoolP512r1Fq;
 pub mod brainpoolP512r1Fr;
 pub mod brainpoolP512t1Fq;
 pub mod brainpoolP512t1Fr;
-pub mod P192;
+pub mod P192Fq;
+pub mod P192Fr;

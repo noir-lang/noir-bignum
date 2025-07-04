@@ -8,7 +8,8 @@ use crate::params::BigNumParams;
 use crate::fields::bls12_381Fq::BLS12_381_Fq;
 use crate::fields::bls12_381Fr::BLS12_381_Fr;
 use crate::fields::bn254Fq::BN254_Fq;
-use crate::fields::P192::P192;
+use crate::fields::brainpoolP256r1Fr::BrainpoolP256r1_Fr;
+use crate::fields::P192Fq::P192;
 use crate::fields::U256::U256;
 
 global TEST_2048_PARAMS: BigNumParams<18, 2048> = BigNumParams {
