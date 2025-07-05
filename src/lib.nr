@@ -18,6 +18,7 @@ mod tests;
 
 // Re-export the main structs so that users don't have to specify the paths
 pub use bignum::BigNum;
+pub use bignum::derive_bignum;
 pub use runtime_bignum::RuntimeBigNum;
 
 // Re-export the pre-defined bignum types, for easier access:

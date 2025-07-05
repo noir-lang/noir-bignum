@@ -15,7 +15,7 @@
 //! * Valuation(q - 1, 2) = 32
 //! * Valuation(r - 1, 2) = 32
 use crate::bignum::BigNum;
-use crate::bignum::derive_bignum_impl;
+use crate::bignum::derive_bignum;
 use crate::params::BigNumParams;
 
 pub global Vesta_Fr_PARAMS: BigNumParams<3, 255> = BigNumParams {
@@ -29,7 +29,7 @@ pub global Vesta_Fr_PARAMS: BigNumParams<3, 255> = BigNumParams {
     redc_param: [0x59c0fdacc1b919b4b3c4bfffffffc4, 0xfffffffffffffffffffffffffff76e, 0x0fffff],
 };
 
-#[derive_bignum_impl(3, 255, quote {Vesta_Fr_PARAMS})]
+#[derive_bignum(3, 255, quote {Vesta_Fr_PARAMS})]
 pub struct Vesta_Fr {
     limbs: [u128; 3],
 }

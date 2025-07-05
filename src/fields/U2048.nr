@@ -1,5 +1,5 @@
 use crate::bignum::BigNum;
-use crate::bignum::derive_bignum_impl;
+use crate::bignum::derive_bignum;
 use crate::params::BigNumParams;
 
 pub global U2048_PARAMS: BigNumParams<18, 2049> = BigNumParams {
@@ -34,7 +34,7 @@ pub global U2048_PARAMS: BigNumParams<18, 2049> = BigNumParams {
     ],
 };
 
-#[derive_bignum_impl(18, 2049, quote {U2048_PARAMS})]
+#[derive_bignum(18, 2049, quote {U2048_PARAMS})]
 pub struct U2048 {
     limbs: [u128; 18],
 }

@@ -20,7 +20,7 @@
 //!    * NON_RESIDUE = 11 is the cubic non-residue used to conpub struct  the
 //!      extension field Fq3
 use crate::bignum::BigNum;
-use crate::bignum::derive_bignum_impl;
+use crate::bignum::derive_bignum;
 use crate::params::BigNumParams;
 
 pub global MNT6_753_Fq_PARAMS: BigNumParams<7, 753> = BigNumParams {
@@ -54,7 +54,7 @@ pub global MNT6_753_Fq_PARAMS: BigNumParams<7, 753> = BigNumParams {
     ],
 };
 
-#[derive_bignum_impl(7, 753, quote {MNT6_753_Fq_PARAMS})]
+#[derive_bignum(7, 753, quote {MNT6_753_Fq_PARAMS})]
 pub struct MNT6_753_Fq {
     limbs: [u128; 7],
 }

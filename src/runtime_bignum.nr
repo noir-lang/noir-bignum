@@ -364,8 +364,6 @@ pub fn conditional_select<let N: u32, let MOD_BITS: u32>(
 ) -> RuntimeBigNum<N, MOD_BITS> {
     let params = lhs.params;
     assert(params == rhs.params);
-    RuntimeBigNum {
-        limbs: crate::fns::constrained_ops::conditional_select(lhs.limbs, rhs.limbs, predicate),
-        params,
-    }
+    let limbs = if predicate { lhs.limbs } else { rhs.limbs };
+    RuntimeBigNum { limbs: limbs, params }
 }

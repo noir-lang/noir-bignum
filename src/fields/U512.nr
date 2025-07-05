@@ -1,5 +1,5 @@
 use crate::bignum::BigNum;
-use crate::bignum::derive_bignum_impl;
+use crate::bignum::derive_bignum;
 use crate::params::BigNumParams;
 
 pub global U512_PARAMS: BigNumParams<5, 513> = BigNumParams {
@@ -15,7 +15,7 @@ pub global U512_PARAMS: BigNumParams<5, 513> = BigNumParams {
     redc_param: [0x00, 0x00, 0x00, 0x00, 0x4000000000],
 };
 
-#[derive_bignum_impl(5, 513, quote {U512_PARAMS})]
+#[derive_bignum(5, 513, quote {U512_PARAMS})]
 pub struct U512 {
     limbs: [u128; 5],
 }
