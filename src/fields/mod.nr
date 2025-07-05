@@ -11,6 +11,8 @@ pub mod mnt6_753Fq;
 pub mod mnt6_753Fr;
 pub mod pallasFq;
 pub mod pallasFr;
+pub mod secp192r1Fq;
+pub mod secp192r1Fr;
 pub mod secp256k1Fq;
 pub mod secp256k1Fr;
 pub mod secp256r1Fq;

@@ -9,6 +9,8 @@ use crate::fields::bls12_381Fq::BLS12_381_Fq;
 use crate::fields::bls12_381Fr::BLS12_381_Fr;
 use crate::fields::bn254Fq::BN254_Fq;
 use crate::fields::U256::U256;
+use crate::fields::secp192r1Fq::Secp192r1_Fq;
+use crate::fields::secp192r1Fr::Secp192r1_Fr;
 
 global TEST_2048_PARAMS: BigNumParams<18, 2048> = BigNumParams {
     has_multiplicative_inverse: false,
@@ -1044,3 +1046,13 @@ fn fuzz_cmp_equal(seed: [u8; 5]) {
 fn bls12_377_should_accept_small_values() {
     let _ = crate::BLS12_377_Fr::from(1);
 }
+
+#[test]
+fn test_derive_from_seed_Secp192r1_Fq() {
+    let seed = [
+         115, 35, 199, 103, 218, 172, 89, 203, 174, 180, 84, 175, 186, 54, 154, 241, 66, 167, 65,
+         103, 89, 120, 182, 195, 61, 87, 162, 202, 140, 52, 33, 8,
+     ];
+     let result_bn: Secp192r1_Fq = Secp192r1_Fq::derive_from_seed(seed);
+     result_bn.validate_in_field();
+ }

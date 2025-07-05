@@ -72,9 +72,11 @@ pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
     if !std::runtime::is_unconstrained() {
         // validate the limbs are in range and the value in total is less than 2^254
         let mut grumpkin_modulus = [0; N];
-        grumpkin_modulus[0] = 0x33e84879b9709143e1f593f0000001;
-        grumpkin_modulus[1] = 0x4e72e131a029b85045b68181585d28;
-        grumpkin_modulus[2] = 0x3064;
+        if N > 2 {
+            grumpkin_modulus[0] = 0x33e84879b9709143e1f593f0000001;
+            grumpkin_modulus[1] = 0x4e72e131a029b85045b68181585d28;
+            grumpkin_modulus[2] = 0x3064;
+        }
         if MOD_BITS > 253 {
             // this means that the field modulus is larger than grumpkin modulus so we have to check if the element fields in the field size are less than the grumpkin modulus.
             // also for correct params N is always larger than 3 here
@@ -196,25 +198,27 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
     for k in 0..num_bigfield_chunks {
         let mut bigfield_limbs: [u128; N] = [0; N];
         let mut num_filled_bytes = (k * 30);
-        let mut num_remaining_bytes = num_bytes - num_filled_bytes;
-        let mut num_remaining_limbs =
-            (num_remaining_bytes / 15) + (num_remaining_bytes % 15 > 0) as u32;
-        let mut more_than_N_minus_one_limbs = (num_remaining_limbs > (N - 1)) as u32;
-        let mut num_limbs_in_bigfield = more_than_N_minus_one_limbs * (N - 1)
-            + num_remaining_limbs * (1 - more_than_N_minus_one_limbs);
+        if num_bytes >= k * 30 {
+            let mut num_remaining_bytes = num_bytes - num_filled_bytes;
+            let mut num_remaining_limbs =
+                (num_remaining_bytes / 15) + (num_remaining_bytes % 15 > 0) as u32;
+            let mut more_than_N_minus_one_limbs = (num_remaining_limbs > (N - 1)) as u32;
+            let mut num_limbs_in_bigfield = more_than_N_minus_one_limbs * (N - 1)
+                + num_remaining_limbs * (1 - more_than_N_minus_one_limbs);
 
-        for j in 0..num_limbs_in_bigfield {
-            let mut limb: u128 = 0;
-            for _ in 0..15 {
-                let need_more_bytes = (byte_ptr < num_bytes);
-                let mut byte = hash_buffer[byte_ptr];
-                limb *= (256 * need_more_bytes as u128 + (1 - need_more_bytes as u128));
-                limb += byte as u128 * need_more_bytes as u128;
-                byte_ptr += need_more_bytes as u32;
+            for j in 0..num_limbs_in_bigfield {
+                let mut limb: u128 = 0;
+                for _ in 0..15 {
+                    let need_more_bytes = (byte_ptr < num_bytes);
+                    let mut byte = hash_buffer[byte_ptr];
+                    limb *= (256 * need_more_bytes as u128 + (1 - need_more_bytes as u128));
+                    limb += byte as u128 * need_more_bytes as u128;
+                    byte_ptr += need_more_bytes as u32;
+                }
+                bigfield_limbs[num_limbs_in_bigfield - 1 - j] = limb;
             }
-            bigfield_limbs[num_limbs_in_bigfield - 1 - j] = limb;
+            bigfield_chunks[num_bigfield_chunks - 1 - k] = bigfield_limbs;
         }
-        bigfield_chunks[num_bigfield_chunks - 1 - k] = bigfield_limbs;
     }
 
     let mut bigfield_rhs_limbs: [u128; N] = [0; N];

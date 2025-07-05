@@ -46,6 +46,8 @@ pub use fields::mnt6_753Fq::MNT6_753_Fq;
 pub use fields::mnt6_753Fr::MNT6_753_Fr;
 pub use fields::pallasFq::Pallas_Fq;
 pub use fields::pallasFr::Pallas_Fr;
+pub use fields::secp192r1Fq::Secp192r1_Fq;
+pub use fields::secp192r1Fr::Secp192r1_Fr;
 pub use fields::secp256k1Fq::Secp256k1_Fq;
 pub use fields::secp256k1Fr::Secp256k1_Fr;
 pub use fields::secp256r1Fq::Secp256r1_Fq;
