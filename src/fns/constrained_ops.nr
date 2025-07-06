@@ -222,7 +222,8 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
                 bigfield_limbs[num_limbs_in_bigfield - 1 - j] = limb;
             }
             bigfield_chunks[num_bigfield_chunks - 1 - k] = bigfield_limbs;
-    }}
+        }
+    }
 
     let mut bigfield_rhs_limbs: [u128; N] = [0; N];
     bigfield_rhs_limbs[N - 1] = 1;
