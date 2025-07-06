@@ -8,10 +8,11 @@ use crate::params::BigNumParams;
 use crate::fields::bls12_381Fq::BLS12_381_Fq;
 use crate::fields::bls12_381Fr::BLS12_381_Fr;
 use crate::fields::bn254Fq::BN254_Fq;
-use crate::fields::U256::U256;
+use crate::fields::brainpoolP192r1Fq::BrainpoolP192r1_Fq;
+use crate::fields::brainpoolP224r1Fq::BrainpoolP224r1_Fq;
 use crate::fields::secp192r1Fq::Secp192r1_Fq;
-use crate::fields::secp192r1Fr::Secp192r1_Fr;
-
+use crate::fields::secp224r1Fq::Secp224r1_Fq;
+use crate::fields::U256::U256;
 global TEST_2048_PARAMS: BigNumParams<18, 2048> = BigNumParams {
     has_multiplicative_inverse: false,
     modulus: [
@@ -1050,9 +1051,39 @@ fn bls12_377_should_accept_small_values() {
 #[test]
 fn test_derive_from_seed_Secp192r1_Fq() {
     let seed = [
-         115, 35, 199, 103, 218, 172, 89, 203, 174, 180, 84, 175, 186, 54, 154, 241, 66, 167, 65,
-         103, 89, 120, 182, 195, 61, 87, 162, 202, 140, 52, 33, 8,
-     ];
-     let result_bn: Secp192r1_Fq = Secp192r1_Fq::derive_from_seed(seed);
-     result_bn.validate_in_field();
- }
+        115, 35, 199, 103, 218, 172, 89, 203, 174, 180, 84, 175, 186, 54, 154, 241, 66, 167, 65,
+        103, 89, 120, 182, 195, 61, 87, 162, 202, 140, 52, 33, 8,
+    ];
+    let result_bn: Secp192r1_Fq = Secp192r1_Fq::derive_from_seed(seed);
+    result_bn.validate_in_field();
+}
+
+#[test]
+fn test_derive_from_seed_Secp224r1_Fq() {
+    let seed = [
+        115, 35, 199, 103, 218, 172, 89, 203, 174, 180, 84, 175, 186, 54, 154, 241, 66, 167, 65,
+        103, 89, 120, 182, 195, 61, 87, 162, 202, 140, 52, 33, 8,
+    ];
+    let result_bn: Secp224r1_Fq = Secp224r1_Fq::derive_from_seed(seed);
+    result_bn.validate_in_field();
+}
+
+#[test]
+fn test_derive_from_seed_BrainpoolP192r1_Fq() {
+    let seed = [
+        115, 35, 199, 103, 218, 172, 89, 203, 174, 180, 84, 175, 186, 54, 154, 241, 66, 167, 65,
+        103, 89, 120, 182, 195, 61, 87, 162, 202, 140, 52, 33, 8,
+    ];
+    let result_bn: BrainpoolP192r1_Fq = BrainpoolP192r1_Fq::derive_from_seed(seed);
+    result_bn.validate_in_field();
+}
+
+#[test]
+fn test_derive_from_seed_BrainpoolP224r1_Fq() {
+    let seed = [
+        115, 35, 199, 103, 218, 172, 89, 203, 174, 180, 84, 175, 186, 54, 154, 241, 66, 167, 65,
+        103, 89, 120, 182, 195, 61, 87, 162, 202, 140, 52, 33, 8,
+    ];
+    let result_bn: BrainpoolP224r1_Fq = BrainpoolP224r1_Fq::derive_from_seed(seed);
+    result_bn.validate_in_field();
+}
