@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.7.4](https://github.com/noir-lang/noir-bignum/compare/v0.7.3...v0.7.4) (2025-07-11)
+
+
+### Features
+
+* Expose bignum trait derivation macro  ([#187](https://github.com/noir-lang/noir-bignum/issues/187)) ([103d6e2](https://github.com/noir-lang/noir-bignum/commit/103d6e2b360123f9bc2a378e0a5810d9fb41f9f1))
+* Remove conditional select from Bignum ([#185](https://github.com/noir-lang/noir-bignum/issues/185)) ([38c03e7](https://github.com/noir-lang/noir-bignum/commit/38c03e75b14a25c2321cd0a11186760fa403a106))
+
+
+### Bug Fixes
+
+* Correct from_field and derive_from_seed for small field modulus ([#190](https://github.com/noir-lang/noir-bignum/issues/190)) ([52b4cd0](https://github.com/noir-lang/noir-bignum/commit/52b4cd0d6a72d8de34aaad6577dc1164afeea428))
+
 ## [0.7.3](https://github.com/noir-lang/noir-bignum/compare/v0.7.2...v0.7.3) (2025-05-30)
 
 
