@@ -1,4 +1,4 @@
-mod bignum;
+pub mod bignum;
 mod runtime_bignum;
 
 mod constants;
