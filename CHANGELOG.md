@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.5](https://github.com/noir-lang/noir-bignum/compare/v0.7.4...v0.7.5) (2025-07-24)
+
+
+### Bug Fixes
+
+* Let the bignum module be public ([#192](https://github.com/noir-lang/noir-bignum/issues/192)) ([a43f327](https://github.com/noir-lang/noir-bignum/commit/a43f327ab2a9838ae99d35494c7ed6e66a1eb542))
+
 ## [0.7.4](https://github.com/noir-lang/noir-bignum/compare/v0.7.3...v0.7.4) (2025-07-11)
 
 
