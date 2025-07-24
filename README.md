@@ -46,7 +46,7 @@ For the arithmetic operations it is important to notice the difference between c
 
 ## Noir Version Compatibility
 
-This library is tested with all stable releases since 1.0.0-beta.0 as well as nightly.
+This library is tested with all stable releases since 1.0.0-beta.7 as well as nightly.
 
 Refer to [Noir's docs](https://noir-lang.org/docs/getting_started/noir_installation) for installation steps.
 
