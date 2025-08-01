@@ -366,10 +366,10 @@ pub(crate) unconstrained fn __shr<let N: u32>(input: [u128; N], shift: u32) -> [
     let mut result: [u128; N] = [0; N];
 
     let num_shifted_limbs = shift / 120;
-    let limb_shift = (shift % 120) as u8;
-    let remainder_shift = (120 - limb_shift) as u8;
+    let limb_shift = (shift % 120) as u128;
+    let remainder_shift = (120 - limb_shift);
     let mask: u128 = (((1 as u128) << limb_shift) - 1) << remainder_shift;
-    result[0] = (input[0 + num_shifted_limbs] >> limb_shift);
+    result[0] = (input[0 + num_shifted_limbs] >> (limb_shift));
     for i in 1..(N - num_shifted_limbs) {
         let value = input[i + num_shifted_limbs];
         result[i] = value >> limb_shift;
@@ -383,8 +383,8 @@ pub(crate) unconstrained fn __shl<let N: u32>(input: [u128; N], shift: u32) -> [
     let mut result: [u128; N] = [0; N];
 
     let num_shifted_limbs = shift / 120;
-    let limb_shift = (shift % 120) as u8;
-    let remainder_shift: u8 = 120 - limb_shift as u8;
+    let limb_shift = (shift % 120) as u128;
+    let remainder_shift = 120 - limb_shift;
 
     // 83
     // limb shift = 1
@@ -460,9 +460,9 @@ pub(crate) unconstrained fn __get_msb<let N: u32>(val: [u128; N]) -> u32 {
 
 pub(crate) fn __get_bit<let N: u32>(input: [u128; N], bit: u32) -> bool {
     let segment_index: u32 = bit / 120;
-    let uint_index = bit % 120;
+    let uint_index = (bit % 120) as u128;
     let limb: u128 = input[segment_index];
-    let value = (limb >> uint_index as u8) & 1;
+    let value = (limb >> uint_index) & 1;
     value == 1
 }
 
