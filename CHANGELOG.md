@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.8.0](https://github.com/noir-lang/noir-bignum/compare/v0.7.5...v0.8.0) (2025-08-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* switch to new bit shifts semantic ([#196](https://github.com/noir-lang/noir-bignum/issues/196))
+
+### Bug Fixes
+
+* Switch to new bit shifts semantic ([#196](https://github.com/noir-lang/noir-bignum/issues/196)) ([d87eeb0](https://github.com/noir-lang/noir-bignum/commit/d87eeb062e03ea087e2f473367265fa58a66b5e9))
+
 ## [0.7.5](https://github.com/noir-lang/noir-bignum/compare/v0.7.4...v0.7.5) (2025-07-24)
 
 
