@@ -24,7 +24,7 @@ jobs:
 
       - name: Install bb
         run: |
-          curl -L https://bbup.aztec.network | bash
+          curl -L https://raw.githubusercontent.com/AztecProtocol/aztec-packages/refs/heads/next/barretenberg/bbup/install | bash
           ~/.bb/bbup -nv ${{env.MINIMUM_NOIR_VERSION}}
           sudo apt install libc++-dev
 
