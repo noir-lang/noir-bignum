@@ -80,6 +80,18 @@ comptime fn make_test(_m: Module, N: u32, MOD_BITS: u32, params: Quoted) -> Quot
     let udiv = quote { crate::fns::constrained_ops::udiv };
     let sub = quote { crate::fns::constrained_ops::sub };
     quote {
+
+#[test]
+fn test_derive()
+{
+    let params: crate::params::BigNumParams<_,_> = $params;
+
+    // let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, "hello".as_bytes());
+    let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
+    let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
+    assert_eq(a, b);
+}
+
 #[test]
 fn test_add() {
     let params: crate::params::BigNumParams<_,_> = $params;
@@ -103,6 +115,45 @@ fn test_add() {
         assert(e.limbs[i] == 0);
     }
     assert(e.limbs[0] == 2);
+}
+
+#[test]
+fn test_add_modulus_limit() {
+    let params: crate::params::BigNumParams<_,_> = $params;
+
+    // p + 2^{modulus_bits()} - 1 should be the maximum allowed value fed into an add operation
+    // when adding, if the result overflows the modulus, we conditionally subtract the modulus, producing 2^{254} -  1
+    // this is the largest value that will satisfy the range check applied when constructing a bignum
+    let p: [u128; $N] = params.modulus;
+    let one: [u128; $N] = [1; $N];
+
+    let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: p, params };
+
+    // Safety: test code
+    let two_pow_modulus_bits_minus_one: [u128; $N] =  unsafe { $__helper_sub($__shl(one, $MOD_BITS), one) };
+
+    let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: two_pow_modulus_bits_minus_one, params };
+    let result = a + b;
+    assert(result == b);
+}
+
+#[test(should_fail_with = "call to assert_max_bit_size")]
+fn test_add_modulus_overflow() {
+    let params: crate::params::BigNumParams<_,_> = $params;
+
+    let p: [u128; $N] = params.modulus;
+    // Safety: test code
+    let one = unsafe{$__one()};
+
+    // Safety: test code
+    let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: unsafe { $__helper_add(p, one) }, params };
+
+    // Safety: test code
+    let mut two_pow_modulus_bits_minus_one: [u128; $N] =  unsafe { $__helper_sub($__shl(one, $MOD_BITS), one) };
+
+    let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: two_pow_modulus_bits_minus_one, params };
+    let result = a + b;
+    assert(result == b);
 }
 
 #[test]
@@ -152,45 +203,6 @@ fn test_sub_modulus_underflow() {
 }
 
 #[test]
-fn test_add_modulus_limit() {
-    let params: crate::params::BigNumParams<_,_> = $params;
-
-    // p + 2^{modulus_bits()} - 1 should be the maximum allowed value fed into an add operation
-    // when adding, if the result overflows the modulus, we conditionally subtract the modulus, producing 2^{254} -  1
-    // this is the largest value that will satisfy the range check applied when constructing a bignum
-    let p: [u128; $N] = params.modulus;
-    let one: [u128; $N] = [1; $N];
-
-    let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: p, params };
-
-    // Safety: test code
-    let two_pow_modulus_bits_minus_one: [u128; $N] =  unsafe { $__helper_sub($__shl(one, $MOD_BITS), one) };
-
-    let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: two_pow_modulus_bits_minus_one, params };
-    let result = a + b;
-    assert(result == b);
-}
-
-#[test(should_fail_with = "call to assert_max_bit_size")]
-fn test_add_modulus_overflow() {
-    let params: crate::params::BigNumParams<_,_> = $params;
-
-    let p: [u128; $N] = params.modulus;
-    // Safety: test code
-    let one = unsafe{$__one()};
-
-    // Safety: test code
-    let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: unsafe { $__helper_add(p, one) }, params };
-
-    // Safety: test code
-    let mut two_pow_modulus_bits_minus_one: [u128; $N] =  unsafe { $__helper_sub($__shl(one, $MOD_BITS), one) };
-
-    let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: two_pow_modulus_bits_minus_one, params };
-    let result = a + b;
-    assert(result == b);
-}
-
-#[test]
 fn test_mul() {
     let params: crate::params::BigNumParams<_,_> = $params;
 
@@ -200,54 +212,6 @@ fn test_mul() {
     let c = (a + b) * (a + b);
     let d = (a * a) + (b * b) + (a * b) + (a * b);
     assert(c == d);
-}
-
-#[test]
-fn test_quadratic_expression() {
-    let params: crate::params::BigNumParams<_,_> = $params;
-
-    for i in 0..32 {
-        let X1: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [i as u8, 2, 3, 4]);
-        let Y1: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [i as u8, i as u8, 6, 7]);
-        let Z1: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::one(params);
-
-        let (_, YY_mul_2): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = crate::runtime_bignum::__compute_quadratic_expression(params, [[Y1]], [[false]], [[Y1, Y1]], [[false, false]], [], []);
-        let mut (_, XX_mul_3): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = crate::runtime_bignum::__compute_quadratic_expression(
-            params,
-            [[X1]],
-            [[false]],
-            [[X1, X1, X1]],
-            [[false, false, false]],
-            [],
-            []
-        );
-        let (_, D): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = crate::runtime_bignum::__compute_quadratic_expression(params, [[X1, X1]], [[false, false]], [[YY_mul_2]], [[false]], [], []);
-        let mut (_, X3) =  crate::runtime_bignum::__compute_quadratic_expression(
-            params,
-            [[XX_mul_3]],
-            [[false]],
-            [[XX_mul_3]],
-            [[false]],
-            [D, D],
-            [true, true]
-        );
-        let (_, Y3): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = crate::runtime_bignum::__compute_quadratic_expression(
-            params,
-            [[XX_mul_3], [YY_mul_2]],
-            [[false], [true]],
-            [[D, X3], [YY_mul_2, YY_mul_2]],
-            [[false, true], [false, false]],
-            [],
-            []
-        );
-        // 3XX * (D - X3) - 8YYYY
-
-        let (_, Z3): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = crate::runtime_bignum::__compute_quadratic_expression(params, [[Y1]], [[false]], [[Z1, Z1]], [[false, false]], [], []);
-
-        X3.validate_in_field();
-        Y3.validate_in_field();
-        Z3.validate_in_field();
-    }
 }
 
 #[test]
@@ -323,17 +287,6 @@ fn assert_is_not_equal_overloaded_fail() {
     let b_plus_modulus: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: unsafe { $__helper_add(t1, t2) }, params };
 
     a_plus_modulus.assert_is_not_equal(b_plus_modulus);
-}
-
-#[test]
-fn test_derive()
-{
-    let params: crate::params::BigNumParams<_,_> = $params;
-
-    // let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, "hello".as_bytes());
-    let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
-    let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
-    assert_eq(a, b);
 }
 
 #[test]
@@ -448,6 +401,53 @@ fn test_cmp_fuzz(seed: [u8; 2]){
     assert(a < half_modulus);
 }
 
+#[test]
+fn test_quadratic_expression() {
+    let params: crate::params::BigNumParams<_,_> = $params;
+
+    for i in 0..32 {
+        let X1: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [i as u8, 2, 3, 4]);
+        let Y1: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [i as u8, i as u8, 6, 7]);
+        let Z1: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::one(params);
+
+        let (_, YY_mul_2): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = crate::runtime_bignum::__compute_quadratic_expression(params, [[Y1]], [[false]], [[Y1, Y1]], [[false, false]], [], []);
+        let mut (_, XX_mul_3): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = crate::runtime_bignum::__compute_quadratic_expression(
+            params,
+            [[X1]],
+            [[false]],
+            [[X1, X1, X1]],
+            [[false, false, false]],
+            [],
+            []
+        );
+        let (_, D): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = crate::runtime_bignum::__compute_quadratic_expression(params, [[X1, X1]], [[false, false]], [[YY_mul_2]], [[false]], [], []);
+        let mut (_, X3) =  crate::runtime_bignum::__compute_quadratic_expression(
+            params,
+            [[XX_mul_3]],
+            [[false]],
+            [[XX_mul_3]],
+            [[false]],
+            [D, D],
+            [true, true]
+        );
+        let (_, Y3): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = crate::runtime_bignum::__compute_quadratic_expression(
+            params,
+            [[XX_mul_3], [YY_mul_2]],
+            [[false], [true]],
+            [[D, X3], [YY_mul_2, YY_mul_2]],
+            [[false, true], [false, false]],
+            [],
+            []
+        );
+        // 3XX * (D - X3) - 8YYYY
+
+        let (_, Z3): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = crate::runtime_bignum::__compute_quadratic_expression(params, [[Y1]], [[false]], [[Z1, Z1]], [[false, false]], [], []);
+
+        X3.validate_in_field();
+        Y3.validate_in_field();
+        Z3.validate_in_field();
+    }
+}
 
 }
 }

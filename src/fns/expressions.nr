@@ -7,6 +7,76 @@ use crate::fns::{
 use crate::params::BigNumParams as P;
 
 /**
+* @brief Computes the result of a linear combination of (possibly negative) BigNum values (unconstrained)
+**/
+// NOTE: modulus2 is structured such that all limbs will be greater than 0, even when subtracting.
+// To do this, when computing `p - x`, we ensure that each limb in `p` is greater than each limb in `x`.
+// We know that, for a valid bignum element, the limbs in `x` will be <2^{120}
+// Therefore each of the limbs in `p` (except the most significant) will borrow 2^{120} from the more significant limb.
+// Finally, to ensure we do not underflow in the most significant limb, we use `2p` instead of `p`
+unconstrained fn __add_linear_expression<let N: u32, let MOD_BITS: u32, let M: u32>(
+    params: P<N, MOD_BITS>,
+    x: [[u128; N]; M],
+    flags: [bool; M],
+) -> ([u128; N]) {
+    // TODO, validate we do not overflow N2 when multiplying and N when adding
+    let mut sum: [u128; N] = [0; N];
+    // TODO: ugly! Will fail if input array is empty
+    let modulus2: [u128; N] = params.double_modulus;
+    for i in 0..M {
+        if (flags[i]) {
+            for j in 0..N {
+                sum[j] = sum[j] + (modulus2[j] as Field - x[i][j] as Field) as u128;
+                // assert(x[i][j].lt(modulus2[j]));
+            }
+        } else {
+            for j in 0..N {
+                sum[j] = sum[j] + x[i][j];
+            }
+        }
+    }
+    // problem if we normalize when used in computing quotient
+    sum
+}
+
+/**
+* @brief computes the limb products of a quadratic expression
+* @details see compute_quadratic_expression_with_borrow_flags for full description
+**/
+unconstrained fn compute_quadratic_expression_product<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
+    params: P<N, MOD_BITS>,
+    lhs_terms: [[[u128; N]; LHS_N]; NUM_PRODUCTS],
+    lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
+    rhs_terms: [[[u128; N]; RHS_N]; NUM_PRODUCTS],
+    rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
+    linear_terms: [[u128; N]; ADD_N],
+    linear_flags: [bool; ADD_N],
+) -> [Field; 2 * N] {
+    // TODO, validate we do not overflow N2 when multiplying and N when adding
+    let mut lhs: [[u128; N]; NUM_PRODUCTS] = [[0; N]; NUM_PRODUCTS];
+    let mut rhs: [[u128; N]; NUM_PRODUCTS] = [[0; N]; NUM_PRODUCTS];
+
+    for i in 0..NUM_PRODUCTS {
+        lhs[i] = __add_linear_expression(params, lhs_terms[i], lhs_flags[i]);
+        rhs[i] = __add_linear_expression(params, rhs_terms[i], rhs_flags[i]);
+    }
+
+    let add: [u128; N] = __add_linear_expression(params, linear_terms, linear_flags);
+
+    let mut mulout: [Field; 2 * N] = [0; 2 * N];
+
+    for i in 0..N {
+        for j in 0..N {
+            for k in 0..NUM_PRODUCTS {
+                mulout[i + j] += (lhs[k][i] as Field * rhs[k][j] as Field);
+            }
+        }
+        mulout[i] += add[i] as Field;
+    }
+    mulout
+}
+
+/**
 * @brief Given a degree-2 BigNum expression that is equal to 0 mod p, compute the quotient and borrow flags 
 * @description The expression is of the form:
 *
@@ -97,76 +167,6 @@ unconstrained fn compute_quadratic_expression_with_borrow_flags<let N: u32, let 
     }
 
     (quotient, remainder, borrow_flags)
-}
-
-/**
-* @brief Computes the result of a linear combination of (possibly negative) BigNum values (unconstrained)
-**/
-// NOTE: modulus2 is structured such that all limbs will be greater than 0, even when subtracting.
-// To do this, when computing `p - x`, we ensure that each limb in `p` is greater than each limb in `x`.
-// We know that, for a valid bignum element, the limbs in `x` will be <2^{120}
-// Therefore each of the limbs in `p` (except the most significant) will borrow 2^{120} from the more significant limb.
-// Finally, to ensure we do not underflow in the most significant limb, we use `2p` instead of `p`
-unconstrained fn __add_linear_expression<let N: u32, let MOD_BITS: u32, let M: u32>(
-    params: P<N, MOD_BITS>,
-    x: [[u128; N]; M],
-    flags: [bool; M],
-) -> ([u128; N]) {
-    // TODO, validate we do not overflow N2 when multiplying and N when adding
-    let mut sum: [u128; N] = [0; N];
-    // TODO: ugly! Will fail if input array is empty
-    let modulus2: [u128; N] = params.double_modulus;
-    for i in 0..M {
-        if (flags[i]) {
-            for j in 0..N {
-                sum[j] = sum[j] + (modulus2[j] as Field - x[i][j] as Field) as u128;
-                // assert(x[i][j].lt(modulus2[j]));
-            }
-        } else {
-            for j in 0..N {
-                sum[j] = sum[j] + x[i][j];
-            }
-        }
-    }
-    // problem if we normalize when used in computing quotient
-    sum
-}
-
-/**
-* @brief computes the limb products of a quadratic expression
-* @details see compute_quadratic_expression_with_borrow_flags for full description
-**/
-unconstrained fn compute_quadratic_expression_product<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
-    params: P<N, MOD_BITS>,
-    lhs_terms: [[[u128; N]; LHS_N]; NUM_PRODUCTS],
-    lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
-    rhs_terms: [[[u128; N]; RHS_N]; NUM_PRODUCTS],
-    rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
-    linear_terms: [[u128; N]; ADD_N],
-    linear_flags: [bool; ADD_N],
-) -> [Field; 2 * N] {
-    // TODO, validate we do not overflow N2 when multiplying and N when adding
-    let mut lhs: [[u128; N]; NUM_PRODUCTS] = [[0; N]; NUM_PRODUCTS];
-    let mut rhs: [[u128; N]; NUM_PRODUCTS] = [[0; N]; NUM_PRODUCTS];
-
-    for i in 0..NUM_PRODUCTS {
-        lhs[i] = __add_linear_expression(params, lhs_terms[i], lhs_flags[i]);
-        rhs[i] = __add_linear_expression(params, rhs_terms[i], rhs_flags[i]);
-    }
-
-    let add: [u128; N] = __add_linear_expression(params, linear_terms, linear_flags);
-
-    let mut mulout: [Field; 2 * N] = [0; 2 * N];
-
-    for i in 0..N {
-        for j in 0..N {
-            for k in 0..NUM_PRODUCTS {
-                mulout[i + j] += (lhs[k][i] as Field * rhs[k][j] as Field);
-            }
-        }
-        mulout[i] += add[i] as Field;
-    }
-    mulout
 }
 
 /**
