@@ -67,7 +67,6 @@ pub(crate) unconstrained fn __gte<let N: u32>(lhs: [u128; N], rhs: [u128; N]) ->
     }
 }
 
-
 /**
 * @brief given an input `x`, compute `2p - x` (unconstrained)
 *

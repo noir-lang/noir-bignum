@@ -283,7 +283,6 @@ fn fuzz_to_be_bytes(seed: [u8; 5]) {
     assert(a == b);
 }
 
-
 fn test_eq<let N: u32, BN>()
 where
     BN: BigNum,
@@ -466,7 +465,6 @@ fn test_do_nothing() {
     assert(c == d.get_limbs());
     assert(c == e.get_limbs());
 }
-
 
 fn test_add<let N: u32, BN>()
 where
@@ -1023,7 +1021,6 @@ fn test_sub_underflow_regression() {
     let c = b - a;
     assert(c.get_limbs() == [0, 0, 0]);
 }
-
 
 #[derive_bignum(2, 224, quote {SecP224r1_PARAMS})]
 struct SecP224r1 {
