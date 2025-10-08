@@ -17,8 +17,8 @@ pub(crate) unconstrained fn __split_120_bits(mut x: Field) -> (u128, Field) {
 
 /**
  * @brief Normalize an array of Field values into 120-bit limbs (unconstrained)
- * @details Each Field element is split into two part modulo 2^120
- *          The overflow from the lower limbs is carried into the higher limb
+ * @details Each Field element is split into two parts modulo 2^120
+ *          The overflow from the lower limbs is carried into the higher limbs
  **/
 pub(crate) unconstrained fn __normalize_limbs<let N: u32>(input: [Field; N]) -> [u128; N] {
     let mut normalized: [u128; N] = [0; N];
