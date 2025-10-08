@@ -200,7 +200,7 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
         }
     }
 
-    let mulout: [u128; 3 * N] = __normalize_limbs(mulout_field, 3 * N);
+    let mulout: [u128; 3 * N] = __normalize_limbs(mulout_field);
 
     // When we apply the barrett reduction, the maximum value of the output will be
     // <= p * (1 + x/2^{2k})
@@ -239,7 +239,7 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
 
     // Then, split the accumulated values and propagate higher bits
     let long_quotient_mul_modulus_normalized: [u128; 2 * N] =
-        __normalize_limbs(quotient_mul_modulus_normalized, 2 * N);
+        __normalize_limbs(quotient_mul_modulus_normalized);
     let mut quotient_mul_modulus_normalized: [u128; N] = [0; N];
     for i in 0..N {
         quotient_mul_modulus_normalized[i] = long_quotient_mul_modulus_normalized[i];

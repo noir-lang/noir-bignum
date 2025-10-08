@@ -123,7 +123,7 @@ unconstrained fn compute_quadratic_expression_with_borrow_flags<let N: u32, let 
     );
 
     let mut mulout_n: [Field; 2 * N] = [0; 2 * N];
-    let mut relation_result: [u128; 2 * N] = split_bits::__normalize_limbs(mulout_p, 2 * N);
+    let mut relation_result: [u128; 2 * N] = split_bits::__normalize_limbs(mulout_p);
 
     let (quotient, remainder) =
         __barrett_reduction(relation_result, params.redc_param, MOD_BITS, params.modulus);
@@ -192,7 +192,7 @@ pub(crate) unconstrained fn compute_quadratic_expression<let N: u32, let MOD_BIT
         linear_terms,
         linear_flags,
     );
-    let mut relation_result: [u128; 2 * N] = split_bits::__normalize_limbs(mulout, 2 * N);
+    let mut relation_result: [u128; 2 * N] = split_bits::__normalize_limbs(mulout);
 
     // size 4
     // a[3] * b[3] = a[6] = 7
