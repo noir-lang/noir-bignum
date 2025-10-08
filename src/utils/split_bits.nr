@@ -30,6 +30,7 @@ pub(crate) unconstrained fn __normalize_limbs<let N: u32>(input: [Field; N]) -> 
     }
     let (lo, hi): (u128, Field) = __split_120_bits(next);
     normalized[N - 1] = lo;
-    assert(hi == 0, f"BigNum::__normalize_limbs: Expected hi to be 0, but got {hi}");
+    assert(hi == 0, f"BigNum::__normalize_limbs: non-zero final carry (expected hi = 0, got {hi})");
+
     normalized
 }
