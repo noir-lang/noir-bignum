@@ -30,6 +30,8 @@ pub(crate) unconstrained fn __normalize_limbs<let N: u32>(input: [Field; N]) -> 
     }
     let (lo, hi): (u128, Field) = __split_120_bits(next);
     normalized[N - 1] = lo;
+
+    // non-zero final carry <=> normalized value overflows the array length
     assert(hi == 0);
 
     normalized
