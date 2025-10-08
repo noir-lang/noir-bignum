@@ -9,11 +9,16 @@ global MUL_DE_BRUIJN_BIT: [u32; 128] = [
     45, 111, 74, 34, 10, 38, 44, 33, 9, 32, 8, 7, 128,
 ];
 
+/**
+ * @brief get the most significant bit position of a `val` (unconstrained)
+ * @details bit hack that uses De Bruijn sequence to calculate msb position
+ *          see https://graphics.stanford.edu/~seander/bithacks.html#IntegerLogDeBruijn
+ **/
 pub(crate) unconstrained fn get_msb(x: u128) -> u32 {
-    let result = if x == 0 {
+    let result: u32 = if x == 0 {
         0
     } else {
-        let mut v = x;
+        let mut v: u128 = x;
         v |= v >> 1;
         v |= v >> 2;
         v |= v >> 4;
@@ -21,7 +26,7 @@ pub(crate) unconstrained fn get_msb(x: u128) -> u32 {
         v |= v >> 16;
         v |= v >> 32;
         v |= v >> 64;
-        let index = (v.wrapping_mul(0x1FC10C2FBCF471B913B14CD2595D6D5)) >> 121;
+        let index: u128 = (v.wrapping_mul(0x1FC10C2FBCF471B913B14CD2595D6D5)) >> 121;
         (index as Field).assert_max_bit_size::<32>();
         MUL_DE_BRUIJN_BIT[index as u32]
     };
@@ -35,7 +40,9 @@ mod tests {
     use std::ops::WrappingMul;
 
     fn assert_msb_equal(x: u64) {
+        // Safety: test code
         let msb64 = unsafe { get_msb64(x) };
+        // Safety: test code
         let msb128 = unsafe { get_msb128(x as u128) };
         assert_eq(msb64, msb128);
     }
@@ -44,23 +51,23 @@ mod tests {
     // To check that the msb functions are equivalent with de bruijn sequence for 64 bits and 128 bits
     fn test_get_msb() {
         // Test case 1: MSB at position 7
-        let x = 0x80; // binary: 10000000
+        let x: u64 = 0x80; // binary: 10000000
         assert_msb_equal(x);
 
         // Test case 2: MSB at position 0
-        let x = 0x1; // binary: 00000001
+        let x: u64 = 0x1; // binary: 00000001
         assert_msb_equal(x);
 
         // Test case 3: MSB at position 63
-        let x = 0x8000000000000000; // binary: 1000...0000 (63 zeros)
+        let x: u64 = 0x8000000000000000; // binary: 1000...0000 (63 zeros)
         assert_msb_equal(x);
 
         // Test case 4: Zero input
-        let x = 0x0;
+        let x: u64 = 0x0;
         assert_msb_equal(x);
 
         // Test case 5: All bits set
-        let x = 0xFFFFFFFFFFFFFFFF;
+        let x: u64 = 0xFFFFFFFFFFFFFFFF;
         assert_msb_equal(x);
     }
 
@@ -79,24 +86,24 @@ mod tests {
     ];
 
     pub(crate) unconstrained fn get_msb64(x: u64) -> u32 {
-        let mut v = x;
+        let mut v: u64 = x;
         v |= v >> 1;
         v |= v >> 2;
         v |= v >> 4;
         v |= v >> 8;
         v |= v >> 16;
         v |= v >> 32;
-        let index = (v.wrapping_mul(0x6c04f118e9966f6b)) >> 57;
+        let index: u64 = (v.wrapping_mul(0x6c04f118e9966f6b)) >> 57;
         (index as Field).assert_max_bit_size::<32>();
         MUL_DE_BRUIJN_BIT_64[index as u32]
     }
 
     unconstrained fn __get_msb64<let N: u32>(val: [u128; N]) -> u32 {
-        let mut count = 0;
+        let mut count: u32 = 0;
         for i in 0..N {
-            let v = val[((N) - 1 - i)];
-            let v_low = v as u64 % TWO_POW_60 as u64;
-            let v_high = ((v - v_low as u128) / TWO_POW_60) as u64;
+            let v: u128 = val[((N) - 1 - i)];
+            let v_low: u64 = v as u64 % TWO_POW_60 as u64;
+            let v_high: u64 = ((v - v_low as u128) / TWO_POW_60) as u64;
             if (v_high > 0) {
                 count = 60 * ((2 * N) - 1 - (i * 2)) + get_msb64(v_high);
                 break;
@@ -110,47 +117,47 @@ mod tests {
     }
 
     #[test]
-    // To check that the msb functions are equivalent with de bruijn sequence for 64 bits and 128 bits
+    // Check that the msb functions are equivalent with De Bruijn sequence for 64 bits and 128 bits
     unconstrained fn test_get_msb_equivalence() {
         // Test single limb (64-bit number)
-        let x = 0x8000000000000000;
-        let arr = [0, 0, x as u128, 0];
-        let msb1 = __get_msb64(arr);
-        let msb2 = __get_msb(arr);
+        let x: Field = 0x8000000000000000;
+        let arr: [u128; 4] = [0, 0, x as u128, 0];
+        let msb1: u32 = __get_msb64(arr);
+        let msb2: u32 = __get_msb(arr);
         assert_eq(msb1, msb2);
 
         // Test multiple limbs (120-bit number)
-        let x = 0x800000000000000000000000000000; // 120 bits number
-        let arr = [0, 0, x as u128, 0];
-        let msb1 = __get_msb64(arr);
-        let msb2 = __get_msb(arr);
+        let x: Field = 0x800000000000000000000000000000; // 120 bits number, 2^119
+        let arr: [u128; 4] = [0, 0, x as u128, 0];
+        let msb1: u32 = __get_msb64(arr);
+        let msb2: u32 = __get_msb(arr);
         assert_eq(msb1, msb2);
 
         // Test zero
-        let arr = [0, 0, 0, 0];
-        let msb1 = __get_msb64(arr);
-        let msb2 = __get_msb(arr);
+        let arr: [u128; 4] = [0, 0, 0, 0];
+        let msb1: u32 = __get_msb64(arr);
+        let msb2: u32 = __get_msb(arr);
         assert_eq(msb1, msb2);
 
         // Test all bits set (120 bits)
-        let x = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // 120 bits
-        let arr = [0, x as u128, 0, 0];
-        let msb1 = __get_msb64(arr);
-        let msb2 = __get_msb(arr);
+        let x: Field = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // 120 bits, 2^120 - 1
+        let arr: [u128; 4] = [0, x as u128, 0, 0];
+        let msb1: u32 = __get_msb64(arr);
+        let msb2: u32 = __get_msb(arr);
         assert_eq(msb1, msb2);
 
         // Test systematic bit positions
         for i in 0..120 {
             let x: u128 = 1;
-            let shifted = x << i;
-            let arr = [0, shifted, 0, 0];
-            let msb1 = __get_msb64(arr);
-            let msb2 = __get_msb(arr);
+            let shifted: u128 = x << i;
+            let arr: [u128; 4] = [0, shifted, 0, 0];
+            let msb1: u32 = __get_msb64(arr);
+            let msb2: u32 = __get_msb(arr);
             assert_eq(msb1, msb2);
         }
 
         // Test random-like patterns (multiple bits set)
-        let patterns = [
+        let patterns: [Field; 7] = [
             0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA, // alternating bits
             0x555555555555555555555555555555, // alternating bits (opposite)
             0x1234567890ABCDEF1234567890ABCD, // some pattern
@@ -160,43 +167,43 @@ mod tests {
             0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFF, // all bits except highest
         ];
         for i in 0..patterns.len() {
-            let arr = [0, patterns[i] as u128, 0, 0];
-            let msb1 = __get_msb64(arr);
-            let msb2 = __get_msb(arr);
+            let arr: [u128; 4] = [0, patterns[i] as u128, 0, 0];
+            let msb1: u32 = __get_msb64(arr);
+            let msb2: u32 = __get_msb(arr);
             assert_eq(msb1, msb2);
         }
 
         // Test with MSB in different array positions (120 bits)
-        let x = 0x800000000000000000000000000000; // 120 bits
-        let arr1 = [x as u128, 0, 0, 0];
-        let arr2 = [0, x as u128, 0, 0];
-        let arr3 = [0, 0, x as u128, 0];
-        let arr4 = [0, 0, 0, x as u128];
-        let msb1_1 = __get_msb64(arr1);
-        let msb2_1 = __get_msb(arr1);
+        let x: Field = 0x800000000000000000000000000000; // 120 bits
+        let arr1: [u128; 4] = [x as u128, 0, 0, 0];
+        let arr2: [u128; 4] = [0, x as u128, 0, 0];
+        let arr3: [u128; 4] = [0, 0, x as u128, 0];
+        let arr4: [u128; 4] = [0, 0, 0, x as u128];
+        let msb1_1: u32 = __get_msb64(arr1);
+        let msb2_1: u32 = __get_msb(arr1);
         assert_eq(msb1_1, msb2_1);
 
-        let msb1_2 = __get_msb64(arr2);
-        let msb2_2 = __get_msb(arr2);
+        let msb1_2: u32 = __get_msb64(arr2);
+        let msb2_2: u32 = __get_msb(arr2);
         assert_eq(msb1_2, msb2_2);
 
-        let msb1_3 = __get_msb64(arr3);
-        let msb2_3 = __get_msb(arr3);
+        let msb1_3: u32 = __get_msb64(arr3);
+        let msb2_3: u32 = __get_msb(arr3);
         assert_eq(msb1_3, msb2_3);
 
-        let msb1_4 = __get_msb64(arr4);
-        let msb2_4 = __get_msb(arr4);
+        let msb1_4: u32 = __get_msb64(arr4);
+        let msb2_4: u32 = __get_msb(arr4);
         assert_eq(msb1_4, msb2_4);
     }
 
     #[test]
     unconstrained fn fuzz_get_msb(seed: [u128; 5]) {
-        let mut seed_copy = seed;
+        let mut seed_copy: [u128; 5] = seed;
         for i in 0..5 {
             seed_copy[i] = seed_copy[i] & (TWO_POW_120 - 1);
         }
-        let msb1 = __get_msb64(seed_copy);
-        let msb2 = __get_msb(seed_copy);
+        let msb1: u32 = __get_msb64(seed_copy);
+        let msb2: u32 = __get_msb(seed_copy);
         assert_eq(msb1, msb2);
     }
 }
