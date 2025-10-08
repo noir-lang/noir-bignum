@@ -292,26 +292,6 @@ pub(crate) fn is_zero<let N: u32, let MOD_BITS: u32>(val: [u128; N]) -> bool {
     val.all(|limb| limb == 0)
 }
 
-pub(crate) fn validate_in_field<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
-    val: [u128; N],
-) {
-    // N.B. need to combine with validate_in_range if `self` limbs have not been range constrained
-    let mut p_minus_self: [Field; N] = [0; N];
-    let modulus: [u128; N] = params.modulus;
-    for i in 0..N {
-        p_minus_self[i] = (modulus[i] as Field - val[i] as Field);
-    }
-    let borrow_flags = unsafe { __validate_in_field_compute_borrow_flags(params, val) };
-    p_minus_self[0] += (borrow_flags[0] as Field * TWO_POW_120 as Field);
-    for i in 1..N - 1 {
-        p_minus_self[i] +=
-            (borrow_flags[i] as Field * TWO_POW_120 as Field - borrow_flags[i - 1] as Field);
-    }
-    p_minus_self[N - 1] -= (borrow_flags[N - 2] as Field);
-    validate_in_range::<_, _, MOD_BITS>(p_minus_self);
-}
-
 /**
 * @brief Validate a BigNum instance is correctly range constrained to contain no more than Params::modulus_bits()
 **/
@@ -357,6 +337,73 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u
     validate_in_range::<_, _, MOD_BITS>(result);
     assert(!underflow, "BigNum::validate_gt check fails");
     check_gt_with_flags::<N, MOD_BITS>(lhs, rhs, result, borrow_flags, carry_flags);
+}
+
+// the constraining function for the results returned by __validate_gt_remainder. this is used in both comparisons and validate gt
+pub(crate) fn check_gt_with_flags<let N: u32, let MOD_BITS: u32>(
+    lhs: [u128; N],
+    rhs: [u128; N],
+    result: [u128; N],
+    borrow_flags: [bool; N],
+    carry_flags: [bool; N],
+) {
+    let mut addend: [Field; N] = [0; N];
+    let result_limb = lhs[0] as Field - rhs[0] as Field + addend[0] - result[0] as Field
+        + (borrow_flags[0] as Field - carry_flags[0] as Field) * TWO_POW_120 as Field;
+    assert(result_limb == 0);
+
+    for i in 1..N - 1 {
+        let prev_borrow_sub_carry = borrow_flags[i - 1] as Field - carry_flags[i - 1] as Field;
+        let borrow_sub_carry = borrow_flags[i] as Field - carry_flags[i] as Field;
+        let result_limb = lhs[i] as Field - rhs[i] as Field + addend[i] as Field
+            - result[i] as Field
+            - prev_borrow_sub_carry
+            + borrow_sub_carry * TWO_POW_120 as Field;
+        assert(result_limb == 0);
+    }
+
+    let result_limb = lhs[N - 1] as Field - rhs[N - 1] as Field + addend[N - 1] as Field
+        - result[N - 1] as Field
+        - borrow_flags[N - 2] as Field
+        + carry_flags[N - 2] as Field;
+    assert(result_limb == 0);
+}
+
+pub(crate) fn validate_in_field<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    val: [u128; N],
+) {
+    // N.B. need to combine with validate_in_range if `self` limbs have not been range constrained
+    let mut p_minus_self: [Field; N] = [0; N];
+    let modulus: [u128; N] = params.modulus;
+    for i in 0..N {
+        p_minus_self[i] = (modulus[i] as Field - val[i] as Field);
+    }
+    let borrow_flags = unsafe { __validate_in_field_compute_borrow_flags(params, val) };
+    p_minus_self[0] += (borrow_flags[0] as Field * TWO_POW_120 as Field);
+    for i in 1..N - 1 {
+        p_minus_self[i] +=
+            (borrow_flags[i] as Field * TWO_POW_120 as Field - borrow_flags[i - 1] as Field);
+    }
+    p_minus_self[N - 1] -= (borrow_flags[N - 2] as Field);
+    validate_in_range::<_, _, MOD_BITS>(p_minus_self);
+}
+
+// a comparison function. returns true if lhs > rhs and false otherwise
+pub(crate) fn cmp<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N]) -> Ordering {
+    let (underflow, result, carry_flags, borrow_flags) =
+        unsafe { __validate_gt_remainder(lhs, rhs) };
+    // if underflow is true, swap lhs and rhs
+    let (lhs, rhs) = if underflow { (rhs, lhs) } else { (lhs, rhs) };
+
+    check_gt_with_flags::<N, MOD_BITS>(lhs, rhs, result, borrow_flags, carry_flags);
+    if lhs == rhs {
+        Ordering::equal()
+    } else if underflow {
+        Ordering::less()
+    } else {
+        Ordering::greater()
+    }
 }
 
 pub(crate) fn neg<let N: u32, let MOD_BITS: u32>(
@@ -594,51 +641,4 @@ pub(crate) fn umod<let N: u32, let MOD_BITS: u32>(
     divisor: [u128; N],
 ) -> [u128; N] {
     udiv_mod::<_, MOD_BITS>(params, numerator, divisor).1
-}
-
-// a comparison function. returns true if lhs > rhs and false otherwise
-pub(crate) fn cmp<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N]) -> Ordering {
-    let (underflow, result, carry_flags, borrow_flags) =
-        unsafe { __validate_gt_remainder(lhs, rhs) };
-    // if underflow is true, swap lhs and rhs
-    let (lhs, rhs) = if underflow { (rhs, lhs) } else { (lhs, rhs) };
-
-    check_gt_with_flags::<N, MOD_BITS>(lhs, rhs, result, borrow_flags, carry_flags);
-    if lhs == rhs {
-        Ordering::equal()
-    } else if underflow {
-        Ordering::less()
-    } else {
-        Ordering::greater()
-    }
-}
-
-// the constraining function for the results returned by __validate_gt_remainder. this is used in both comparisons and validate gt
-pub(crate) fn check_gt_with_flags<let N: u32, let MOD_BITS: u32>(
-    lhs: [u128; N],
-    rhs: [u128; N],
-    result: [u128; N],
-    borrow_flags: [bool; N],
-    carry_flags: [bool; N],
-) {
-    let mut addend: [Field; N] = [0; N];
-    let result_limb = lhs[0] as Field - rhs[0] as Field + addend[0] - result[0] as Field
-        + (borrow_flags[0] as Field - carry_flags[0] as Field) * TWO_POW_120 as Field;
-    assert(result_limb == 0);
-
-    for i in 1..N - 1 {
-        let prev_borrow_sub_carry = borrow_flags[i - 1] as Field - carry_flags[i - 1] as Field;
-        let borrow_sub_carry = borrow_flags[i] as Field - carry_flags[i] as Field;
-        let result_limb = lhs[i] as Field - rhs[i] as Field + addend[i] as Field
-            - result[i] as Field
-            - prev_borrow_sub_carry
-            + borrow_sub_carry * TWO_POW_120 as Field;
-        assert(result_limb == 0);
-    }
-
-    let result_limb = lhs[N - 1] as Field - rhs[N - 1] as Field + addend[N - 1] as Field
-        - result[N - 1] as Field
-        - borrow_flags[N - 2] as Field
-        + carry_flags[N - 2] as Field;
-    assert(result_limb == 0);
 }

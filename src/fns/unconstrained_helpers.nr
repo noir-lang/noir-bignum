@@ -31,55 +31,6 @@ pub(crate) unconstrained fn __from_field<let N: u32>(field: Field) -> [u128; N] 
     result
 }
 
-pub(crate) unconstrained fn __validate_in_field_compute_borrow_flags<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
-    val: [u128; N],
-) -> [bool; N] {
-    let mut flags: [bool; N] = [false; N];
-    let modulus: [u128; N] = params.modulus;
-    flags[0] = modulus[0] < val[0];
-    for i in 1..N - 1 {
-        flags[i] = modulus[i] < val[i] + flags[i - 1] as u128;
-    }
-    flags
-}
-
-pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
-    lhs: [u128; N],
-    rhs: [u128; N],
-) -> (bool, [u128; N], [bool; N], [bool; N]) {
-    let mut a = lhs;
-    let mut b = rhs;
-    let underflow = !__gte(lhs, rhs);
-
-    let mut result: [u128; N] = [0; N];
-    // swap a and b if there's an underflow
-    let (a, b) = if underflow { (b, a) } else { (a, b) };
-    let mut carry_in: u128 = 0;
-    let mut borrow_in: u128 = 0;
-    let mut borrow_flags: [bool; N] = [false; N];
-    let mut carry_flags: [bool; N] = [false; N];
-    for i in 0..N {
-        let mut add_term: u128 = a[i] + carry_in;
-        let mut carry = (add_term as u128 >= TWO_POW_120) as u128;
-        add_term -= carry * TWO_POW_120;
-        carry_in = carry;
-
-        let sub_term = b[i] + borrow_in;
-        let mut borrow = (sub_term > add_term) as u128;
-        result[i] = (borrow * TWO_POW_120 + add_term - sub_term);
-
-        borrow_in = borrow;
-
-        // Only set `borrow` and `carry` if they differ
-        if (carry != borrow) {
-            carry_flags[i] = carry != 0;
-            borrow_flags[i] = borrow != 0;
-        }
-    }
-    (underflow, result, carry_flags, borrow_flags)
-}
-
 pub(crate) unconstrained fn __neg_with_flags<let N: u32>(
     modulus: [u128; N],
     val: [u128; N],
@@ -180,6 +131,55 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32>(
     (result, carry_flags, borrow_flags, underflow)
 }
 
+pub(crate) unconstrained fn __validate_in_field_compute_borrow_flags<let N: u32, let MOD_BITS: u32>(
+    params: P<N, MOD_BITS>,
+    val: [u128; N],
+) -> [bool; N] {
+    let mut flags: [bool; N] = [false; N];
+    let modulus: [u128; N] = params.modulus;
+    flags[0] = modulus[0] < val[0];
+    for i in 1..N - 1 {
+        flags[i] = modulus[i] < val[i] + flags[i - 1] as u128;
+    }
+    flags
+}
+
+pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
+    lhs: [u128; N],
+    rhs: [u128; N],
+) -> (bool, [u128; N], [bool; N], [bool; N]) {
+    let mut a = lhs;
+    let mut b = rhs;
+    let underflow = !__gte(lhs, rhs);
+
+    let mut result: [u128; N] = [0; N];
+    // swap a and b if there's an underflow
+    let (a, b) = if underflow { (b, a) } else { (a, b) };
+    let mut carry_in: u128 = 0;
+    let mut borrow_in: u128 = 0;
+    let mut borrow_flags: [bool; N] = [false; N];
+    let mut carry_flags: [bool; N] = [false; N];
+    for i in 0..N {
+        let mut add_term: u128 = a[i] + carry_in;
+        let mut carry = (add_term as u128 >= TWO_POW_120) as u128;
+        add_term -= carry * TWO_POW_120;
+        carry_in = carry;
+
+        let sub_term = b[i] + borrow_in;
+        let mut borrow = (sub_term > add_term) as u128;
+        result[i] = (borrow * TWO_POW_120 + add_term - sub_term);
+
+        borrow_in = borrow;
+
+        // Only set `borrow` and `carry` if they differ
+        if (carry != borrow) {
+            carry_flags[i] = carry != 0;
+            borrow_flags[i] = borrow != 0;
+        }
+    }
+    (underflow, result, carry_flags, borrow_flags)
+}
+
 /**
  * @brief BARRETT_REDUCTION_OVERFLOW_BITS defines how large an input to barrett reduction can be
  * @details maximum value = modulus^2 <<BARRETT_REDUCTION_OVERFLOW_BITS
@@ -268,6 +268,122 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     (smaller_quotient, remainder)
 }
 
+pub(crate) unconstrained fn __increment<let N: u32>(val: [u128; N]) -> [u128; N] {
+    let mut result: [u128; N] = [0; N];
+    let mut carry: u128 = 1;
+    for i in 0..N {
+        let mut add_term = (val[i] + carry);
+        carry = add_term >> 120;
+        add_term = add_term - (carry << 120);
+        result[i] = add_term;
+    }
+    result
+}
+
+pub(crate) unconstrained fn __helper_add<let N: u32>(lhs: [u128; N], rhs: [u128; N]) -> [u128; N] {
+    let mut result: [u128; N] = [0; N];
+    let mut carry: u128 = 0;
+    for i in 0..N {
+        let mut add_term = (lhs[i] + rhs[i] + carry);
+        carry = add_term >> 120;
+        add_term = add_term - (carry << 120);
+        result[i] = add_term;
+    }
+    result
+}
+
+pub(crate) unconstrained fn __helper_sub<let N: u32>(lhs: [u128; N], rhs: [u128; N]) -> [u128; N] {
+    let mut result: [u128; N] = [0; N];
+    let mut borrow: u128 = 0;
+    let mut borrow_in: u128 = 0;
+    for i in 0..N {
+        borrow = ((rhs[i] + borrow_in) > lhs[i]) as u128;
+        let sub = (borrow << 120) + lhs[i] as u128 - rhs[i] as u128 - borrow_in;
+        result[i] = sub;
+        borrow_in = borrow;
+    }
+    result
+}
+
+pub(crate) unconstrained fn __shr<let N: u32>(input: [u128; N], shift: u32) -> [u128; N] {
+    let mut result: [u128; N] = [0; N];
+
+    let num_shifted_limbs = shift / 120;
+    let limb_shift = (shift % 120) as u128;
+    let remainder_shift = (120 - limb_shift);
+    let mask: u128 = (((1 as u128) << limb_shift) - 1) << remainder_shift;
+    result[0] = (input[0 + num_shifted_limbs] >> (limb_shift));
+    for i in 1..(N - num_shifted_limbs) {
+        let value = input[i + num_shifted_limbs];
+        result[i] = value >> limb_shift;
+        let remainder: u128 = (value << remainder_shift) & mask;
+        result[i - 1] = result[i - 1] + remainder;
+    }
+    result
+}
+
+pub(crate) unconstrained fn __shl<let N: u32>(input: [u128; N], shift: u32) -> [u128; N] {
+    let mut result: [u128; N] = [0; N];
+
+    let num_shifted_limbs = shift / 120;
+    let limb_shift = (shift % 120) as u128;
+    let remainder_shift = 120 - limb_shift;
+
+    // 83
+    // limb shift = 1
+    // inside shift = 19 bits to the left
+    // meaning we have 19 carry bits and 41 remainder bits
+    let mask: u128 = (1 as u128 << 120) - 1;
+    //   let mask: u64 = (((1 as u64) << limb_shift as u8) - 1) << remainder_shift as u8;
+    let value = input[0];
+
+    let mut remainder = (value >> remainder_shift);
+    result[num_shifted_limbs] = (value << limb_shift) & mask;
+
+    // shift 84. num shifted = 1
+    for i in 1..((N) - num_shifted_limbs) {
+        let value = input[i];
+        let upshift = ((value << limb_shift) + remainder) & mask;
+        result[i + num_shifted_limbs] = upshift;
+        remainder = (value >> remainder_shift);
+    }
+    result
+}
+
+pub(crate) unconstrained fn __shr1<let N: u32>(mut input: [u128; N]) -> [u128; N] {
+    let value = input[N - 1];
+    input[N - 1] = value >> 1;
+
+    let mut remainder = (value & 1) << 119;
+
+    for i in 1..N {
+        let value = input[N - 1 - i];
+        input[N - 1 - i] = (value >> 1) + remainder;
+        remainder = (value << 119) & TWO_POW_119;
+    }
+    input
+}
+
+pub(crate) unconstrained fn __get_msb<let N: u32>(val: [u128; N]) -> u32 {
+    let mut count = 0;
+    for i in 0..N {
+        let v = val[(N - 1 - i)];
+        if (v > 0) {
+            count = 120 * (N - 1 - i) + get_msb(v);
+            break;
+        }
+    }
+    count
+}
+
+pub(crate) fn __get_bit<let N: u32>(input: [u128; N], bit: u32) -> bool {
+    let segment_index: u32 = bit / 120;
+    let uint_index = (bit % 120) as u128;
+    let limb: u128 = input[segment_index];
+    let value = (limb >> uint_index) & 1;
+    value == 1
+}
+
 /**
 * @brief compute the log of the size of the primitive root
 * @details find the maximum value k where x^k = 1, where x = primitive root
@@ -348,122 +464,6 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt_inner_loop_check<let N: u32, l
         result = __tonelli_shanks_sqrt_inner_loop_check::<_, MOD_BITS>(params, t2m, i);
     }
     result
-}
-
-pub(crate) unconstrained fn __increment<let N: u32>(val: [u128; N]) -> [u128; N] {
-    let mut result: [u128; N] = [0; N];
-    let mut carry: u128 = 1;
-    for i in 0..N {
-        let mut add_term = (val[i] + carry);
-        carry = add_term >> 120;
-        add_term = add_term - (carry << 120);
-        result[i] = add_term;
-    }
-    result
-}
-
-pub(crate) unconstrained fn __shr<let N: u32>(input: [u128; N], shift: u32) -> [u128; N] {
-    let mut result: [u128; N] = [0; N];
-
-    let num_shifted_limbs = shift / 120;
-    let limb_shift = (shift % 120) as u128;
-    let remainder_shift = (120 - limb_shift);
-    let mask: u128 = (((1 as u128) << limb_shift) - 1) << remainder_shift;
-    result[0] = (input[0 + num_shifted_limbs] >> (limb_shift));
-    for i in 1..(N - num_shifted_limbs) {
-        let value = input[i + num_shifted_limbs];
-        result[i] = value >> limb_shift;
-        let remainder: u128 = (value << remainder_shift) & mask;
-        result[i - 1] = result[i - 1] + remainder;
-    }
-    result
-}
-
-pub(crate) unconstrained fn __shl<let N: u32>(input: [u128; N], shift: u32) -> [u128; N] {
-    let mut result: [u128; N] = [0; N];
-
-    let num_shifted_limbs = shift / 120;
-    let limb_shift = (shift % 120) as u128;
-    let remainder_shift = 120 - limb_shift;
-
-    // 83
-    // limb shift = 1
-    // inside shift = 19 bits to the left
-    // meaning we have 19 carry bits and 41 remainder bits
-    let mask: u128 = (1 as u128 << 120) - 1;
-    //   let mask: u64 = (((1 as u64) << limb_shift as u8) - 1) << remainder_shift as u8;
-    let value = input[0];
-
-    let mut remainder = (value >> remainder_shift);
-    result[num_shifted_limbs] = (value << limb_shift) & mask;
-
-    // shift 84. num shifted = 1
-    for i in 1..((N) - num_shifted_limbs) {
-        let value = input[i];
-        let upshift = ((value << limb_shift) + remainder) & mask;
-        result[i + num_shifted_limbs] = upshift;
-        remainder = (value >> remainder_shift);
-    }
-    result
-}
-
-pub(crate) unconstrained fn __helper_sub<let N: u32>(lhs: [u128; N], rhs: [u128; N]) -> [u128; N] {
-    let mut result: [u128; N] = [0; N];
-    let mut borrow: u128 = 0;
-    let mut borrow_in: u128 = 0;
-    for i in 0..N {
-        borrow = ((rhs[i] + borrow_in) > lhs[i]) as u128;
-        let sub = (borrow << 120) + lhs[i] as u128 - rhs[i] as u128 - borrow_in;
-        result[i] = sub;
-        borrow_in = borrow;
-    }
-    result
-}
-
-pub(crate) unconstrained fn __helper_add<let N: u32>(lhs: [u128; N], rhs: [u128; N]) -> [u128; N] {
-    let mut result: [u128; N] = [0; N];
-    let mut carry: u128 = 0;
-    for i in 0..N {
-        let mut add_term = (lhs[i] + rhs[i] + carry);
-        carry = add_term >> 120;
-        add_term = add_term - (carry << 120);
-        result[i] = add_term;
-    }
-    result
-}
-
-pub(crate) unconstrained fn __shr1<let N: u32>(mut input: [u128; N]) -> [u128; N] {
-    let value = input[N - 1];
-    input[N - 1] = value >> 1;
-
-    let mut remainder = (value & 1) << 119;
-
-    for i in 1..N {
-        let value = input[N - 1 - i];
-        input[N - 1 - i] = (value >> 1) + remainder;
-        remainder = (value << 119) & TWO_POW_119;
-    }
-    input
-}
-
-pub(crate) unconstrained fn __get_msb<let N: u32>(val: [u128; N]) -> u32 {
-    let mut count = 0;
-    for i in 0..N {
-        let v = val[(N - 1 - i)];
-        if (v > 0) {
-            count = 120 * (N - 1 - i) + get_msb(v);
-            break;
-        }
-    }
-    count
-}
-
-pub(crate) fn __get_bit<let N: u32>(input: [u128; N], bit: u32) -> bool {
-    let segment_index: u32 = bit / 120;
-    let uint_index = (bit % 120) as u128;
-    let limb: u128 = input[segment_index];
-    let value = (limb >> uint_index) & 1;
-    value == 1
 }
 
 pub(crate) fn __into_field_array<let N: u32>(input: [u128; N]) -> [Field; N] {
