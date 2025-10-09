@@ -1,32 +1,49 @@
-use crate::constants::{TWO_POW_119, TWO_POW_120};
-use crate::fns::unconstrained_ops::{__add, __gte, __mul, __neg, __one, __pow};
-use crate::params::BigNumParams as P;
-use crate::utils::msb::get_msb;
-use crate::utils::split_bits::__normalize_limbs;
+// This file contains the unconstrained helpers that are mostly used by unconstrained ops
 
-pub(crate) unconstrained fn __from_field<let N: u32>(field: Field) -> [u128; N] {
-    let mut x = field;
-    let x_first_u128 = (x as u128);
-    let first: u128 = x_first_u128 % TWO_POW_120;
-    // this becomes the same as a integer division because we're removing the remainder
-    x = (x - (first as Field)) / (TWO_POW_120 as Field);
-    let x_second_u128 = (x as u128);
-    let second = x_second_u128 % TWO_POW_120;
-    x = (x - (second as Field)) / (TWO_POW_120 as Field);
-    let x_third_u128 = (x as u128);
-    let third = x_third_u128 % TWO_POW_120;
+use crate::constants::{TWO_POW_119, TWO_POW_120};
+
+use crate::fns::unconstrained_ops::{__add, __gte, __mul, __neg, __pow};
+
+use crate::utils::msb::get_msb;
+use crate::utils::split_bits::{__normalize_limbs, __split_120_bits};
+
+use crate::params::BigNumParams;
+
+// ------------------------------ DERIVATION HELPER FUNCTIONS ------------------------------
+
+///  Construct a `1` BigNum value (unconstrained)
+pub(crate) unconstrained fn __one<let N: u32>() -> [u128; N] {
+    let mut limbs: [u128; N] = [0; N];
+    limbs[0] = 1;
+    limbs
+}
+
+/// Construct a BigNum value from Field (unconstrained)
+///
+/// Split the native `Field` value into N 120 bit limbs
+pub(crate) unconstrained fn __from_field<let N: u32>(val: Field) -> [u128; N] {
+    let mut x: Field = val;
     let mut result: [u128; N] = [0; N];
-    if N > 2 {
-        result[0] = first;
-        result[1] = second;
-        result[2] = third;
+
+    if (N == 1) {
+        let (first_limb, _): (u128, Field) = __split_120_bits(x);
+        result[0] = first_limb;
     }
-    if N == 2 {
-        result[0] = first;
-        result[1] = second;
+
+    if (N == 2) {
+        let (first_limb, x): (u128, Field) = __split_120_bits(x);
+        let (second_limb, _): (u128, Field) = __split_120_bits(x);
+        result[0] = first_limb;
+        result[1] = second_limb;
     }
-    if N == 1 {
-        result[0] = first;
+
+    if (N > 2) {
+        let (first_limb, x): (u128, Field) = __split_120_bits(x);
+        let (second_limb, x): (u128, Field) = __split_120_bits(x);
+        let (third_limb, _): (u128, Field) = __split_120_bits(x);
+        result[0] = first_limb;
+        result[1] = second_limb;
+        result[2] = third_limb;
     }
     result
 }
@@ -132,7 +149,7 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32>(
 }
 
 pub(crate) unconstrained fn __validate_in_field_compute_borrow_flags<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
+    params: BigNumParams<N, MOD_BITS>,
     val: [u128; N],
 ) -> [bool; N] {
     let mut flags: [bool; N] = [false; N];
@@ -390,7 +407,7 @@ pub(crate) fn __get_bit<let N: u32>(input: [u128; N], bit: u32) -> bool {
 *          This is needed for our Tonelli-Shanks sqrt algorithm
 **/
 pub(crate) unconstrained fn __primitive_root_log_size<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
+    params: BigNumParams<N, MOD_BITS>,
 ) -> u32 {
     let mut one: [u128; N] = [0; N];
     one[0] = 1;
@@ -412,7 +429,7 @@ pub(crate) unconstrained fn __primitive_root_log_size<let N: u32, let MOD_BITS: 
 * @details recursive function to get around the lack of a `while` keyword
 **/
 unconstrained fn __recursively_find_multiplicative_generator<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
+    params: BigNumParams<N, MOD_BITS>,
     target: [u128; N],
     p_minus_one_over_two: [u128; N],
 ) -> (bool, [u128; N]) {
@@ -438,7 +455,7 @@ unconstrained fn __recursively_find_multiplicative_generator<let N: u32, let MOD
 * @note WARNING if multiplicative generator does not exist, this function will enter an infinite loop!
 **/
 pub(crate) unconstrained fn __multiplicative_generator<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
+    params: BigNumParams<N, MOD_BITS>,
 ) -> [u128; N] {
     let mut target: [u128; N] = __one();
     let p_minus_one_over_two = __shr1(__helper_sub(params.modulus, __one()));
@@ -451,7 +468,7 @@ pub(crate) unconstrained fn __multiplicative_generator<let N: u32, let MOD_BITS:
 }
 
 pub(crate) unconstrained fn __tonelli_shanks_sqrt_inner_loop_check<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
+    params: BigNumParams<N, MOD_BITS>,
     t2m: [u128; N],
     i: u32,
 ) -> u32 {
