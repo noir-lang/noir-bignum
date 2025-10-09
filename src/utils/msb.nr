@@ -9,10 +9,10 @@ global MUL_DE_BRUIJN_BIT: [u32; 128] = [
     45, 111, 74, 34, 10, 38, 44, 33, 9, 32, 8, 7, 128,
 ];
 
-/// get the most significant bit position of a `val` (unconstrained)
+/// Get the most significant bit position of a `val` (unconstrained)
 ///
-/// bit hack that uses De Bruijn sequence to calculate msb position
-/// see [IntegerLog2DeBruijn](https://graphics.stanford.edu/~seander/bithacks.html#IntegerLogDeBruijn)
+/// Bit hack that uses De Bruijn sequence to calculate msb position in log(N)
+/// See [IntegerLog2DeBruijn](https://graphics.stanford.edu/~seander/bithacks.html#IntegerLogDeBruijn)
 pub(crate) unconstrained fn get_msb(x: u128) -> u32 {
     let result: u32 = if x == 0 {
         0
@@ -47,7 +47,7 @@ mod tests {
     }
 
     #[test]
-    // To check that the msb functions are equivalent with de bruijn sequence for 64 bits and 128 bits
+    /// Check that the msb functions are equivalent with de bruijn sequence for 64 bits and 128 bits
     fn test_get_msb() {
         // Test case 1: MSB at position 7
         let x: u64 = 0x80; // binary: 10000000

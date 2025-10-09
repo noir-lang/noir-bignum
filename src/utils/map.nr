@@ -10,6 +10,7 @@ pub(crate) fn map<T, let N: u32, U, Env>(arr: [T; N], f: fn[Env](T) -> U) -> [U;
     ret
 }
 
+/// reverse an array
 pub(crate) fn invert_array<T, let M: u32>(array: [T; M]) -> [T; M] {
     let mut ret: [T; M] = std::mem::zeroed();
 
