@@ -20,7 +20,7 @@ pub(crate) unconstrained fn __one<let N: u32>() -> [u128; N] {
 
 /// Construct a BigNum value from Field (unconstrained)
 ///
-/// Split the native `Field` value into N 120 bit limbs
+/// Split the native `Field` value into `N` 120-bit limbs
 pub(crate) unconstrained fn __from_field<let N: u32>(val: Field) -> [u128; N] {
     let mut x: Field = val;
     let mut result: [u128; N] = [0; N];
