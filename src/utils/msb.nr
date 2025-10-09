@@ -26,7 +26,6 @@ pub(crate) unconstrained fn get_msb(x: u128) -> u32 {
         v |= v >> 32;
         v |= v >> 64;
         let index: u128 = (v.wrapping_mul(0x1FC10C2FBCF471B913B14CD2595D6D5)) >> 121;
-        (index as Field).assert_max_bit_size::<32>();
         MUL_DE_BRUIJN_BIT[index as u32]
     };
     result
