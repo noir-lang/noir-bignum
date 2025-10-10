@@ -30,26 +30,12 @@ pub(crate) unconstrained fn __derive_from_seed<let N: u32, let MOD_BITS: u32, le
 
 /// Compare two limb arrays for equality (unconstrained)
 pub(crate) unconstrained fn __eq<let N: u32>(lhs: [u128; N], rhs: [u128; N]) -> bool {
-    let mut result: bool = true;
-    for i in 0..N {
-        if lhs[i] != rhs[i] {
-            result = false;
-            break;
-        }
-    }
-    result
+    lhs == rhs
 }
 
 /// Compare a limb array to a zero array (unconstrained)
 pub(crate) unconstrained fn __is_zero<let N: u32>(limbs: [u128; N]) -> bool {
-    let mut result: bool = true;
-    for i in 0..N {
-        if limbs[i] != 0 {
-            result = false;
-            break;
-        }
-    }
-    result
+    limbs == [0; N]
 }
 
 /// Compare two little-endian limb arrays for `lhs >= rhs` over integers (unconstrained)
