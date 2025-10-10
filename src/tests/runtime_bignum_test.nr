@@ -75,7 +75,7 @@ comptime fn make_test(_m: Module, N: u32, MOD_BITS: u32, params: Quoted) -> Quot
     let RuntimeBigNum = quote { crate::RuntimeBigNum };
     let __helper_add = quote { crate::fns::unconstrained_helpers::__helper_add };
     let __helper_sub = quote { crate::fns::unconstrained_helpers::__helper_sub };
-    let __one = quote { crate::fns::unconstrained_ops::__one };
+    let __one = quote { crate::fns::unconstrained_helpers::__one };
     let __shl = quote { crate::fns::unconstrained_helpers::__shl };
     let udiv = quote { crate::fns::constrained_ops::udiv };
     let sub = quote { crate::fns::constrained_ops::sub };
