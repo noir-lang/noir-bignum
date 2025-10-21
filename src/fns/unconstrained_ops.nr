@@ -1,64 +1,57 @@
+// This file contains the unconstrained operations that are used directly by BigNum class
+
 use crate::fns::constrained_ops::derive_from_seed;
+
 use crate::fns::unconstrained_helpers::{
     __barrett_reduction, __get_bit, __get_msb, __helper_add, __helper_sub, __increment,
-    __multiplicative_generator, __one, __primitive_root_log_size, __shl, __shr,
+    __multiplicative_generator, __one, __primitive_root_log_size, __shl, __shr, __shr1,
     __tonelli_shanks_sqrt_inner_loop_check,
 };
-use crate::params::BigNumParams as P;
-use crate::utils::split_bits;
-use super::unconstrained_helpers::__shr1;
 
-/// Deterministically derives a big_num from a seed value.
+use crate::params::BigNumParams;
+
+use crate::utils::split_bits;
+
+// ------------------------------ DERIVATION FUNCTIONS ------------------------------
+
+/// Deterministically derives a BigNum from a seed value (unconstrained)
 ///
-/// Takes a seed byte array and generates a big_num in the range [0, modulus-1].
+/// Takes a seed byte array and generates a BigNum in the range [0, modulus-1].
 ///
-/// ## Value Parameters
-///
-/// - `params`: The BigNum parameters containing modulus and reduction info
-/// - `seed`:  Input seed bytes to derive from.
-///
-/// ## Returns
-///
-///  An array of field elements derived from the seed (the limbs of the big_num)
+/// See more information in `constrained_ops.nr`: `derive_from_seed`
 pub(crate) unconstrained fn __derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(
-    params: P<N, MOD_BITS>,
+    params: BigNumParams<N, MOD_BITS>,
     seed: [u8; SeedBytes],
 ) -> [u128; N] {
-    let out: [u128; N] = derive_from_seed::<N, MOD_BITS, SeedBytes>(params, seed);
-    out
+    derive_from_seed::<N, MOD_BITS, SeedBytes>(params, seed)
 }
 
+// ------------------------------ COMPARISON FUNCTIONS ------------------------------
+
+/// Compare two limb arrays for equality (unconstrained)
 pub(crate) unconstrained fn __eq<let N: u32>(lhs: [u128; N], rhs: [u128; N]) -> bool {
     lhs == rhs
 }
 
+/// Compare a limb array to a zero array (unconstrained)
 pub(crate) unconstrained fn __is_zero<let N: u32>(limbs: [u128; N]) -> bool {
-    let mut result: bool = true;
-    for i in 0..N {
-        result = result & (limbs[i] == 0);
-    }
-
-    result
+    limbs == [0; N]
 }
 
+/// Compare two little-endian limb arrays for `lhs >= rhs` over integers (unconstrained)
+///
+/// Starts from the most significant limb (`N - 1`) and returns true
+/// if `lhs` is greater or equal to `rhs`
 pub(crate) unconstrained fn __gte<let N: u32>(lhs: [u128; N], rhs: [u128; N]) -> bool {
-    let mut result = false;
-    let mut early_exit = false;
-    for i in 0..(N) {
-        let idx = (N) - 1 - i;
-        if (rhs[idx] == lhs[idx]) {
-            continue;
+    let mut result: bool = true;
+    for i in 0..N {
+        let idx: u32 = N - 1 - i;
+        if (lhs[idx] != rhs[idx]) {
+            result = lhs[idx] > rhs[idx];
+            break;
         }
-
-        result = rhs[idx] < lhs[idx];
-        early_exit = true;
-        break;
     }
-    if early_exit {
-        result
-    } else {
-        lhs[0] == rhs[0]
-    }
+    result
 }
 
 /**
@@ -109,7 +102,7 @@ pub(crate) unconstrained fn __sub<let N: u32>(
 }
 
 pub(crate) unconstrained fn __mul_with_quotient<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
+    params: BigNumParams<N, MOD_BITS>,
     lhs: [u128; N],
     rhs: [u128; N],
 ) -> ([u128; N], [u128; N]) {
@@ -125,7 +118,7 @@ pub(crate) unconstrained fn __mul_with_quotient<let N: u32, let MOD_BITS: u32>(
 }
 
 pub(crate) unconstrained fn __mul<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
+    params: BigNumParams<N, MOD_BITS>,
     lhs: [u128; N],
     rhs: [u128; N],
 ) -> [u128; N] {
@@ -134,7 +127,7 @@ pub(crate) unconstrained fn __mul<let N: u32, let MOD_BITS: u32>(
 }
 
 pub(crate) unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
+    params: BigNumParams<N, MOD_BITS>,
     val: [u128; N],
     exponent: [u128; N],
 ) -> [u128; N] {
@@ -153,7 +146,7 @@ pub(crate) unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
 }
 
 pub(crate) unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
+    params: BigNumParams<N, MOD_BITS>,
     val: [u128; N],
 ) -> [u128; N] {
     let one = __one();
@@ -162,7 +155,7 @@ pub(crate) unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
 }
 
 pub(crate) unconstrained fn __div<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
+    params: BigNumParams<N, MOD_BITS>,
     numerator: [u128; N],
     divisor: [u128; N],
 ) -> [u128; N] {
@@ -221,7 +214,7 @@ pub(crate) unconstrained fn __udiv_mod<let N: u32>(
 }
 
 pub(crate) unconstrained fn batch_invert<let N: u32, let MOD_BITS: u32, let M: u32>(
-    params: P<N, MOD_BITS>,
+    params: BigNumParams<N, MOD_BITS>,
     x: [[u128; N]; M],
 ) -> [[u128; N]; M] {
     // TODO: ugly! Will fail if input slice is empty
@@ -250,7 +243,7 @@ pub(crate) unconstrained fn batch_invert<let N: u32, let MOD_BITS: u32, let M: u
 }
 
 pub(crate) unconstrained fn batch_invert_slice<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
+    params: BigNumParams<N, MOD_BITS>,
     x: [[u128; N]],
 ) -> [[u128; N]] {
     // TODO: ugly! Will fail if input slice is empty
@@ -286,7 +279,7 @@ pub(crate) unconstrained fn batch_invert_slice<let N: u32, let MOD_BITS: u32>(
 * TODO: create fn that constrains nonexistence of square root (i.e. find x where x^2 = -self)
 **/
 pub(crate) unconstrained fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>(
-    params: P<N, MOD_BITS>,
+    params: BigNumParams<N, MOD_BITS>,
     input: [u128; N],
 ) -> std::option::Option<[u128; N]> {
     // Tonelli-shanks algorithm begins by finding a field element Q and integer S,
