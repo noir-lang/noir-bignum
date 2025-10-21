@@ -285,11 +285,19 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     (smaller_quotient, remainder)
 }
 
+// ------------------------------ ARITHMETIC HELPER FUNCTIONS ------------------------------
+// These are the functions that operate on limbs as if they were just big integers
+
+/// Adds `1` to the BigNum value without modular reduction (unconstrained)
+///
+/// ## Note
+/// The `carry` must be `0` at the end of the loop.
+/// No explicit assertion is made, as this condition is validated during evaluation.
 pub(crate) unconstrained fn __increment<let N: u32>(val: [u128; N]) -> [u128; N] {
     let mut result: [u128; N] = [0; N];
     let mut carry: u128 = 1;
     for i in 0..N {
-        let mut add_term = (val[i] + carry);
+        let mut add_term: u128 = val[i] + carry;
         carry = add_term >> 120;
         add_term = add_term - (carry << 120);
         result[i] = add_term;
@@ -297,11 +305,17 @@ pub(crate) unconstrained fn __increment<let N: u32>(val: [u128; N]) -> [u128; N]
     result
 }
 
+/// Adds two `BigNum` values without modular reduction (unconstrained).
+///
+/// ## Note
+/// The `carry` must be `0` at the end of the loop.
+/// No explicit assertion is made, as this condition is validated during evaluation.
 pub(crate) unconstrained fn __helper_add<let N: u32>(lhs: [u128; N], rhs: [u128; N]) -> [u128; N] {
     let mut result: [u128; N] = [0; N];
+
     let mut carry: u128 = 0;
     for i in 0..N {
-        let mut add_term = (lhs[i] + rhs[i] + carry);
+        let mut add_term: u128 = lhs[i] + rhs[i] + carry;
         carry = add_term >> 120;
         add_term = add_term - (carry << 120);
         result[i] = add_term;
@@ -309,95 +323,140 @@ pub(crate) unconstrained fn __helper_add<let N: u32>(lhs: [u128; N], rhs: [u128;
     result
 }
 
+/// Subtracts two `BigNum` values without modular reduction (unconstrained).
+///
+/// ## Note
+/// The `borrow` must be `0` at the end of the loop.
+/// No explicit assertion is made, as this condition is validated during evaluation.
 pub(crate) unconstrained fn __helper_sub<let N: u32>(lhs: [u128; N], rhs: [u128; N]) -> [u128; N] {
     let mut result: [u128; N] = [0; N];
+
     let mut borrow: u128 = 0;
-    let mut borrow_in: u128 = 0;
     for i in 0..N {
-        borrow = ((rhs[i] + borrow_in) > lhs[i]) as u128;
-        let sub = (borrow << 120) + lhs[i] as u128 - rhs[i] as u128 - borrow_in;
-        result[i] = sub;
-        borrow_in = borrow;
+        let subtrahend: u128 = rhs[i] + borrow;
+        borrow = (subtrahend > lhs[i]) as u128;
+        result[i] = (borrow << 120) + lhs[i] - subtrahend;
     }
     result
 }
 
-pub(crate) unconstrained fn __shr<let N: u32>(input: [u128; N], shift: u32) -> [u128; N] {
-    let mut result: [u128; N] = [0; N];
-
-    let num_shifted_limbs = shift / 120;
-    let limb_shift = (shift % 120) as u128;
-    let remainder_shift = (120 - limb_shift);
-    let mask: u128 = (((1 as u128) << limb_shift) - 1) << remainder_shift;
-    result[0] = (input[0 + num_shifted_limbs] >> (limb_shift));
-    for i in 1..(N - num_shifted_limbs) {
-        let value = input[i + num_shifted_limbs];
-        result[i] = value >> limb_shift;
-        let remainder: u128 = (value << remainder_shift) & mask;
-        result[i - 1] = result[i - 1] + remainder;
+/// Multiplies two `BigNum` values without modular reduction (unconstrained).
+///
+/// Computes the full schoolbook product of two N-limb little-endian arrays
+///
+/// ## Note
+/// The mathematical product fits in `2 * N - 1` limbs, but we keep `2 * N`
+/// limbs intentionally as the extra high limb safely absorbs a possible single limb overflow
+/// for moduli close to `120 * N` bits.
+pub(crate) unconstrained fn __helper_mul<let N: u32>(
+    lhs: [u128; N],
+    rhs: [u128; N],
+) -> [u128; 2 * N] {
+    let mut result: [Field; 2 * N] = [0; 2 * N];
+    for i in 0..N {
+        for j in 0..N {
+            result[i + j] += (lhs[i] as Field) * (rhs[j] as Field);
+        }
     }
-    result
+    __normalize_limbs(result)
 }
 
+// ------------------------------ LOGIC HELPER FUNCTIONS ------------------------------
+// These are the functions that operate on limbs as if they were just big integers
+
+/// Left-shifts a `BigNum` value by `shift` bits (unconstrained).
+///
+/// Performs a bitwise left shift across limbs.
+///
+/// ## Note
+/// The most significant limb is truncated to 120 bits after the shift.
 pub(crate) unconstrained fn __shl<let N: u32>(input: [u128; N], shift: u32) -> [u128; N] {
     let mut result: [u128; N] = [0; N];
 
-    let num_shifted_limbs = shift / 120;
-    let limb_shift = (shift % 120) as u128;
-    let remainder_shift = 120 - limb_shift;
+    let num_shifted_limbs: u32 = shift / 120;
+    if num_shifted_limbs < N {
+        let limb_shift: u128 = (shift % 120) as u128;
+        let remainder_shift: u128 = 120 - limb_shift;
 
-    // 83
-    // limb shift = 1
-    // inside shift = 19 bits to the left
-    // meaning we have 19 carry bits and 41 remainder bits
-    let mask: u128 = (1 as u128 << 120) - 1;
-    //   let mask: u64 = (((1 as u64) << limb_shift as u8) - 1) << remainder_shift as u8;
-    let value = input[0];
+        let mask: u128 = TWO_POW_120 - 1;
+        let value: u128 = input[0];
 
-    let mut remainder = (value >> remainder_shift);
-    result[num_shifted_limbs] = (value << limb_shift) & mask;
+        let mut remainder: u128 = value >> remainder_shift;
+        result[num_shifted_limbs] = (value << limb_shift) & mask;
 
-    // shift 84. num shifted = 1
-    for i in 1..((N) - num_shifted_limbs) {
-        let value = input[i];
-        let upshift = ((value << limb_shift) + remainder) & mask;
-        result[i + num_shifted_limbs] = upshift;
-        remainder = (value >> remainder_shift);
+        for i in 1..(N - num_shifted_limbs) {
+            let value: u128 = input[i];
+            let upshift: u128 = ((value << limb_shift) + remainder) & mask;
+            result[i + num_shifted_limbs] = upshift;
+            remainder = value >> remainder_shift;
+        }
     }
     result
 }
 
-pub(crate) unconstrained fn __shr1<let N: u32>(mut input: [u128; N]) -> [u128; N] {
-    let value = input[N - 1];
-    input[N - 1] = value >> 1;
+/// Right-shifts a `BigNum` value by `shift` bits (unconstrained).
+///
+/// Performs a bitwise right shift across limbs.
+pub(crate) unconstrained fn __shr<let N: u32>(input: [u128; N], shift: u32) -> [u128; N] {
+    let mut result: [u128; N] = [0; N];
 
-    let mut remainder = (value & 1) << 119;
+    let num_shifted_limbs: u32 = shift / 120;
+    if num_shifted_limbs < N {
+        let limb_shift: u128 = (shift % 120) as u128;
+        let remainder_shift: u128 = 120 - limb_shift;
+        let mask: u128 = (((1 as u128) << limb_shift) - 1) << remainder_shift;
 
-    for i in 1..N {
-        let value = input[N - 1 - i];
-        input[N - 1 - i] = (value >> 1) + remainder;
-        remainder = (value << 119) & TWO_POW_119;
+        result[0] = input[num_shifted_limbs] >> limb_shift;
+        for i in 1..(N - num_shifted_limbs) {
+            let value: u128 = input[i + num_shifted_limbs];
+            result[i] = value >> limb_shift;
+            let remainder: u128 = (value << remainder_shift) & mask;
+            result[i - 1] = result[i - 1] + remainder;
+        }
     }
-    input
+    result
 }
 
+/// Right-shifts a `BigNum` value by `1` bit  (unconstrained)
+pub(crate) unconstrained fn __shr1<let N: u32>(mut input: [u128; N]) -> [u128; N] {
+    let mut result: [u128; N] = [0; N];
+
+    let value: u128 = input[N - 1];
+    result[N - 1] = value >> 1;
+    let mut remainder: u128 = (value & 1) << 119;
+
+    for i in 1..N {
+        let value: u128 = input[N - 1 - i];
+        result[N - 1 - i] = (value >> 1) + remainder;
+        remainder = (value << 119) & TWO_POW_119;
+    }
+    result
+}
+
+/// Returns the index of the most significant set bit in a `BigNum` value (unconstrained).
 pub(crate) unconstrained fn __get_msb<let N: u32>(val: [u128; N]) -> u32 {
-    let mut count = 0;
+    let mut count: u32 = 0;
     for i in 0..N {
-        let v = val[(N - 1 - i)];
+        let idx: u32 = N - 1 - i;
+        let v: u128 = val[idx];
         if (v > 0) {
-            count = 120 * (N - 1 - i) + get_msb(v);
+            count = 120 * idx + get_msb(v);
             break;
         }
     }
     count
 }
 
+/// Returns `true` if the bit at position `bit` is set in the `BigNum` (unconstrained).
+///
+/// ## Note
+/// No bounds check is performed
 pub(crate) fn __get_bit<let N: u32>(input: [u128; N], bit: u32) -> bool {
     let segment_index: u32 = bit / 120;
-    let uint_index = (bit % 120) as u128;
+    let uint_index: u128 = (bit % 120) as u128;
+
     let limb: u128 = input[segment_index];
-    let value = (limb >> uint_index) & 1;
+    let value: u128 = (limb >> uint_index) & 1;
     value == 1
 }
 
