@@ -370,26 +370,28 @@ pub(crate) unconstrained fn __helper_mul<let N: u32>(
 ///
 /// ## Note
 /// The most significant limb is truncated to 120 bits after the shift.
+///
+/// No bounds check is performed on `num_shifted_limbs`.
+/// However, we use it only in `__udiv_mod`, where it is not possible to reach
+/// `num_shifted_limbs` > `N`
 pub(crate) unconstrained fn __shl<let N: u32>(input: [u128; N], shift: u32) -> [u128; N] {
     let mut result: [u128; N] = [0; N];
 
     let num_shifted_limbs: u32 = shift / 120;
-    if num_shifted_limbs < N {
-        let limb_shift: u128 = (shift % 120) as u128;
-        let remainder_shift: u128 = 120 - limb_shift;
+    let limb_shift: u128 = (shift % 120) as u128;
+    let remainder_shift: u128 = 120 - limb_shift;
 
-        let mask: u128 = TWO_POW_120 - 1;
-        let value: u128 = input[0];
+    let mask: u128 = TWO_POW_120 - 1;
+    let value: u128 = input[0];
 
-        let mut remainder: u128 = value >> remainder_shift;
-        result[num_shifted_limbs] = (value << limb_shift) & mask;
+    let mut remainder: u128 = value >> remainder_shift;
+    result[num_shifted_limbs] = (value << limb_shift) & mask;
 
-        for i in 1..(N - num_shifted_limbs) {
-            let value: u128 = input[i];
-            let upshift: u128 = ((value << limb_shift) + remainder) & mask;
-            result[i + num_shifted_limbs] = upshift;
-            remainder = value >> remainder_shift;
-        }
+    for i in 1..(N - num_shifted_limbs) {
+        let value: u128 = input[i];
+        let upshift: u128 = ((value << limb_shift) + remainder) & mask;
+        result[i + num_shifted_limbs] = upshift;
+        remainder = value >> remainder_shift;
     }
     result
 }
@@ -397,22 +399,25 @@ pub(crate) unconstrained fn __shl<let N: u32>(input: [u128; N], shift: u32) -> [
 /// Right-shifts a `BigNum` value by `shift` bits (unconstrained).
 ///
 /// Performs a bitwise right shift across limbs.
+///
+/// # Note
+/// No bounds check is performed on `num_shifted_limbs`.
+/// However, we use it only in `__tonelli_shanks_sqrt`, where it is not possible to reach
+/// `num_shifted_limbs` > `N`
 pub(crate) unconstrained fn __shr<let N: u32>(input: [u128; N], shift: u32) -> [u128; N] {
     let mut result: [u128; N] = [0; N];
 
     let num_shifted_limbs: u32 = shift / 120;
-    if num_shifted_limbs < N {
-        let limb_shift: u128 = (shift % 120) as u128;
-        let remainder_shift: u128 = 120 - limb_shift;
-        let mask: u128 = (((1 as u128) << limb_shift) - 1) << remainder_shift;
+    let limb_shift: u128 = (shift % 120) as u128;
+    let remainder_shift: u128 = 120 - limb_shift;
+    let mask: u128 = (((1 as u128) << limb_shift) - 1) << remainder_shift;
 
-        result[0] = input[num_shifted_limbs] >> limb_shift;
-        for i in 1..(N - num_shifted_limbs) {
-            let value: u128 = input[i + num_shifted_limbs];
-            result[i] = value >> limb_shift;
-            let remainder: u128 = (value << remainder_shift) & mask;
-            result[i - 1] = result[i - 1] + remainder;
-        }
+    result[0] = input[num_shifted_limbs] >> limb_shift;
+    for i in 1..(N - num_shifted_limbs) {
+        let value: u128 = input[i + num_shifted_limbs];
+        result[i] = value >> limb_shift;
+        let remainder: u128 = (value << remainder_shift) & mask;
+        result[i - 1] = result[i - 1] + remainder;
     }
     result
 }
@@ -450,7 +455,7 @@ pub(crate) unconstrained fn __get_msb<let N: u32>(val: [u128; N]) -> u32 {
 /// Returns `true` if the bit at position `bit` is set in the `BigNum` (unconstrained).
 ///
 /// ## Note
-/// No bounds check is performed
+/// No bounds check is performed on `bit`
 pub(crate) fn __get_bit<let N: u32>(input: [u128; N], bit: u32) -> bool {
     let segment_index: u32 = bit / 120;
     let uint_index: u128 = (bit % 120) as u128;
