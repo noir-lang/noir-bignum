@@ -353,15 +353,18 @@ pub(crate) unconstrained fn __shr<let N: u32>(input: [u128; N], shift: u32) -> [
 
     let num_shifted_limbs: u32 = shift / 120;
     let limb_shift: u128 = (shift % 120) as u128;
+
     let remainder_shift: u128 = 120 - limb_shift;
-    let mask: u128 = (((1 as u128) << limb_shift) - 1) << remainder_shift;
+    let low_mask: u128 = (1 as u128 << limb_shift) - 1;
 
     result[0] = input[num_shifted_limbs] >> limb_shift;
     for i in 1..(N - num_shifted_limbs) {
         let value: u128 = input[i + num_shifted_limbs];
+
+        let carry: u128 = (value & low_mask) << remainder_shift;
+        result[i - 1] |= carry;
+
         result[i] = value >> limb_shift;
-        let remainder: u128 = (value << remainder_shift) & mask;
-        result[i - 1] = result[i - 1] + remainder;
     }
     result
 }
@@ -408,14 +411,13 @@ pub(crate) unconstrained fn __shl<let N: u32>(input: [u128; N], shift: u32) -> [
     let remainder_shift: u128 = 120 - limb_shift;
 
     let mask: u128 = TWO_POW_120 - 1;
-    let value: u128 = input[0];
+    let mut remainder: u128 = input[0] >> remainder_shift;
 
-    let mut remainder: u128 = value >> remainder_shift;
-    result[num_shifted_limbs] = (value << limb_shift) & mask;
+    result[num_shifted_limbs] = (input[0] << limb_shift) & mask;
 
     for i in 1..(N - num_shifted_limbs) {
         let value: u128 = input[i];
-        let upshift: u128 = ((value << limb_shift) + remainder) & mask;
+        let upshift: u128 = ((value << limb_shift) | remainder) & mask;
         result[i + num_shifted_limbs] = upshift;
         remainder = value >> remainder_shift;
     }
@@ -423,19 +425,21 @@ pub(crate) unconstrained fn __shl<let N: u32>(input: [u128; N], shift: u32) -> [
 }
 
 /// Right-shifts a `BigNum` value by `1` bit  (unconstrained)
+///
+/// # Note
+/// All the operations on limbs are executed in place
+/// to save opcodes
 pub(crate) unconstrained fn __shr1<let N: u32>(mut input: [u128; N]) -> [u128; N] {
-    let mut result: [u128; N] = [0; N];
-
     let value: u128 = input[N - 1];
-    result[N - 1] = value >> 1;
     let mut remainder: u128 = (value & 1) << 119;
+    input[N - 1] >>= 1;
 
     for i in 1..N {
         let value: u128 = input[N - 1 - i];
-        result[N - 1 - i] = (value >> 1) + remainder;
-        remainder = (value << 119) & TWO_POW_119;
+        input[N - 1 - i] = (value >> 1) | remainder;
+        remainder = (value & 1) << 119;
     }
-    result
+    input
 }
 
 /// Returns the index of the most significant set bit in a `BigNum` value (unconstrained).
