@@ -340,6 +340,32 @@ pub(crate) unconstrained fn __helper_sub<let N: u32>(lhs: [u128; N], rhs: [u128;
     result
 }
 
+/// Right-shifts a `BigNum` value by `shift` bits (unconstrained).
+///
+/// Performs a bitwise right shift across limbs.
+///
+/// # Note
+/// No bounds check is performed on `num_shifted_limbs`.
+/// However, we use it only in `__tonelli_shanks_sqrt`, where it is not possible to reach
+/// `num_shifted_limbs` > `N`
+pub(crate) unconstrained fn __shr<let N: u32>(input: [u128; N], shift: u32) -> [u128; N] {
+    let mut result: [u128; N] = [0; N];
+
+    let num_shifted_limbs: u32 = shift / 120;
+    let limb_shift: u128 = (shift % 120) as u128;
+    let remainder_shift: u128 = 120 - limb_shift;
+    let mask: u128 = (((1 as u128) << limb_shift) - 1) << remainder_shift;
+
+    result[0] = input[num_shifted_limbs] >> limb_shift;
+    for i in 1..(N - num_shifted_limbs) {
+        let value: u128 = input[i + num_shifted_limbs];
+        result[i] = value >> limb_shift;
+        let remainder: u128 = (value << remainder_shift) & mask;
+        result[i - 1] = result[i - 1] + remainder;
+    }
+    result
+}
+
 /// Multiplies two `BigNum` values without modular reduction (unconstrained).
 ///
 /// Computes the full schoolbook product of two N-limb little-endian arrays
@@ -392,32 +418,6 @@ pub(crate) unconstrained fn __shl<let N: u32>(input: [u128; N], shift: u32) -> [
         let upshift: u128 = ((value << limb_shift) + remainder) & mask;
         result[i + num_shifted_limbs] = upshift;
         remainder = value >> remainder_shift;
-    }
-    result
-}
-
-/// Right-shifts a `BigNum` value by `shift` bits (unconstrained).
-///
-/// Performs a bitwise right shift across limbs.
-///
-/// # Note
-/// No bounds check is performed on `num_shifted_limbs`.
-/// However, we use it only in `__tonelli_shanks_sqrt`, where it is not possible to reach
-/// `num_shifted_limbs` > `N`
-pub(crate) unconstrained fn __shr<let N: u32>(input: [u128; N], shift: u32) -> [u128; N] {
-    let mut result: [u128; N] = [0; N];
-
-    let num_shifted_limbs: u32 = shift / 120;
-    let limb_shift: u128 = (shift % 120) as u128;
-    let remainder_shift: u128 = 120 - limb_shift;
-    let mask: u128 = (((1 as u128) << limb_shift) - 1) << remainder_shift;
-
-    result[0] = input[num_shifted_limbs] >> limb_shift;
-    for i in 1..(N - num_shifted_limbs) {
-        let value: u128 = input[i + num_shifted_limbs];
-        result[i] = value >> limb_shift;
-        let remainder: u128 = (value << remainder_shift) & mask;
-        result[i - 1] = result[i - 1] + remainder;
     }
     result
 }
