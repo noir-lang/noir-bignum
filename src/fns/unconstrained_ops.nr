@@ -3,10 +3,12 @@
 use crate::fns::constrained_ops::derive_from_seed;
 
 use crate::fns::unconstrained_helpers::{
-    __barrett_reduction, __get_bit, __get_msb, __helper_add, __helper_sub, __increment,
-    __multiplicative_generator, __one, __primitive_root_log_size, __shl, __shr, __shr1,
+    __barrett_reduction, __get_bit, __get_msb, __helper_add, __helper_mul, __helper_sub,
+    __increment, __multiplicative_generator, __one, __primitive_root_log_size, __shl, __shr, __shr1,
     __tonelli_shanks_sqrt_inner_loop_check,
 };
+
+use crate::constants::TWO_POW_120;
 
 use crate::params::BigNumParams;
 
@@ -14,9 +16,9 @@ use crate::utils::split_bits;
 
 // ------------------------------ DERIVATION FUNCTIONS ------------------------------
 
-/// Deterministically derives a BigNum from a seed value (unconstrained)
+/// Deterministically derives a `BigNum` from a seed value (unconstrained)
 ///
-/// Takes a seed byte array and generates a BigNum in the range [0, modulus-1].
+/// Takes a seed byte array and generates a `BigNum` in the range [0, modulus-1].
 ///
 /// See more information in `constrained_ops.nr`: `derive_from_seed`
 pub(crate) unconstrained fn __derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(
@@ -54,20 +56,24 @@ pub(crate) unconstrained fn __gte<let N: u32>(lhs: [u128; N], rhs: [u128; N]) ->
     result
 }
 
-/**
-* @brief given an input `x`, compute `2p - x` (unconstrained)
-*
-* @description we subtract the input from double the modulus, because all constrained BigNum operations
-*              only guarantee that the output is in the range [0, ceil(log2(p))].
-*              I.E. the input may be larger than the modulus `p`.
-*              In order to ensure this operation does not underflow, we compute `2p - x` instead of `p - x`.
-*              N.B. constrained BigNum operations do not fully constrain outputs to be in the range [0, p-1]
-*              because such a check is expensive and usually unneccesary.
-*/
+// ------------------------------ ARITHMETIC FUNCTIONS ------------------------------
+
+/// Negates a `BigNum` value, returning `m - x` (unconstrained)
+///
+/// ## Note
+/// The input is assumed to be less than modulus
 pub(crate) unconstrained fn __neg<let N: u32>(modulus: [u128; N], limbs: [u128; N]) -> [u128; N] {
     __helper_sub(modulus, limbs)
 }
 
+/// Adds two `BigNum` values with modular reduction (unconstrained)
+///
+/// Sums the limbs one by one, keeping the carry.
+/// In case the result overflows the modulus, the modulus is subtracted once
+///
+/// ## Note
+/// The `carry` must be `0` at the end of the loop.
+/// No explicit assertion is made, as this condition is validated during evaluation.
 pub(crate) unconstrained fn __add<let N: u32>(
     modulus: [u128; N],
     lhs: [u128; N],
@@ -75,12 +81,14 @@ pub(crate) unconstrained fn __add<let N: u32>(
 ) -> [u128; N] {
     let mut result: [u128; N] = [0; N];
     let mut carry: u128 = 0;
+    let mask: u128 = TWO_POW_120 - 1;
+
     for i in 0..N {
-        let mut add_term = (lhs[i] + rhs[i] + carry);
+        let add_term: u128 = (lhs[i] + rhs[i] + carry);
         carry = add_term >> 120;
-        add_term = add_term - (carry << 120);
-        result[i] = add_term;
+        result[i] = add_term & mask;
     }
+
     // check if the result is greater than the modulus
     if __gte(result, modulus) {
         __helper_sub(result, modulus)
@@ -89,10 +97,9 @@ pub(crate) unconstrained fn __add<let N: u32>(
     }
 }
 
-/**
-* @brief given inputs `x, y` compute 2p + x - y (unconstrained)
-* @description see `__neg` for why we use 2p instead of p
-**/
+/// Subtracts two `BigNum` values with modular reduction (unconstrained).
+///
+/// Computes `x + (m - y)` (mod m)
 pub(crate) unconstrained fn __sub<let N: u32>(
     modulus: [u128; N],
     lhs: [u128; N],
@@ -101,93 +108,121 @@ pub(crate) unconstrained fn __sub<let N: u32>(
     __add(modulus, lhs, __neg(modulus, rhs))
 }
 
+/// Multiply `x` and `y` and reduce via Barrett, returning (Q, R) (unconstrained).
+///
+/// For `BigNum` values `x` and `y` compute (`Q`, `R`) such that:
+///      x * y = R + Q * m, 0 <= R < m
+/// See `__barrett_reduction` for details.
 pub(crate) unconstrained fn __mul_with_quotient<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     lhs: [u128; N],
     rhs: [u128; N],
 ) -> ([u128; N], [u128; N]) {
-    let mut mul: [Field; 2 * N] = [0; 2 * N];
-    for i in 0..N {
-        for j in 0..N {
-            mul[i + j] += (lhs[i] as Field * rhs[j] as Field);
-        }
-    }
-    let to_reduce: [u128; (N * 2)] = split_bits::__normalize_limbs(mul);
-    let (q, r) = __barrett_reduction(to_reduce, params.redc_param, MOD_BITS, params.modulus);
+    let to_reduce: [u128; N * 2] = __helper_mul(lhs, rhs);
+    let (q, r): ([u128; N], [u128; N]) =
+        __barrett_reduction(to_reduce, params.redc_param, MOD_BITS, params.modulus);
     (q, r)
 }
 
+/// Multiplies two `BigNum` values with modular reduction (unconstrained).
 pub(crate) unconstrained fn __mul<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     lhs: [u128; N],
     rhs: [u128; N],
 ) -> [u128; N] {
-    let (_, b) = __mul_with_quotient::<_, MOD_BITS>(params, lhs, rhs);
-    b
+    __mul_with_quotient::<N, MOD_BITS>(params, lhs, rhs).1
 }
 
+/// Squares a `BigNum` value with modular reduction (unconstrained).
+pub(crate) unconstrained fn __sqr<let N: u32, let MOD_BITS: u32>(
+    params: BigNumParams<N, MOD_BITS>,
+    val: [u128; N],
+) -> [u128; N] {
+    __mul_with_quotient::<N, MOD_BITS>(params, val, val).1
+}
+
+/// Modular exponentiation via square-and-multiply. LSB-first (unconstrained).
+///
+/// Computes `x^e mod m`
 pub(crate) unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     val: [u128; N],
     exponent: [u128; N],
 ) -> [u128; N] {
-    let x = exponent;
-    let num_bits = MOD_BITS + 1;
-
-    let mut accumulator: [u128; N] = __one::<N>();
+    let mut accumulator: [u128; N] = __one();
+    let mut x: [u128; N] = val;
+    let num_bits: u32 = __get_msb(exponent) + 1;
 
     for i in 0..num_bits {
-        accumulator = __mul::<_, MOD_BITS>(params, accumulator, accumulator);
-        if __get_bit(x, num_bits - i - 1) {
-            accumulator = __mul::<_, MOD_BITS>(params, accumulator, val);
+        if __get_bit(exponent, i) {
+            accumulator = __mul::<N, MOD_BITS>(params, accumulator, x);
         }
+        x = __sqr::<N, MOD_BITS>(params, x);
     }
     accumulator
 }
 
+/// Given a `BigNum` value `x` compute x^{-1} (mod m) (unconstrained)
+///
+/// x^{p-1} = 1 (mod p) (Fermat's little theorem)
+/// x^{p-2} = x^{-1} (mod p)
+///
+/// ## Note
+/// The input value must be nonzero
+/// No explicit assertion is made, as this condition is validated during evaluation
 pub(crate) unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     val: [u128; N],
 ) -> [u128; N] {
-    let one = __one();
-    let exp = __helper_sub(params.modulus, __helper_add(one, one));
-    __pow::<_, MOD_BITS>(params, val, exp)
+    let one: [u128; N] = __one();
+    let exp: [u128; N] = __helper_sub(params.modulus, __helper_add(one, one));
+    __pow::<N, MOD_BITS>(params, val, exp)
 }
 
+/// Divides two `BigNum` values with modular reduction (unconstrained).
+///
+/// Computes `x * y^{-1}` (mod m)
+///
+/// ## Note
+/// The divisor must be nonzero
+/// No explicit assertion is made, as this condition is validated during evaluation
 pub(crate) unconstrained fn __div<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     numerator: [u128; N],
     divisor: [u128; N],
 ) -> [u128; N] {
-    let inv_divisor: [u128; N] = __invmod::<_, MOD_BITS>(params, divisor);
-    __mul::<_, MOD_BITS>(params, numerator, inv_divisor)
+    let inv_divisor: [u128; N] = __invmod::<N, MOD_BITS>(params, divisor);
+    __mul::<N, MOD_BITS>(params, numerator, inv_divisor)
 }
 
-/**
-* @brief __udiv_mod performs *unconstrained* integer division between numerator, divisor 
-*
-* i.e. 1. floor(numerator / divisor) = quotient
-*      2. numerator % divisor = remainder
-*      3. divisor * quotient + remainder = numerator
-**/
+/// Given the `BigNum` inputs `x, y`, compute integer division x / y (unconstrained)
+///
+/// This function implements binary long division and outputs (`quotient`, `remainder`) such that:
+///   1. floor(numerator / divisor) = quotient
+///   2. numerator % divisor = remainder
+///   3. divisor * quotient + remainder = numerator
+///
+/// ## Note
+/// The divisor must be nonzero
+/// No explicit assertion is made, as this condition is validated during evaluation
 pub(crate) unconstrained fn __udiv_mod<let N: u32>(
     numerator: [u128; N],
     divisor: [u128; N],
 ) -> ([u128; N], [u128; N]) {
     let mut quotient: [u128; N] = [0; N];
     let mut remainder: [u128; N] = numerator;
+    let b: [u128; N] = divisor;
 
-    let b = divisor;
-    let numerator_msb = __get_msb(numerator);
-    let divisor_msb = __get_msb(divisor);
+    let numerator_msb: u32 = __get_msb(numerator);
+    let divisor_msb: u32 = __get_msb(divisor);
     if divisor_msb > numerator_msb {
         ([0; N], numerator)
     } else {
-        let mut bit_difference = __get_msb(remainder) - __get_msb(divisor);
-        let mut accumulator: [u128; N] = __one();
-        let mut divisor = __shl(divisor, bit_difference);
-        accumulator = __shl(accumulator, bit_difference);
+        let mut bit_difference: u32 = __get_msb(remainder) - __get_msb(divisor);
+        let mut divisor: [u128; N] = __shl(divisor, bit_difference);
+        let mut accumulator: [u128; N] = __shl(__one(), bit_difference);
 
+        // The same as divisor > remainder
         if (__gte(divisor, __increment(remainder))) {
             divisor = __shr1(divisor);
             accumulator = __shr1(accumulator);
@@ -205,68 +240,86 @@ pub(crate) unconstrained fn __udiv_mod<let N: u32>(
                 // accumulator is always a nice power of two
                 quotient = __helper_add(quotient, accumulator);
             }
-            divisor = __shr1(divisor); // >>= 1;
-            accumulator = __shr1(accumulator); //  >>= 1;
+            divisor = __shr1(divisor);
+            accumulator = __shr1(accumulator);
         }
 
         (quotient, remainder)
     }
 }
 
+/// Batch modular inversion of `BigNum` values in an array (unconstrained)
+///
+/// Given values v[0..M), returns inv[0...M) with inv[i] = v[i]^{-1} (mod m)
+///
+/// We use the Montgomery trick:
+/// First we compute the partial products:
+///         T0 = 1
+///         T1 = v1,
+///         T2 = v1 * v2,
+///         ...
+///         T_{m - 1} = T_{m - 2} * v_{m - 1} = v1 * ... * v_{m - 1}
+///
+///         P = T_{m-1} * v_m = v1 * v2 * ... * v_m
+///
+/// Then we calculate a single inverse P^-1 = v1^-1 * v2^-1 * ... * v_m^-1
+/// Finally we compute
+///         v_m^-1       = (P^-1 * T_{m-1})
+///         v_{m - 1}^-1 = (P^-1 * v_m * T_{m - 2})
+///         ....
+///         v_2^-1       = (P^-1 * v_m * ... * v_3 * T_1)
+///         v_1^-1       = (P^-1 * v_m * ... * v_2 * T_0)
+///
+/// ## Note
+/// All the values must be nonzero
+/// No explicit assertion is made, as this condition is validated during evaluation
 pub(crate) unconstrained fn batch_invert<let N: u32, let MOD_BITS: u32, let M: u32>(
     params: BigNumParams<N, MOD_BITS>,
-    x: [[u128; N]; M],
+    vals: [[u128; N]; M],
 ) -> [[u128; N]; M] {
-    // TODO: ugly! Will fail if input slice is empty
-
-    let mut accumulator: [u128; N] = __one::<N>();
-    let mut temporaries: [[u128; N]; M] = std::mem::zeroed();
+    let mut accumulator: [u128; N] = __one();
+    let mut temporaries: [[u128; N]; M] = [[0; N]; M];
 
     for i in 0..M {
         temporaries[i] = accumulator;
-        if (!__is_zero(x[i])) {
-            accumulator = __mul::<_, MOD_BITS>(params, accumulator, x[i]);
-        }
+        accumulator = __mul::<N, MOD_BITS>(params, accumulator, vals[i]);
     }
 
     let mut result: [[u128; N]; M] = [[0; N]; M];
-    accumulator = __invmod::<_, MOD_BITS>(params, accumulator);
+    accumulator = __invmod::<N, MOD_BITS>(params, accumulator);
     for i in 0..M {
-        let idx = M - 1 - i;
-        if (!__is_zero(x[idx])) {
-            let T0 = __mul::<_, MOD_BITS>(params, accumulator, temporaries[idx]);
-            accumulator = __mul::<_, MOD_BITS>(params, accumulator, x[idx]);
-            result[idx] = T0;
-        }
+        let idx: u32 = M - 1 - i;
+        let T0: [u128; N] = __mul::<N, MOD_BITS>(params, accumulator, temporaries[idx]);
+        accumulator = __mul::<N, MOD_BITS>(params, accumulator, vals[idx]);
+        result[idx] = T0;
     }
     result
 }
 
+/// Batch modular inversion of `BigNum` values in a slice (unconstrained)
+///
+/// See `batch_invert` for details
 pub(crate) unconstrained fn batch_invert_slice<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
-    x: [[u128; N]],
+    vals: [[u128; N]],
 ) -> [[u128; N]] {
-    // TODO: ugly! Will fail if input slice is empty
-    let mut accumulator: [u128; N] = __one::<N>();
+    let mut accumulator: [u128; N] = __one();
     let mut temporaries: [[u128; N]] = &[];
-    for i in 0..x.len() {
+
+    let M: u32 = vals.len();
+
+    for i in 0..M {
         temporaries = temporaries.push_back(accumulator);
-        if (!__is_zero(x[i])) {
-            accumulator = __mul::<_, MOD_BITS>(params, accumulator, x[i]);
-        }
+        accumulator = __mul::<N, MOD_BITS>(params, accumulator, vals[i]);
     }
 
     let mut result: [[u128; N]] = [];
-    accumulator = __invmod::<_, MOD_BITS>(params, accumulator);
-    for i in 0..x.len() {
-        let idx = x.len() - 1 - i;
-        if (!__is_zero(x[idx])) {
-            let T0 = __mul::<_, MOD_BITS>(params, accumulator, temporaries[idx]);
-            accumulator = __mul::<_, MOD_BITS>(params, accumulator, x[idx]);
-            result = result.push_front(T0);
-        } else {
-            result = result.push_front([0; N]);
-        };
+    accumulator = __invmod::<N, MOD_BITS>(params, accumulator);
+    for i in 0..M {
+        let idx: u32 = M - 1 - i;
+        let T0: [u128; N] = __mul::<_, MOD_BITS>(params, accumulator, temporaries[idx]);
+        accumulator = __mul::<_, MOD_BITS>(params, accumulator, vals[idx]);
+        result = result.push_front(T0);
     }
 
     result
