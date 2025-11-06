@@ -12,8 +12,6 @@ use crate::constants::TWO_POW_120;
 
 use crate::params::BigNumParams;
 
-use crate::utils::split_bits;
-
 // ------------------------------ DERIVATION FUNCTIONS ------------------------------
 
 /// Deterministically derives a `BigNum` from a seed value (unconstrained)
