@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762436214487,
+  "lastUpdate": 1762436215440,
   "repoUrl": "https://github.com/noir-lang/noir-bignum",
   "entries": {
     "ACIR Opcodes": [
@@ -12295,6 +12295,905 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/noir-lang/noir-bignum/commit/4585c991810329ca1abbeaf29860d42c9d0d1b31"
         },
         "date": 1761220514716,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "add_BLS12_377Fq_Bench.json/main",
+            "value": 2896,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "add_BLS12_377Fr_Bench.json/main",
+            "value": 4238,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "add_BLS12_381Fq_Bench.json/main",
+            "value": 2916,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "add_BLS12_381Fr_Bench.json/main",
+            "value": 2874,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "add_BN254_Fq_Bench.json/main",
+            "value": 2868,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "add_U2048_Bench.json/main",
+            "value": 3289,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "add_U256_Bench.json/main",
+            "value": 2873,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "assert_is_not_equal_BLS12_377Fq_Bench.json/main",
+            "value": 2818,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "assert_is_not_equal_BLS12_377Fr_Bench.json/main",
+            "value": 2804,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "assert_is_not_equal_BLS12_381Fq_Bench.json/main",
+            "value": 2818,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "assert_is_not_equal_BLS12_381Fr_Bench.json/main",
+            "value": 2804,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "assert_is_not_equal_BN254_Fq_Bench.json/main",
+            "value": 2804,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "assert_is_not_equal_U2048_Bench.json/main",
+            "value": 3018,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "assert_is_not_equal_U256_Bench.json/main",
+            "value": 2804,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "batch_invert_10_elements_BLS12_377Fq_Bench.json/main",
+            "value": 3316,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "batch_invert_10_elements_BLS12_377Fr_Bench.json/main",
+            "value": 3176,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "batch_invert_10_elements_BLS12_381Fq_Bench.json/main",
+            "value": 3316,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "batch_invert_10_elements_BLS12_381Fr_Bench.json/main",
+            "value": 3176,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "batch_invert_10_elements_BN254_Fq_Bench.json/main",
+            "value": 3176,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "batch_invert_10_elements_U2048_Bench.json/main",
+            "value": 5276,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "batch_invert_10_elements_U256_Bench.json/main",
+            "value": 3176,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "cmp_BLS12_377Fq_Bench.json/main",
+            "value": 2878,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "cmp_BLS12_377Fr_Bench.json/main",
+            "value": 2848,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "cmp_BLS12_381Fq_Bench.json/main",
+            "value": 2878,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "cmp_BLS12_381Fr_Bench.json/main",
+            "value": 2848,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "cmp_BN254_Fq_Bench.json/main",
+            "value": 2848,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "cmp_U2048_Bench.json/main",
+            "value": 3292,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "cmp_U256_Bench.json/main",
+            "value": 2848,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "derive_from_seed_13_elements_BLS12_377Fq_Bench.json/main",
+            "value": 6617,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "derive_from_seed_13_elements_BLS12_377Fr_Bench.json/main",
+            "value": 6877,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "derive_from_seed_13_elements_BLS12_381Fq_Bench.json/main",
+            "value": 7931,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "derive_from_seed_13_elements_BLS12_381Fr_Bench.json/main",
+            "value": 5530,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "derive_from_seed_13_elements_BN254_Fq_Bench.json/main",
+            "value": 5506,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "derive_from_seed_13_elements_U2048_Bench.json/main",
+            "value": 20463,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "derive_from_seed_13_elements_U256_Bench.json/main",
+            "value": 5591,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "div_BLS12_377Fq_Bench.json/main",
+            "value": 3082,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "div_BLS12_377Fr_Bench.json/main",
+            "value": 2946,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "div_BLS12_381Fq_Bench.json/main",
+            "value": 4362,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "div_BLS12_381Fr_Bench.json/main",
+            "value": 2962,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "div_BN254_Fq_Bench.json/main",
+            "value": 2951,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "div_U2048_Bench.json/main",
+            "value": 2991,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "div_U256_Bench.json/main",
+            "value": 2797,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "eq_BLS12_377Fq_Bench.json/main",
+            "value": 2919,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "eq_BLS12_377Fr_Bench.json/main",
+            "value": 4255,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "eq_BLS12_381Fq_Bench.json/main",
+            "value": 2939,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "eq_BLS12_381Fr_Bench.json/main",
+            "value": 2891,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "eq_BN254_Fq_Bench.json/main",
+            "value": 2885,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "eq_U2048_Bench.json/main",
+            "value": 3346,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "eq_U256_Bench.json/main",
+            "value": 2885,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "evaluate_quadratic_expression_12_elements_BLS12_377Fq_Bench.json/main",
+            "value": 8877,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "evaluate_quadratic_expression_12_elements_BLS12_377Fr_Bench.json/main",
+            "value": 6862,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "evaluate_quadratic_expression_12_elements_BLS12_381Fq_Bench.json/main",
+            "value": 10157,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "evaluate_quadratic_expression_12_elements_BLS12_381Fr_Bench.json/main",
+            "value": 6878,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "evaluate_quadratic_expression_12_elements_BN254_Fq_Bench.json/main",
+            "value": 6867,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "evaluate_quadratic_expression_12_elements_U2048_Bench.json/main",
+            "value": 68639,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "evaluate_quadratic_expression_12_elements_U256_Bench.json/main",
+            "value": 6942,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "evaluate_quadratic_expression_3_elements_BLS12_377Fq_Bench.json/main",
+            "value": 4558,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "evaluate_quadratic_expression_3_elements_BLS12_377Fr_Bench.json/main",
+            "value": 3948,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "evaluate_quadratic_expression_3_elements_BLS12_381Fq_Bench.json/main",
+            "value": 5838,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "evaluate_quadratic_expression_3_elements_BLS12_381Fr_Bench.json/main",
+            "value": 3964,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "evaluate_quadratic_expression_3_elements_BN254_Fq_Bench.json/main",
+            "value": 3953,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "evaluate_quadratic_expression_3_elements_U2048_Bench.json/main",
+            "value": 20094,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "evaluate_quadratic_expression_3_elements_U256_Bench.json/main",
+            "value": 4028,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "from_be_bytes_BLS12_377Fq_Bench.json/main",
+            "value": 2905,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "from_be_bytes_BLS12_377Fr_Bench.json/main",
+            "value": 2874,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "from_be_bytes_BLS12_381Fq_Bench.json/main",
+            "value": 2905,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "from_be_bytes_BLS12_381Fr_Bench.json/main",
+            "value": 2874,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "from_be_bytes_BN254_Fq_Bench.json/main",
+            "value": 2874,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "from_be_bytes_U2048_Bench.json/main",
+            "value": 3328,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "from_be_bytes_U256_Bench.json/main",
+            "value": 2875,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "from_field_BLS12_377Fq_Bench.json/main",
+            "value": 2855,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "from_field_BLS12_377Fr_Bench.json/main",
+            "value": 4203,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "from_field_BLS12_381Fq_Bench.json/main",
+            "value": 2875,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "from_field_BLS12_381Fr_Bench.json/main",
+            "value": 2840,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "from_field_BN254_Fq_Bench.json/main",
+            "value": 2834,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "from_field_U2048_Bench.json/main",
+            "value": 3141,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "from_field_U256_Bench.json/main",
+            "value": 2840,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "from_le_bytes_BLS12_377Fq_Bench.json/main",
+            "value": 2905,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "from_le_bytes_BLS12_377Fr_Bench.json/main",
+            "value": 2874,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "from_le_bytes_BLS12_381Fq_Bench.json/main",
+            "value": 2905,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "from_le_bytes_BLS12_381Fr_Bench.json/main",
+            "value": 2874,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "from_le_bytes_BN254_Fq_Bench.json/main",
+            "value": 2874,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "from_le_bytes_U2048_Bench.json/main",
+            "value": 3328,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "from_le_bytes_U256_Bench.json/main",
+            "value": 2875,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "is_zero_BLS12_377Fq_Bench.json/main",
+            "value": 2793,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "is_zero_BLS12_377Fr_Bench.json/main",
+            "value": 2784,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "is_zero_BLS12_381Fq_Bench.json/main",
+            "value": 2793,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "is_zero_BLS12_381Fr_Bench.json/main",
+            "value": 2784,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "is_zero_BN254_Fq_Bench.json/main",
+            "value": 2784,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "is_zero_U2048_Bench.json/main",
+            "value": 2927,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "is_zero_U256_Bench.json/main",
+            "value": 2784,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "mul_BLS12_377Fq_Bench.json/main",
+            "value": 3082,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "mul_BLS12_377Fr_Bench.json/main",
+            "value": 2946,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "mul_BLS12_381Fq_Bench.json/main",
+            "value": 4362,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "mul_BLS12_381Fr_Bench.json/main",
+            "value": 2962,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "mul_BN254_Fq_Bench.json/main",
+            "value": 2951,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "mul_U2048_Bench.json/main",
+            "value": 4063,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "mul_U256_Bench.json/main",
+            "value": 3026,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "neg_BLS12_377Fq_Bench.json/main",
+            "value": 2955,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "neg_BLS12_377Fr_Bench.json/main",
+            "value": 4276,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "neg_BLS12_381Fq_Bench.json/main",
+            "value": 2975,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "neg_BLS12_381Fr_Bench.json/main",
+            "value": 2912,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "neg_BN254_Fq_Bench.json/main",
+            "value": 2906,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "neg_U2048_Bench.json/main",
+            "value": 3505,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "neg_U256_Bench.json/main",
+            "value": 2896,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "pow_BLS12_377Fq_Bench.json/main",
+            "value": 2838,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "pow_BLS12_377Fr_Bench.json/main",
+            "value": 2817,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "pow_BLS12_381Fq_Bench.json/main",
+            "value": 2838,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "pow_BLS12_381Fr_Bench.json/main",
+            "value": 2817,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "pow_BN254_Fq_Bench.json/main",
+            "value": 2817,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "pow_U2048_Bench.json/main",
+            "value": 3126,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "pow_U256_Bench.json/main",
+            "value": 2817,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "sqrt_BLS12_377Fq_Bench.json/main",
+            "value": 2814,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "sqrt_BLS12_377Fr_Bench.json/main",
+            "value": 2801,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "sqrt_BLS12_381Fq_Bench.json/main",
+            "value": 2814,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "sqrt_BLS12_381Fr_Bench.json/main",
+            "value": 2801,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "sqrt_BN254_Fq_Bench.json/main",
+            "value": 2801,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "sqrt_U2048_Bench.json/main",
+            "value": 3010,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "sqrt_U256_Bench.json/main",
+            "value": 2801,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "sub_BLS12_377Fq_Bench.json/main",
+            "value": 2896,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "sub_BLS12_377Fr_Bench.json/main",
+            "value": 4238,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "sub_BLS12_381Fq_Bench.json/main",
+            "value": 2916,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "sub_BLS12_381Fr_Bench.json/main",
+            "value": 2874,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "sub_BN254_Fq_Bench.json/main",
+            "value": 2868,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "sub_U2048_Bench.json/main",
+            "value": 3289,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "sub_U256_Bench.json/main",
+            "value": 2873,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "to_be_bytes_BLS12_377Fq_Bench.json/main",
+            "value": 2905,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "to_be_bytes_BLS12_377Fr_Bench.json/main",
+            "value": 2874,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "to_be_bytes_BLS12_381Fq_Bench.json/main",
+            "value": 2905,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "to_be_bytes_BLS12_381Fr_Bench.json/main",
+            "value": 2874,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "to_be_bytes_BN254_Fq_Bench.json/main",
+            "value": 2874,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "to_be_bytes_U2048_Bench.json/main",
+            "value": 3328,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "to_be_bytes_U256_Bench.json/main",
+            "value": 2875,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "to_field_BLS12_377Fq_Bench.json/main",
+            "value": 2855,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "to_field_BLS12_377Fr_Bench.json/main",
+            "value": 4203,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "to_field_BLS12_381Fq_Bench.json/main",
+            "value": 2875,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "to_field_BLS12_381Fr_Bench.json/main",
+            "value": 2840,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "to_field_BN254_Fq_Bench.json/main",
+            "value": 2834,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "to_field_U2048_Bench.json/main",
+            "value": 3141,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "to_field_U256_Bench.json/main",
+            "value": 2840,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "to_le_bytes_BLS12_377Fq_Bench.json/main",
+            "value": 2905,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "to_le_bytes_BLS12_377Fr_Bench.json/main",
+            "value": 2874,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "to_le_bytes_BLS12_381Fq_Bench.json/main",
+            "value": 2905,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "to_le_bytes_BLS12_381Fr_Bench.json/main",
+            "value": 2874,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "to_le_bytes_BN254_Fq_Bench.json/main",
+            "value": 2874,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "to_le_bytes_U2048_Bench.json/main",
+            "value": 3328,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "to_le_bytes_U256_Bench.json/main",
+            "value": 2875,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "udiv_BLS12_377Fq_Bench.json/main",
+            "value": 3150,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "udiv_BLS12_377Fr_Bench.json/main",
+            "value": 4362,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "udiv_BLS12_381Fq_Bench.json/main",
+            "value": 4450,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "udiv_BLS12_381Fr_Bench.json/main",
+            "value": 3014,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "udiv_BN254_Fq_Bench.json/main",
+            "value": 2997,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "udiv_U2048_Bench.json/main",
+            "value": 4441,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "udiv_U256_Bench.json/main",
+            "value": 3078,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "udiv_mod_BLS12_377Fq_Bench.json/main",
+            "value": 3150,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "udiv_mod_BLS12_377Fr_Bench.json/main",
+            "value": 4362,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "udiv_mod_BLS12_381Fq_Bench.json/main",
+            "value": 4450,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "udiv_mod_BLS12_381Fr_Bench.json/main",
+            "value": 3014,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "udiv_mod_BN254_Fq_Bench.json/main",
+            "value": 2997,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "udiv_mod_U2048_Bench.json/main",
+            "value": 4441,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "udiv_mod_U256_Bench.json/main",
+            "value": 3078,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "validate_in_field_BLS12_377Fq_Bench.json/main",
+            "value": 2860,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "validate_in_field_BLS12_377Fr_Bench.json/main",
+            "value": 4211,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "validate_in_field_BLS12_381Fq_Bench.json/main",
+            "value": 2880,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "validate_in_field_BLS12_381Fr_Bench.json/main",
+            "value": 2847,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "validate_in_field_BN254_Fq_Bench.json/main",
+            "value": 2841,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "validate_in_field_U2048_Bench.json/main",
+            "value": 3137,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "validate_in_field_U256_Bench.json/main",
+            "value": 2847,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "validate_in_range_BLS12_377Fq_Bench.json/main",
+            "value": 2821,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "validate_in_range_BLS12_377Fr_Bench.json/main",
+            "value": 4180,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "validate_in_range_BLS12_381Fq_Bench.json/main",
+            "value": 2841,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "validate_in_range_BLS12_381Fr_Bench.json/main",
+            "value": 2816,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "validate_in_range_BN254_Fq_Bench.json/main",
+            "value": 2810,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "validate_in_range_U2048_Bench.json/main",
+            "value": 2978,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "validate_in_range_U256_Bench.json/main",
+            "value": 2816,
+            "unit": "circuit_size"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "75146596+Sarkoxed@users.noreply.github.com",
+            "name": "Sarkoxed",
+            "username": "Sarkoxed"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a6587998b7f39a2ce7a93ce2bf1c090c4f05822d",
+          "message": "chore(unconstrained_helpers): Arithmetic and Logic clean up #209 (#212)",
+          "timestamp": "2025-11-06T16:36:14+03:00",
+          "tree_id": "9b7bbeaf89c2082a855502bf7eab933e19dee8c6",
+          "url": "https://github.com/noir-lang/noir-bignum/commit/a6587998b7f39a2ce7a93ce2bf1c090c4f05822d"
+        },
+        "date": 1762436215418,
         "tool": "customSmallerIsBetter",
         "benches": [
           {
