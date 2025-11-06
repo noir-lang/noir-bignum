@@ -144,6 +144,10 @@ pub(crate) unconstrained fn __sqr<let N: u32, let MOD_BITS: u32>(
 /// Modular exponentiation via square-and-multiply. LSB-first (unconstrained).
 ///
 /// Computes `x^e mod m`
+///
+/// ## Note
+/// For the loop, we are using `MOD_BITS` instead of `__get_msb`
+/// because it is much much cheaper
 pub(crate) unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     val: [u128; N],
@@ -151,7 +155,7 @@ pub(crate) unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
 ) -> [u128; N] {
     let mut accumulator: [u128; N] = __one();
     let mut x: [u128; N] = val;
-    let num_bits: u32 = __get_msb(exponent) + 1;
+    let num_bits: u32 = MOD_BITS + 1;
 
     for i in 0..num_bits {
         if __get_bit(exponent, i) {
