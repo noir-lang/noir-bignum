@@ -170,7 +170,7 @@ pub(crate) unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
 /// x^{p-2} = x^{-1} (mod p)
 ///
 /// ## Note
-/// The input value must be nonzero
+/// The input value must be nonzero and modulus has to be prime
 /// No explicit assertion is made, as this condition is validated during evaluation
 pub(crate) unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
