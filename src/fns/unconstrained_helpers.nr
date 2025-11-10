@@ -314,11 +314,12 @@ pub(crate) unconstrained fn __helper_add<let N: u32>(lhs: [u128; N], rhs: [u128;
     let mut result: [u128; N] = [0; N];
 
     let mut carry: u128 = 0;
+    let mask: u128 = TWO_POW_120 - 1;
+
     for i in 0..N {
-        let mut add_term: u128 = lhs[i] + rhs[i] + carry;
+        let add_term: u128 = lhs[i] + rhs[i] + carry;
         carry = add_term >> 120;
-        add_term = add_term - (carry << 120);
-        result[i] = add_term;
+        result[i] = add_term & mask;
     }
     result
 }
@@ -336,35 +337,6 @@ pub(crate) unconstrained fn __helper_sub<let N: u32>(lhs: [u128; N], rhs: [u128;
         let subtrahend: u128 = rhs[i] + borrow;
         borrow = (subtrahend > lhs[i]) as u128;
         result[i] = (borrow << 120) + lhs[i] - subtrahend;
-    }
-    result
-}
-
-/// Right-shifts a `BigNum` value by `shift` bits (unconstrained).
-///
-/// Performs a bitwise right shift across limbs.
-///
-/// # Note
-/// No bounds check is performed on `num_shifted_limbs`.
-/// However, we use it only in `__tonelli_shanks_sqrt`, where it is not possible to reach
-/// `num_shifted_limbs` > `N`
-pub(crate) unconstrained fn __shr<let N: u32>(input: [u128; N], shift: u32) -> [u128; N] {
-    let mut result: [u128; N] = [0; N];
-
-    let num_shifted_limbs: u32 = shift / 120;
-    let limb_shift: u128 = (shift % 120) as u128;
-
-    let remainder_shift: u128 = 120 - limb_shift;
-    let low_mask: u128 = (1 as u128 << limb_shift) - 1;
-
-    result[0] = input[num_shifted_limbs] >> limb_shift;
-    for i in 1..(N - num_shifted_limbs) {
-        let value: u128 = input[i + num_shifted_limbs];
-
-        let carry: u128 = (value & low_mask) << remainder_shift;
-        result[i - 1] |= carry;
-
-        result[i] = value >> limb_shift;
     }
     result
 }
@@ -420,6 +392,35 @@ pub(crate) unconstrained fn __shl<let N: u32>(input: [u128; N], shift: u32) -> [
         let upshift: u128 = ((value << limb_shift) | remainder) & mask;
         result[i + num_shifted_limbs] = upshift;
         remainder = value >> remainder_shift;
+    }
+    result
+}
+
+/// Right-shifts a `BigNum` value by `shift` bits (unconstrained).
+///
+/// Performs a bitwise right shift across limbs.
+///
+/// # Note
+/// No bounds check is performed on `num_shifted_limbs`.
+/// However, we use it only in `__tonelli_shanks_sqrt`, where it is not possible to reach
+/// `num_shifted_limbs` > `N`
+pub(crate) unconstrained fn __shr<let N: u32>(input: [u128; N], shift: u32) -> [u128; N] {
+    let mut result: [u128; N] = [0; N];
+
+    let num_shifted_limbs: u32 = shift / 120;
+    let limb_shift: u128 = (shift % 120) as u128;
+
+    let remainder_shift: u128 = 120 - limb_shift;
+    let low_mask: u128 = (1 as u128 << limb_shift) - 1;
+
+    result[0] = input[num_shifted_limbs] >> limb_shift;
+    for i in 1..(N - num_shifted_limbs) {
+        let value: u128 = input[i + num_shifted_limbs];
+
+        let carry: u128 = (value & low_mask) << remainder_shift;
+        result[i - 1] |= carry;
+
+        result[i] = value >> limb_shift;
     }
     result
 }
