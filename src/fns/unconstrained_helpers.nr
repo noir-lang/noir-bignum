@@ -197,89 +197,112 @@ pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
     (underflow, result, carry_flags, borrow_flags)
 }
 
-/**
- * @brief BARRETT_REDUCTION_OVERFLOW_BITS defines how large an input to barrett reduction can be
- * @details maximum value = modulus^2 <<BARRETT_REDUCTION_OVERFLOW_BITS
- *          see __barrett_reduction for more details
- **/
+// ------------------------------ BARRETT REDUCTION ------------------------------
+
+/// `BARRETT_REDUCTION_OVERFLOW_BITS` defines how large an input to barrett reduction can be
+///
+/// maximum value = modulus^2 << BARRETT_REDUCTION_OVERFLOW_BITS
+/// see __barrett_reduction for more details
 comptime global BARRETT_REDUCTION_OVERFLOW_BITS: u32 = 4;
 
+/// Optimized modular multiplication (unconstrained)
+///
+/// The trick is to approximate 1/p with m/2**r, because division by 2**r is much cheaper
+/// In our case m = redc_param = floor(2^{MOD_BITS * 2 + BARRET_REDUCTION_OVERFLOW_BITS} / p)
+///             r = MOD_BITS * 2 + BARRET_REDUCTION_OVERFLOW_BITS
+///
+/// When we apply the barrett reduction, the maximum value of the output will be <= p * (1 + x/2^{2k})
+/// where p = modulus,
+///       x = reduction input
+///
+/// If x > p * p, we need k to be larger than modulus_bits()
+/// We hardcode k = 4, which means that the maximum value of x is approx. 16 * p * p
+/// This should be larger than most values put into `evaluate_quadratic_expression`
+///
+/// ## TODO
+/// Detect cases where x might be too large at comptime
+///
+/// ## Note
+/// very niche edge case error that we need to be aware of:
+///      N must be large enough to cover the modulus *plus* BARRETT_REDUCTION_OVERFLOW_BITS
+///      i.e. a 359-bit prime needs (I think) 4 limbs to represent or we may overflow
+///      when calling __barrett_reduction
 pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     x: [u128; 2 * N],
     redc_param: [u128; N],
     k: u32,
     modulus: [u128; N],
 ) -> ([u128; N], [u128; N]) {
+    // TODO: switch to __helper_mul, once the compiler is smart enough to handle this
     let mut mulout_field: [Field; 3 * N] = [0; 3 * N];
-    for i in 0..(N + N) {
+    for i in 0..(2 * N) {
         for j in 0..N {
-            mulout_field[i + j] += x[i] as Field * redc_param[j] as Field;
+            mulout_field[i + j] += (x[i] as Field) * (redc_param[j] as Field);
         }
     }
-
     let mulout: [u128; 3 * N] = __normalize_limbs(mulout_field);
 
-    // When we apply the barrett reduction, the maximum value of the output will be
-    // <= p * (1 + x/2^{2k})
-    // where p = modulus,
-    //       x = reduction input
-    // if x > p * p, we need k to be larger than modulus_bits()
-    // we hardcode k = 4, which means that the maximum value of x is approx. 16 * p * p
-    // this should be larger than most values put into `evaluate_quadratic_expression`
-    // TODO: try and detect cases where x might be too large at comptime
-    // N.B. BARRETT_REDUCTION_OVERFLOW_BITS affects how `redc_param` is generated.
-    // `redc_param` = 2^{modulus_bits() * 2 + BARRETT_REDUCTION_OVERFLOW_BITS} / modulus
-    // NOTE: very niche edge case error that we need to be aware of:
-    //       N must be large enough to cover the modulus *plus* BARRETT_REDUCTION_OVERFLOW_BITS
-    //       i.e. a 359-bit prime needs (I think) 4 limbs to represent or we may overflow when calling __barrett_reduction
-    let mut quotient = __shr(mulout, (k + k + BARRETT_REDUCTION_OVERFLOW_BITS));
-    // the quotient has bunch of zero limbs now, so we can just take the first N limbs as a result
-    let mut smaller_quotient = [0; N];
+    let quotient: [u128; 3 * N] = __shr(mulout, (k + k + BARRETT_REDUCTION_OVERFLOW_BITS));
+
+    // Remove a bunch of zeros from the end
+    let mut smaller_quotient: [u128; N] = [0; N];
     for i in 0..N {
         smaller_quotient[i] = quotient[i] as u128;
     }
 
-    // N.B. we assume that the shifted quotient cannot exceed 2 times original bit size.
-    //      (partial_quotient_full should be just slightly larger than the modulus, we could probably represent with a size N+1 array)
-    let partial_quotient_full: [Field; 3 * N] = __into_field_array(quotient);
+    // long_quotient_mul_modulus can never exceed input value `x` so can fit into size-2 array
+    let long_quotient_mul_modulus: [u128; 2 * N] = __helper_mul(smaller_quotient, modulus);
+    let long_remainder: [u128; 2 * N] = __helper_sub(x, long_quotient_mul_modulus);
 
-    // quotient_mul_modulus_normalized can never exceed input value `x` so can fit into size-2 array
-    let mut quotient_mul_modulus_normalized: [Field; 2 * N] = [0; 2 * N];
-
-    // First, accumulate the products into quotient_mul_modulus_normalized
-    for j in 0..N {
-        for i in 0..(N + N - j) {
-            quotient_mul_modulus_normalized[i + j] +=
-                partial_quotient_full[i] * modulus[j] as Field;
-        }
-    }
-
-    // Then, split the accumulated values and propagate higher bits
-    let long_quotient_mul_modulus_normalized: [u128; 2 * N] =
-        __normalize_limbs(quotient_mul_modulus_normalized);
-    let mut quotient_mul_modulus_normalized: [u128; N] = [0; N];
-    for i in 0..N {
-        quotient_mul_modulus_normalized[i] = long_quotient_mul_modulus_normalized[i];
-    }
-
-    let mut long_remainder = __helper_sub(x, long_quotient_mul_modulus_normalized);
-    // ugly but have to remove a bunch of zeros from this
-    let mut remainder = [0; N];
+    // Remove a bunch of zeros from the end
+    let mut remainder: [u128; N] = [0; N];
     for i in 0..N {
         remainder[i] = long_remainder[i];
     }
-    // barrett reduction is quirky so might need to remove a few modulus from the remainder
-    if (__gte(remainder, modulus)) {
-        remainder = __helper_sub(remainder, modulus);
-        smaller_quotient = __increment(smaller_quotient);
-    }
-    if (__gte(remainder, modulus)) {
-        remainder = __helper_sub(remainder, modulus);
-        smaller_quotient = __increment(smaller_quotient);
-    }
-    if (__gte(remainder, modulus)) {
-        remainder = __helper_sub(remainder, modulus);
-        smaller_quotient = __increment(smaller_quotient);
+
+    // We need at most one reduction here:
+    //
+    // Assumptions:
+    //  - k = ceil(log2 p), so p <= 2^k
+    //  - s = 4, m = redc_param = floor(2^{2*k + s}/p)
+    //  - x < 16 * p^2 (x < 2^{2 * k + s})
+    //
+    // Let m' = 2^{2*k + s} / p, and write m = m' - \epsilon, \epsilon \in [0, 1)
+    //
+    // quo = floor(x * m / 2^{2 * k + s}) = floor(x * m' / 2^{2 * k + s} - x * \epsilon / 2^{2 * k + s}) =
+    // floor(x / p - x * \epsilon / 2^{2 * k + s})
+    //
+    // Bounds:
+    //   quo <= floor(x / p)
+    //
+    //   floor(a - b) >= floor(a) - ceil(b) (known identity) =>
+    //   quo >= floor(x / p) - ceil(x * \epsilon / 2^{2 * k + s})
+    //       >= floor(x / p) - ceil(x / 2^{2 * k + s}) (epsilon < 1)
+    //
+    // x / 2^{2 * k + s} < C * p^2 / 2^{2 * k + s} <= C * 2^{2 * k} / 2^{2 * k + s} = C / 2^s
+    //
+    // When the assumption holds (C = 16), ceil(x / 2^{2 * k + s}) = 1, for x > 0
+    // Therefore quo = {floor(x/p), floor(x/p) - 1}
+    //
+    // In first case: rem = x - quo * p = x - floor(x/p) * p < p
+    // In second case: rem = x - (floor(x/p) - 1) * p = (x - floor(x/p) * p) + p -> need 1 subtraction
+    //
+    // NOTE
+    // We allow 64 products to be summed inside the `evaluate_quadratic_expression`
+    // In that case x / 2^{2 * k + s} < 64 / 2^4 = 4 => hence we need to subtract modulus at most 4 times
+    // We can leave it 2 for now
+    //
+    // In the worst case though, we will have the input > 64 * p^2
+    // (for example (a1 + b1) * (c1 + d1) + ... 64 times)
+    // This is highly unlikely though.
+    //
+    // TODO: Possibly change the `BARRETT_REDUCTION_OVERFLOW_BITS` to 6, so that we need only 1 reduction here
+    //       However we will have to recompute all the fields `redc_param`s and fix paramgen
+    for i in 0..2 {
+        if (__gte(remainder, modulus)) {
+            remainder = __helper_sub(remainder, modulus);
+            smaller_quotient = __increment(smaller_quotient);
+        }
     }
 
     (smaller_quotient, remainder)
