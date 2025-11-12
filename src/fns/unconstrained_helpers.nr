@@ -1,6 +1,6 @@
 // This file contains the unconstrained helpers that are mostly used by unconstrained ops
 
-use crate::constants::{TWO_POW_119, TWO_POW_120};
+use crate::constants::TWO_POW_120;
 
 use crate::fns::unconstrained_ops::{__add, __gte, __mul, __neg, __pow};
 
