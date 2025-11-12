@@ -1,6 +1,6 @@
 // This file contains the unconstrained helpers that are mostly used by unconstrained ops
 
-use crate::constants::{TWO_POW_119, TWO_POW_120};
+use crate::constants::TWO_POW_120;
 
 use crate::fns::unconstrained_ops::{__add, __gte, __mul, __neg, __pow};
 
@@ -573,14 +573,6 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt_inner_loop_check<let N: u32, l
         let t2m = __mul::<_, MOD_BITS>(params, t2m, t2m);
         let i = i + 1;
         result = __tonelli_shanks_sqrt_inner_loop_check::<_, MOD_BITS>(params, t2m, i);
-    }
-    result
-}
-
-pub(crate) fn __into_field_array<let N: u32>(input: [u128; N]) -> [Field; N] {
-    let mut result: [Field; N] = [0; N];
-    for i in 0..N {
-        result[i] = input[i] as Field;
     }
     result
 }
