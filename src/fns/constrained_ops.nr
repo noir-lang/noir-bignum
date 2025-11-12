@@ -2,8 +2,8 @@ use crate::constants::TWO_POW_120;
 use crate::fns::{
     expressions::evaluate_quadratic_expression,
     unconstrained_helpers::{
-        __add_with_flags, __from_field, __neg_with_flags, __sub_with_flags, __validate_gt_remainder,
-        __validate_in_field_compute_borrow_flags,
+        __add_with_flags, __from_field, __neg_with_flags, __sub_with_flags,
+        __validate_gt_with_flags, __validate_in_field_compute_borrow_flags,
     },
     unconstrained_ops::{__add, __div, __mul, __neg, __sub, __udiv_mod},
 };
@@ -332,40 +332,37 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u
     // so we do... p - x - r = 0 and there might be borrow flags
     // a - b = r
     // p + a - b - r = 0
-    let (underflow, result, carry_flags, borrow_flags) =
-        unsafe { __validate_gt_remainder(lhs, rhs) };
+    let (underflow, result, borrow_flags) = unsafe { __validate_gt_with_flags(lhs, rhs) };
     validate_in_range::<_, _, MOD_BITS>(result);
     assert(!underflow, "BigNum::validate_gt check fails");
-    check_gt_with_flags::<N, MOD_BITS>(lhs, rhs, result, borrow_flags, carry_flags);
+    check_gt_with_flags::<N, MOD_BITS>(lhs, rhs, result, borrow_flags);
 }
 
-// the constraining function for the results returned by __validate_gt_remainder. this is used in both comparisons and validate gt
+// the constraining function for the results returned by __validate_gt_with_flags. this is used in both comparisons and validate gt
 pub(crate) fn check_gt_with_flags<let N: u32, let MOD_BITS: u32>(
     lhs: [u128; N],
     rhs: [u128; N],
-    result: [u128; N],
-    borrow_flags: [bool; N],
-    carry_flags: [bool; N],
+    result: [Field; N],
+    borrow_flags: [bool; N - 1],
 ) {
     let mut addend: [Field; N] = [0; N];
-    let result_limb = lhs[0] as Field - rhs[0] as Field + addend[0] - result[0] as Field
-        + (borrow_flags[0] as Field - carry_flags[0] as Field) * TWO_POW_120 as Field;
+    let result_limb = lhs[0] as Field - rhs[0] as Field + addend[0] - result[0]
+        + (borrow_flags[0] as Field) * TWO_POW_120 as Field;
     assert(result_limb == 0);
 
     for i in 1..N - 1 {
-        let prev_borrow_sub_carry = borrow_flags[i - 1] as Field - carry_flags[i - 1] as Field;
-        let borrow_sub_carry = borrow_flags[i] as Field - carry_flags[i] as Field;
+        let prev_borrow_sub_carry = borrow_flags[i - 1] as Field;
+        let borrow_sub_carry = borrow_flags[i] as Field;
         let result_limb = lhs[i] as Field - rhs[i] as Field + addend[i] as Field
-            - result[i] as Field
+            - result[i]
             - prev_borrow_sub_carry
             + borrow_sub_carry * TWO_POW_120 as Field;
         assert(result_limb == 0);
     }
 
     let result_limb = lhs[N - 1] as Field - rhs[N - 1] as Field + addend[N - 1] as Field
-        - result[N - 1] as Field
-        - borrow_flags[N - 2] as Field
-        + carry_flags[N - 2] as Field;
+        - result[N - 1]
+        - borrow_flags[N - 2] as Field;
     assert(result_limb == 0);
 }
 
@@ -391,12 +388,11 @@ pub(crate) fn validate_in_field<let N: u32, let MOD_BITS: u32>(
 
 // a comparison function. returns true if lhs > rhs and false otherwise
 pub(crate) fn cmp<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N]) -> Ordering {
-    let (underflow, result, carry_flags, borrow_flags) =
-        unsafe { __validate_gt_remainder(lhs, rhs) };
+    let (underflow, result, borrow_flags) = unsafe { __validate_gt_with_flags(lhs, rhs) };
     // if underflow is true, swap lhs and rhs
     let (lhs, rhs) = if underflow { (rhs, lhs) } else { (lhs, rhs) };
 
-    check_gt_with_flags::<N, MOD_BITS>(lhs, rhs, result, borrow_flags, carry_flags);
+    check_gt_with_flags::<N, MOD_BITS>(lhs, rhs, result, borrow_flags);
     if lhs == rhs {
         Ordering::equal()
     } else if underflow {

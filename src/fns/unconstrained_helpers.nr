@@ -48,6 +48,17 @@ pub(crate) unconstrained fn __from_field<let N: u32>(val: Field) -> [u128; N] {
     result
 }
 
+// ------------------------------ ARITHMETIC WITH FLAGS HELPER FUNCTIONS ------------------------------
+// These are the functions that compute modular operations results as well as borrow and carry flags for constraints
+
+/// Compute the `MOD - val` and the corresponding borrow flags (unconstrained)
+///
+/// Negate the value and compute the flags indicating whether we need
+///      to borrow a `bit` from the upper limb when subtracting the value from modulus
+///
+/// ## Note
+/// The `borrow_in` must be `0` at the end of the loop.
+/// No explicit assertion is made, as this condition is validated during evaluation.
 pub(crate) unconstrained fn __neg_with_flags<let N: u32>(
     modulus: [u128; N],
     val: [u128; N],
@@ -57,92 +68,100 @@ pub(crate) unconstrained fn __neg_with_flags<let N: u32>(
 
     let mut borrow_flags: [bool; N - 1] = [false; N - 1];
     for i in 0..N {
-        let sub_term = val[i] + borrow_in;
-        let borrow = (sub_term > modulus[i]) as u128;
-        result[i] = borrow * TWO_POW_120 + modulus[i] - sub_term;
-
-        borrow_in = borrow;
+        let sub_term: u128 = val[i] + borrow_in;
+        borrow_in = (sub_term > modulus[i]) as u128;
+        result[i] = borrow_in * TWO_POW_120 + modulus[i] - sub_term;
         if (i < N - 1) {
-            borrow_flags[i] = borrow != 0;
+            borrow_flags[i] = (borrow_in != 0);
         }
     }
     (result, borrow_flags)
 }
 
+/// Compute modular addition and the corresponding borrow and carry flags (unconstrained)
+///
+/// Given `x, y, MOD` compute x + y or x + y - MOD in case it overflows
+/// Additionally compute all the carries from addition (x + y)
+/// and borrows from subtraction  (- MOD)
+///
+/// ## Note
+/// The `borrow` must be equal to `carry` at the end of the loop.
+/// No explicit assertion is made, as this condition is validated during evaluation.
 pub(crate) unconstrained fn __add_with_flags<let N: u32>(
     modulus: [u128; N],
     lhs: [u128; N],
     rhs: [u128; N],
-) -> ([u128; N], [bool; N], [bool; N - 1], bool) {
-    let add_res = __helper_add(lhs, rhs);
-    let overflow = __gte(add_res, modulus);
+) -> ([u128; N], [bool; N - 1], [bool; N - 1], bool) {
+    let add_res: [u128; N] = __helper_add(lhs, rhs);
+    let overflow: bool = __gte(add_res, modulus);
 
-    let mut subtrahend: [u128; N] = [0; N];
+    let mut subtrahend: [u128; N] = if overflow { modulus } else { [0; N] };
     let mut result: [u128; N] = [0; N];
 
-    if overflow {
-        subtrahend = modulus;
-    }
-
-    let mut carry_in: u128 = 0;
-    let mut borrow_in: u128 = 0;
     let mut borrow_flags: [bool; N - 1] = [false; N - 1];
-    let mut carry_flags: [bool; N] = [false; N];
+    let mut carry_flags: [bool; N - 1] = [false; N - 1];
+
+    let mut carry: u128 = 0;
+    let mut borrow: u128 = 0;
     for i in 0..N {
-        let mut add_term = lhs[i] + rhs[i] + carry_in;
-        let mut carry = (add_term as u128 >= TWO_POW_120) as u128;
+        let mut add_term: u128 = lhs[i] + rhs[i] + carry;
+        carry = (add_term >= TWO_POW_120) as u128;
         add_term -= carry * TWO_POW_120;
-        carry_in = carry as u128;
 
-        let sub_term = subtrahend[i] + borrow_in;
+        let sub_term: u128 = subtrahend[i] + borrow;
+        borrow = (sub_term > add_term) as u128;
 
-        let mut borrow: u128 = (sub_term > add_term) as u128;
         result[i] = borrow * TWO_POW_120 + add_term - sub_term;
-        borrow_in = borrow as u128;
 
         // Only set `borrow` and `carry` if they differ
-        if (carry != borrow) {
+        // And if it's not the last limb
+        if (carry != borrow) & (i < N - 1) {
             carry_flags[i] = carry != 0;
-            if (i < N - 1) {
-                borrow_flags[i] = borrow != 0;
-            }
+            borrow_flags[i] = borrow != 0;
         }
     }
     (result, carry_flags, borrow_flags, overflow)
 }
 
+/// Compute modular subtraction and the corresponding borrow and carry flags (unconstrained)
+///
+/// Given `x, y, MOD` compute x - y or x - y + MOD in case it overflows
+/// Additionally compute all the carries from addition (x + MOD)
+/// and borrows from subtraction  (- y)
+///
+/// ## Note
+/// The `borrow` must be equal to `carry` at the end of the loop.
+/// No explicit assertion is made, as this condition is validated during evaluation.
 pub(crate) unconstrained fn __sub_with_flags<let N: u32>(
     modulus: [u128; N],
     lhs: [u128; N],
     rhs: [u128; N],
-) -> ([u128; N], [bool; N], [bool; N - 1], bool) {
-    let mut one: [u128; N] = [0; N];
-    one[0] = 1;
-    let underflow = !__gte(lhs, rhs);
+) -> ([u128; N], [bool; N - 1], [bool; N - 1], bool) {
+    let underflow: bool = !__gte(lhs, rhs);
+
     let addend: [u128; N] = if underflow { modulus } else { [0; N] };
     let mut result: [u128; N] = [0; N];
 
-    let mut carry_in: u128 = 0;
-    let mut borrow_in: u128 = 0;
     let mut borrow_flags: [bool; N - 1] = [false; N - 1];
-    let mut carry_flags: [bool; N] = [false; N];
-    for i in 0..N {
-        let mut add_term: u128 = lhs[i] + addend[i] + carry_in;
-        let mut carry = (add_term as u128 >= TWO_POW_120) as u128;
-        add_term -= carry * TWO_POW_120;
-        carry_in = carry;
+    let mut carry_flags: [bool; N - 1] = [false; N - 1];
 
-        let sub_term = rhs[i] + borrow_in;
-        let mut borrow = (sub_term > add_term) as u128;
-        result[i] = borrow as u128 * TWO_POW_120 + add_term - sub_term;
-        borrow_in = borrow;
+    let mut carry: u128 = 0;
+    let mut borrow: u128 = 0;
+    for i in 0..N {
+        let mut add_term: u128 = lhs[i] + addend[i] + carry;
+        carry = (add_term >= TWO_POW_120) as u128;
+        add_term -= carry * TWO_POW_120;
+
+        let sub_term: u128 = rhs[i] + borrow;
+        borrow = (sub_term > add_term) as u128;
+
+        result[i] = borrow * TWO_POW_120 + add_term - sub_term;
 
         // Only set `borrow` and `carry` if they differ
-        if (carry != borrow) {
+        // And if it's not the last limb
+        if (carry != borrow) & (i < N - 1) {
             carry_flags[i] = carry != 0;
-            if (i < N - 1) {
-                borrow_flags[i] = borrow != 0;
-            }
+            borrow_flags[i] = borrow != 0;
         }
     }
     (result, carry_flags, borrow_flags, underflow)
@@ -161,40 +180,47 @@ pub(crate) unconstrained fn __validate_in_field_compute_borrow_flags<let N: u32,
     flags
 }
 
-pub(crate) unconstrained fn __validate_gt_remainder<let N: u32>(
+/// Validate that lhs - rhs does not underflow (unconstrained)
+///
+/// Compute underflow flag (lhs < rhs)
+///       then perform subtraction with borrow flags
+///
+/// ## Note
+/// We return result as a `Field` array, because it is cheaper (gate-wise)
+/// to constrain its limbs to be in range
+/// rather than first constraining them to be `u128`
+///
+/// The `borrow` must be equal to 0 at the end of the loop.
+/// And it can't be nonzero, since we swap the terms at the beginning
+pub(crate) unconstrained fn __validate_gt_with_flags<let N: u32>(
     lhs: [u128; N],
     rhs: [u128; N],
-) -> (bool, [u128; N], [bool; N], [bool; N]) {
-    let mut a = lhs;
-    let mut b = rhs;
-    let underflow = !__gte(lhs, rhs);
+) -> (bool, [Field; N], [bool; N - 1]) {
+    let mut a: [u128; N] = lhs;
+    let mut b: [u128; N] = rhs;
 
-    let mut result: [u128; N] = [0; N];
+    let underflow: bool = !__gte(lhs, rhs);
     // swap a and b if there's an underflow
-    let (a, b) = if underflow { (b, a) } else { (a, b) };
-    let mut carry_in: u128 = 0;
-    let mut borrow_in: u128 = 0;
-    let mut borrow_flags: [bool; N] = [false; N];
-    let mut carry_flags: [bool; N] = [false; N];
+    let (a, b): ([u128; N], [u128; N]) = if underflow { (b, a) } else { (a, b) };
+
+    let mut result: [Field; N] = [0; N];
+
+    let mut borrow_flags: [bool; N - 1] = [false; N - 1];
+
+    let mut borrow: u128 = 0;
     for i in 0..N {
-        let mut add_term: u128 = a[i] + carry_in;
-        let mut carry = (add_term as u128 >= TWO_POW_120) as u128;
-        add_term -= carry * TWO_POW_120;
-        carry_in = carry;
+        let mut add_term: u128 = a[i];
 
-        let sub_term = b[i] + borrow_in;
-        let mut borrow = (sub_term > add_term) as u128;
-        result[i] = (borrow * TWO_POW_120 + add_term - sub_term);
+        let sub_term: u128 = b[i] + borrow;
+        borrow = (sub_term > add_term) as u128;
 
-        borrow_in = borrow;
+        result[i] = (borrow * TWO_POW_120 + add_term - sub_term) as Field;
 
-        // Only set `borrow` and `carry` if they differ
-        if (carry != borrow) {
-            carry_flags[i] = carry != 0;
+        if (i < N - 1) {
             borrow_flags[i] = borrow != 0;
         }
     }
-    (underflow, result, carry_flags, borrow_flags)
+    (underflow, result, borrow_flags)
 }
 
 // ------------------------------ BARRETT REDUCTION ------------------------------
@@ -573,14 +599,6 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt_inner_loop_check<let N: u32, l
         let t2m = __mul::<_, MOD_BITS>(params, t2m, t2m);
         let i = i + 1;
         result = __tonelli_shanks_sqrt_inner_loop_check::<_, MOD_BITS>(params, t2m, i);
-    }
-    result
-}
-
-pub(crate) fn __into_field_array<let N: u32>(input: [u128; N]) -> [Field; N] {
-    let mut result: [Field; N] = [0; N];
-    for i in 0..N {
-        result[i] = input[i] as Field;
     }
     result
 }
