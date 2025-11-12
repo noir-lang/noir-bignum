@@ -92,6 +92,8 @@ pub(crate) unconstrained fn __add_with_flags<let N: u32>(
     lhs: [u128; N],
     rhs: [u128; N],
 ) -> ([u128; N], [bool; N - 1], [bool; N - 1], bool) {
+    let mask: u128 = TWO_POW_120 - 1;
+
     let add_res: [u128; N] = __helper_add(lhs, rhs);
     let overflow: bool = __gte(add_res, modulus);
 
@@ -105,8 +107,8 @@ pub(crate) unconstrained fn __add_with_flags<let N: u32>(
     let mut borrow: u128 = 0;
     for i in 0..N {
         let mut add_term: u128 = lhs[i] + rhs[i] + carry;
-        carry = (add_term >= TWO_POW_120) as u128;
-        add_term -= carry * TWO_POW_120;
+        carry = add_term >> 120;
+        add_term &= mask;
 
         let sub_term: u128 = subtrahend[i] + borrow;
         borrow = (sub_term > add_term) as u128;
@@ -137,6 +139,8 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32>(
     lhs: [u128; N],
     rhs: [u128; N],
 ) -> ([u128; N], [bool; N - 1], [bool; N - 1], bool) {
+    let mask: u128 = TWO_POW_120 - 1;
+
     let underflow: bool = !__gte(lhs, rhs);
 
     let addend: [u128; N] = if underflow { modulus } else { [0; N] };
@@ -149,8 +153,8 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32>(
     let mut borrow: u128 = 0;
     for i in 0..N {
         let mut add_term: u128 = lhs[i] + addend[i] + carry;
-        carry = (add_term >= TWO_POW_120) as u128;
-        add_term -= carry * TWO_POW_120;
+        carry = add_term >> 120;
+        add_term &= mask;
 
         let sub_term: u128 = rhs[i] + borrow;
         borrow = (sub_term > add_term) as u128;
@@ -345,13 +349,14 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
 /// The `carry` must be `0` at the end of the loop.
 /// No explicit assertion is made, as this condition is validated during evaluation.
 pub(crate) unconstrained fn __increment<let N: u32>(val: [u128; N]) -> [u128; N] {
+    let mask: u128 = TWO_POW_120 - 1;
+
     let mut result: [u128; N] = [0; N];
     let mut carry: u128 = 1;
     for i in 0..N {
-        let mut add_term: u128 = val[i] + carry;
+        let add_term: u128 = val[i] + carry;
         carry = add_term >> 120;
-        add_term = add_term - (carry << 120);
-        result[i] = add_term;
+        result[i] = add_term & mask;
     }
     result
 }
