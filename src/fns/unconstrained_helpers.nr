@@ -190,10 +190,6 @@ pub(crate) unconstrained fn __validate_in_field_compute_borrow_flags<let N: u32,
 ///       then perform subtraction with borrow flags
 ///
 /// ## Note
-/// We return result as a `Field` array, because it is cheaper (gate-wise)
-/// to constrain its limbs to be in range
-/// rather than first constraining them to be `u128`
-///
 /// The `borrow` must be equal to 0 at the end of the loop.
 /// And it can't be nonzero, since we swap the terms at the beginning
 pub(crate) unconstrained fn __validate_gt_with_flags<let N: u32>(
