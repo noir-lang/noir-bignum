@@ -273,8 +273,15 @@ pub(crate) unconstrained fn __udiv_mod<let N: u32>(
 ///         v_1^-1       = (P^-1 * v_m * ... * v_2 * T_0)
 ///
 /// ## Note
-/// All the values must be nonzero
-/// No explicit assertion is made, as this condition is validated during evaluation
+/// Zero elements are allowed and are left unchanged in the resulting array
+///
+/// This interacts poorly with `neg(zero)`:
+/// Calling `neg` on `zero` yeilds `modulus` rather than `0`.
+/// A value in this form will **not** satisfy
+/// the `__is_zero` check and will lead to incorrect results.
+///
+/// This edge case should be rare, but it's worth keeping in mind when
+/// composing operations or debugging unexpected behavior
 pub(crate) unconstrained fn batch_invert<let N: u32, let MOD_BITS: u32, let M: u32>(
     params: BigNumParams<N, MOD_BITS>,
     vals: [[u128; N]; M],
@@ -284,16 +291,20 @@ pub(crate) unconstrained fn batch_invert<let N: u32, let MOD_BITS: u32, let M: u
 
     for i in 0..M {
         temporaries[i] = accumulator;
-        accumulator = __mul::<N, MOD_BITS>(params, accumulator, vals[i]);
+        if (!__is_zero(vals[i])) {
+            accumulator = __mul::<N, MOD_BITS>(params, accumulator, vals[i]);
+        }
     }
 
     let mut result: [[u128; N]; M] = [[0; N]; M];
     accumulator = __invmod::<N, MOD_BITS>(params, accumulator);
     for i in 0..M {
         let idx: u32 = M - 1 - i;
-        let T0: [u128; N] = __mul::<N, MOD_BITS>(params, accumulator, temporaries[idx]);
-        accumulator = __mul::<N, MOD_BITS>(params, accumulator, vals[idx]);
-        result[idx] = T0;
+        if (!__is_zero(vals[idx])) {
+            let T0: [u128; N] = __mul::<N, MOD_BITS>(params, accumulator, temporaries[idx]);
+            accumulator = __mul::<N, MOD_BITS>(params, accumulator, vals[idx]);
+            result[idx] = T0;
+        }
     }
     result
 }
@@ -312,16 +323,22 @@ pub(crate) unconstrained fn batch_invert_slice<let N: u32, let MOD_BITS: u32>(
 
     for i in 0..M {
         temporaries = temporaries.push_back(accumulator);
-        accumulator = __mul::<N, MOD_BITS>(params, accumulator, vals[i]);
+        if (!__is_zero(vals[i])) {
+            accumulator = __mul::<N, MOD_BITS>(params, accumulator, vals[i]);
+        }
     }
 
     let mut result: [[u128; N]] = [];
     accumulator = __invmod::<N, MOD_BITS>(params, accumulator);
     for i in 0..M {
         let idx: u32 = M - 1 - i;
-        let T0: [u128; N] = __mul::<_, MOD_BITS>(params, accumulator, temporaries[idx]);
-        accumulator = __mul::<_, MOD_BITS>(params, accumulator, vals[idx]);
-        result = result.push_front(T0);
+        if (!__is_zero(vals[idx])) {
+            let T0: [u128; N] = __mul::<N, MOD_BITS>(params, accumulator, temporaries[idx]);
+            accumulator = __mul::<N, MOD_BITS>(params, accumulator, vals[idx]);
+            result = result.push_front(T0);
+        } else {
+            result = result.push_front([0; N]);
+        }
     }
 
     result
