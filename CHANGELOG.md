@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.8.1](https://github.com/noir-lang/noir-bignum/compare/v0.8.0...v0.8.1) (2025-11-13)
+
+
+### Features
+
+* Clean up and optimize `__barrett_reduction` ([#214](https://github.com/noir-lang/noir-bignum/issues/214)) ([e163efa](https://github.com/noir-lang/noir-bignum/commit/e163efac2f306296a4680979f64291079a5e6ef0))
+* Clean up and optimize arithmetic with flags  ([#217](https://github.com/noir-lang/noir-bignum/issues/217)) ([a44cf68](https://github.com/noir-lang/noir-bignum/commit/a44cf685013cf7ab16af43972367ee95f6eb457b))
+
 ## [0.8.0](https://github.com/noir-lang/noir-bignum/compare/v0.7.5...v0.8.0) (2025-08-14)
 
 
