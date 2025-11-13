@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.2](https://github.com/noir-lang/noir-bignum/compare/v0.8.1...v0.8.2) (2025-11-13)
+
+
+### Bug Fixes
+
+* Revert `batch_invert` ([#222](https://github.com/noir-lang/noir-bignum/issues/222)) ([fe25ca4](https://github.com/noir-lang/noir-bignum/commit/fe25ca4d2cb9178b67d3322fe19d0e53644cbfdf))
+
 ## [0.8.1](https://github.com/noir-lang/noir-bignum/compare/v0.8.0...v0.8.1) (2025-11-13)
 
 
