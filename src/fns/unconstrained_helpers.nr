@@ -199,7 +199,7 @@ pub(crate) unconstrained fn __validate_in_field_compute_borrow_flags<let N: u32,
 pub(crate) unconstrained fn __validate_gt_with_flags<let N: u32>(
     lhs: [u128; N],
     rhs: [u128; N],
-) -> (bool, [Field; N], [bool; N - 1]) {
+) -> (bool, [u128; N], [bool; N - 1]) {
     let mut a: [u128; N] = lhs;
     let mut b: [u128; N] = rhs;
 
@@ -207,7 +207,7 @@ pub(crate) unconstrained fn __validate_gt_with_flags<let N: u32>(
     // swap a and b if there's an underflow
     let (a, b): ([u128; N], [u128; N]) = if underflow { (b, a) } else { (a, b) };
 
-    let mut result: [Field; N] = [0; N];
+    let mut result: [u128; N] = [0; N];
 
     let mut borrow_flags: [bool; N - 1] = [false; N - 1];
 
@@ -218,7 +218,7 @@ pub(crate) unconstrained fn __validate_gt_with_flags<let N: u32>(
         let sub_term: u128 = b[i] + borrow;
         borrow = (sub_term > add_term) as u128;
 
-        result[i] = (borrow * TWO_POW_120 + add_term - sub_term) as Field;
+        result[i] = borrow * TWO_POW_120 + add_term - sub_term;
 
         if (i < N - 1) {
             borrow_flags[i] = borrow != 0;

@@ -342,11 +342,11 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u
 pub(crate) fn check_gt_with_flags<let N: u32, let MOD_BITS: u32>(
     lhs: [u128; N],
     rhs: [u128; N],
-    result: [Field; N],
+    result: [u128; N],
     borrow_flags: [bool; N - 1],
 ) {
     let mut addend: [Field; N] = [0; N];
-    let result_limb = lhs[0] as Field - rhs[0] as Field + addend[0] - result[0]
+    let result_limb = lhs[0] as Field - rhs[0] as Field + addend[0] - result[0] as Field
         + (borrow_flags[0] as Field) * TWO_POW_120 as Field;
     assert(result_limb == 0);
 
@@ -354,14 +354,14 @@ pub(crate) fn check_gt_with_flags<let N: u32, let MOD_BITS: u32>(
         let prev_borrow_sub_carry = borrow_flags[i - 1] as Field;
         let borrow_sub_carry = borrow_flags[i] as Field;
         let result_limb = lhs[i] as Field - rhs[i] as Field + addend[i] as Field
-            - result[i]
+            - result[i] as Field
             - prev_borrow_sub_carry
             + borrow_sub_carry * TWO_POW_120 as Field;
         assert(result_limb == 0);
     }
 
     let result_limb = lhs[N - 1] as Field - rhs[N - 1] as Field + addend[N - 1] as Field
-        - result[N - 1]
+        - result[N - 1] as Field
         - borrow_flags[N - 2] as Field;
     assert(result_limb == 0);
 }
