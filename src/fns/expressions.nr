@@ -1,50 +1,52 @@
 use crate::utils::split_bits;
 
 use crate::constants::{TWO_POW_120, TWO_POW_126, TWO_POW_246};
-use crate::fns::{
-    constrained_ops::validate_quotient_in_range, unconstrained_helpers::__barrett_reduction,
-};
-use crate::params::BigNumParams as P;
 
-/**
-* @brief Computes the result of a linear combination of (possibly negative) BigNum values (unconstrained)
-**/
-// NOTE: modulus2 is structured such that all limbs will be greater than 0, even when subtracting.
-// To do this, when computing `p - x`, we ensure that each limb in `p` is greater than each limb in `x`.
-// We know that, for a valid bignum element, the limbs in `x` will be <2^{120}
-// Therefore each of the limbs in `p` (except the most significant) will borrow 2^{120} from the more significant limb.
-// Finally, to ensure we do not underflow in the most significant limb, we use `2p` instead of `p`
+use crate::fns::constrained_ops::validate_quotient_in_range;
+use crate::fns::unconstrained_helpers::__barrett_reduction;
+use crate::fns::unconstrained_ops::__is_zero;
+
+use crate::params::BigNumParams;
+
+/// Compute the result of a linear combination of (possibly negative) `BigNum` values (unconstrained)
+///
+/// ## Note
+/// `modulus2` is structured such that all limbs will be greater than `0`, even when subtracting.
+/// To do this, when computing `p - x`, we ensure that each limb in `p` is greater than each limb in `x`.
+/// We know that, for a valid bignum element, the limbs in `x` will be < 2^{120}
+/// Therefore each of the limbs in `p` (except the most significant) will borrow 2^{120} from the more significant limb.
+/// Finally, to ensure we do not underflow in the most significant limb, we use `2p` instead of `p`
+///
+/// Returns the `Field` values that are not normalized to be 120-bit
 unconstrained fn __add_linear_expression<let N: u32, let MOD_BITS: u32, let M: u32>(
-    params: P<N, MOD_BITS>,
-    x: [[u128; N]; M],
+    params: BigNumParams<N, MOD_BITS>,
+    vals: [[u128; N]; M],
     flags: [bool; M],
-) -> ([u128; N]) {
-    // TODO, validate we do not overflow N2 when multiplying and N when adding
-    let mut sum: [u128; N] = [0; N];
-    // TODO: ugly! Will fail if input array is empty
+) -> ([Field; N]) {
+    let mut sum: [Field; N] = [0; N];
     let modulus2: [u128; N] = params.double_modulus;
     for i in 0..M {
         if (flags[i]) {
             for j in 0..N {
-                sum[j] = sum[j] + (modulus2[j] as Field - x[i][j] as Field) as u128;
-                // assert(x[i][j].lt(modulus2[j]));
+                sum[j] = sum[j] + (modulus2[j] as Field) - (vals[i][j] as Field);
             }
         } else {
             for j in 0..N {
-                sum[j] = sum[j] + x[i][j];
+                sum[j] = sum[j] + (vals[i][j] as Field);
             }
         }
     }
-    // problem if we normalize when used in computing quotient
     sum
 }
 
-/**
-* @brief computes the limb products of a quadratic expression
-* @details see compute_quadratic_expression_with_borrow_flags for full description
-**/
-unconstrained fn compute_quadratic_expression_product<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
-    params: P<N, MOD_BITS>,
+/// Compute the limb products of a quadratic expression (unconstrained)
+///
+/// See `__compute_quadratic_expression_with_borrow_flags` for full description
+///
+/// ## Note
+/// Returns the `Field` values that are not normalized to be 120-bit
+unconstrained fn __compute_quadratic_expression_product<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
+    params: BigNumParams<N, MOD_BITS>,
     lhs_terms: [[[u128; N]; LHS_N]; NUM_PRODUCTS],
     lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
     rhs_terms: [[[u128; N]; RHS_N]; NUM_PRODUCTS],
@@ -52,67 +54,80 @@ unconstrained fn compute_quadratic_expression_product<let N: u32, let MOD_BITS: 
     linear_terms: [[u128; N]; ADD_N],
     linear_flags: [bool; ADD_N],
 ) -> [Field; 2 * N] {
-    // TODO, validate we do not overflow N2 when multiplying and N when adding
-    let mut lhs: [[u128; N]; NUM_PRODUCTS] = [[0; N]; NUM_PRODUCTS];
-    let mut rhs: [[u128; N]; NUM_PRODUCTS] = [[0; N]; NUM_PRODUCTS];
+    let mut lhs: [[Field; N]; NUM_PRODUCTS] = [[0; N]; NUM_PRODUCTS];
+    let mut rhs: [[Field; N]; NUM_PRODUCTS] = [[0; N]; NUM_PRODUCTS];
 
     for i in 0..NUM_PRODUCTS {
         lhs[i] = __add_linear_expression(params, lhs_terms[i], lhs_flags[i]);
         rhs[i] = __add_linear_expression(params, rhs_terms[i], rhs_flags[i]);
     }
-
-    let add: [u128; N] = __add_linear_expression(params, linear_terms, linear_flags);
+    let add: [Field; N] = __add_linear_expression(params, linear_terms, linear_flags);
 
     let mut mulout: [Field; 2 * N] = [0; 2 * N];
-
     for i in 0..N {
         for j in 0..N {
             for k in 0..NUM_PRODUCTS {
-                mulout[i + j] += (lhs[k][i] as Field * rhs[k][j] as Field);
+                mulout[i + j] += lhs[k][i] * rhs[k][j];
             }
         }
-        mulout[i] += add[i] as Field;
+        mulout[i] += add[i];
     }
     mulout
 }
 
-/**
-* @brief Given a degree-2 BigNum expression that is equal to 0 mod p, compute the quotient and borrow flags 
-* @description The expression is of the form:
-*
-* \sum_{i=0}^{NUM_PRODUCTS - 1} ((\sum_{j=0}^{LHS_N-1}lhs[i][j]) * (\sum_{j=0}^{RHS_N-1}rhs[i][j])) + \sum_{i=0}^{ADD_N - 1}linear_terms[i] = quotient * modulus
-*
-* The intent is to capture an arbitrary degree-2 expression within the limitations of Noir (no efficient dynamically-sized vectors)
-*
-* When performing BigNum arithmetic, we want to represent desired BigNum operations in a way that minimizes the number of modular reductions that are required.
-* This can be achieved by minimizing the number of degree-2 relations required.
-*
-* The borrow flags describe whether individual Field limbs will underflow when evaluating the above relation.
-* For example, when computing the product a * b - q * p = 0, it is possible that:
-*      1. a[0]*b[0] - p[0]*q[0] = -2^{120}
-*      2. a[0]*b[1] + a[1]*b[0] - p[0]*q[1] - p[1]*q[0] = 1
-* In the above example, the value represented by these two limbs is zero despite each limb being nonzero.
-* In this case, to correctly constrain the result, we must add (at least) 2^{120} from the first limb and subtract 1 from the second.
-*
-* @param lhs_terms a 2D array of BigNum
-* @param lhs_flags a 2D array of sign flags
-* @param rhs_terms a 2D array of BigNum
-* @param rhs_flags a 2D array of sign flags
-* @param linear_terms an array of BigNum
-* @param linear_flags an array of sign flags
-**/
-
-unconstrained fn compute_quadratic_expression_with_borrow_flags<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
-    params: P<N, MOD_BITS>,
+/// Given a degree-2 `BigNum` expression that is equal to `0` mod p, compute the quotient and the borrow flags (unconstrained)
+///
+/// The expression is of the form:
+///     \sum_{i=0}^{NUM_PRODUCTS - 1} ((\sum_{j=0}^{LHS_N-1}lhs[i][j]) * (\sum_{j=0}^{RHS_N-1}rhs[i][j]))
+///     + \sum_{i=0}^{ADD_N - 1}linear_terms[i]
+///     = quotient * modulus
+///
+/// The intent is to capture an arbitrary degree-2 `BigNum` relation within the limitations of Noir
+/// (no efficient dynamically-sized vectors)
+///
+/// When performing `BigNum` arithmetic, we want to represent desired `BigNum` operations in a way that minimizes
+/// the number of modular reductions that are required. This can be achieved by minimizing the number of degree-2
+/// relations required.
+///
+/// The borrow flags describe whether individual `Field` limbs will underflow when evaluating the above relation.
+/// For example, when constraining
+///      a * b - q * p = 0
+///
+/// it is possible that:
+///      1. a[0]*b[0] - p[0]*q[0] = -2^{120}
+///      2. a[0]*b[1] + a[1]*b[0] - p[0]*q[1] - p[1]*q[0] = 1
+///
+/// In this example, the two 120-bit limbs together still represent zero, despite each limb being nonzero.
+/// To constrain this correctly, we conceptually "borrow" (at least) 2^{120} from the next limb:
+/// add 2^{120} to the first limb and subtract 1 from the second
+///
+/// In the circuit, we do not literally add 2^{120}. Instead, we encode borrows using a larger constant 2^{246}.
+/// This keeps all intermediate values non-negative in the field and, after scaling by 2^{-120}, produces a clean
+/// 2^{126} contribution into the next limb. The extra 6 limbs reflect the maximum allowed overflow per limb.
+/// See `evaluate_quadratic_expression` and `validate_quotient_in_range` for details
+///
+/// Basically what we are doing is the following:
+///     1. compute `mulout_p` as
+///          \sum_{i=0}^{NUM_PRODUCTS - 1} ((\sum_{j=0}^{LHS_N-1}lhs[i][j]) * (\sum_{j=0}^{RHS_N-1}rhs[i][j]))
+///          + \sum_{i=0}^{ADD_N - 1}linear_terms[i]
+///        It is not normalized so each limb may exceed 120 bits
+///     2. Normalize `mulout_p` into 2N 120-bit limbs and compute
+///             quotient = floor(mulout_p / modulus) using Barrett reduction
+///             also compute the remainder and validate that it is zero
+///     3. Reconstruct `mulout_n = quotient * modulus` as a limb array
+///     4. Compute the limb-by-limb difference `mulout_p - mulout_n`, using borrow flags to
+///        model true integer borrows while keeping each intermediate difference within a
+///        126-bit bound (needed for the borrow simulation to remain well-defined).
+unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
+    params: BigNumParams<N, MOD_BITS>,
     lhs_terms: [[[u128; N]; LHS_N]; NUM_PRODUCTS],
     lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
     rhs_terms: [[[u128; N]; RHS_N]; NUM_PRODUCTS],
     rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
     linear_terms: [[u128; N]; ADD_N],
     linear_flags: [bool; ADD_N],
-) -> ([u128; N], [u128; N], [Field; 2 * N - 2]) {
-    // TODO, validate we do not overflow N2 when multiplying and N when adding
-    let mut mulout_p = compute_quadratic_expression_product(
+) -> ([u128; N], [bool; 2 * N - 2]) {
+    let mut mulout_p: [Field; 2 * N] = __compute_quadratic_expression_product(
         params,
         lhs_terms,
         lhs_flags,
@@ -122,59 +137,57 @@ unconstrained fn compute_quadratic_expression_with_borrow_flags<let N: u32, let 
         linear_flags,
     );
 
-    let mut mulout_n: [Field; 2 * N] = [0; 2 * N];
+    // `__normalize_limbs` will validate that we do not overflow 2N, normally we should not overflow 2N-1
     let mut relation_result: [u128; 2 * N] = split_bits::__normalize_limbs(mulout_p);
-
-    let (quotient, remainder) =
+    let (quotient, remainder): ([u128; N], [u128; N]) =
         __barrett_reduction(relation_result, params.redc_param, MOD_BITS, params.modulus);
-    assert(remainder == [0; N]);
+
+    // This is verified later by the range checks but left for debugging purposes
+    assert(__is_zero(remainder));
+
+    // We do not normalize `mulout_n` so we won't fill the `2 * N - 1`
+    let mut mulout_n: [Field; 2 * N - 1] = [0; 2 * N - 1];
     for i in 0..N {
         for j in 0..N {
-            mulout_n[i + j] += quotient[i] as Field * params.modulus[j] as Field;
+            mulout_n[i + j] += (quotient[i] as Field) * (params.modulus[j] as Field);
         }
     }
 
     // compute borrow flags from mulout_p and mulout_n
-    let mut borrow_flags: [Field; 2 * N - 2] = [0; 2 * N - 2];
+    let mut borrow_flags: [bool; 2 * N - 2] = [false; 2 * N - 2];
     let borrow_shift: Field = TWO_POW_246; // 2^{246}
-    let borrow_carry: Field = TWO_POW_126; // 2^{246 - 120} = 2^{126}
-    let downshift: Field = 1 / (TWO_POW_120 as Field);
+    let borrow_carry: Field = TWO_POW_126; // 2^{126} = 2^{246 - 120}
+    let downshift_120: Field = 1 / (TWO_POW_120 as Field);
 
     // determine whether we need to borrow from more significant limbs.
     // initial limb is "simple" comparison operation
-    // TODO: check how expensive `lt` operator is w.r.t. witness generation
-    borrow_flags[0] = mulout_p[0].lt(mulout_n[0]) as Field;
+    borrow_flags[0] = mulout_p[0].lt(mulout_n[0]);
+
     // we have 2N - 2 borrow flags. The number of limbs from our product computation is 2N - 1
     // and there is nothing to borrow against for the final limb.
-    let mut hi_bits =
-        (mulout_p[0] - mulout_n[0] + (borrow_flags[0] as Field * borrow_shift)) * downshift;
+    let mut hi_bits: Field =
+        (mulout_p[0] - mulout_n[0] + ((borrow_flags[0] as Field) * borrow_shift)) * downshift_120;
+
     for i in 1..(N + N - 2) {
         // compute the contribution from limb `i-1` that gets added into limb `i`, and add into limb `i`
-        // let hi_bits = (mulout_p.get(i - 1) - mulout_n.get(i - 1) + (borrow_flags.get(i - 1) * borrow_shift))
-        //     * downshift;
         mulout_p[i] += hi_bits;
 
+        let subtrahend: Field = mulout_n[i] + (borrow_flags[i - 1] as Field) * borrow_carry;
+
         // determine whether negative limb values are greater than positive limb values
-        let underflow: Field =
-            mulout_p[i].lt(mulout_n[i] + (borrow_flags[i - 1] * borrow_carry)) as Field;
-        borrow_flags[i] = underflow;
+        borrow_flags[i] = mulout_p[i].lt(subtrahend);
+        let minuend: Field = mulout_p[i] + (borrow_flags[i] as Field) * borrow_shift;
 
-        hi_bits = (
-            mulout_p[i] - mulout_n[i] + (borrow_flags[i] * borrow_shift)
-                - (borrow_flags[i - 1] * borrow_carry)
-        )
-            * downshift;
+        hi_bits = (minuend - subtrahend) * downshift_120;
     }
-
-    (quotient, remainder, borrow_flags)
+    (quotient, borrow_flags)
 }
 
-/**
-* @brief computes the quotient/remainder of a quadratic expression
-* @details see compute_quadratic_expression_with_borrow_flags for full description
-**/
-pub(crate) unconstrained fn compute_quadratic_expression<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
-    params: P<N, MOD_BITS>,
+/// Computes the quotient/remainder of a quadratic expression (unconstrained)
+///
+/// See `__compute_quadratic_expression_with_borrow_flags` for full description
+pub(crate) unconstrained fn __compute_quadratic_expression<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
+    params: BigNumParams<N, MOD_BITS>,
     lhs_terms: [[[u128; N]; LHS_N]; NUM_PRODUCTS],
     lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
     rhs_terms: [[[u128; N]; RHS_N]; NUM_PRODUCTS],
@@ -182,8 +195,7 @@ pub(crate) unconstrained fn compute_quadratic_expression<let N: u32, let MOD_BIT
     linear_terms: [[u128; N]; ADD_N],
     linear_flags: [bool; ADD_N],
 ) -> ([u128; N], [u128; N]) {
-    // TODO, validate we do not overflow N2 when multiplying and N when adding
-    let mulout: [Field; (N * 2)] = compute_quadratic_expression_product(
+    let mulout: [Field; 2 * N] = __compute_quadratic_expression_product(
         params,
         lhs_terms,
         lhs_flags,
@@ -192,19 +204,13 @@ pub(crate) unconstrained fn compute_quadratic_expression<let N: u32, let MOD_BIT
         linear_terms,
         linear_flags,
     );
+    // __normalize_limbs will validate that we do not overflow 2N, normally we should not overflow 2N-1
     let mut relation_result: [u128; 2 * N] = split_bits::__normalize_limbs(mulout);
 
-    // size 4
-    // a[3] * b[3] = a[6] = 7
-    // TODO: ugly! Will fail if input slice is empty
-    let k = MOD_BITS;
+    let (quotient, remainder): ([u128; N], [u128; N]) =
+        __barrett_reduction(relation_result, params.redc_param, MOD_BITS, params.modulus);
 
-    let (quotient, remainder) =
-        __barrett_reduction(relation_result, params.redc_param, k, params.modulus);
-
-    let mut q = quotient;
-    let mut r = remainder;
-    (q, r)
+    (quotient, remainder)
 }
 
 /**
@@ -245,7 +251,7 @@ pub(crate) unconstrained fn compute_quadratic_expression<let N: u32, let MOD_BIT
 * @param linear_flags an array of sign flags
 **/
 pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
-    params: P<N, MOD_BITS>,
+    params: BigNumParams<N, MOD_BITS>,
     lhs_terms: [[[u128; N]; LHS_N]; NUM_PRODUCTS],
     lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
     rhs_terms: [[[u128; N]; RHS_N]; NUM_PRODUCTS],
@@ -254,8 +260,8 @@ pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let L
     linear_flags: [bool; ADD_N],
 ) {
     // use an unconstrained function to compute the value of the quotient
-    let (quotient, _, borrow_flags): ([u128; N], [u128; N], [Field; 2 * N - 2]) = unsafe {
-        compute_quadratic_expression_with_borrow_flags::<_, MOD_BITS, _, _, _, _>(
+    let (quotient, borrow_flags): ([u128; N], [bool; 2 * N - 2]) = unsafe {
+        __compute_quadratic_expression_with_borrow_flags::<_, MOD_BITS, _, _, _, _>(
             params,
             lhs_terms,
             lhs_flags,
@@ -345,16 +351,15 @@ pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let L
     // (the larger the value, the greater the range check that is required on product_limbs)
     // (126-bit range check is a sweet spot for the barretenberg backend as it decomposes into 9 14-bit range checks)
     // (the barretenberg backend can evaluate these in 5.25 gates. 127 bits costs 6.5 gates)
-    let borrow_shift: Field = 0x40000000000000000000000000000000000000000000000000000000000000; // 2^{246}
-    let borrow_carry: Field = 0x40000000000000000000000000000000; // 2^{246 - 120} = 2^{126}
+    let borrow_shift: Field = TWO_POW_246; // 2^{246}
+    let borrow_carry: Field = TWO_POW_126; // 2^{246 - 120} = 2^{126}
     // N.B. borrow_flags is `Field` type because making it `bool` would apply boolean constraints to all `N2` array entries.
     //      We only use `N2 - 2` borrow flags so applying 1-bit range checks on the array elements we use is more efficient.
     // TODO: Once it is possible to perform arithmetic on generics we can use `borrow_flags: [bool;N+N-2]` to avoid this issue
-    borrow_flags[0].assert_max_bit_size::<1>();
-    product_limbs[0] += borrow_flags[0] * borrow_shift;
+    product_limbs[0] += (borrow_flags[0] as Field) * borrow_shift;
     for i in 1..(N + N - 2) {
-        borrow_flags[i].assert_max_bit_size::<1>();
-        product_limbs[i] += (borrow_flags[i] * borrow_shift - borrow_flags[i - 1] * borrow_carry);
+        product_limbs[i] += (borrow_flags[i] as Field) * borrow_shift
+            - (borrow_flags[i - 1] as Field) * borrow_carry;
     }
     product_limbs[N + N - 2] -= borrow_flags[N + N - 3] as Field * borrow_carry;
 
@@ -369,7 +374,7 @@ pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let L
     // (the probability of an underflow value satisfying a 126-bit range constraint is approx. 2^{k - 126},
     //  where k is the number of bits in the prime field)
     // We then add the result into the next limb and repeat.
-    let hi_shift: Field = 0x1000000000000000000000000000000;
+    let hi_shift: Field = TWO_POW_120 as Field;
     let hi_downshift: Field = 1 / hi_shift;
     for i in 0..N + N - 2 {
         product_limbs[i] *= hi_downshift;

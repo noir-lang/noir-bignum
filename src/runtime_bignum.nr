@@ -296,7 +296,7 @@ pub fn __compute_quadratic_expression<let N: u32, let MOD_BITS: u32, let LHS_N: 
     linear_flags: [bool; ADD_N],
 ) -> (RuntimeBigNum<N, MOD_BITS>, RuntimeBigNum<N, MOD_BITS>) {
     let (q_limbs, r_limbs) = unsafe {
-        crate::fns::expressions::compute_quadratic_expression::<_, MOD_BITS, _, _, _, _>(
+        crate::fns::expressions::__compute_quadratic_expression::<_, MOD_BITS, _, _, _, _>(
             params,
             map(lhs_terms, |bns| map(bns, |bn| RuntimeBigNum::get_limbs(bn))),
             lhs_flags,
