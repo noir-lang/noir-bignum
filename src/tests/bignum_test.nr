@@ -642,7 +642,9 @@ where
 {
     let inverted_fields = crate::bignum::batch_invert(fields);
     for i in 0..N {
-        assert_eq(fields[i] * inverted_fields[i], BN::one());
+        let eq_flag: bool = (fields[i] * inverted_fields[i]) == BN::one();
+        let is_zero_flag: bool = fields[i].is_zero();
+        assert(eq_flag | is_zero_flag);
     }
 }
 
@@ -672,6 +674,12 @@ unconstrained fn test_batch_inversion_slice_BN381(seeds: [[u8; 2]; 3]) {
 #[test]
 unconstrained fn test_batch_inversion_BN381_regression(seeds: [[u8; 2]; 5]) {
     let fields = seeds.map(|seed| BLS12_381_Fr::derive_from_seed(seed));
+    test_batch_inversion(fields)
+}
+
+#[test]
+unconstrained fn test_batch_inversion_regression() {
+    let fields = [BN254_Fq::one(), BN254_Fq::zero(), BN254_Fq::one()];
     test_batch_inversion(fields)
 }
 
