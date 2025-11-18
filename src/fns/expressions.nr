@@ -157,7 +157,7 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, le
     let mut borrow_flags: [bool; 2 * N - 2] = [false; 2 * N - 2];
     let borrow_shift: Field = TWO_POW_246; // 2^{246}
     let borrow_carry: Field = TWO_POW_126; // 2^{126} = 2^{246 - 120}
-    let shift_120: Field = 1 / (TWO_POW_120 as Field);
+    let downshift_120: Field = 1 / (TWO_POW_120 as Field);
 
     // determine whether we need to borrow from more significant limbs.
     // initial limb is "simple" comparison operation
@@ -166,7 +166,7 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, le
     // we have 2N - 2 borrow flags. The number of limbs from our product computation is 2N - 1
     // and there is nothing to borrow against for the final limb.
     let mut hi_bits: Field =
-        (mulout_p[0] - mulout_n[0] + ((borrow_flags[0] as Field) * borrow_shift)) * shift_120;
+        (mulout_p[0] - mulout_n[0] + ((borrow_flags[0] as Field) * borrow_shift)) * downshift_120;
 
     for i in 1..(N + N - 2) {
         // compute the contribution from limb `i-1` that gets added into limb `i`, and add into limb `i`
@@ -178,7 +178,7 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, le
         borrow_flags[i] = mulout_p[i].lt(subtrahend);
         let minuend: Field = mulout_p[i] + (borrow_flags[i] as Field) * borrow_shift;
 
-        hi_bits = (minuend - subtrahend) * shift_120;
+        hi_bits = (minuend - subtrahend) * downshift_120;
     }
     (quotient, borrow_flags)
 }
