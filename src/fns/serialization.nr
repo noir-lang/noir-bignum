@@ -9,27 +9,21 @@ use crate::utils::map::invert_array;
 /// The input encodes an integer in base 256, which we split into `N` 120-bit limbs.
 ///
 /// ## Note
-/// We only enforce that the value is < 2^MOD_BITS via a range constraint on the
-/// most significant byte (when `MOD_BITS % 8 != 0`). We do not enforce that it is
+/// We only enforce that the value is < 2^MOD_BITS. We do not enforce that it is
 /// reduced modulo the field modulus.
-///
-/// This does not prove `x < modulus`, but it is acceptable here: by construction
-/// the value can differ from the modulus by at most one multiple of it, which is
-/// compatible with the rest of this library
 ///
 /// Consistency between `N` and `MOD_BITS` is expected:
 ///     - `N * 15 >= num_bytes`
 ///     - `num_bytes > (N - 1) * 15`
-///     - `num_bits >= MOD_BITS`
-///     - `num_bits - MOD_BITS < 8`
+///
+/// Enforcing range constraints on each limb is crucial for efficiency.
+/// In principle, accumulating `u8` values already bounds the integer,
+/// but relying on Noir to infer a `u128` from a large linear combination
+/// would trigger a very general (and expensive) range checks
 pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32>(
     x: [u8; (MOD_BITS + 7) / 8],
 ) -> [u128; N] {
     let num_bytes: u32 = (MOD_BITS + 7) / 8;
-    let num_bits: u32 = num_bytes * 8;
-
-    assert(num_bits >= MOD_BITS);
-    assert(num_bits - MOD_BITS < 8);
 
     let mut result: [u128; N] = [0; N];
 
@@ -43,6 +37,7 @@ pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32>(
         limb += x[byte_ptr] as Field;
         byte_ptr += 1;
     }
+    limb.assert_max_bit_size::<MOD_BITS - (N - 1) * 120>();
     result[N - 1] = limb as u128;
 
     for i in 1..N {
@@ -52,14 +47,9 @@ pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32>(
             limb += x[byte_ptr] as Field;
             byte_ptr += 1;
         }
+        limb.assert_max_bit_size::<120>();
         result[N - i - 1] = limb as u128;
     }
-
-    let most_significant_byte: Field = x[0] as Field;
-    if MOD_BITS % 8 != 0 {
-        most_significant_byte.assert_max_bit_size::<MOD_BITS % 8>();
-    }
-
     result
 }
 
