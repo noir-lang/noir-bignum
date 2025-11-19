@@ -35,6 +35,9 @@ pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32>(
         limb *= 256;
         limb += x[i] as Field;
     }
+
+    // TODO: Figure out why is it more efficient to apply 120-bit range constraint here
+    // Rather than `MOD_BITS - 120 * (N - 1)`-bit constraint
     limb.assert_max_bit_size::<120>();
     result[N - 1] = limb as u128;
 
@@ -50,9 +53,10 @@ pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32>(
         result[N - i - 1] = limb as u128;
     }
 
-    let most_significant_byte: Field = x[0] as Field;
-
-    most_significant_byte.assert_max_bit_size::<8 - ((MOD_BITS + 7) / 8 * 8 - MOD_BITS)>();
+    if (MOD_BITS % 8 != 0) {
+        let most_significant_byte: Field = x[0] as Field;
+        most_significant_byte.assert_max_bit_size::<MOD_BITS % 8>();
+    }
     result
 }
 
