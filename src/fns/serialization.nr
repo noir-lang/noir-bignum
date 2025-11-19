@@ -35,7 +35,7 @@ pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32>(
         limb *= 256;
         limb += x[i] as Field;
     }
-    limb.assert_max_bit_size::<128>();
+    limb.assert_max_bit_size::<120>();
     result[N - 1] = limb as u128;
 
     let mut byte_ptr: u32 = last_limb_bytes;
@@ -46,7 +46,7 @@ pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32>(
             limb += x[byte_ptr] as Field;
             byte_ptr += 1;
         }
-        limb.assert_max_bit_size::<128>();
+        limb.assert_max_bit_size::<120>();
         result[N - i - 1] = limb as u128;
     }
 
@@ -65,9 +65,6 @@ pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32>(
 /// Consistency between `N` and `MOD_BITS` is expected:
 ///     - the most significant limb contributes `((MOD_BITS + 7) / 8) - (N - 1) * 15` bytes;
 ///     - all other limbs are serialized as full 15-byte chunks.
-///
-/// No range checks are applied here; limbs are assumed to be valid `BigNum`
-/// representations.
 pub(crate) fn to_be_bytes<let N: u32, let MOD_BITS: u32>(
     val: [u128; N],
 ) -> [u8; (MOD_BITS + 7) / 8] {
@@ -95,6 +92,10 @@ pub(crate) fn to_be_bytes<let N: u32, let MOD_BITS: u32>(
 }
 
 /// Construct a `BigNum` value from little-endian byte array
+///
+/// Reverse an array and apply `from_be_bytes`
+///
+/// See `from_be_bytes` for details
 pub(crate) fn from_le_bytes<let N: u32, let MOD_BITS: u32>(
     x: [u8; (MOD_BITS + 7) / 8],
 ) -> [u128; N] {
@@ -103,6 +104,10 @@ pub(crate) fn from_le_bytes<let N: u32, let MOD_BITS: u32>(
 }
 
 /// Construct a little-endian byte array from a `BigNum` value
+///
+/// Apply `to_be_bytes` and reverse an array
+///
+/// See `to_be_bytes` for details
 pub(crate) fn to_le_bytes<let N: u32, let MOD_BITS: u32>(
     val: [u128; N],
 ) -> [u8; (MOD_BITS + 7) / 8] {
