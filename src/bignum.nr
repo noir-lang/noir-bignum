@@ -311,7 +311,7 @@ pub unconstrained fn compute_quadratic_expression<T: BigNum, let LHS_N: u32, let
     linear_flags: [bool; ADD_N],
 ) -> (T, T) {
     let params = T::params();
-    let (q_limbs, r_limbs) = crate::fns::expressions::compute_quadratic_expression(
+    let (q_limbs, r_limbs) = crate::fns::expressions::__compute_quadratic_expression(
         params,
         crate::utils::map::map(
             lhs_terms,
