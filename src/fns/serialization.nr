@@ -66,21 +66,20 @@ pub(crate) fn to_be_bytes<let N: u32, let MOD_BITS: u32>(
     val: [u128; N],
 ) -> [u8; (MOD_BITS + 7) / 8] {
     let mut result: [u8; (MOD_BITS + 7) / 8] = [0; (MOD_BITS + 7) / 8];
-    // the last limb will not have all the 15 bytes so we deal with the full limbs first
-    for i in 0..N - 1 {
-        let index = N - i - 2;
-        let limb_bytes: [u8; 15] = (val[index] as Field).to_be_bytes();
-        for j in 0..15 {
-            // we leave the space for the first byte empty, which would take (MOD_BITS+7)/8 - MOD_BITS/8 bytes
-            result[i * 15 + j + (MOD_BITS + 7) / 8 - (N - 1) * 15] = limb_bytes[j];
-        }
-    }
-    // now we deal with the last limb
+
     let last_limb_bytes: [u8; ((MOD_BITS + 7) / 8 - (N - 1) * 15)] =
         (val[N - 1] as Field).to_be_bytes();
 
     for i in 0..((MOD_BITS + 7) / 8 - (N - 1) * 15) {
         result[i] = last_limb_bytes[i];
+    }
+
+    for i in 0..N - 1 {
+        let index = N - i - 2;
+        let limb_bytes: [u8; 15] = (val[index] as Field).to_be_bytes();
+        for j in 0..15 {
+            result[i * 15 + j + (MOD_BITS + 7) / 8 - (N - 1) * 15] = limb_bytes[j];
+        }
     }
     result
 }
