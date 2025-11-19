@@ -28,24 +28,21 @@ pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32>(
     let mut result: [u128; N] = [0; N];
 
     let excess_bytes: u32 = N * 15 - num_bytes;
-    let final_limb_bytes: u32 = 15 - excess_bytes;
+    let last_limb_bytes: u32 = 15 - excess_bytes;
 
     let mut limb: Field = 0;
-    let mut byte_ptr: u32 = 0;
-    for _ in 0..final_limb_bytes {
+    for i in 0..last_limb_bytes {
         limb *= 256;
-        limb += x[byte_ptr] as Field;
-        byte_ptr += 1;
+        limb += x[i] as Field;
     }
     limb.assert_max_bit_size::<MOD_BITS - (N - 1) * 120>();
     result[N - 1] = limb as u128;
 
     for i in 1..N {
         let mut limb: Field = 0;
-        for _ in 0..15 {
+        for j in 0..15 {
             limb *= 256;
-            limb += x[byte_ptr] as Field;
-            byte_ptr += 1;
+            limb += x[last_limb_bytes + 15 * i + j] as Field;
         }
         limb.assert_max_bit_size::<120>();
         result[N - i - 1] = limb as u128;
@@ -69,7 +66,6 @@ pub(crate) fn to_be_bytes<let N: u32, let MOD_BITS: u32>(
     val: [u128; N],
 ) -> [u8; (MOD_BITS + 7) / 8] {
     let mut result: [u8; (MOD_BITS + 7) / 8] = [0; (MOD_BITS + 7) / 8];
-    let mut byte_ptr: u32 = 0;
 
     // First we deal with the last limb
     let last_limb_num_bytes: u32 = (MOD_BITS + 7) / 8 - (N - 1) * 15;
@@ -78,8 +74,7 @@ pub(crate) fn to_be_bytes<let N: u32, let MOD_BITS: u32>(
         (val[N - 1] as Field).to_be_bytes();
 
     for i in 0..last_limb_num_bytes {
-        result[byte_ptr] = last_limb_bytes[i];
-        byte_ptr += 1;
+        result[i] = last_limb_bytes[i];
     }
 
     // Now we deal with the full limbs
@@ -87,8 +82,7 @@ pub(crate) fn to_be_bytes<let N: u32, let MOD_BITS: u32>(
         let idx = (N - 1) - i - 1;
         let limb_bytes: [u8; 15] = (val[idx] as Field).to_be_bytes();
         for j in 0..15 {
-            result[byte_ptr] = limb_bytes[j];
-            byte_ptr += 1;
+            result[last_limb_num_bytes + i * 15 + j] = limb_bytes[j];
         }
     }
     result
