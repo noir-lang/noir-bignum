@@ -44,7 +44,7 @@ pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32>(
         for _ in 0..15 {
             limb *= 256;
             limb += x[byte_ptr] as Field;
-            byte_ptr+=1;
+            byte_ptr += 1;
         }
         limb.assert_max_bit_size::<128>();
         result[N - i - 1] = limb as u128;
@@ -56,26 +56,41 @@ pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32>(
     result
 }
 
+/// Construct a big-endian byte array from a `BigNum` value.
+///
+/// The output contains `(MOD_BITS + 7) / 8` bytes. We serialize the most
+/// significant limb first, which may occupy fewer than 15 bytes, followed by
+/// the remaining full 15-byte limbs in big-endian order.
+///
+/// Consistency between `N` and `MOD_BITS` is expected:
+///     - the most significant limb contributes `((MOD_BITS + 7) / 8) - (N - 1) * 15` bytes;
+///     - all other limbs are serialized as full 15-byte chunks.
+///
+/// No range checks are applied here; limbs are assumed to be valid `BigNum`
+/// representations.
 pub(crate) fn to_be_bytes<let N: u32, let MOD_BITS: u32>(
     val: [u128; N],
 ) -> [u8; (MOD_BITS + 7) / 8] {
     let mut result: [u8; (MOD_BITS + 7) / 8] = [0; (MOD_BITS + 7) / 8];
-    // the last limb will not have all the 15 bytes so we deal with the full limbs first
+
+    let mut byte_ptr: u32 = 0;
+    // First we deal with the full limbs
     for i in 0..N - 1 {
-        let index = N - i - 2;
-        let limb_bytes: [u8; 15] = (val[index] as Field).to_be_bytes();
+        let idx = (N - 1) - i - 1;
+        let limb_bytes: [u8; 15] = (val[idx] as Field).to_be_bytes();
         for j in 0..15 {
-            // we leave the space for the first byte empty, which would take (MOD_BITS+7)/8 - MOD_BITS/8 bytes
-            result[i * 15 + j + (MOD_BITS + 7) / 8 - (N - 1) * 15] = limb_bytes[j];
+            result[byte_ptr] = limb_bytes[j];
+            byte_ptr += 1;
         }
     }
-    // now we deal with the last limb
+
+    let last_limb_num_bytes: u32 = (MOD_BITS + 7) / 8 - (N - 1) * 15;
     let last_limb_bytes: [u8; ((MOD_BITS + 7) / 8 - (N - 1) * 15)] =
         (val[N - 1] as Field).to_be_bytes();
-
-    for i in 0..((MOD_BITS + 7) / 8 - (N - 1) * 15) {
+    for i in 0..last_limb_num_bytes {
         result[i] = last_limb_bytes[i];
     }
+
     result
 }
 
