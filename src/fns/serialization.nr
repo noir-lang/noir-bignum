@@ -73,10 +73,11 @@ pub(crate) fn to_be_bytes<let N: u32, let MOD_BITS: u32>(
 ) -> [u8; (MOD_BITS + 7) / 8] {
     let mut result: [u8; (MOD_BITS + 7) / 8] = [0; (MOD_BITS + 7) / 8];
 
-    let mut byte_ptr: u32 = 0;
+    let last_limb_num_bytes: u32 = (MOD_BITS + 7) / 8 - (N - 1) * 15;
+    let mut byte_ptr: u32 = last_limb_num_bytes;
     // First we deal with the full limbs
     for i in 0..N - 1 {
-        let idx = (N - 1) - i - 1;
+        let idx: u32 = (N - 1) - i - 1;
         let limb_bytes: [u8; 15] = (val[idx] as Field).to_be_bytes();
         for j in 0..15 {
             result[byte_ptr] = limb_bytes[j];
@@ -84,7 +85,6 @@ pub(crate) fn to_be_bytes<let N: u32, let MOD_BITS: u32>(
         }
     }
 
-    let last_limb_num_bytes: u32 = (MOD_BITS + 7) / 8 - (N - 1) * 15;
     let last_limb_bytes: [u8; ((MOD_BITS + 7) / 8 - (N - 1) * 15)] =
         (val[N - 1] as Field).to_be_bytes();
     for i in 0..last_limb_num_bytes {
