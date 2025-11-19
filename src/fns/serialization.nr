@@ -1,33 +1,50 @@
 use crate::utils::map::invert_array;
-/// conversions between big endian and little endian byte arrays and BigNum instances
-/// the byte serialization should have `(MOD_BITS + 7) / 8` bytes.
-/// each 120-bit limb is represented by 15 bytes, and there are fewer bytes for covering the most significant limb
+
+// Conversions between big endian and little endian byte arrays and BigNum instances
+// the byte serialization should have `(MOD_BITS + 7) / 8` bytes.
+// each 120-bit limb is represented by 15 bytes, and there are fewer bytes for covering the most significant limb
+
+/// Construct a `BigNum` value from a big-endian byte array.
+///
+/// The input encodes an integer in base 256, which we split into `N` 120-bit limbs.
+///
+/// ## Note
+/// We only enforce that the value is < 2^MOD_BITS. We do not enforce that it is
+/// reduced modulo the field modulus.
+///
+/// Consistency between `N` and `MOD_BITS` is expected:
+///     - `N * 15 >= num_bytes`
+///     - `num_bytes > (N - 1) * 15`
+///
+/// Enforcing range constraints on each limb is crucial for efficiency.
+/// In principle, accumulating `u8` values already bounds the integer,
+/// but relying on Noir to infer a `u128` from a large linear combination
+/// would trigger a very general (and expensive) range checks
 pub(crate) fn from_be_bytes<let N: u32, let MOD_BITS: u32>(
     x: [u8; (MOD_BITS + 7) / 8],
 ) -> [u128; N] {
-    let num_bits = (MOD_BITS + 7) / 8 * 8;
-    assert(num_bits >= MOD_BITS);
-    assert(num_bits - MOD_BITS < 8);
+    let num_bytes: u32 = (MOD_BITS + 7) / 8;
+
     let mut result: [u128; N] = [0; N];
 
-    let excess_bytes = N * 15 - (MOD_BITS + 7) / 8;
-    let final_limb_bytes = 15 - excess_bytes;
+    let excess_bytes: u32 = N * 15 - num_bytes;
+    let last_limb_bytes: u32 = 15 - excess_bytes;
+
     let mut limb: Field = 0;
-    let mut k = 0;
-    for _j in 0..final_limb_bytes {
+    for i in 0..last_limb_bytes {
         limb *= 256;
-        limb += x[k] as Field;
-        k += 1;
+        limb += x[i] as Field;
     }
     limb.assert_max_bit_size::<128>();
     result[N - 1] = limb as u128;
 
+    let mut byte_ptr: u32 = last_limb_bytes;
     for i in 1..N {
         let mut limb: Field = 0;
-        for _j in 0..15 {
+        for _ in 0..15 {
             limb *= 256;
-            limb += x[k] as Field;
-            k += 1;
+            limb += x[byte_ptr] as Field;
+            byte_ptr+=1;
         }
         limb.assert_max_bit_size::<128>();
         result[N - i - 1] = limb as u128;
