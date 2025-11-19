@@ -94,18 +94,18 @@ pub(crate) fn to_be_bytes<let N: u32, let MOD_BITS: u32>(
     result
 }
 
+/// Construct a `BigNum` value from little-endian byte array
+pub(crate) fn from_le_bytes<let N: u32, let MOD_BITS: u32>(
+    x: [u8; (MOD_BITS + 7) / 8],
+) -> [u128; N] {
+    let be_x: [u8; (MOD_BITS + 7) / 8] = invert_array(x);
+    from_be_bytes(be_x)
+}
+
+/// Construct a little-endian byte array from a `BigNum` value
 pub(crate) fn to_le_bytes<let N: u32, let MOD_BITS: u32>(
     val: [u128; N],
 ) -> [u8; (MOD_BITS + 7) / 8] {
     let result_be: [u8; (MOD_BITS + 7) / 8] = to_be_bytes(val);
-    let result = invert_array(result_be);
-    result
-}
-
-pub(crate) fn from_le_bytes<let N: u32, let MOD_BITS: u32>(
-    x: [u8; (MOD_BITS + 7) / 8],
-) -> [u128; N] {
-    // make the bytes big endian
-    let be_x = invert_array(x);
-    from_be_bytes(be_x)
+    invert_array(result_be)
 }
