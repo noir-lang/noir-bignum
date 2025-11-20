@@ -226,13 +226,38 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
 
 /// Validate lhs != rhs
 ///
-/// A == B (mod p) implies A == B
-/// We can efficiently evaluate A == B (mod p), where p - circuit modulus
-/// This method is *sound*, but not *complete* (i.e. A != B but A == B (mod p))
-/// However the probability of an honest Prover being unable to satisfy this check is tiny!
-///         (todo: compute how tiny)
-////
-/// TODO: check that !eq is not more efficient
+/// We compare `A` and `B` via their encodings in the circuit `Field`
+///
+/// Under our range assumptions, equality in `Field` implies equality of the underlying
+/// `BigNum` values, hence equality (mod `MOD`)
+///
+/// In this library it is possible that A or B is a little bit greater than `MOD`
+/// So A == B (mod `MOD`) implies that A == B, A == B + MOD or A == B - MOD over the integers
+/// Hence we can compute everything (mod p) and constrain that
+/// (A - B) * (A - B + MOD) * (A - B - MOD) != 0 (mod p)
+///
+/// ## Soundness
+/// This method is *sound* for checking `A != B (mod MOD)`
+///
+/// If `A == B (mod MOD)`, then `A - B` is in `{0, +-MOD}` as an integer,
+/// so one of the factors `A-B`, `A-B+MOD`, `A-B-MOD` is zero in `Field`, and the product is zero
+/// Therefore, whenever the assertion `target != 0` holds, we must have `A != B (mod MOD)`
+/// under our range assumptions
+///
+/// ## Completeness
+/// In general, this method is not *complete*: if the admissible range of `A` and `B`
+/// is large enough relative to the circuit `Field` prime `p`, an honest prover with
+/// `A != B (mod MOD)` can still hit an alias where
+///     (A - B) * (A - B + MOD) * (A - B - MOD) == 0 (mod p),
+/// i.e.
+///     - A = B      (mod p), or
+///     - A = B + MOD (mod p), or
+///     - A = B - MOD (mod p).
+///
+/// For random `A, B` in such a wide range, the probability of this collision is
+/// roughly 3/p.
+///
+/// In case `MOD` < `p` this function becomes *complete*
 pub(crate) fn assert_is_not_equal<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     lhs: [u128; N],
@@ -251,9 +276,6 @@ pub(crate) fn assert_is_not_equal<let N: u32, let MOD_BITS: u32>(
         modulus_mod_p += params.modulus[N - i - 1] as Field;
     }
 
-    // lhs can be either X mod p or M + X mod p
-    // rhs can be either Y mod p or M + Y mod p
-    // If lhs - rhs = 0 mod M then lhs - rhs = {0, M or -M} mod p
     let diff: Field = l - r;
     let target: Field = diff * (diff + modulus_mod_p) * (diff - modulus_mod_p);
     assert(target != 0);
@@ -263,7 +285,13 @@ pub(crate) fn assert_is_not_equal<let N: u32, let MOD_BITS: u32>(
 ///
 /// A == B (mod MOD)
 /// We compute A - B and check whether it is `0` or `MOD`
-/// This is due to subtract constrains the diff value to be < 2^MOD_BITS, not < M
+/// This is due to subtract constrains the diff value to be < 2^MOD_BITS, not < `MOD`
+///
+/// ## Soundness
+/// This function is statistically *sound*. See `sub` for details
+///
+/// ## Completeness
+/// This function is *complete*. An honest prover will always be able to execute it.
 ///
 /// ## TODO
 /// can do this more efficiently via witngen in unconstrained functions?
