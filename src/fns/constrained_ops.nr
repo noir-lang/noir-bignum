@@ -309,11 +309,11 @@ where
 ///                               2. in `evaluate_quadratic_expression`, we require that for `expression - quotient * modulus`,
 ///                                  limbs cannot exceed `246` bits (246 magic number due to a higher number adding extra range check gates)
 ///           because of factor 2 and the fact that modulus limbs are 120 bits, quotient limbs cannot be > 126 bits
-pub(crate) fn validate_quotient_in_range<let N: u32, let MOD_BITS: u32>(limbs: [Field; N]) {
+pub(crate) fn validate_quotient_in_range<let N: u32, let MOD_BITS: u32>(limbs: [u128; N]) {
     for i in 0..(N - 1) {
-        limbs[i].assert_max_bit_size::<120>();
+        (limbs[i] as Field).assert_max_bit_size::<120>();
     }
-    limbs[N - 1].assert_max_bit_size::<MOD_BITS - (N - 1) * 120 + 6>();
+    (limbs[N - 1] as Field).assert_max_bit_size::<MOD_BITS - (N - 1) * 120 + 6>();
 }
 
 /// Validate that `lhs - rhs` does not underflow i.e. that lhs > rhs over the integers

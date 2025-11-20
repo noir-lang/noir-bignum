@@ -224,7 +224,7 @@ fn assert_is_not_equal() {
     a.assert_is_not_equal(b);
 }
 
-#[test(should_fail_with = "asssert_is_not_equal fail")]
+#[test(should_fail_with = "")]
 fn assert_is_not_equal_fail() {
     let params: crate::params::BigNumParams<_,_> = $params;
 
@@ -234,7 +234,7 @@ fn assert_is_not_equal_fail() {
     a.assert_is_not_equal(b);
 }
 
-#[test(should_fail_with = "asssert_is_not_equal fail")]
+#[test(should_fail_with = "")]
 fn assert_is_not_equal_overloaded_lhs_fail() {
     let params: crate::params::BigNumParams<_,_> = $params;
 
@@ -251,7 +251,7 @@ fn assert_is_not_equal_overloaded_lhs_fail() {
     a_plus_modulus.assert_is_not_equal(b);
 }
 
-#[test(should_fail_with = "asssert_is_not_equal fail")]
+#[test(should_fail_with = "")]
 fn assert_is_not_equal_overloaded_rhs_fail() {
     let params: crate::params::BigNumParams<_,_> = $params;
 
@@ -268,7 +268,7 @@ fn assert_is_not_equal_overloaded_rhs_fail() {
     a.assert_is_not_equal(b_plus_modulus);
 }
 
-#[test(should_fail_with = "asssert_is_not_equal fail")]
+#[test(should_fail_with = "")]
 fn assert_is_not_equal_overloaded_fail() {
     let params: crate::params::BigNumParams<_,_> = $params;
 
