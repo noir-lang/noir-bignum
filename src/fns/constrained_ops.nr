@@ -437,6 +437,10 @@ pub(crate) fn check_gt_with_flags<let N: u32>(
 ///
 /// Basically the same as `validate_gt` but we compute the result on the fly
 /// It is just a bit more optimized as we expect each `BigNum` value to be \leq `MOD`
+///
+/// ## Note
+/// In contrast to `validate_gt`, we allow the value to be `MOD`
+/// Since it is consistent with the rest of the library
 pub(crate) fn validate_in_field<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     val: [u128; N],
