@@ -320,7 +320,7 @@ pub(crate) fn is_zero<let N: u32>(val: [u128; N]) -> bool {
 ///     - Constraining the last limb to be `MOD_BITS - 120 * (N - 1)`
 ///
 /// ## Note
-/// This is a very expensive function, when the `TOP_LIMB_BITS` is uncommon
+/// This can be a very expensive function, when the `TOP_LIMB_BITS` is uncommon
 ///
 /// For example: BLS12_377Fr, with `TOP_LIMB_BITS`=13
 /// It creates a new 13-bit range table, which consists of roughly 3k variables
