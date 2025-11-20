@@ -218,7 +218,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     }
 
     pub fn is_zero(self) -> bool {
-        is_zero::<N, MOD_BITS>(self.limbs)
+        is_zero(self.limbs)
     }
 }
 
