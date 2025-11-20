@@ -222,14 +222,16 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
     result
 }
 
-/**
-    * @brief Validate self != other
-    * @details If A == B, then A == B mod N.
-    *          We can efficiently evaluate A == B mod N where N = circuit modulus
-    *          This method is *sound*, but not *complete* (i.e. A != B but A == B mod N)
-    *          However the probability of an honest Prover being unable to satisfy this check is tiny!
-    *          (todo: compute how tiny)
-    **/
+// ------------------------------ COMPARISON FUNCTIONS ------------------------------
+
+/// Validate lhs != rhs
+///
+/// A == B (mod p) implies A == B
+/// We can efficiently evaluate A == B (mod p), where p - circuit modulus
+/// This method is *sound*, but not *complete* (i.e. A != B but A == B (mod p))
+/// However the probability of an honest Prover being unable to satisfy this check is tiny!
+///         (todo: compute how tiny)
+////
 pub(crate) fn assert_is_not_equal<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     lhs: [u128; N],
@@ -237,45 +239,56 @@ pub(crate) fn assert_is_not_equal<let N: u32, let MOD_BITS: u32>(
 ) {
     let mut l: Field = 0;
     let mut r: Field = 0;
-    let mut modulus_mod_n: Field = 0;
+    let mut modulus_mod_p: Field = 0;
     for i in 0..N {
         l *= TWO_POW_120 as Field;
         r *= TWO_POW_120 as Field;
-        modulus_mod_n *= TWO_POW_120 as Field;
+        modulus_mod_p *= TWO_POW_120 as Field;
+
         l += lhs[N - i - 1] as Field;
         r += rhs[N - i - 1] as Field;
-        modulus_mod_n += params.modulus[N - i - 1] as Field;
+        modulus_mod_p += params.modulus[N - i - 1] as Field;
     }
 
-    // lhs can be either X mod N or P + X mod N
-    // rhs can be either Y mod N or P + Y mod N
-    // If lhs - rhs = 0 mod P then lhs - rhs = 0, P or -P mod N
-    let diff = l - r;
-    let target = diff * (diff + modulus_mod_n) * (diff - modulus_mod_n);
-    assert(target != 0, "asssert_is_not_equal fail");
+    // lhs can be either X mod p or M + X mod p
+    // rhs can be either Y mod p or M + Y mod p
+    // If lhs - rhs = 0 mod M then lhs - rhs = {0, M or -M} mod p
+    let diff: Field = l - r;
+    let target: Field = diff * (diff + modulus_mod_p) * (diff - modulus_mod_p);
+    assert(target != 0);
 }
 
+/// Compute equality flag
+///
+/// A == B (mod MOD)
+/// We compute A - B and check whether it is `0` or `MOD`
+/// This is due to subtract constrains the diff value to be < 2^MOD_BITS, not < M
+///
+/// ## TODO
+/// can do this more efficiently via witngen in unconstrained functions?
 pub(crate) fn eq<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     lhs: [u128; N],
     rhs: [u128; N],
 ) -> bool {
-    let diff = sub::<_, MOD_BITS>(params, lhs, rhs);
-    // if self == other, possible values of `diff` will be `p` or `0`
-    // (the subtract operator constrains diff to be < ceil(log(p)))
-    // TODO: can do this more efficiently via witngen in unconstrained functions?
+    let diff: [u128; N] = sub::<N, MOD_BITS>(params, lhs, rhs);
     let is_equal_modulus: bool = diff == params.modulus;
-    let is_equal_zero: bool = diff.all(|elem| elem == 0);
+    let is_equal_zero: bool = is_zero(diff);
     is_equal_modulus | is_equal_zero
 }
 
+/// Compare the `BigNum` value with `0`
+///
+/// Compare each limb with 0
 pub(crate) fn is_zero<let N: u32>(val: [u128; N]) -> bool {
-    val.all(|limb| limb == 0)
+    val.all(|limb: u128| limb == 0)
 }
 
-/**
-* @brief Validate a BigNum instance is correctly range constrained to contain no more than Params::modulus_bits()
-**/
+/// Validate a `BigNum` instance is correctly range constrained to contain no more than `MOD_BITS` bits
+///
+/// Constrain the `BigNum` instance to be < 2^MOD_BITS by:
+///     - Constraining each limb(0..N-2) to be 120-bit limb
+///     - Constraining the last limb to be `MOD_BITS - 120 * (N - 1)`
 pub(crate) fn validate_in_range<T, let N: u32, let MOD_BITS: u32>(limbs: [T; N])
 where
     T: Into<Field>,
@@ -287,25 +300,20 @@ where
     limbs[N - 1].into().assert_max_bit_size::<MOD_BITS - ((N - 1) * 120)>();
 }
 
-/**
-* @brief validate quotient produced from `evaluate_quadratic_expression` is well-formed
-* @description because the inputs into evaluate_quadratic_expression may cause the quotient to extend beyond `Params::modulus_bits`.
-*              We allow the quotient to extend 6 bits beyond Params::modulus_bits()
-*              Why is this?
-*              several factors:    1. quotient * modulus , limbs cannot overflow field boundary (254 bits)
-*                                  2. in `evaluate_quadratic_expression`, we require that for `expression - quotient * modulus`,
-*                                     limbs cannot exceed 246 bits (246 magic number due to a higher number adding extra range check gates)
-*              because of factor 2 and the fact that modulus limbs are 120 bits, quotient limbs cannot be >126 bits
-*
-*              Note: doesn't this mean that final_limb_bits should be constrained to be 126 bits, not modulus_bits() - ((N - 1) * 120) + 6?
-*              TODO: think about this more! we want the range constraint we apply to be as small as allowable as this is more efficient
-**/
-pub(crate) fn validate_quotient_in_range<let N: u32, let MOD_BITS: u32>(limbs: [u128; N]) {
-    for i in 0..(N) {
-        (limbs[i] as Field).assert_max_bit_size::<120>();
+/// Validate quotient produced from `evaluate_quadratic_expression` is well-formed
+///
+/// Because the inputs into `evaluate_quadratic_expression` may cause the quotient to extend beyond `Params::modulus_bits`.
+///           We allow the quotient to extend `6` bits beyond `Params::modulus_bits()`
+///           Why is this?
+///           several factors:    1. quotient * modulus , limbs cannot overflow `Field` boundary (254 bits)
+///                               2. in `evaluate_quadratic_expression`, we require that for `expression - quotient * modulus`,
+///                                  limbs cannot exceed `246` bits (246 magic number due to a higher number adding extra range check gates)
+///           because of factor 2 and the fact that modulus limbs are 120 bits, quotient limbs cannot be > 126 bits
+pub(crate) fn validate_quotient_in_range<let N: u32, let MOD_BITS: u32>(limbs: [Field; N]) {
+    for i in 0..(N - 1) {
+        limbs[i].assert_max_bit_size::<120>();
     }
-    // Note: replace magic number 6 with definition
-    (limbs[N - 1] as Field).assert_max_bit_size::<MOD_BITS - ((N - 1) * 120) + 6>();
+    limbs[N - 1].assert_max_bit_size::<MOD_BITS - (N - 1) * 120 + 6>();
 }
 
 /// Validate that `lhs - rhs` does not underflow i.e. that lhs > rhs over the integers
@@ -345,7 +353,7 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u
     assert(!is_zero(result));
 
     // Constrain result and borrow_flags to match the expected arithmetic
-    check_gt_with_flags::<N, MOD_BITS>(lhs, rhs, result, borrow_flags);
+    check_gt_with_flags(lhs, rhs, result, borrow_flags);
 }
 
 /// Constraining function for the results of `__validate_gt_with_flags`,
@@ -355,7 +363,7 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u
 ///     lhs[0]     - rhs[0]     - result[0]     + bf[0] * 2^{120}             = 0
 ///     lhs[i]     - rhs[i]     - result[i]     + bf[i] * 2^{120} - bf[i - 1] = 0,  i = 1..N-2
 ///     lhs[N - 1] - rhs[N - 1] - result[N - 1]                   - bf[N - 2] = 0
-pub(crate) fn check_gt_with_flags<let N: u32, let MOD_BITS: u32>(
+pub(crate) fn check_gt_with_flags<let N: u32>(
     lhs: [u128; N],
     rhs: [u128; N],
     result: [u128; N],
@@ -379,33 +387,57 @@ pub(crate) fn check_gt_with_flags<let N: u32, let MOD_BITS: u32>(
     assert(result_limb == 0);
 }
 
+/// Validate that `val` <= MOD
+///
+/// Compute `result = MOD - val` along with `borrow_flags`,
+/// then constrain `result` to be a valid `BigNum` value.
+///
+/// Basically the same as `validate_gt` but we compute the result on the fly
+/// It is just a bit more optimized as we expect each `BigNum` value to be \leq `MOD`
 pub(crate) fn validate_in_field<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     val: [u128; N],
 ) {
-    // N.B. need to combine with validate_in_range if `self` limbs have not been range constrained
-    let mut p_minus_self: [Field; N] = [0; N];
     let modulus: [u128; N] = params.modulus;
-    for i in 0..N {
-        p_minus_self[i] = (modulus[i] as Field - val[i] as Field);
-    }
-    let borrow_flags = unsafe { __validate_in_field_compute_borrow_flags(params, val) };
-    p_minus_self[0] += (borrow_flags[0] as Field * TWO_POW_120 as Field);
+
+    // Safety: compute borrow flags out-of-circuit
+    let borrow_flags: [bool; (N - 1)] =
+        unsafe { __validate_in_field_compute_borrow_flags(params, val) };
+
+    let mut p_minus_self: [Field; N] = [0; N];
+    p_minus_self[0] = (modulus[0] as Field) - (val[0] as Field)
+        + (borrow_flags[0] as Field) * (TWO_POW_120 as Field);
     for i in 1..N - 1 {
-        p_minus_self[i] +=
-            (borrow_flags[i] as Field * TWO_POW_120 as Field - borrow_flags[i - 1] as Field);
+        p_minus_self[i] = (modulus[i] as Field) - (val[i] as Field)
+            + (borrow_flags[i] as Field) * (TWO_POW_120 as Field)
+            - (borrow_flags[i - 1] as Field);
     }
-    p_minus_self[N - 1] -= (borrow_flags[N - 2] as Field);
-    validate_in_range::<_, _, MOD_BITS>(p_minus_self);
+    p_minus_self[N - 1] =
+        (modulus[N - 1] as Field) - (val[N - 1] as Field) - (borrow_flags[N - 2] as Field);
+    validate_in_range::<Field, N, MOD_BITS>(p_minus_self);
 }
 
-// a comparison function. returns true if lhs > rhs and false otherwise
+/// Compare two `BigNum` values
+///
+/// Returns `lhs > rhs`
+///
+/// ## Note
+/// This is a strict value comparison over the integers,
+/// the values may not be reduced
 pub(crate) fn cmp<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N]) -> Ordering {
-    let (underflow, result, borrow_flags) = unsafe { __validate_gt_with_flags(lhs, rhs) };
-    // if underflow is true, swap lhs and rhs
-    let (lhs, rhs) = if underflow { (rhs, lhs) } else { (lhs, rhs) };
+    // Safety: we constrain:
+    //          `underflow` with the following swap and (bool)
+    //          `result` with `check_gt_with_flags` and `validate_in_range`
+    //          `borrow_flags` with `check_gt_with_flags` and (bool)
+    let (underflow, result, borrow_flags): (bool, [u128; N], [bool; N - 1]) =
+        unsafe { __validate_gt_with_flags(lhs, rhs) };
 
-    check_gt_with_flags::<N, MOD_BITS>(lhs, rhs, result, borrow_flags);
+    // if underflow is true, swap lhs and rhs
+    let (lhs, rhs): ([u128; N], [u128; N]) = if underflow { (rhs, lhs) } else { (lhs, rhs) };
+
+    validate_in_range::<u128, N, MOD_BITS>(result);
+    check_gt_with_flags(lhs, rhs, result, borrow_flags);
+
     if lhs == rhs {
         Ordering::equal()
     } else if underflow {

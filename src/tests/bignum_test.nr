@@ -206,7 +206,7 @@ fn test_to_field_three_digits() {
     assert(result == field);
 }
 
-#[test(should_fail_with = "BigNum::validate_gt check fails")]
+#[test(should_fail_with = "")]
 fn test_to_field_three_digits_overflow() {
     let bn = BN254_Fq::from_limbs([
         0x4e6405505a33bb9b9c0563df2bd59a,
@@ -216,7 +216,7 @@ fn test_to_field_three_digits_overflow() {
     let _ = to_field(bn);
 }
 
-#[test(should_fail_with = "BigNum::validate_gt check fails")]
+#[test(should_fail_with = "")]
 fn test_to_field_too_many_digits() {
     let bn = BLS12_381_Fq::from_limbs([
         0xea1742447ee9d92f9f18e1c80a481e,
