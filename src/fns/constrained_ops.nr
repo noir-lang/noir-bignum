@@ -232,6 +232,7 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
 /// However the probability of an honest Prover being unable to satisfy this check is tiny!
 ///         (todo: compute how tiny)
 ////
+/// TODO: check that !eq is not more efficient
 pub(crate) fn assert_is_not_equal<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     lhs: [u128; N],
@@ -289,6 +290,18 @@ pub(crate) fn is_zero<let N: u32>(val: [u128; N]) -> bool {
 /// Constrain the `BigNum` instance to be < 2^MOD_BITS by:
 ///     - Constraining each limb(0..N-2) to be 120-bit limb
 ///     - Constraining the last limb to be `MOD_BITS - 120 * (N - 1)`
+///
+/// ## Note
+/// This is a very expensive function, when the `TOP_LIMB_BITS` is uncommon
+///
+/// For example: BLS12_377Fr, with `TOP_LIMB_BITS`=13
+/// It creates a new 13-bit range table, which consists of roughly 3k variables
+/// And ~2k circuit gates
+///
+/// Compare this to BLS12_377Fq, with `TOP_LIMB_BITS`=17
+/// It is nicely decomposed into
+/// 14-bit range check and 3-bit range check - much much cheaper, since 14-bit range checks
+/// are already pretty common for 120-bit range checks
 pub(crate) fn validate_in_range<T, let N: u32, let MOD_BITS: u32>(limbs: [T; N])
 where
     T: Into<Field>,
@@ -333,6 +346,8 @@ pub(crate) fn validate_quotient_in_range<let N: u32, let MOD_BITS: u32>(limbs: [
 ///
 /// If `lhs < rhs`, then some limb of `result` would have to borrow from a higher limb,
 /// which is impossible because the top limb cannot borrow
+/// Without the extra borrow, the resulting difference will be wrapped around the `Field` modulus
+/// And won't satisfy the range constraint, since all the limbs are < 2^120
 ///
 /// ## Note
 /// `assert(!is_zero(result))` is crucial. Without it, we could always provide
@@ -387,7 +402,7 @@ pub(crate) fn check_gt_with_flags<let N: u32>(
     assert(result_limb == 0);
 }
 
-/// Validate that `val` <= MOD
+/// Validate that `val` <= `MOD`
 ///
 /// Compute `result = MOD - val` along with `borrow_flags`,
 /// then constrain `result` to be a valid `BigNum` value.
@@ -423,19 +438,22 @@ pub(crate) fn validate_in_field<let N: u32, let MOD_BITS: u32>(
 ///
 /// ## Note
 /// This is a strict value comparison over the integers,
-/// the values may not be reduced
+/// the values do not have to be reduced modulo `MOD`.
 pub(crate) fn cmp<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N]) -> Ordering {
     // Safety: we constrain:
-    //          `underflow` with the following swap and (bool)
-    //          `result` with `check_gt_with_flags` and `validate_in_range`
-    //          `borrow_flags` with `check_gt_with_flags` and (bool)
+    //        - `result` and `borrow_flags` with `check_gt_with_flags`
+    //        - `borrow_flags` are also booleans
+    //        - `underflow` with the following swap and (bool)
     let (underflow, result, borrow_flags): (bool, [u128; N], [bool; N - 1]) =
         unsafe { __validate_gt_with_flags(lhs, rhs) };
 
     // if underflow is true, swap lhs and rhs
     let (lhs, rhs): ([u128; N], [u128; N]) = if underflow { (rhs, lhs) } else { (lhs, rhs) };
 
+    // Constrain the `result` to be a valid `BigNum` value
     validate_in_range::<u128, N, MOD_BITS>(result);
+
+    // Constrain subtraction: result = lhs - rhs with borrow_flags
     check_gt_with_flags(lhs, rhs, result, borrow_flags);
 
     if lhs == rhs {
