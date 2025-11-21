@@ -288,7 +288,7 @@ pub(crate) fn assert_is_not_equal<let N: u32, let MOD_BITS: u32>(
 /// This is due to subtract constrains the diff value to be < 2^MOD_BITS, not < `MOD`
 ///
 /// ## Soundness
-/// This function is statistically *sound*. See `sub` for details
+/// This function is conditionally *sound*. See `sub` for details
 ///
 /// ## Completeness
 /// This function is *complete*. An honest prover will always be able to execute it.
