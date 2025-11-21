@@ -232,7 +232,7 @@ pub comptime fn derive_bignum(
             }
 
             fn is_zero(self: Self) -> bool {
-                $constrained_ops::is_zero::<_, $MOD_BITS>(self.get_limbs())
+                $constrained_ops::is_zero(self.get_limbs())
             }
         }
 
