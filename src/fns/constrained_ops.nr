@@ -250,7 +250,7 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
 /// `A != B (mod MOD)` can still hit an alias where
 ///     (A - B) * (A - B + MOD) * (A - B - MOD) == 0 (mod p),
 /// i.e.
-///     - A = B      (mod p), or
+///     - A = B       (mod p), or
 ///     - A = B + MOD (mod p), or
 ///     - A = B - MOD (mod p).
 ///
@@ -369,7 +369,7 @@ pub(crate) fn assert_is_not_zero<let N: u32, let MOD_BITS: u32>(
 ///
 /// This treats both the all-zero limb vector and `params.modulus` as
 /// representing zero. It assumes that all valid `BigNum` values are
-/// range-constrained so that no other representatives of `0 mod MOD`
+/// range-constrained so that no other representatives of `0 (mod MOD)`
 /// can appear.
 ///
 /// ## Note
@@ -691,7 +691,7 @@ pub(crate) fn neg<let N: u32, let MOD_BITS: u32>(
 ///
 /// Under these assumptions the constrained result equals:
 ///
-///     result = (lhs + rhs) mod MOD
+///     result = lhs + rhs (mod MOD)
 ///
 /// in the intended arithmetic.
 ///
@@ -726,13 +726,13 @@ pub(crate) fn neg<let N: u32, let MOD_BITS: u32>(
 /// Consequently, this function is only *conditionally* sound: we rely on the
 /// out-of-circuit implementation of `__add_with_flags` to provide the honest
 /// `(borrow_flags, carry_flags, overflow_modulus)` witness. Under that
-/// assumption, the constrained `result` matches `lhs + rhs mod MOD`.
+/// assumption, the constrained `result` matches `lhs + rhs (mod MOD)`.
 ///
 /// ## Completeness
 ///
 /// For inputs in the range `0 <= lhs, rhs < MOD` and honest flags from
 /// `__add_with_flags`, the constraints are complete: every valid `BigNum` sum
-/// `lhs + rhs mod MOD` admits a satisfying assignment.
+/// `lhs + rhs (mod MOD)` admits a satisfying assignment.
 ///
 /// Inputs with `lhs` or `rhs` in `[MOD, 2^{MOD_BITS})` are still representable
 /// as limb arrays and may admit satisfying witnesses, but then the operation
@@ -837,7 +837,7 @@ pub(crate) fn add<let N: u32, let MOD_BITS: u32>(
 ///
 /// Under these assumptions the constrained result equals:
 ///
-///     result = (lhs - rhs) mod MOD
+///     result = lhs - rhs (mod MOD)
 ///
 /// in the intended arithmetic.
 ///
@@ -874,13 +874,13 @@ pub(crate) fn add<let N: u32, let MOD_BITS: u32>(
 /// Consequently, this function is only *conditionally* sound: we rely on the
 /// out-of-circuit implementation of `__sub_with_flags` to provide the honest
 /// `(borrow_flags, carry_flags, underflow_modulus)` witness. Under that
-/// assumption, the constrained `result` matches `(lhs - rhs) mod MOD`.
+/// assumption, the constrained `result` matches `lhs - rhs (mod MOD)`.
 ///
 /// ## Completeness
 ///
 /// For inputs in the range `0 <= lhs, rhs < MOD` and honest flags from
 /// `__sub_with_flags`, the constraints are complete: every valid `BigNum`
-/// difference `(lhs - rhs) mod MOD` admits a satisfying assignment.
+/// difference `lhs - rhs (mod MOD)` admits a satisfying assignment.
 ///
 /// Inputs with `lhs` or `rhs` in `[MOD, 2^{MOD_BITS})` are still representable
 /// as limb arrays and may admit satisfying witnesses, but then the operation
@@ -936,7 +936,7 @@ pub(crate) fn sub<let N: u32, let MOD_BITS: u32>(
 
 /// Compute the `BigNum` multiplication
 ///
-/// Computes `result = lhs * rhs mod MOD` by:
+/// Computes `result = lhs * rhs (mod MOD)` by:
 ///   1. Computing `result` out of circuit via `__mul`.
 ///   2. Constraining the quadratic relation `lhs * rhs - result = 0` with
 ///      `evaluate_quadratic_expression`.
@@ -972,7 +972,7 @@ pub(crate) fn mul<let N: u32, let MOD_BITS: u32>(
 
 /// Compute the `BigNum` squaring
 ///
-/// Computes `result = val * val mod MOD` by:
+/// Computes `result = val * val (mod MOD)` by:
 ///   1. Computing `result` out of circuit via `__sqr`.
 ///   2. Constraining the quadratic relation `val * val - result = 0` with
 ///      `evaluate_quadratic_expression`.
@@ -1007,11 +1007,11 @@ pub(crate) fn sqr<let N: u32, let MOD_BITS: u32>(
 
 /// Compute the `BigNum` division
 ///
-/// Computes `result = lhs * rhs^{-1} mod MOD` by:
+/// Computes `result = lhs * rhs^{-1} (mod MOD)` by:
 ///   1. Computing `result` out of circuit via `__div`.
 ///   2. Constraining the quadratic relation `result * rhs - lhs = 0` with
 ///      `evaluate_quadratic_expression`.
-///   3. Enforcing `rhs != 0`.
+///   3. Enforcing `rhs != 0 (mod MOD)`.
 ///
 /// ## Soundness
 /// Soundness reduces to `evaluate_quadratic_expression` for the relation
@@ -1030,7 +1030,10 @@ pub(crate) fn div<let N: u32, let MOD_BITS: u32>(
     lhs: [u128; N],
     rhs: [u128; N],
 ) -> [u128; N] {
-    assert(params.has_multiplicative_inverse);
+    assert(
+        params.has_multiplicative_inverse,
+        "BigNum has no multiplicative inverse. Use udiv for unsigned integer division",
+    );
     // Safety: We constrain the result of division immediately after
     let result: [u128; N] = unsafe { __div::<_, MOD_BITS>(params, lhs, rhs) };
     if !std::runtime::is_unconstrained() {
@@ -1044,42 +1047,27 @@ pub(crate) fn div<let N: u32, let MOD_BITS: u32>(
             [lhs],
             [true],
         );
-        assert(!is_zero::<N, MOD_BITS>(rhs));
+        assert_is_not_zero(params, rhs);
     }
     result
 }
 
-/// Compute the `BigNum` integer division with remainder
-///
-/// Computes `quotient = floor(numerator / divisor)` and
-/// `remainder = numerator % divisor` by:
-///   1. Computing `(quotient, remainder)` out of circuit via `__udiv_mod`.
-///   2. Constraining the quadratic relation
-///        quotient * divisor + remainder - numerator = 0
-///      with `evaluate_quadratic_expression`.
-///   3. Enforcing `divisor != 0` and `remainder < divisor`.
-///
-/// ## Soundness
-/// Soundness reduces to `evaluate_quadratic_expression` for the relation
-///     quotient * divisor + remainder - numerator = 0,
-/// together with:
-///   - the non-zero check on `divisor`, and
-///   - the `remainder < divisor` check enforced via `validate_gt`.
-///
-/// Under these checks, any satisfying assignment corresponds to a valid
-/// integer division `numerator = quotient * divisor + remainder` with
-/// `0 <= remainder < divisor`.
+/**
+* @brief udiv_mod performs integer division between numerator, divisor
+*
+* i.e. 1. floor(numerator / divisor) = quotient
+*      2. numerator % divisor = remainder
+*      3. divisor * quotient + remainder = numerator
+**/
 pub(crate) fn udiv_mod<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     numerator: [u128; N],
     divisor: [u128; N],
 ) -> ([u128; N], [u128; N]) {
-    // Safety: We constrain the result of udiv immediately after
-    let (quotient, remainder): ([u128; N], [u128; N]) = unsafe { __udiv_mod(numerator, divisor) };
+    let (quotient, remainder) = unsafe { __udiv_mod(numerator, divisor) };
     if !std::runtime::is_unconstrained() {
-        // quotient * divisor + remainder - numerator = 0
-        // remainder < divisor
-        // divisor != 0
+        // self / divisor = quotient rounded
+        // quotient * divisor + remainder - self = 0
         evaluate_quadratic_expression(
             params,
             [[quotient]],
@@ -1089,8 +1077,9 @@ pub(crate) fn udiv_mod<let N: u32, let MOD_BITS: u32>(
             [numerator, remainder],
             [true, false],
         );
-        validate_gt::<N, MOD_BITS>(divisor, remainder);
-        assert(!is_zero::<N, MOD_BITS>(divisor));
+        // we need (remainder < divisor)
+        // implies (divisor - remainder > 0)
+        validate_gt::<_, MOD_BITS>(divisor, remainder);
     }
     (quotient, remainder)
 }
