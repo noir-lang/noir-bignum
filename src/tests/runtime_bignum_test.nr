@@ -319,7 +319,11 @@ fn test_is_zero() {
     let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
 
     assert(a.is_zero() == true);
+    assert(a.is_zero_integer() == true);
     assert(b.is_zero() == false);
+    assert(b.is_zero_integer() == false);
+
+    b.assert_is_not_zero();
 }
 
 #[test]

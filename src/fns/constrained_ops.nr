@@ -301,16 +301,84 @@ pub(crate) fn eq<let N: u32, let MOD_BITS: u32>(
     rhs: [u128; N],
 ) -> bool {
     let diff: [u128; N] = sub::<N, MOD_BITS>(params, lhs, rhs);
-    let is_equal_modulus: bool = diff == params.modulus;
-    let is_equal_zero: bool = is_zero(diff);
-    is_equal_modulus | is_equal_zero
+    is_zero::<N, MOD_BITS>(params, diff)
 }
 
-/// Compare the `BigNum` value with `0`
+/// Validate that `val` is not equal to zero when interpreted as an integer.
 ///
-/// Compare each limb with 0
-pub(crate) fn is_zero<let N: u32>(val: [u128; N]) -> bool {
-    val.all(|limb: u128| limb == 0)
+/// This enforces that at least one limb of `val` is non-zero.
+/// It does *not* check "BigNum zero" in the modular sense (e.g. it
+/// treats `MOD` as non-zero).
+///
+/// ## Assumptions
+/// * Each limb of `val` is range-constrained to be a 120-bit value:
+///   `0 <= val[i] < 2^120`.
+/// * For our concrete fields and limb counts we have `N * 2^120 < p`,
+///   so the sum of all limbs fits strictly inside the field modulus.
+///
+/// ## Completeness
+/// If `val` is non-zero as an integer, then at least one limb is non-zero,
+/// so the integer sum of the limbs satisfies `0 < limb_sum < p`. In this
+/// case `limb_sum != 0` in the `Field`, and the assertion passes.
+///
+/// ## Soundness
+/// If all limbs of `val` are zero, then `limb_sum` is zero as an integer
+/// and as a field element, so the assertion fails. A witness representing
+/// the zero integer can never satisfy this check.
+///
+/// ## Note
+/// This is slightly cheaper than doing `val != [0; N]`, as we avoid
+/// creating per-limb boolean equalities and chaining them with `and`s.
+pub(crate) fn assert_is_not_zero_integer<let N: u32>(val: [u128; N]) {
+    let mut limb_sum: Field = 0;
+    for i in 0..N {
+        limb_sum += val[i] as Field;
+    }
+    assert(limb_sum != 0);
+}
+
+/// Check whether `val` is the zero `BigNum` in the integer sense.
+///
+/// This returns `true` iff all limbs of `val` are zero. It does *not*
+/// treat `MOD` as zero; for modular `BigNum` zero use `is_zero`.
+///
+/// See `assert_is_not_zero_integer` for the underlying assumptions.
+///
+/// ## Note
+/// This is slightly cheaper than testing `val == [0; N]`, as we avoid
+/// creating per-limb boolean equalities and chaining them with `and`s.
+pub(crate) fn is_zero_integer<let N: u32>(val: [u128; N]) -> bool {
+    let mut limb_sum: Field = 0;
+    for i in 0..N {
+        limb_sum += val[i] as Field;
+    }
+    limb_sum == 0
+}
+
+/// Validate that a `BigNum` value is not zero modulo `MOD`.
+///
+/// Convenience wrapper around `assert_is_not_equal`.
+pub(crate) fn assert_is_not_zero<let N: u32, let MOD_BITS: u32>(
+    params: BigNumParams<N, MOD_BITS>,
+    val: [u128; N],
+) {
+    assert_is_not_equal::<N, MOD_BITS>(params, val, [0; N]);
+}
+
+/// Check whether a `BigNum` value is zero modulo `MOD`.
+///
+/// This treats both the all-zero limb vector and `params.modulus` as
+/// representing zero. It assumes that all valid `BigNum` values are
+/// range-constrained so that no other representatives of `0 mod MOD`
+/// can appear.
+///
+/// ## Note
+/// This is cheaper than calling `eq(val, [0; N])`
+pub(crate) fn is_zero<let N: u32, let MOD_BITS: u32>(
+    params: BigNumParams<N, MOD_BITS>,
+    val: [u128; N],
+) -> bool {
+    is_zero_integer(val) | (val == params.modulus)
 }
 
 /// Validate a `BigNum` instance is correctly range constrained to contain no more than `MOD_BITS` bits
@@ -378,7 +446,7 @@ pub(crate) fn validate_quotient_in_range<let N: u32, let MOD_BITS: u32>(limbs: [
 /// And won't satisfy the range constraint, since all the limbs are < 2^120
 ///
 /// ## Note
-/// `assert(!is_zero(result))` is crucial. Without it, we could always provide
+/// `assert_is_not_zero_integer(result)` is crucial. Without it, we could always provide
 /// two identical inputs `x`, `x` and set `borrow_flags = [false; N]`,
 /// which would satisfy the limb constraints.
 ///
@@ -393,7 +461,7 @@ pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u
     assert(!underflow);
 
     validate_in_range::<u128, N, MOD_BITS>(result);
-    assert(!is_zero(result));
+    assert_is_not_zero_integer(result);
 
     // Constrain result and borrow_flags to match the expected arithmetic
     check_gt_with_flags(lhs, rhs, result, borrow_flags);

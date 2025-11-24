@@ -303,7 +303,11 @@ where
     let a = BN::derive_from_seed([1, 2, 3, 4]);
     let zero = BN::zero();
     assert(a.is_zero() == false);
+    assert(a.is_zero_integer() == false);
     assert(zero.is_zero() == true);
+    assert(zero.is_zero_integer() == true);
+
+    a.assert_is_not_zero();
 }
 
 fn assert_is_not_equal<let N: u32, BN>()

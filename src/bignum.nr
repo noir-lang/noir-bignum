@@ -53,6 +53,9 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     fn umod(self, divisor: Self) -> Self;
 
     fn is_zero(self) -> bool;
+    fn is_zero_integer(self) -> bool;
+    fn assert_is_not_zero(self);
+    fn assert_is_not_zero_integer(self);
 }
 
 // we need macros that implement the BigNum, Default, From, Neg, Add, Sub, Mul, Div, Eq, Ord traits for each bignum type
@@ -232,7 +235,21 @@ pub comptime fn derive_bignum(
             }
 
             fn is_zero(self: Self) -> bool {
-                $constrained_ops::is_zero(self.get_limbs())
+                let params = Self::params();
+                $constrained_ops::is_zero::<$N, $MOD_BITS>(params, self.get_limbs())
+            }
+
+            fn is_zero_integer(self: Self) -> bool {
+                $constrained_ops::is_zero_integer(self.get_limbs())
+            }
+
+            fn assert_is_not_zero(self: Self) {
+                let params = Self::params();
+                $constrained_ops::assert_is_not_zero::<$N, $MOD_BITS>(params, self.get_limbs());
+            }
+
+            fn assert_is_not_zero_integer(self: Self) {
+                $constrained_ops::assert_is_not_zero_integer(self.get_limbs());
             }
         }
 

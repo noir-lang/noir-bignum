@@ -3,8 +3,9 @@ use crate::utils::map::map;
 
 use crate::fns::{
     constrained_ops::{
-        add, assert_is_not_equal, cmp, derive_from_seed, div, eq, is_zero, mul, neg, sub, udiv,
-        udiv_mod, umod, validate_in_field, validate_in_range,
+        add, assert_is_not_equal, assert_is_not_zero, assert_is_not_zero_integer, cmp,
+        derive_from_seed, div, eq, is_zero, is_zero_integer, mul, neg, sub, udiv, udiv_mod, umod,
+        validate_in_field, validate_in_range,
     },
     serialization::{from_be_bytes, from_le_bytes, to_be_bytes, to_le_bytes},
     unconstrained_ops::{
@@ -218,7 +219,21 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     }
 
     pub fn is_zero(self) -> bool {
-        is_zero(self.limbs)
+        let params = self.params;
+        is_zero(params, self.limbs)
+    }
+
+    pub fn is_zero_integer(self: Self) -> bool {
+        is_zero_integer(self.limbs)
+    }
+
+    pub fn assert_is_not_zero(self: Self) {
+        let params = self.params;
+        assert_is_not_zero::<N, MOD_BITS>(params, self.limbs);
+    }
+
+    pub fn assert_is_not_zero_integer(self: Self) {
+        assert_is_not_zero_integer(self.limbs);
     }
 }
 
