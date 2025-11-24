@@ -1,4 +1,4 @@
-use crate::constants::TWO_POW_120;
+use crate::constants::{GRUMPKIN_MODULUS, TWO_POW_120, TWO_POW_240};
 
 use crate::fns::{
     expressions::evaluate_quadratic_expression,
@@ -13,93 +13,100 @@ use crate::params::BigNumParams;
 
 use std::cmp::Ordering;
 
+/// Lift the limbs of a `BigNum` value onto the circuit `Field`
+///
+/// Descent the `BigNum` value back into the `Field` and
+///    - check that it's a proper `BigNum` value
+///    - validate the limbs sum up to a `Field` value
 pub(crate) fn limbs_to_field<let N: u32, let MOD_BITS: u32>(
     _params: BigNumParams<N, MOD_BITS>,
     limbs: [u128; N],
 ) -> Field {
+    validate_in_range::<u128, N, MOD_BITS>(limbs);
     if N > 2 {
-        // validate that the limbs is less than the modulus the grumpkin modulus
-        let mut grumpkin_modulus = [0; N];
-        grumpkin_modulus[0] = 0x33e84879b9709143e1f593f0000001;
-        grumpkin_modulus[1] = 0x4e72e131a029b85045b68181585d28;
-        grumpkin_modulus[2] = 0x3064;
+        // validate that the `BigNum` is less than the Grumpkin modulus
+        let mut grumpkin_modulus: [u128; N] = [0; N];
+        grumpkin_modulus[0] = GRUMPKIN_MODULUS[0];
+        grumpkin_modulus[1] = GRUMPKIN_MODULUS[1];
+        grumpkin_modulus[2] = GRUMPKIN_MODULUS[2];
         validate_gt::<N, MOD_BITS>(grumpkin_modulus, limbs);
-        // validate that the limbs are in range
-        validate_in_range::<_, N, MOD_BITS>(limbs);
     }
-    // validate the limbs sum up to the field value
+
     if N < 2 {
         limbs[0] as Field
     } else if N == 2 {
-        validate_in_range::<_, N, MOD_BITS>(limbs);
-        (limbs[0] + limbs[1] * TWO_POW_120) as Field
+        (limbs[0] as Field) + (limbs[1] as Field) * (TWO_POW_120 as Field)
     } else {
-        // validate_in_range::<N, 254>(limbs);
-        (
-            limbs[0] as Field
-                + limbs[1] as Field * TWO_POW_120 as Field
-                + limbs[2] as Field * TWO_POW_120 as Field * TWO_POW_120 as Field
-        )
+        (limbs[0] as Field)
+            + (limbs[1] as Field) * (TWO_POW_120 as Field)
+            + (limbs[2] as Field) * TWO_POW_240
     }
 }
 
+/// Construct a `BigNum` value from a native `Field`
+///
+/// Decomposes the `Field` value into 120-bit limbs
+/// then we have three cases:
+///     - MOD_BITS < 253 (grumpkin_mod_bits - 1): it is enough to call for `validate_in_field`, which is basically `val <= MOD`
+///     - MOD_BITS > 253: we need to verify that the obtained `BigNum` `val < GRUMPKIN_MODULUS`
+///     - MOD_BITS = 253: verify that `val < min(MOD, GRUMPKIN_MODULUS)`
+/// Next we verify that all the limbs are properly ranged
+/// and that the accumulated limbs are equal to the input `Field` value
 pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
     _params: BigNumParams<N, MOD_BITS>,
-    field: Field,
+    val: Field,
 ) -> [u128; N] {
     // Safety: we check that the resulting limbs represent the intended field element
     // we check the bit length, the limbs being max 120 bits, and the value in total is less than the field modulus
-    let result: [u128; N] = unsafe { __from_field::<N>(field) };
+    let result: [u128; N] = unsafe { __from_field::<N>(val) };
+
     if !std::runtime::is_unconstrained() {
         // validate the limbs are in range and the value in total is less than 2^254
-        let mut grumpkin_modulus = [0; N];
-        if N > 2 {
-            grumpkin_modulus[0] = 0x33e84879b9709143e1f593f0000001;
-            grumpkin_modulus[1] = 0x4e72e131a029b85045b68181585d28;
-            grumpkin_modulus[2] = 0x3064;
-        }
-        if MOD_BITS > 253 {
-            // this means that the field modulus is larger than grumpkin modulus so we have to check if the element fields in the field size are less than the grumpkin modulus.
-            // also for correct params N is always larger than 3 here
-            validate_gt::<N, MOD_BITS>(grumpkin_modulus, result);
-        } else if MOD_BITS < 253 {
+        if MOD_BITS < 253 {
             // this means that the field modulus is smaller than grumpkin modulus so we have to check if the element fields in the field size
             validate_in_field(_params, result);
         } else {
-            // this is the tricky part, when MOD_BITS = 253, so we have to compare the limbs of the modulus to the grumpkin modulus limbs
-            // any bignum with 253 bits will have 3 limbs
+            let mut grumpkin_modulus: [u128; N] = [0; N];
+            grumpkin_modulus[0] = GRUMPKIN_MODULUS[0];
+            grumpkin_modulus[1] = GRUMPKIN_MODULUS[1];
+            grumpkin_modulus[2] = GRUMPKIN_MODULUS[2];
 
-            // if modulus is larger than grumpkin modulus, this will be true
-            let mut gt_grumpkin = false;
-            for i in 0..3 {
-                if !gt_grumpkin {
-                    if _params.modulus[2 - i] < grumpkin_modulus[2 - i] {
-                        gt_grumpkin = true;
+            if MOD_BITS > 253 {
+                // this means that the field modulus is larger than grumpkin modulus so we have to check if the element fields in the field size are less than the grumpkin modulus.
+                // also for correct params N is always larger than 3 here
+                validate_gt::<N, MOD_BITS>(grumpkin_modulus, result);
+            } else {
+                // this is the tricky part, when MOD_BITS = 253, we have to compare the limbs of the modulus to the grumpkin modulus limbs
+                // any `BigNum` with 253 bits will have 3 limbs
+
+                // if MOD is less than grumpkin modulus, this will be true
+                let mut mod_lt_grumpkin: bool = false;
+                for i in 0..3 {
+                    if !mod_lt_grumpkin & (_params.modulus[2 - i] < grumpkin_modulus[2 - i]) {
+                        mod_lt_grumpkin = true;
                     }
                 }
+                let min_modulus: [u128; N] = if mod_lt_grumpkin {
+                    _params.modulus
+                } else {
+                    grumpkin_modulus
+                };
+                validate_gt::<N, MOD_BITS>(min_modulus, result);
             }
-            let result_2 = if gt_grumpkin {
-                _params.modulus
-            } else {
-                grumpkin_modulus
-            };
-            validate_gt::<N, MOD_BITS>(result_2, result);
         }
+        validate_in_range::<u128, N, MOD_BITS>(result);
 
         // validate the limbs sum up to the field value
-        let TWO_POW_120_FIELD = TWO_POW_120 as Field;
-        let field_val = if N < 2 {
+        let field_val: Field = if N < 2 {
             result[0] as Field
         } else if N == 2 {
-            validate_in_range::<_, N, MOD_BITS>(result);
-            result[0] as Field + result[1] as Field * TWO_POW_120_FIELD
+            (result[0] as Field) + (result[1] as Field) * (TWO_POW_120 as Field)
         } else {
-            validate_in_range::<_, N, MOD_BITS>(result);
-            result[0] as Field
-                + result[1] as Field * TWO_POW_120_FIELD
-                + result[2] as Field * TWO_POW_120_FIELD * TWO_POW_120_FIELD
+            (result[0] as Field)
+                + (result[1] as Field) * (TWO_POW_120 as Field)
+                + (result[2] as Field) * TWO_POW_240
         };
-        assert_eq(field_val, field);
+        assert_eq(field_val, val);
     }
 
     result
