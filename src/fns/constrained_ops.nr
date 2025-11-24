@@ -4,7 +4,7 @@ use crate::fns::{
     expressions::evaluate_quadratic_expression,
     unconstrained_helpers::{
         __add_with_flags, __from_field, __neg_with_flags, __sub_with_flags,
-        __validate_gt_with_flags, __validate_in_field_compute_borrow_flags,
+        __validate_gte_with_flags, __validate_in_field_compute_borrow_flags,
     },
     unconstrained_ops::{__add, __div, __mul, __neg, __sub, __udiv_mod},
 };
@@ -278,7 +278,7 @@ pub(crate) fn assert_is_not_equal<let N: u32, let MOD_BITS: u32>(
 
     let diff: Field = l - r;
     let target: Field = diff * (diff + modulus_mod_p) * (diff - modulus_mod_p);
-    assert(target != 0);
+    assert(target != 0, "assert_is_not_equal fail");
 }
 
 /// Compute equality flag
@@ -334,7 +334,7 @@ pub(crate) fn assert_is_not_zero_integer<let N: u32>(val: [u128; N]) {
     for i in 0..N {
         limb_sum += val[i] as Field;
     }
-    assert(limb_sum != 0);
+    assert(limb_sum != 0, "assert_is_not_zero_integer fail");
 }
 
 /// Check whether `val` is the zero `BigNum` in the integer sense.
@@ -455,26 +455,28 @@ pub(crate) fn validate_quotient_in_range<let N: u32, let MOD_BITS: u32>(limbs: [
 pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N]) {
     // Safety: compute borrow flags out-of-circuit
     let (underflow, result, borrow_flags): (bool, [u128; N], [bool; N - 1]) =
-        unsafe { __validate_gt_with_flags(lhs, rhs) };
+        unsafe { __validate_gte_with_flags(lhs, rhs) };
 
     // Completeness: require that no underflow occurred
-    assert(!underflow);
+    assert(!underflow, "validate_gt fail");
 
+    // Constrain the `result` to be a valid `BigNum` value
     validate_in_range::<u128, N, MOD_BITS>(result);
+    // Constrain it to be strict inequality
     assert_is_not_zero_integer(result);
 
-    // Constrain result and borrow_flags to match the expected arithmetic
-    check_gt_with_flags(lhs, rhs, result, borrow_flags);
+    // Constrain `result` and `borrow_flags` to match the expected arithmetic
+    check_gte_with_flags(lhs, rhs, result, borrow_flags);
 }
 
-/// Constraining function for the results of `__validate_gt_with_flags`,
+/// Constraining function for the results of `__validate_gte_with_flags`,
 /// used by both `cmp` and `validate gt`
 ///
 /// This function checks the relations between `lhs`, `rhs`, `result` adn `borrow_flags`:
 ///     lhs[0]     - rhs[0]     - result[0]     + bf[0] * 2^{120}             = 0
 ///     lhs[i]     - rhs[i]     - result[i]     + bf[i] * 2^{120} - bf[i - 1] = 0,  i = 1..N-2
 ///     lhs[N - 1] - rhs[N - 1] - result[N - 1]                   - bf[N - 2] = 0
-pub(crate) fn check_gt_with_flags<let N: u32>(
+pub(crate) fn check_gte_with_flags<let N: u32>(
     lhs: [u128; N],
     rhs: [u128; N],
     result: [u128; N],
@@ -541,11 +543,11 @@ pub(crate) fn validate_in_field<let N: u32, let MOD_BITS: u32>(
 /// the values do not have to be reduced modulo `MOD`.
 pub(crate) fn cmp<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N]) -> Ordering {
     // Safety: we constrain:
-    //        - `result` and `borrow_flags` with `check_gt_with_flags`
+    //        - `result` and `borrow_flags` with `check_gte_with_flags`
     //        - `borrow_flags` are also booleans
     //        - `underflow` with the following swap and (bool)
     let (underflow, result, borrow_flags): (bool, [u128; N], [bool; N - 1]) =
-        unsafe { __validate_gt_with_flags(lhs, rhs) };
+        unsafe { __validate_gte_with_flags(lhs, rhs) };
 
     // if underflow is true, swap lhs and rhs
     let (lhs, rhs): ([u128; N], [u128; N]) = if underflow { (rhs, lhs) } else { (lhs, rhs) };
@@ -554,7 +556,7 @@ pub(crate) fn cmp<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N])
     validate_in_range::<u128, N, MOD_BITS>(result);
 
     // Constrain subtraction: result = lhs - rhs with borrow_flags
-    check_gt_with_flags(lhs, rhs, result, borrow_flags);
+    check_gte_with_flags(lhs, rhs, result, borrow_flags);
 
     if lhs == rhs {
         Ordering::equal()

@@ -173,7 +173,7 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32>(
 
 /// Validate that lhs - rhs does not underflow (unconstrained)
 ///
-/// Same as `__validate_gt_with_flags`, but we don't compute the
+/// Same as `__validate_gte_with_flags`, but we don't compute the
 /// result of a subtraction
 pub(crate) unconstrained fn __validate_in_field_compute_borrow_flags<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
@@ -197,7 +197,7 @@ pub(crate) unconstrained fn __validate_in_field_compute_borrow_flags<let N: u32,
 /// ## Note
 /// The `borrow` must be equal to 0 at the end of the loop.
 /// And it can't be nonzero, since we swap the terms at the beginning
-pub(crate) unconstrained fn __validate_gt_with_flags<let N: u32>(
+pub(crate) unconstrained fn __validate_gte_with_flags<let N: u32>(
     lhs: [u128; N],
     rhs: [u128; N],
 ) -> (bool, [u128; N], [bool; N - 1]) {
