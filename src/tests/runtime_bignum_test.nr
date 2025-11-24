@@ -224,7 +224,7 @@ fn assert_is_not_equal() {
     a.assert_is_not_equal(b);
 }
 
-#[test(should_fail_with = "")]
+#[test(should_fail_with = "assert_is_not_equal fail")]
 fn assert_is_not_equal_fail() {
     let params: crate::params::BigNumParams<_,_> = $params;
 
