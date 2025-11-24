@@ -206,7 +206,7 @@ fn test_to_field_three_digits() {
     assert(result == field);
 }
 
-#[test(should_fail_with = "BigNum::validate_gt check fails")]
+#[test(should_fail_with = "validate_gt fail")]
 fn test_to_field_three_digits_overflow() {
     let bn = BN254_Fq::from_limbs([
         0x4e6405505a33bb9b9c0563df2bd59a,
@@ -216,7 +216,7 @@ fn test_to_field_three_digits_overflow() {
     let _ = to_field(bn);
 }
 
-#[test(should_fail_with = "BigNum::validate_gt check fails")]
+#[test(should_fail_with = "validate_gt fail")]
 fn test_to_field_too_many_digits() {
     let bn = BLS12_381_Fq::from_limbs([
         0xea1742447ee9d92f9f18e1c80a481e,
@@ -303,7 +303,11 @@ where
     let a = BN::derive_from_seed([1, 2, 3, 4]);
     let zero = BN::zero();
     assert(a.is_zero() == false);
+    assert(a.is_zero_integer() == false);
     assert(zero.is_zero() == true);
+    assert(zero.is_zero_integer() == true);
+
+    a.assert_is_not_zero();
 }
 
 fn assert_is_not_equal<let N: u32, BN>()
@@ -763,22 +767,22 @@ fn test_assert_is_not_equal_BN() {
     assert_is_not_equal::<3, BN254_Fq>();
 }
 
-#[test(should_fail_with = "asssert_is_not_equal fail")]
+#[test(should_fail_with = "assert_is_not_equal fail")]
 fn test_assert_is_not_equal_fail_BN() {
     assert_is_not_equal_fail::<3, BN254_Fq>();
 }
 
-#[test(should_fail_with = "asssert_is_not_equal fail")]
+#[test(should_fail_with = "assert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_lhs_fail_BN() {
     assert_is_not_equal_overloaded_lhs_fail::<3, BN254_Fq>();
 }
 
-#[test(should_fail_with = "asssert_is_not_equal fail")]
+#[test(should_fail_with = "assert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_rhs_fail_BN() {
     assert_is_not_equal_overloaded_rhs_fail::<3, BN254_Fq>();
 }
 
-#[test(should_fail_with = "asssert_is_not_equal fail")]
+#[test(should_fail_with = "assert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_fail_BN() {
     assert_is_not_equal_overloaded_fail::<3, BN254_Fq>();
 }
@@ -808,22 +812,22 @@ fn test_assert_is_not_equal_2048() {
     assert_is_not_equal::<18, BN2048>();
 }
 
-#[test(should_fail_with = "asssert_is_not_equal fail")]
+#[test(should_fail_with = "assert_is_not_equal fail")]
 fn test_assert_is_not_equal_fail_2048() {
     assert_is_not_equal_fail::<18, BN2048>();
 }
 
-#[test(should_fail_with = "asssert_is_not_equal fail")]
+#[test(should_fail_with = "assert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_lhs_fail_2048() {
     assert_is_not_equal_overloaded_lhs_fail::<18, BN2048>();
 }
 
-#[test(should_fail_with = "asssert_is_not_equal fail")]
+#[test(should_fail_with = "assert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_rhs_fail_2048() {
     assert_is_not_equal_overloaded_rhs_fail::<18, BN2048>();
 }
 
-#[test(should_fail_with = "asssert_is_not_equal fail")]
+#[test(should_fail_with = "assert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_fail_2048() {
     assert_is_not_equal_overloaded_fail::<18, BN2048>();
 }
@@ -853,22 +857,22 @@ fn test_assert_is_not_equal_U256() {
     assert_is_not_equal::<3, U256>();
 }
 
-#[test(should_fail_with = "asssert_is_not_equal fail")]
+#[test(should_fail_with = "assert_is_not_equal fail")]
 fn test_assert_is_not_equal_fail_U256() {
     assert_is_not_equal_fail::<3, U256>();
 }
 
-#[test(should_fail_with = "asssert_is_not_equal fail")]
+#[test(should_fail_with = "assert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_lhs_fail_U256() {
     assert_is_not_equal_overloaded_lhs_fail::<3, U256>();
 }
 
-#[test(should_fail_with = "asssert_is_not_equal fail")]
+#[test(should_fail_with = "assert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_rhs_fail_U256() {
     assert_is_not_equal_overloaded_rhs_fail::<3, U256>();
 }
 
-#[test(should_fail_with = "asssert_is_not_equal fail")]
+#[test(should_fail_with = "assert_is_not_equal fail")]
 fn test_assert_is_not_equal_overloaded_fail_U256() {
     assert_is_not_equal_overloaded_fail::<3, U256>();
 }

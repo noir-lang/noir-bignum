@@ -276,7 +276,7 @@ pub(crate) unconstrained fn __udiv_mod<let N: u32>(
 /// Zero elements are allowed and are left unchanged in the resulting array
 ///
 /// This interacts poorly with `neg(zero)`:
-/// Calling `neg` on `zero` yeilds `modulus` rather than `0`.
+/// Calling `neg` on `zero` yields `modulus` rather than `0`.
 /// A value in this form will **not** satisfy
 /// the `__is_zero` check and will lead to incorrect results.
 ///
