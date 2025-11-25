@@ -207,20 +207,21 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
             } else {
                 num_remaining_limbs_to_sample
             };
+
             for j in 0..num_limbs_to_sample {
-                let mut limb: u128 = 0;
+                let mut limb: Field = 0;
                 // Construct a 120 bit limb
                 for _ in 0..15 {
                     if byte_ptr < num_bytes {
                         let mut byte: u8 = hash_buffer[byte_ptr];
                         limb *= 256;
-                        limb += byte as u128;
-
+                        limb += byte as Field;
                         byte_ptr += 1;
                     }
                 }
+                limb.assert_max_bit_size::<120>();
                 // Accumulate limbs from top to bottom
-                bigfield_limbs[num_limbs_to_sample - 1 - j] = limb;
+                bigfield_limbs[num_limbs_to_sample - 1 - j] = limb as u128;
             }
             // Accumulate `BigNum` values from top to bottom
             bigfield_chunks[num_bigfield_chunks - 1 - k] = bigfield_limbs;
