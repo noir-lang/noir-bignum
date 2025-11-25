@@ -6,7 +6,7 @@ use crate::fns::{
         __add_with_flags, __from_field, __neg_with_flags, __sub_with_flags,
         __validate_gte_with_flags, __validate_in_field_compute_borrow_flags,
     },
-    unconstrained_ops::{__add, __div, __mul, __neg, __sub, __udiv_mod},
+    unconstrained_ops::{__add, __div, __mul, __neg, __sqr, __sub, __udiv_mod},
 };
 
 use crate::params::BigNumParams;
@@ -250,7 +250,7 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
 /// `A != B (mod MOD)` can still hit an alias where
 ///     (A - B) * (A - B + MOD) * (A - B - MOD) == 0 (mod p),
 /// i.e.
-///     - A = B      (mod p), or
+///     - A = B       (mod p), or
 ///     - A = B + MOD (mod p), or
 ///     - A = B - MOD (mod p).
 ///
@@ -369,7 +369,7 @@ pub(crate) fn assert_is_not_zero<let N: u32, let MOD_BITS: u32>(
 ///
 /// This treats both the all-zero limb vector and `params.modulus` as
 /// representing zero. It assumes that all valid `BigNum` values are
-/// range-constrained so that no other representatives of `0 mod MOD`
+/// range-constrained so that no other representatives of `0 (mod MOD)`
 /// can appear.
 ///
 /// ## Note
@@ -567,147 +567,396 @@ pub(crate) fn cmp<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N])
     }
 }
 
+// ------------------------------ ARITHMETIC FUNCTIONS ------------------------------
+
+/// Negate a `BigNum` value
+///
+/// Computes `result = MOD - val` using limb-wise subtraction with borrow flags,
+/// then constrains:
+///   - all `result` limbs to be a valid `BigNum` value, and
+///   - the subtraction relation with the borrow flags
+///
+/// ## Assumptions
+/// - `val` is a valid `BigNum` in the range `0 <= val <= MOD`.
+///
+/// ## Soundness
+/// This function constrains the following relations:
+///     result[0]     = MOD[0]     - val[0]     + bf[0] * 2^{120}             < 2^{120}
+///     result[i]     = MOD[i]     - val[i]     + bf[i] * 2^{120} - bf[i - 1] < 2^{120},  i = 1..N-2
+///     result[N - 1] = MOD[N - 1] - val[N - 1]                   - bf[N - 2] < 2^{TOP_LIMB_BITS}
+///
+/// If all `MOD` and `val` limbs are valid `BigNum` limbs, these constraints
+/// ensure that:
+///   - the borrow flags `bf[i]` form a valid limb-wise subtraction chain, and
+///   - no underflow can occur in the subtraction `MOD - val`.
+///
+/// ## Completeness
+/// This function is complete for inputs in the range `0 <= val <= MOD`.
+/// If a value `val > MOD` is passed in (while still `< 2^{MOD_BITS}`), the
+/// constraints above will fail, since there is no valid borrow chain making
+/// `MOD - val` a well-formed `BigNum`.
+///
+/// In practice, honest provers should not hit this case: all functions in this
+/// module are expected to return values `< MOD`.
+///
+/// ## Note
+/// This function returns `MOD` when `val` is zero.
 pub(crate) fn neg<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     val: [u128; N],
 ) -> [u128; N] {
     if std::runtime::is_unconstrained() {
-        // Safety: not need to constrain in unconstrained runtime
+        // Safety: no need to constrain in an unconstrained runtime
         unsafe {
             __neg(params.modulus, val)
         }
     } else {
-        // so we do... p - x - r = 0 and there might be borrow flags
-        let (result, borrow_flags) = unsafe { __neg_with_flags(params.modulus, val) };
-        validate_in_range::<_, _, MOD_BITS>(result);
-        let modulus = params.modulus;
-        let result_limb = modulus[0] + (borrow_flags[0] as u128 * TWO_POW_120) - val[0] - result[0];
+        // Safety: compute borrow flags out-of-circuit
+        let (result, borrow_flags): ([u128; N], [bool; N - 1]) =
+            unsafe { __neg_with_flags(params.modulus, val) };
+        validate_in_range::<u128, N, MOD_BITS>(result);
+
+        let result_limb: Field = (params.modulus[0] as Field)
+            - (val[0] as Field)
+            - (result[0] as Field)
+            + (borrow_flags[0] as Field) * (TWO_POW_120 as Field);
         assert(result_limb == 0);
+
         for i in 1..N - 1 {
-            let result_limb = modulus[i] + (borrow_flags[i] as u128 * TWO_POW_120)
-                - val[i]
-                - result[i]
-                - borrow_flags[i - 1] as u128;
+            let result_limb: Field = (params.modulus[i] as Field)
+                - (val[i] as Field)
+                - (result[i] as Field)
+                + (borrow_flags[i] as Field) * (TWO_POW_120 as Field)
+                - (borrow_flags[i - 1] as Field);
             assert(result_limb == 0);
         }
-        let result_limb = modulus[N - 1] - val[N - 1] - result[N - 1] - borrow_flags[N - 2] as u128;
+
+        let result_limb: Field = (params.modulus[N - 1] as Field)
+            - (val[N - 1] as Field)
+            - (result[N - 1] as Field)
+            - (borrow_flags[N - 2] as Field);
         assert(result_limb == 0);
         result
     }
 }
 
+/// Add two `BigNum` values
+///
+/// Computes `result = lhs + rhs` using limb-wise addition with carry flags,
+/// and an optional subtraction of `MOD` using borrow flags. The function then
+/// constrains:
+///   - all `result` limbs to be a valid `BigNum` value, and
+///   - the addition/subtraction relation with the carry/borrow flags and the
+///     `overflow_modulus` bit.
+///
+/// ## Assumptions
+/// - All limbs of `lhs`, `rhs` and `MOD` are valid `BigNum` limbs
+///   (120-bit for non-top limbs, `TOP_LIMB_BITS` for the top limb).
+/// - Semantically, we intend to use this only with `0 <= lhs, rhs < MOD`,
+///   even though the limb/range constraints allow values up to `< 2^{MOD_BITS}`.
+///
+/// ## Soundness (intended relation)
+/// This function constrains the following equations:
+///
+///     result[0]     = lhs[0]     + rhs[0]
+///                     - sub[0]
+///                     + bf[0] * 2^{120}
+///                     - cf[0]                                        < 2^{120}
+///
+///     result[i]     = lhs[i]     + rhs[i]
+///                     - sub[i]
+///                     + bf[i] * 2^{120}  - bf[i - 1]
+///                     - cf[i] * 2^{120}  + cf[i - 1]                 < 2^{120},
+///                     for i = 1..N-2
+///
+///     result[N - 1] = lhs[N - 1] + rhs[N - 1]
+///                     - sub[N - 1]
+///                     - bf[N - 2]
+///                     + cf[N - 2]                                   < 2^{TOP_LIMB_BITS}
+///
+/// where:
+///   - `bf[i]` are the borrow flags of the optional subtraction,
+///   - `cf[i]` are the carry flags of the addition, and
+///   - `sub` is either the zero vector or `MOD`, depending on the
+///     `overflow_modulus` flag:
+///         * `overflow_modulus = 0`  =>  `sub = 0`
+///         * `overflow_modulus = 1`  =>  `sub = MOD`
+///
+/// If `lhs`, `rhs` and `MOD` are valid `BigNum` limbs and the witness for
+/// `(bf, cf, overflow_modulus)` is the honest one produced by `__add_with_flags`,
+/// these constraints enforce:
+///   - a valid limb-wise carry chain for `lhs + rhs`, and
+///   - a valid limb-wise subtraction chain for either `lhs + rhs` or
+///     `lhs + rhs - MOD`, with no underflow in any limb.
+///
+/// Under these assumptions the constrained result equals:
+///
+///     result = lhs + rhs (mod MOD)
+///
+/// in the intended arithmetic.
+///
+/// ## Limitations / extra satisfying witnesses
+///
+/// The constraint system itself does **not** uniquely determine the carry/borrow
+/// flags nor the `overflow_modulus` bit:
+///
+/// - For each limb `i`, `bf[i]` and `cf[i]` only appear in the combination
+///   `bf[i] * 2^{120} - cf[i] * 2^{120}`. This means that both
+///
+///       (bf[i], cf[i]) = (0, 0)  and  (bf[i], cf[i]) = (1, 1)
+///
+///   give the same contribution to the equation. As a result, there are multiple
+///   valid flag assignments for the *same* `lhs`, `rhs`, `sub` and `result`.
+///
+/// - More importantly, if `lhs + rhs` is greater than `MOD` but still strictly
+///   less than `2^{MOD_BITS}`, there exist *spurious* witnesses where:
+///     * `overflow_modulus` is set inconsistently with the true arithmetic
+///       overflow, and
+///     * the `(bf, cf)` flags are adjusted accordingly,
+///
+///   such that all equations above still hold and all `result` limbs remain
+///   within range. In particular, when
+///
+///       lhs + rhs + MOD < 2^{MOD_BITS},
+///
+///   a malicious prover can "hide" an extra `MOD` inside the choice of
+///   `overflow_modulus`, `bf` and `cf`, so that the circuit is satisfied by a
+///   witness
+///
+/// Consequently, this function is only *conditionally* sound: we rely on the
+/// out-of-circuit implementation of `__add_with_flags` to provide the honest
+/// `(borrow_flags, carry_flags, overflow_modulus)` witness. Under that
+/// assumption, the constrained `result` matches `lhs + rhs (mod MOD)`.
+///
+/// ## Completeness
+///
+/// For inputs in the range `0 <= lhs, rhs < MOD` and honest flags from
+/// `__add_with_flags`, the constraints are complete: every valid `BigNum` sum
+/// `lhs + rhs (mod MOD)` admits a satisfying assignment.
+///
+/// Inputs with `lhs` or `rhs` in `[MOD, 2^{MOD_BITS})` are still representable
+/// as limb arrays and may admit satisfying witnesses, but then the operation
+/// no longer corresponds to a unique, well-defined addition in the field
+/// `Z / MOD Z`. Such uses are outside the intended semantics of this function.
 pub(crate) fn add<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     lhs: [u128; N],
     rhs: [u128; N],
 ) -> [u128; N] {
     if std::runtime::is_unconstrained() {
-        // Safety: not need to constrain in unconstrained runtime
+        // Safety: no need to constrain in unconstrained runtime
         unsafe {
-            // __add_u128(params, lhs, rhs)
             __add(params.modulus, lhs, rhs)
         }
     } else {
-        // so we do... p - x - r = 0 and there might be borrow flags
-        let (result, carry_flags, borrow_flags, overflow_modulus) =
+        // Safety: compute borrow/carry flags out-of-circuit
+        let (result, carry_flags, borrow_flags, overflow_modulus): ([u128; N], [bool; N - 1], [bool; N - 1], bool) =
             unsafe { __add_with_flags(params.modulus, lhs, rhs) };
-        validate_in_range::<_, _, MOD_BITS>(result);
-        let modulus = params.modulus;
+        validate_in_range::<u128, N, MOD_BITS>(result);
 
-        let mut subtrahend: [u128; N] = [0; N];
-        if (overflow_modulus) {
-            subtrahend = modulus;
-        }
-        let borrow_sub_carry = borrow_flags[0] as Field - carry_flags[0] as Field;
-        let result_limb = lhs[0] as Field + rhs[0] as Field
-            - subtrahend[0] as Field
-            - result[0] as Field
-            + borrow_sub_carry * TWO_POW_120 as Field;
+        let mut subtrahend: [u128; N] = if overflow_modulus {
+            params.modulus
+        } else {
+            [0; N]
+        };
+
+        let result_limb: Field = (lhs[0] as Field) + (rhs[0] as Field)
+            - (result[0] as Field)
+            - (subtrahend[0] as Field)
+            + (borrow_flags[0] as Field) * (TWO_POW_120 as Field)
+            - (carry_flags[0] as Field) * (TWO_POW_120 as Field);
         assert(result_limb == 0);
         for i in 1..N - 1 {
-            let prev_borrow_sub_carry = borrow_flags[i - 1] as Field - carry_flags[i - 1] as Field;
-            let borrow_sub_carry = borrow_flags[i] as Field - carry_flags[i] as Field;
-            let result_limb = lhs[i] as Field + rhs[i] as Field
-                - subtrahend[i] as Field
-                - result[i] as Field
-                - prev_borrow_sub_carry
-                + borrow_sub_carry * TWO_POW_120 as Field;
+            let result_limb: Field = (lhs[i] as Field) + (rhs[i] as Field)
+                - (result[i] as Field)
+                - (subtrahend[i] as Field)
+                - (borrow_flags[i - 1] as Field)
+                + (carry_flags[i - 1] as Field)
+                + (borrow_flags[i] as Field) * (TWO_POW_120 as Field)
+                - (carry_flags[i] as Field) * (TWO_POW_120 as Field);
             assert(result_limb == 0);
         }
-        let borrow_sub_carry = borrow_flags[N - 2] as Field - carry_flags[N - 2] as Field;
-        let result_limb = lhs[N - 1] as Field + rhs[N - 1] as Field
-            - subtrahend[N - 1] as Field
-            - result[N - 1] as Field
-            - borrow_sub_carry as Field;
+        let result_limb: Field = (lhs[N - 1] as Field) + (rhs[N - 1] as Field)
+            - (result[N - 1] as Field)
+            - (subtrahend[N - 1] as Field)
+            - (borrow_flags[N - 2] as Field)
+            + (carry_flags[N - 2] as Field);
         assert(result_limb == 0);
         result
     }
 }
 
+/// Subtract two `BigNum` values
+///
+/// Computes `result = lhs - rhs` using limb-wise subtraction with borrow flags,
+/// and an optional addition of `MOD` using carry flags. The function then
+/// constrains:
+///   - all `result` limbs to be a valid `BigNum` value, and
+///   - the subtraction/addition relation with the carry/borrow flags and the
+///     `underflow_modulus` bit.
+///
+/// ## Assumptions
+/// - All limbs of `lhs`, `rhs` and `MOD` are valid `BigNum` limbs
+///   (120-bit for non-top limbs, `TOP_LIMB_BITS` for the top limb).
+/// - Semantically, we intend to use this only with `0 <= lhs, rhs < MOD`,
+///   even though the limb/range constraints allow values up to `< 2^{MOD_BITS}`.
+///
+/// ## Soundness (intended relation)
+/// This function constrains the following equations:
+///
+///     result[0]     = lhs[0]     - rhs[0]
+///                     + add[0]
+///                     + bf[0] * 2^{120}
+///                     - cf[0]                                        < 2^{120}
+///
+///     result[i]     = lhs[i]     - rhs[i]
+///                     + add[i]
+///                     + bf[i] * 2^{120}  - bf[i - 1]
+///                     - cf[i] * 2^{120}  + cf[i - 1]                 < 2^{120},
+///                     for i = 1..N-2
+///
+///     result[N - 1] = lhs[N - 1] - rhs[N - 1]
+///                     + add[N - 1]
+///                     - bf[N - 2]
+///                     + cf[N - 2]                                   < 2^{TOP_LIMB_BITS}
+///
+/// where:
+///   - `bf[i]` are the borrow flags of the subtraction,
+///   - `cf[i]` are the carry flags of the optional addition, and
+///   - `add` is either the zero vector or `MOD`, depending on the
+///     `underflow_modulus` flag:
+///         * `underflow_modulus = 0`  =>  `add = 0`
+///         * `underflow_modulus = 1`  =>  `add = MOD`
+///
+/// If `lhs`, `rhs` and `MOD` are valid `BigNum` limbs and the witness for
+/// `(bf, cf, underflow_modulus)` is the honest one produced by `__sub_with_flags`,
+/// these constraints enforce:
+///   - a valid limb-wise borrow chain for `lhs - rhs`, and
+///   - a valid limb-wise addition chain for either `lhs - rhs` or
+///     `lhs - rhs + MOD`, with no underflow in any limb.
+///
+/// Under these assumptions the constrained result equals:
+///
+///     result = lhs - rhs (mod MOD)
+///
+/// in the intended arithmetic.
+///
+/// ## Limitations / extra satisfying witnesses
+///
+/// The constraint system itself does **not** uniquely determine the carry/borrow
+/// flags nor the `underflow_modulus` bit:
+///
+/// - For each limb `i`, `bf[i]` and `cf[i]` only appear in the combination
+///   `bf[i] * 2^{120} - cf[i] * 2^{120}`. This means that both
+///
+///       (bf[i], cf[i]) = (0, 0)  and  (bf[i], cf[i]) = (1, 1)
+///
+///   give the same contribution to the equation. As a result, there are multiple
+///   valid flag assignments for the *same* `lhs`, `rhs`, `add` and `result`.
+///
+/// - More importantly, when `lhs < rhs`, the true field result is
+///
+///       lhs - rhs + MOD,
+///
+///   and as long as
+///
+///       lhs - rhs + MOD < 2^{MOD_BITS},
+///
+///   a malicious prover can:
+///     * set `underflow_modulus` inconsistently with the true underflow, and
+///     * adjust the `(bf, cf)` flags accordingly,
+///
+///   such that all equations above still hold and all `result` limbs remain
+///   within range. In other words, the circuit can be satisfied by a witness
+///   that does **not** correspond to the unique intended subtraction modulo
+///   `MOD` for some inputs with `lhs < rhs`.
+///
+/// Consequently, this function is only *conditionally* sound: we rely on the
+/// out-of-circuit implementation of `__sub_with_flags` to provide the honest
+/// `(borrow_flags, carry_flags, underflow_modulus)` witness. Under that
+/// assumption, the constrained `result` matches `lhs - rhs (mod MOD)`.
+///
+/// ## Completeness
+///
+/// For inputs in the range `0 <= lhs, rhs < MOD` and honest flags from
+/// `__sub_with_flags`, the constraints are complete: every valid `BigNum`
+/// difference `lhs - rhs (mod MOD)` admits a satisfying assignment.
+///
+/// Inputs with `lhs` or `rhs` in `[MOD, 2^{MOD_BITS})` are still representable
+/// as limb arrays and may admit satisfying witnesses, but then the operation
+/// no longer corresponds to a unique, well-defined subtraction in the field
+/// `Z / MOD Z`. Such uses are outside the intended semantics of this function.
 pub(crate) fn sub<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     lhs: [u128; N],
     rhs: [u128; N],
 ) -> [u128; N] {
     if std::runtime::is_unconstrained() {
-        // Safety: not need to constrain in unconstrained runtime
+        // Safety: no need to constrain in unconstrained runtime
         unsafe {
             __sub(params.modulus, lhs, rhs)
         }
     } else {
-        // so we do... p - x - r = 0 and there might be borrow flags
-        // a - b = r
-        // p + a - b - r = 0
-        let (result, carry_flags, borrow_flags, underflow) =
+        // Safety: we constrain carry, borrow, underflow and result immediately
+        let (result, carry_flags, borrow_flags, underflow_modulus): ([u128; N], [bool; N - 1], [bool; N - 1], bool) =
             unsafe { __sub_with_flags(params.modulus, lhs, rhs) };
+        validate_in_range::<u128, N, MOD_BITS>(result);
 
-        validate_in_range::<_, _, MOD_BITS>(result);
-        let modulus = params.modulus;
+        let mut addend: [u128; N] = if underflow_modulus {
+            params.modulus
+        } else {
+            [0; N]
+        };
 
-        let mut addend: [u128; N] = [0; N];
-        if (underflow) {
-            addend = modulus;
-        }
-
-        let borrow_sub_carry = borrow_flags[0] as Field - carry_flags[0] as Field;
-        let result_limb = borrow_sub_carry * TWO_POW_120 as Field
-            + addend[0] as Field
-            + lhs[0] as Field
-            - rhs[0] as Field
-            - result[0] as Field;
+        let result_limb: Field = (lhs[0] as Field) - (rhs[0] as Field) - (result[0] as Field)
+            + (addend[0] as Field)
+            + (borrow_flags[0] as Field) * (TWO_POW_120 as Field)
+            - (carry_flags[0] as Field) * (TWO_POW_120 as Field);
         assert(result_limb == 0);
+
         for i in 1..N - 1 {
-            let prev_borrow_sub_carry = borrow_flags[i - 1] as Field - carry_flags[i - 1] as Field;
-            let borrow_sub_carry = borrow_flags[i] as Field - carry_flags[i] as Field;
-            let result_limb = borrow_sub_carry * TWO_POW_120 as Field
-                + addend[i] as Field
-                + lhs[i] as Field
-                - rhs[i] as Field
-                - result[i] as Field
-                - prev_borrow_sub_carry;
+            let result_limb: Field = (lhs[i] as Field) - (rhs[i] as Field) - (result[i] as Field)
+                + (addend[i] as Field)
+                + (borrow_flags[i] as Field) * (TWO_POW_120 as Field)
+                - (carry_flags[i] as Field) * (TWO_POW_120 as Field)
+                - (borrow_flags[i - 1] as Field)
+                + (carry_flags[i - 1] as Field);
             assert(result_limb == 0);
         }
-        let borrow_sub_carry = borrow_flags[N - 2] as Field - carry_flags[N - 2] as Field;
-        let result_limb = addend[N - 1] as Field + lhs[N - 1] as Field
-            - rhs[N - 1] as Field
-            - result[N - 1] as Field
-            - borrow_sub_carry as Field;
+        let result_limb: Field = (lhs[N - 1] as Field)
+            - (rhs[N - 1] as Field)
+            - (result[N - 1] as Field)
+            + (addend[N - 1] as Field)
+            - (borrow_flags[N - 2] as Field)
+            + (carry_flags[N - 2] as Field);
         assert(result_limb == 0);
         result
     }
 }
 
-// Note: this method is expensive! Try to craft quadratic relations and directly evaluate them
-//       via evaluate_quadratic_expression
-// e.g. performing a sum of multiple multiplications and additions via `evaluate_quadratic_expression`
-//      will create much fewer constraints than calling `mul` and `add` directly
+/// Compute the `BigNum` multiplication
+///
+/// Computes `result = lhs * rhs (mod MOD)` by:
+///   1. Computing `result` out of circuit via `__mul`.
+///   2. Constraining the quadratic relation `lhs * rhs - result = 0` with
+///      `evaluate_quadratic_expression`.
+///
+/// ## Soundness
+/// Soundness reduces to `evaluate_quadratic_expression` for the relation
+/// `lhs * rhs - result = 0`
+///
+/// ## Note
+/// When possible, prefer expressing your computation directly as a quadratic
+///   relation and calling `evaluate_quadratic_expression` instead of using `mul`
 pub(crate) fn mul<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     lhs: [u128; N],
     rhs: [u128; N],
 ) -> [u128; N] {
-    let result = unsafe { __mul::<_, MOD_BITS>(params, lhs, rhs) };
+    // Safety: we constrain the multiplication result immediately after
+    let result: [u128; N] = unsafe { __mul::<N, MOD_BITS>(params, lhs, rhs) };
     if !std::runtime::is_unconstrained() {
+        // lhs * rhs - result = 0
         evaluate_quadratic_expression(
             params,
             [[lhs]],
@@ -721,7 +970,61 @@ pub(crate) fn mul<let N: u32, let MOD_BITS: u32>(
     result
 }
 
-// Note: this method is expensive! Witness computation is extremely expensive as it requires modular exponentiation
+/// Compute the `BigNum` squaring
+///
+/// Computes `result = val * val (mod MOD)` by:
+///   1. Computing `result` out of circuit via `__sqr`.
+///   2. Constraining the quadratic relation `val * val - result = 0` with
+///      `evaluate_quadratic_expression`.
+///
+/// ## Soundness
+/// Soundness reduces to `evaluate_quadratic_expression` for the relation
+/// `val * val - result = 0`
+///
+/// ## Note
+/// When possible, prefer expressing your computation directly as a quadratic
+///   relation and calling `evaluate_quadratic_expression` instead of using `sqr`
+pub(crate) fn sqr<let N: u32, let MOD_BITS: u32>(
+    params: BigNumParams<N, MOD_BITS>,
+    val: [u128; N],
+) -> [u128; N] {
+    // Safety: we constrain the multiplication result immediately after
+    let result: [u128; N] = unsafe { __sqr::<_, MOD_BITS>(params, val) };
+    if !std::runtime::is_unconstrained() {
+        // val * val - result = 0
+        evaluate_quadratic_expression(
+            params,
+            [[val]],
+            [[false]],
+            [[val]],
+            [[false]],
+            [result],
+            [true],
+        );
+    }
+    result
+}
+
+/// Compute the `BigNum` division
+///
+/// Computes `result = lhs * rhs^{-1} (mod MOD)` by:
+///   1. Computing `result` out of circuit via `__div`.
+///   2. Constraining the quadratic relation `result * rhs - lhs = 0` with
+///      `evaluate_quadratic_expression`.
+///   3. Enforcing `rhs != 0 (mod MOD)`.
+///
+/// ## Soundness
+/// Soundness reduces to `evaluate_quadratic_expression` for the relation
+/// `result * rhs - lhs = 0`, together with the non-zero check on `rhs` and the
+/// assumption that `MOD` has multiplicative inverses for all non-zero elements
+/// (`params.has_multiplicative_inverse = true`).
+///
+/// ## Note
+/// - This is **expensive** in witness time due to modular inversion.
+/// - When possible, prefer expressing your computation directly as a quadratic
+///   relation and calling `evaluate_quadratic_expression` instead of using `div`.
+/// - In the unconstrained runtime, the behavior of `__div` on zero divisors is
+///   not constrained by this function.
 pub(crate) fn div<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     lhs: [u128; N],
@@ -731,8 +1034,10 @@ pub(crate) fn div<let N: u32, let MOD_BITS: u32>(
         params.has_multiplicative_inverse,
         "BigNum has no multiplicative inverse. Use udiv for unsigned integer division",
     );
-    let result = unsafe { __div::<_, MOD_BITS>(params, lhs, rhs) };
+    // Safety: We constrain the result of division immediately after
+    let result: [u128; N] = unsafe { __div::<_, MOD_BITS>(params, lhs, rhs) };
     if !std::runtime::is_unconstrained() {
+        // result * rhs - lhs = 0
         evaluate_quadratic_expression(
             params,
             [[result]],
@@ -742,6 +1047,7 @@ pub(crate) fn div<let N: u32, let MOD_BITS: u32>(
             [lhs],
             [true],
         );
+        assert_is_not_zero(params, rhs);
     }
     result
 }
@@ -778,28 +1084,26 @@ pub(crate) fn udiv_mod<let N: u32, let MOD_BITS: u32>(
     (quotient, remainder)
 }
 
-/**
-* @brief udiv_mod performs integer division between numerator, divisor
-*
-* i.e. return param is floor(numerator / divisor)
-**/
+/// Compute the `BigNum` integer division
+///
+/// Returns `floor(numerator / divisor)`.
+/// All constraints and soundness details are handled inside `udiv_mod`.
 pub(crate) fn udiv<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     numerator: [u128; N],
     divisor: [u128; N],
 ) -> [u128; N] {
-    udiv_mod::<_, MOD_BITS>(params, numerator, divisor).0
+    udiv_mod::<N, MOD_BITS>(params, numerator, divisor).0
 }
 
-/**
-* @brief udiv_mod performs integer modular reduction
-*
-* i.e. 1. numerator % divisor = return value
-**/
+/// Compute the `BigNum` remainder
+///
+/// Returns `numerator % divisor`.
+/// All constraints and soundness details are handled inside `udiv_mod`.
 pub(crate) fn umod<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     numerator: [u128; N],
     divisor: [u128; N],
 ) -> [u128; N] {
-    udiv_mod::<_, MOD_BITS>(params, numerator, divisor).1
+    udiv_mod::<N, MOD_BITS>(params, numerator, divisor).1
 }

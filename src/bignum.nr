@@ -36,6 +36,7 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     unconstrained fn __add(self, other: Self) -> Self;
     unconstrained fn __sub(self, other: Self) -> Self;
     unconstrained fn __mul(self, other: Self) -> Self;
+    unconstrained fn __sqr(self) -> Self;
     unconstrained fn __div(self, other: Self) -> Self;
     unconstrained fn __udiv_mod(self, divisor: Self) -> (Self, Self);
     unconstrained fn __invmod(self) -> Self;
@@ -47,6 +48,8 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
 
     fn validate_in_range(self);
     fn validate_in_field(self);
+
+    fn sqr(self) -> Self;
 
     fn udiv_mod(self, divisor: Self) -> (Self, Self);
     fn udiv(self, divisor: Self) -> Self;
@@ -172,6 +175,11 @@ pub comptime fn derive_bignum(
                 Self {limbs: $unconstrained_ops::__mul(params, self.get_limbs(), other.get_limbs())}
             }
 
+            unconstrained fn __sqr(self: Self) -> Self {
+                let params = Self::params();
+                Self {limbs: $unconstrained_ops::__sqr(params, self.get_limbs()) }
+            }
+
             unconstrained fn __div(self: Self, divisor: Self) -> Self {
                 let params = Self::params();
                 Self {limbs: $unconstrained_ops::__div(params, self.get_limbs(), divisor.get_limbs())}
@@ -216,6 +224,11 @@ pub comptime fn derive_bignum(
 
             fn validate_in_range(self: Self) {
                 $constrained_ops::validate_in_range::<_, _, $MOD_BITS>(self.get_limbs());
+            }
+
+            fn sqr(self: Self) -> Self {
+                let params = Self::params();
+                Self { limbs: $constrained_ops::sqr::<$N, $MOD_BITS>(params, self.get_limbs()) }
             }
 
             fn udiv_mod(self: Self, divisor: Self) -> (Self, Self) {
