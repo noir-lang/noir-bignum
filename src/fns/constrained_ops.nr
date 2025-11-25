@@ -219,6 +219,7 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
                         byte_ptr += 1;
                     }
                 }
+                // crucial for performance
                 limb.assert_max_bit_size::<120>();
                 // Accumulate limbs from top to bottom
                 bigfield_limbs[num_limbs_to_sample - 1 - j] = limb as u128;
