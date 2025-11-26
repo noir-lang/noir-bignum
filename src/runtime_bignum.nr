@@ -4,13 +4,13 @@ use crate::utils::map::map;
 use crate::fns::{
     constrained_ops::{
         add, assert_is_not_equal, assert_is_not_zero, assert_is_not_zero_integer, cmp,
-        derive_from_seed, div, eq, is_zero, is_zero_integer, mul, neg, sub, udiv, udiv_mod, umod,
-        validate_in_field, validate_in_range,
+        derive_from_seed, div, eq, is_zero, is_zero_integer, mul, neg, sqr, sub, udiv, udiv_mod,
+        umod, validate_in_field, validate_in_range,
     },
     serialization::{from_be_bytes, from_le_bytes, to_be_bytes, to_le_bytes},
     unconstrained_ops::{
-        __add, __derive_from_seed, __div, __eq, __invmod, __is_zero, __mul, __neg, __pow, __sub,
-        __tonelli_shanks_sqrt, __udiv_mod,
+        __add, __derive_from_seed, __div, __eq, __invmod, __is_zero, __mul, __neg, __pow, __sqr,
+        __sub, __tonelli_shanks_sqrt, __udiv_mod,
     },
 };
 use std::{cmp::Ordering, ops::Neg};
@@ -146,6 +146,13 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
+    pub fn __sqr(self) -> Self {
+        let params = self.params;
+        let limbs = unsafe { __sqr::<_, MOD_BITS>(params, self.limbs) };
+        Self { params: params, limbs: limbs }
+    }
+
+    // UNCONSTRAINED! (Hence `__` prefix).
     pub fn __div(self, divisor: Self) -> Self {
         let params = self.params;
         assert(params == divisor.params);
@@ -197,6 +204,11 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
         let params = self.params;
         assert(params == other.params);
         assert_is_not_equal(params, self.limbs, other.limbs);
+    }
+
+    pub fn sqr(self) -> Self {
+        let params = self.params;
+        Self { limbs: sqr(params, self.limbs), params: params }
     }
 
     pub fn udiv_mod(self, divisor: Self) -> (Self, Self) {
