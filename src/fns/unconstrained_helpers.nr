@@ -2,7 +2,7 @@
 
 use crate::constants::TWO_POW_120;
 
-use crate::fns::unconstrained_ops::{__add, __gte, __mul, __neg, __pow};
+use crate::fns::unconstrained_ops::{__add, __eq, __gte, __mul, __neg, __pow, __sqr};
 
 use crate::utils::msb::get_msb;
 use crate::utils::split_bits::{__normalize_limbs, __split_120_bits};
@@ -527,84 +527,93 @@ pub(crate) fn __get_bit<let N: u32>(input: [u128; N], bit: u32) -> bool {
     value == 1
 }
 
-/**
-* @brief compute the log of the size of the primitive root
-* @details find the maximum value k where x^k = 1, where x = primitive root
-*          This is needed for our Tonelli-Shanks sqrt algorithm
-**/
+// ------------------------------ SQRT HELPER FUNCTIONS ------------------------------
+// These are the functions that are used during taking a square root
+
+/// Compute the maximal power of 2 that divides the group order (unconstrained)
+///
+/// Find the maximum value s such that `MOD = 2^s * q + 1`, where `q` is odd
+///       This is needed for our Tonelli-Shanks sqrt algorithm
 pub(crate) unconstrained fn __primitive_root_log_size<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
 ) -> u32 {
-    let mut one: [u128; N] = [0; N];
-    one[0] = 1;
-    let mut target = __helper_sub(params.modulus, one);
+    let mut target: [u128; N] = __helper_sub(params.modulus, __one());
     let mut result: u32 = 0;
-    for _ in 0..MOD_BITS {
-        let lsb_is_one = (target[0] & 1) == 1;
-        if (lsb_is_one) {
-            break;
-        }
+    while !__get_bit(target, result) {
         result += 1;
-        target = __shr1(target);
     }
     result
 }
 
-/**
-* @brief inner loop fn for `find_multiplive_generator`
-* @details recursive function to get around the lack of a `while` keyword
-**/
-unconstrained fn __recursively_find_multiplicative_generator<let N: u32, let MOD_BITS: u32>(
-    params: BigNumParams<N, MOD_BITS>,
-    target: [u128; N],
-    p_minus_one_over_two: [u128; N],
-) -> (bool, [u128; N]) {
-    let exped = __pow(params, target, p_minus_one_over_two);
-    let one: [u128; N] = __one();
-    let neg_one = __neg(params.modulus, one);
-    let found = exped == neg_one;
-    let mut result: (bool, [u128; N]) = (found, target);
-    if (!found) {
-        let _target: [u128; N] = __add(params.modulus, target, one);
-        result = __recursively_find_multiplicative_generator::<_, MOD_BITS>(
-            params,
-            _target,
-            p_minus_one_over_two,
-        );
-    }
-    result
-}
-
-/**
-* @brief find multiplicative generator `g` where `g` is the smallest value that is not a quadratic residue
-*        i.e. smallest g where g^2 = -1
-* @note WARNING if multiplicative generator does not exist, this function will enter an infinite loop!
-**/
-pub(crate) unconstrained fn __multiplicative_generator<let N: u32, let MOD_BITS: u32>(
+/// Find a quadratic non-residue `g` where `g` is the smallest such value (unconstrained)
+///       i.e. smallest `g` such that `g^{(p - 1)/2} = -1 (mod MOD)`
+///       or smallest `g`, such that `x^2 - g = 0 (mod MOD)` has no solutions
+///
+/// ## Note
+/// WARNING If the field is not prime, this function will enter an infinite loop!
+pub(crate) unconstrained fn __quadratic_non_residue<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
 ) -> [u128; N] {
-    let mut target: [u128; N] = __one();
-    let p_minus_one_over_two = __shr1(__helper_sub(params.modulus, __one()));
-    let (_, target) = __recursively_find_multiplicative_generator::<_, MOD_BITS>(
-        params,
-        target,
-        p_minus_one_over_two,
-    );
+    let one: [u128; N] = __one();
+    let neg_one: [u128; N] = __neg(params.modulus, one);
+
+    let p_minus_one_over_two: [u128; N] = __shr1(__helper_sub(params.modulus, __one()));
+
+    // We start with 2
+    let mut target: [u128; N] = __increment(one);
+    let mut expd: [u128; N] = __pow(params, target, p_minus_one_over_two);
+    while !__eq(expd, neg_one) {
+        target = __increment(target);
+        expd = __pow(params, target, p_minus_one_over_two);
+    }
     target
 }
 
-pub(crate) unconstrained fn __tonelli_shanks_sqrt_inner_loop_check<let N: u32, let MOD_BITS: u32>(
+/// Compute the smallest `i`, such that `t^{2^i} = 1, t^{2^{i-1}} = -1 (mod MOD)` (unconstrained)
+///
+/// ## Note
+/// Multiplicative order of t must divide 2^v2(MOD-1), otherwise you'll end up in an infinite loop!
+pub(crate) unconstrained fn __tonelli_shanks_sqrt_find_i<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
-    t2m: [u128; N],
-    i: u32,
+    t: [u128; N],
 ) -> u32 {
     let one: [u128; N] = __one();
-    let is_one = t2m == one;
-    let mut result = i;
-    if (!is_one) {
-        let t2m = __mul::<_, MOD_BITS>(params, t2m, t2m);
-        let i = i + 1;
-        result = __tonelli_shanks_sqrt_inner_loop_check::<_, MOD_BITS>(params, t2m, i);
+    let mut c: [u128; N] = t;
+
+    let mut i: u32 = 0;
+    // Compute t^{2^k} until it hits 1 for the first time
+    while !__eq(t, one) {
+        c = __sqr::<N, MOD_BITS>(params, c);
+        i += 1;
+    }
+    i
+}
+
+/// Compute a modular square root for MOD = 3 (mod 4) (unconstrained)
+///
+/// In case MOD = 3 (mod 4), the square root can be computed using the formula:
+///     `R = a^{(MOD + 1) / 4} (mod MOD)`
+///
+/// Then R^2 = a^{(MOD + 1)/ 4 * 2} = a^{(MOD + 1) / 2} = a^{(MOD - 1) / 2 + 1} = a
+///
+/// ## Note
+/// The input is assumed to be nonzero
+///
+/// This is much cheaper than `__tonelli_shanks_sqrt`
+pub(crate) unconstrained fn __easy_sqrt<let N: u32, let MOD_BITS: u32>(
+    params: BigNumParams<N, MOD_BITS>,
+    input: [u128; N],
+) -> std::option::Option<[u128; N]> {
+    let mut result: Option<[u128; N]> = Option::none();
+
+    let one: [u128; N] = __one();
+    let p_minus_one_over_two: [u128; N] = __shr1(__helper_sub(params.modulus, one));
+    let mut check: [u128; N] = __pow(params, input, p_minus_one_over_two);
+    if (__eq(check, one)) {
+        // a = (MOD - 1) / 2
+        // b = (a + 1) / 2 = ((MOD - 1) / 2 + 1) / 2 = (MOD + 1) / 4
+        let p_plus_one_over_four: [u128; N] = __shr1(__increment(p_minus_one_over_two));
+        result = Option::some(__pow(params, input, p_plus_one_over_four));
     }
     result
 }
