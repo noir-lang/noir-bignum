@@ -532,6 +532,8 @@ fn validate_expression_is_zero<let N: u32>(mut limbs: [Field; 2 * N - 1]) {
 /// since Q is constrained to be < 2^{MOD_BITS + 6} we effectively can add at least 2-3-4? MODs to result
 /// I think the validate_in_range checks on all the inputs won't be that expensive since we already do the `u128` range checks on them anyway
 /// After that there still will be a room for one extra modulus which is fine with the rest of the library
+/// And when we have something like x * y + z - w = 0, and z is the result of our computation, well, we can add a lot of moduli
+/// up until we bump into 2^128 * N
 pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
     params: BigNumParams<N, MOD_BITS>,
     lhs_terms: [[[u128; N]; LHS_N]; NUM_PRODUCTS],
