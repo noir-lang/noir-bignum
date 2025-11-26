@@ -232,7 +232,7 @@ pub(crate) unconstrained fn __compute_quadratic_expression<let N: u32, let MOD_B
 /// accumulated and the top limb of `MOD` is very small. In practice, the
 /// global `BigNum` range and operand-count assumptions in
 /// `evaluate_quadratic_expression` rule out such patterns.
-fn add_linear_expressions<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
+fn compute_linear_expressions<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
     params: BigNumParams<N, MOD_BITS>,
     lhs_terms: [[[u128; N]; LHS_N]; NUM_PRODUCTS],
     lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
@@ -340,7 +340,7 @@ fn compute_quadratic_expression_with_modulus<let N: u32, let MOD_BITS: u32, let 
     validate_quotient_in_range::<N, MOD_BITS>(quotient);
 
     // Compute the linear sums that represent L_i, R_i, A
-    let (lhs_linear, rhs_linear, lin_expr): ([[Field; N]; NUM_PRODUCTS], [[Field; N]; NUM_PRODUCTS], [Field; N]) = add_linear_expressions::<N, MOD_BITS, LHS_N, RHS_N, NUM_PRODUCTS, ADD_N>(
+    let (lhs_linear, rhs_linear, lin_expr): ([[Field; N]; NUM_PRODUCTS], [[Field; N]; NUM_PRODUCTS], [Field; N]) = compute_linear_expressions::<N, MOD_BITS, LHS_N, RHS_N, NUM_PRODUCTS, ADD_N>(
         params,
         lhs_terms,
         lhs_flags,
