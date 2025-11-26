@@ -388,7 +388,7 @@ fn compute_quadratic_expression_with_modulus<let N: u32, let MOD_BITS: u32, let 
     let borrow_shift: Field = TWO_POW_246; // 2^{246}
     let borrow_carry: Field = TWO_POW_126; // 2^{246 - 120} = 2^{126}
 
-    // Get the product_limbs into the form where each entry is a 126-bit value
+    // Get the product_limbs into the form where each entry is a 246-bit value
     product_limbs[0] += (borrow_flags[0] as Field) * borrow_shift;
     for i in 1..(N + N - 2) {
         product_limbs[i] += (borrow_flags[i] as Field) * borrow_shift
