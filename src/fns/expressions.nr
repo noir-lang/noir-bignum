@@ -8,6 +8,8 @@ use crate::fns::unconstrained_ops::__is_zero;
 
 use crate::params::BigNumParams;
 
+// ------------------------------ UNCONSTRAINED EXPRESSIONS ------------------------------
+
 /// Compute the result of a linear combination of (possibly negative) `BigNum` values (unconstrained)
 ///
 /// ## Note
@@ -213,32 +215,213 @@ pub(crate) unconstrained fn __compute_quadratic_expression<let N: u32, let MOD_B
     (quotient, remainder)
 }
 
-///fn add_linear_expressions<let N: u32, let MOD_BITS: u32, let M: u32>(
-///    double_modulus: [u128; N],
-///    lhs_terms: [[[u128; N]; LHS_N]; NUM_PRODUCTS],
-///    lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
-///    rhs_terms: [[[u128; N]; RHS_N]; NUM_PRODUCTS],
-///    rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
-///    linear_terms: [[u128; N]; ADD_N],
-///    linear_flags: [bool; ADD_N],
-///) -> ([Field; N], [Field; N], [Field; N]) {
-///
-///}
-///
-////// This is the constrained version of `__compute_quadratic_expression_product`
-///fn compute_quadratic_expression_product<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
-///    params: BigNumParams<N, MOD_BITS>,
-///    lhs_terms: [[[u128; N]; LHS_N]; NUM_PRODUCTS],
-///    lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
-///    rhs_terms: [[[u128; N]; RHS_N]; NUM_PRODUCTS],
-///    rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
-///    linear_terms: [[u128; N]; ADD_N],
-///    linear_flags: [bool; ADD_N],
-///) -> ([u128; N], [u128; N]) {
-///
-///}
+// ------------------------------ CONSTRAINED EXPRESSIONS ------------------------------
 
-/// Constrain a degree-2 `BigNum` expression to be equal to 0 (mod `MOD`)
+/// Constrained version of `__add_linear_expression`
+///
+/// Computes all the linear parts of an expression in-circuit
+///
+/// ## Note
+/// Negative terms are implemented by adding `double_modulus`
+/// `double_modulus` is chosen so that all limbs except the top one
+/// are > 2^{120}, which prevents underflows in intermediate computations.
+///
+/// For the most significant limb we slightly reduce the padding (to keep the
+/// overall value equal to `2 * MOD`), so in principle there is a narrow edge
+/// case where that limb could underflow if enough negative contributions are
+/// accumulated and the top limb of `MOD` is very small. In practice, the
+/// global `BigNum` range and operand-count assumptions in
+/// `evaluate_quadratic_expression` rule out such patterns.
+fn add_linear_expressions<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
+    params: BigNumParams<N, MOD_BITS>,
+    lhs_terms: [[[u128; N]; LHS_N]; NUM_PRODUCTS],
+    lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
+    rhs_terms: [[[u128; N]; RHS_N]; NUM_PRODUCTS],
+    rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
+    linear_terms: [[u128; N]; ADD_N],
+    linear_flags: [bool; ADD_N],
+) -> ([[Field; N]; NUM_PRODUCTS], [[Field; N]; NUM_PRODUCTS], [Field; N]) {
+    // lhs linear terms
+    let mut lhs_linear: [[Field; N]; NUM_PRODUCTS] = [[0; N]; NUM_PRODUCTS];
+    // rhs linear terms
+    let mut rhs_linear: [[Field; N]; NUM_PRODUCTS] = [[0; N]; NUM_PRODUCTS];
+    // linear terms
+    let mut lin_expr: [Field; N] = [0; N];
+
+    for k in 0..NUM_PRODUCTS {
+        for i in 0..N {
+            for j in 0..LHS_N {
+                // Note: if lhs_flags[k][j] - `is_negative` is not known at comptime this is very expensive
+                if (lhs_flags[k][j]) {
+                    lhs_linear[k][i] -= lhs_terms[k][j][i] as Field;
+                    lhs_linear[k][i] += params.double_modulus[i] as Field;
+                } else {
+                    lhs_linear[k][i] += lhs_terms[k][j][i] as Field;
+                }
+            }
+            for j in 0..RHS_N {
+                // Note: if rhs_flags[k][j] - `is_negative` is not known at comptime this is very expensive
+                if (rhs_flags[k][j]) {
+                    rhs_linear[k][i] -= rhs_terms[k][j][i] as Field;
+                    rhs_linear[k][i] += params.double_modulus[i] as Field;
+                } else {
+                    rhs_linear[k][i] += rhs_terms[k][j][i] as Field;
+                }
+            }
+        }
+    }
+
+    for i in 0..N {
+        for j in 0..ADD_N {
+            // Note: if linear_flags[j] - `is_negative` is not known at comptime this is very expensive
+            if (linear_flags[j]) {
+                lin_expr[i] -= linear_terms[j][i] as Field;
+                lin_expr[i] += params.double_modulus[i] as Field;
+            } else {
+                lin_expr[i] += linear_terms[j][i] as Field;
+            }
+        }
+    }
+
+    (lhs_linear, rhs_linear, lin_expr)
+}
+
+/// Constrained version of `__compute_quadratic_expression_product`
+///
+/// Computes the following expression in-circuit:
+///     \sum (L_i * R_i) + \sum (A_i) - QUOTIENT * MOD
+///
+/// Because of the subtraction of `QUOTIENT * MODULUS`, the resulting limbs may
+/// underflow and represent *negative* values. To account for this, we allow the
+/// prover to choose a sequence of borrow flags and interpret the limbs with
+/// additional terms:
+///
+///   - for each limb `i` we may add `2^{246}` (via a flag at position `i`);
+///   - for each limb `i` we may subtract `2^{126 = 246 - 120}` (via the flag
+///     at position `i - 1`).
+///
+/// This corresponds to borrowing `2^{126}` from limb `i + 1` and adding
+/// `2^{246}` into limb `i`. After this adjustment, an honest prover can ensure
+/// that every limb lies in `[0, 2^{246})` and that the adjusted limbs encode
+/// the correct integer value.
+///
+/// Additionally, we constrain the quotient limbs via `validate_quotient_in_range`:
+///   - limbs `0..N-2` of `quotient` are < 2^{120};
+///   - the top limb is < 2^{TOP_LIMB_BITS + 6}.
+/// Which validates `quotient < 2^{MOD_BITS + 6}`
+///
+/// ## TODO
+/// Apply static or runtime checks in this method to validate that the effective
+/// `twiddle_factor` does not exceed 6 under the chosen parameters.
+fn compute_quadratic_expression_with_modulus<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
+    params: BigNumParams<N, MOD_BITS>,
+    lhs_terms: [[[u128; N]; LHS_N]; NUM_PRODUCTS],
+    lhs_flags: [[bool; LHS_N]; NUM_PRODUCTS],
+    rhs_terms: [[[u128; N]; RHS_N]; NUM_PRODUCTS],
+    rhs_flags: [[bool; RHS_N]; NUM_PRODUCTS],
+    linear_terms: [[u128; N]; ADD_N],
+    linear_flags: [bool; ADD_N],
+) -> [Field; 2 * N - 1] {
+    // Safety: use an unconstrained function to compute the value of the quotient and borrow_flags out-of-circuit
+    let (quotient, borrow_flags): ([u128; N], [bool; 2 * N - 2]) = unsafe {
+        __compute_quadratic_expression_with_borrow_flags::<N, MOD_BITS, LHS_N, RHS_N, NUM_PRODUCTS, ADD_N>(
+            params,
+            lhs_terms,
+            lhs_flags,
+            rhs_terms,
+            rhs_flags,
+            linear_terms,
+            linear_flags,
+        )
+    };
+
+    // Constrain the `quotient < 2^{MOD_BITS + 6}`
+    // By constraining limbs(0..N-2) to be < 2^120 and the the top limb < 2^{TOP_LIMB_BITS + 6}
+    validate_quotient_in_range::<N, MOD_BITS>(quotient);
+
+    // Compute the linear sums that represent L_i, R_i, A
+    let (lhs_linear, rhs_linear, lin_expr): ([[Field; N]; NUM_PRODUCTS], [[Field; N]; NUM_PRODUCTS], [Field; N]) = add_linear_expressions::<N, MOD_BITS, LHS_N, RHS_N, NUM_PRODUCTS, ADD_N>(
+        params,
+        lhs_terms,
+        lhs_flags,
+        rhs_terms,
+        rhs_flags,
+        linear_terms,
+        linear_flags,
+    );
+
+    // We want to evaluate that L * R + A - Quotient * MOD = 0, evaluated over the integers
+    // For this we need to be able to borrow values from more-significant limbs into less-significant limbs,
+    // so that we can ensure that no limbs will underflow
+    let mut product_limbs: [Field; 2 * N - 1] = [0; 2 * N - 1];
+
+    // Compute the product t0 * t1 + t4 - Quotient * MOD
+    // TODO: this is super nasty as it requires a multiplication
+    for i in 0..N {
+        for j in 0..N {
+            for k in 0..NUM_PRODUCTS {
+                if k == 0 {
+                    let new_term: Field = lhs_linear[k][i] * rhs_linear[k][j]
+                        - (quotient[i] as Field) * (params.modulus[j] as Field);
+                    // width-4 optimization
+                    std::as_witness(new_term);
+                    product_limbs[i + j] += new_term;
+                } else {
+                    product_limbs[i + j] += lhs_linear[k][i] * rhs_linear[k][j];
+                }
+            }
+            // This is the fallback for pure linear expression
+            if (NUM_PRODUCTS == 0) {
+                product_limbs[i + j] -= (quotient[i] as Field) * (params.modulus[j] as Field);
+            }
+        }
+        product_limbs[i] += lin_expr[i];
+    }
+
+    // Each limb product represents the sum of 120-bit products.
+    // by setting the borrow value to 2^246 we are restricting this method's completeness to expressions
+    // where no more than 64 limb products are summed together.
+    // TODO: define trade-offs regarding the value of borrow_shift
+    // (the larger the value, the greater the range check that is required on product_limbs)
+    // (126-bit range check is a sweet spot for the barretenberg backend as it decomposes into 9 14-bit range checks)
+    // (the barretenberg backend can evaluate these in 5.25 gates. 127 bits costs 6.5 gates)
+    let borrow_shift: Field = TWO_POW_246; // 2^{246}
+    let borrow_carry: Field = TWO_POW_126; // 2^{246 - 120} = 2^{126}
+
+    // Get the product_limbs into the form where each entry is a 126-bit value
+    product_limbs[0] += (borrow_flags[0] as Field) * borrow_shift;
+    for i in 1..(N + N - 2) {
+        product_limbs[i] += (borrow_flags[i] as Field) * borrow_shift
+            - (borrow_flags[i - 1] as Field) * borrow_carry;
+    }
+    product_limbs[N + N - 2] -= (borrow_flags[N + N - 3] as Field) * borrow_carry;
+
+    product_limbs
+}
+
+/// Validate that `limbs` represent the integer value `0`
+///
+/// ## Assumptions
+///     - `limbs` is a `2*N-1` array of `Field` values that was derived arithmetically as
+///        a degree-2 expression
+///     - each limb satisfies `limbs[i] < 2^{246}`, as ensured by
+///       `compute_quadratic_expression_with_modulus` under its parameter bounds.
+///
+/// ## Details
+/// Each element `i` in `limbs` overlaps in bit-range with element `i+1`, EXCEPT for the low 120 bits
+/// i.e. we need to do the following for each limb `i`:
+///      1. validate the limb's low-120 bits equals zero
+///      2. compute the limb "carry" by right-shifting by 2^{120}
+///      3. propagate the "carry" into limb `i+1`
+/// We can efficiently do all of the above by multiplying the limb by 2^{-120} and constraining the result to be <2^{126}
+///
+/// If the low 120 bits are nonzero, there is no value in `[0, 2^{126})` that
+/// could have produced this limb after multiplying by `2^{120}`. Since
+/// multiplication by `2^{120}` is a bijection on the Field, any limb with
+/// non-zero low 120 bits must map outside the `[0, 2^{126})` range after
+/// scaling by `2^{-120}`.
+///
+/// The most significant limb has no limb to "carry" values into - the entire limb must equal zero
 ///
 /// ## Note
 /// The constant 126 is not arbitrary. We use 120-bit limbs and allow up to 64
@@ -247,7 +430,21 @@ pub(crate) unconstrained fn __compute_quadratic_expression<let N: u32, let MOD_B
 /// principle go higher (up to roughly `CircuitModulusBits - 121`), but 126 is
 /// the minimal bound consistent with `NUM_PRODUCTS < 64` and is significantly
 /// cheaper than larger bounds for the barretenberg backend.
+fn validate_expression_is_zero<let N: u32>(mut limbs: [Field; 2 * N - 1]) {
+    let hi_shift: Field = TWO_POW_120 as Field;
+    let hi_downshift: Field = 1 / hi_shift;
+    for i in 0..N + N - 2 {
+        limbs[i] *= hi_downshift;
+        std::as_witness(limbs[i]);
+        limbs[i].assert_max_bit_size::<126>(); // N.B. is this sufficient? going beyond 126 costs us 1 gate per limb
+        limbs[i + 1] += limbs[i];
+    }
+    assert(limbs[N + N - 2] == 0);
+}
+
+/// Constrain a degree-2 `BigNum` expression to be equal to 0 (mod `MOD`)
 ///
+//
 /// This method is intended for relations where the remainder term of the
 /// degree-2 expression is exactly zero as an integer relation. In other words,
 /// we use it only when we expect:
@@ -278,14 +475,10 @@ pub(crate) unconstrained fn __compute_quadratic_expression<let N: u32, let MOD_B
 ///   1. evaluating the limb products required to compute the `L_i * R_i` values;
 ///   2. applying range constraints to validate that the result encodes 0.
 ///
+/// ## Note
 /// When the expression is evaluated over `N`-limb `BigNum` values, the product
 /// has up to `2N - 1` significant limbs. Each limb is a sum of at most
-/// `NUM_PRODUCTS` products of 120-bit limbs, so for `NUM_PRODUCTS < 64` every
-/// limb lies in:
-///
-///     [0, 2^{240 + twiddle_factor} - 1]    with `twiddle_factor <= 6`.
-///
-/// In particular, we conservatively bound each limb by `2^{246}`.
+/// `NUM_PRODUCTS` products of `linear` 120-bit limbs and `quadratic` 240-bit-ish limbs
 ///
 /// Note that:
 ///   * limb-wise multiplication is not uniform across indices. For example:
@@ -298,37 +491,16 @@ pub(crate) unconstrained fn __compute_quadratic_expression<let N: u32, let MOD_B
 ///         x1*y2 + x2*y1,                       // 2 terms
 ///         x2*y2                                // 1 term
 ///       ]
+///       (grows as C(n, k), the middle limb will always contain the most amount subproducts)
 ///
-///   * we also allow linear combinations inside the products. These details only
-///     increase the effective number of terms in most limbs; the `2^{246}` should
-///     hold under `NUM_PRODUCTS < 64`, but it it can easily be violated by for example:
-///     (a0 + a1 + a2) * (b0 + b1 + b2) + ... (64 times), with each ai having its limbs at maximum value of 2^{120} - 1
-///     The middle limb will contain a value that will definitely overflow the 2^{246} bound. This is a purely completeness issue
+///   * we also allow linear combinations inside the products, which further increases the bound
+///     on a `quadratic` limb
 ///
-/// Because of the subtraction of `QUOTIENT * MODULUS`, the resulting limbs may
-/// underflow and represent *negative* values. To account for this, we allow the
-/// prover to choose a sequence of borrow flags and interpret the limbs with
-/// additional terms:
+///   * finally, when `is_negative` flag is set, we effectively add 2 * MOD to each limb, where
+///     2 * MOD limbs are structured in such a way that they all are > 2**120
 ///
-///   - for each limb `i` we may add `2^{246}` (via a flag at position `i`);
-///   - for each limb `i` we may subtract `2^{126 = 246 - 120}` (via the flag
-///     at position `i - 1`).
-///
-/// This corresponds to borrowing `2^{126}` from limb `i + 1` and adding
-/// `2^{246}` into limb `i`. After this adjustment, an honest prover can ensure
-/// that every limb lies in `[0, 2^{246})` and that the adjusted limbs encode
-/// the correct integer value.
-///
-/// To test that the adjusted multi-limb integer is equal to 0, we then:
-///
-///   1. multiply each limb by `2^{-120}` in the circuit field;
-///   2. enforce that the result fits in 126 bits;
-///   3. add that result into the next more significant limb and repeat.
-///
-/// Intuitively, this is equivalent to checking that the low 120 bits of each
-/// limb are zero, shifting out those 120 bits, and propagating the remaining
-/// high bits into the next limb. The final most-significant limb is then
-/// constrained to be exactly zero.
+/// We allow `NUM_PRODUCTS < 64` completeness-wise, but it certainly can overflow the 2^{240 + `twiddle_factor=6`} bound
+/// in edge cases. See completeness section for an example.
 ///
 /// ## Assumptions
 ///
@@ -336,72 +508,30 @@ pub(crate) unconstrained fn __compute_quadratic_expression<let N: u32, let MOD_B
 ///   - limbs `0..N-2` satisfy `limb_i < 2^{120}`
 ///   - limb `N-1` satisfies `limb_{N-1} < 2^{TOP_LIMB_BITS}`
 ///
-/// Conceptually, let:
+/// ## Completeness
+/// If an honest prover supplies inputs that satisfy the assumptions above,
+/// it can always find a `quotient` and `borrow_flags` such that the integer
+/// relation holds and all constraints are satisfied.
 ///
-///   - `T = [t_0, ..., t_{2N-2}]` be the limb-wise representation of
-///     `\sum L_i * R_i + \sum A_i`, without normalization. Each `t_i < 2^{240 + 6}`
-///   - `S = [s_0, ..., s_{2N-2}]` be the limb-wise representation of
-///     `QUOTIENT * MODULUS` without normalization.         Each `s_i < 2^{240}`.
+/// The only possibility to break completeness is by providing too many inputs, for example:
 ///
-/// We then work with `T - S`, plus the borrow adjustments described above.
+///     (a0 + a1 + a2) * (b0 + b1 + b2) + ... (60 times), with each a_i having its limbs at maximum value of 2^{120} - 1
+///     The middle limb will contain a value that will definitely overflow the 2^{246} bound.
 ///
 /// ## Soundness
+/// TODO: finish after discussion
+
+/// NOTE FOR KHASHAYAR
+/// I believe that the soundness is conditionally broken here. Like in `add`, `sub` from constrained ops but even more
+/// due to the fact that we do not `validate_in_range` all the inputs. For example `div`:
 ///
-/// After introducing borrow flags `bf[i]`, we constrain:
-///
-///  hi_0      = (            t_0       - s_0       + bf[0]    * 2^{246}                     ) * 2^{-120} < 2^{126}
-///  hi_1      = (hi_0      + t_1       - s_1       + bf[1]    * 2^{246} - bf[0]    * 2^{126}) * 2^{-120} < 2^{126}
-///   ...
-///  hi_{2N-3} = (hi_{2N-2} + t_{2N-3}  - s_{2N-3}  + bf[2N-3] * 2^{246} - bf[2N-4] * 2^{126}) * 2^{-120} < 2^{126}
-///  hi_{2N-2} = (hi_{2N-3} + t_{2N-2}  - s_{2N-2}                       - bf[2N-3] * 2^{126})            = 0
-///
-/// Additionally, we constrain the quotient limbs via `validate_quotient_in_range`:
-///   - limbs `0..N-2` of `quotient` are < 2^{120};
-///   - the top limb is < 2^{TOP_LIMB_BITS + 6}.
-///
-/// For an honest prover, after applying the chosen borrow pattern, each limb
-/// has magnitude strictly less than `2^{246}`, with the lower 120 bits equal to
-/// 0. Multiplication by `2^{-120}` therefore shifts the value into a
-/// 126-bit integer, so the 126-bit range checks always succeed.
-///
-/// For any dishonest prover whose integer relation is non-zero, some limb must
-/// have non-zero low 120 bits in the true integer representation, regardless
-/// of the chosen `QUOTIENT` and borrow flags. For such a limb, multiplying by
-/// `2^{-120}` produces a field element which is effectively pseudorandom in
-/// `F_p` with respect to the small interval `[0, 2^{126})`.
-///
-/// The probability that a uniformly random element of `F_p` lies in
-/// `[0, 2^{126})` is approximately `2^{126} / p ~ 2^{126 - k}`, where `k` is
-/// the bit-length of `p`. We perform this check on at most `2N - 1` limbs and
-/// enforce parameter ranges such that `2N - 1 <= 2^6`. A crude union bound then
-/// gives:
-///
-///     Pr[all checks pass for a bad witness] <= 2^6 * 2^{126 - k}.
-///
-/// For typical choices `k ~ 254`, this is at most about `2^{-120}`.
-///
-/// ## Completeness
-///
-/// Under the assumptions:
-///   - `NUM_PRODUCTS < 64`;
-///   - all input `BigNum` limbs are correctly range constrained;
-///   - `quotient` is constrained to `< 2^{MOD_BITS + 6}`;
-///
-/// any honest assignment that satisfies:
-///
-///     \sum L_i * R_i + \sum A_i - QUOTIENT * MODULUS = 0
-///
-/// admits a choice of `borrow_flags` such that:
-///   - the adjusted `product_limbs` lie within `[0, 2^{246})` limb-wise;
-///   - scaling by `2^{-120}` never exceeds the 126-bit range bound;
-///   - the iterative carry propagation leaves the final limb exactly 0.
-///
-/// Thus any honest witness that realizes a valid integer relation will satisfy
-/// all constraints in this gadget.
-///
-/// ## TODO
-/// Apply static or runtime checks in this method to validate that the effective
-/// `twiddle_factor` does not exceed 6 under the chosen parameters.
+/// What we effectively evaluate is `rhs * result + 2 * MOD - lhs = Q * MOD`
+/// We do not `validate_in_range` the result anywhere so
+/// result = ((Q - 2)* MOD + lhs) / rhs
+/// Assuming `rhs`, `lhs` and `MOD` are in the same range we can add a few MODs to result
+/// since Q is constrained to be < 2^{MOD_BITS + 6} we effectively can add at least 2-3-4? MODs to result
+/// I think the validate_in_range checks on all the inputs won't be that expensive since we already do the `u128` range checks on them anyway
+/// After that there still will be a room for one extra modulus which is fine with the rest of the library
 pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
     params: BigNumParams<N, MOD_BITS>,
     lhs_terms: [[[u128; N]; LHS_N]; NUM_PRODUCTS],
@@ -412,137 +542,16 @@ pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let L
     linear_flags: [bool; ADD_N],
 ) {
     assert(NUM_PRODUCTS < 64, f"evaluate_quadratic_expression overflow in operands count");
-    // NUM_PRODUCTS < 64 ensures each limb sum < 2^{246} so that the 126-bit bound is valid.
+    // NUM_PRODUCTS < 64 is a light bound that tries to ensure each limb sum < 2^{246} so that the 126-bit bound is valid.
 
-    // Safety: use an unconstrained function to compute the value of the quotient
-    let (quotient, borrow_flags): ([u128; N], [bool; 2 * N - 2]) = unsafe {
-        __compute_quadratic_expression_with_borrow_flags::<N, MOD_BITS, LHS_N, RHS_N, NUM_PRODUCTS, ADD_N>(
-            params,
-            lhs_terms,
-            lhs_flags,
-            rhs_terms,
-            rhs_flags,
-            linear_terms,
-            linear_flags,
-        )
-    };
-
-    // Constrain the `quotient < 2^{MOD_BITS + 6}`
-    // By constraining limbs(0..N-2) to be < 2^120 and the the top limb < 2^{TOP_LIMB_BITS + 6}
-    validate_quotient_in_range::<N, MOD_BITS>(quotient);
-
-    // (should be a compile-time check...unconstrained function?)
-    // Compute the linear sums that represent L_i, R_i, A_i
-
-    // lhs linear terms
-    let mut lhs_sums: [[Field; N]; NUM_PRODUCTS] = [[0; N]; NUM_PRODUCTS];
-    // rhs linear terms
-    let mut rhs_sums: [[Field; N]; NUM_PRODUCTS] = [[0; N]; NUM_PRODUCTS];
-    // linear terms
-    let mut linear_sum: [Field; N] = [0; N];
-
-    let double_modulus: [u128; N] = params.double_modulus;
-
-    for k in 0..NUM_PRODUCTS {
-        for i in 0..N {
-            for j in 0..LHS_N {
-                // Note: if lhs_flags[k][j] - `is_negative` is not known at comptime this is very expensive
-                if (lhs_flags[k][j]) {
-                    lhs_sums[k][i] -= lhs_terms[k][j][i] as Field;
-                    lhs_sums[k][i] += double_modulus[i] as Field;
-                } else {
-                    lhs_sums[k][i] += lhs_terms[k][j][i] as Field;
-                }
-            }
-            for j in 0..RHS_N {
-                // Note: if rhs_flags[k][j] - `is_negative` is not known at comptime this is very expensive
-                if (rhs_flags[k][j]) {
-                    rhs_sums[k][i] -= rhs_terms[k][j][i] as Field;
-                    rhs_sums[k][i] += double_modulus[i] as Field;
-                } else {
-                    rhs_sums[k][i] += rhs_terms[k][j][i] as Field;
-                }
-            }
-        }
-    }
-
-    for i in 0..N {
-        for j in 0..ADD_N {
-            // Note: if linear_flags[j] - `is_negative` is not known at comptime this is very expensive
-            if (linear_flags[j]) {
-                linear_sum[i] -= linear_terms[j][i] as Field;
-                linear_sum[i] += double_modulus[i] as Field;
-            } else {
-                linear_sum[i] += linear_terms[j][i] as Field;
-            }
-        }
-    }
-
-    // We want to evaluate that t0 * t1 + t4 - Quotient * MOD = 0, evaluated over the integers
-    // For this we need to be able to borrow values from more-significant limbs into less-significant limbs,
-    // so that we can ensure that no limbs will underflow for an honest Prover
-    let mut product_limbs: [Field; 2 * N - 1] = [0; 2 * N - 1];
-
-    // Compute the product t0 * t1 + t4 - Quotient * MOD
-    // TODO: this is super nasty as it requires a multiplication
-    for i in 0..N {
-        for j in 0..N {
-            for k in 0..NUM_PRODUCTS {
-                if k == 0 {
-                    let new_term: Field = lhs_sums[k][i] * rhs_sums[k][j]
-                        - (quotient[i] as Field) * (params.modulus[j] as Field);
-                    // width-4 optimization
-                    std::as_witness(new_term);
-                    product_limbs[i + j] += new_term;
-                } else {
-                    product_limbs[i + j] += lhs_sums[k][i] * rhs_sums[k][j];
-                }
-            }
-            // This is the fallback for pure linear expression
-            if (NUM_PRODUCTS == 0) {
-                product_limbs[i + j] -= (quotient[i] as Field) * (params.modulus[j] as Field);
-            }
-        }
-        product_limbs[i] += linear_sum[i];
-    }
-
-    // Each limb product represents the sum of 120-bit products.
-    // by setting the borrow value to 2^246 we are restricting this method's completeness to expressions
-    // where no more than 64 limb products are summed together.
-    // TODO: define trade-offs regarding the value of borrow_shift
-    // (the larger the value, the greater the range check that is required on product_limbs)
-    // (126-bit range check is a sweet spot for the barretenberg backend as it decomposes into 9 14-bit range checks)
-    // (the barretenberg backend can evaluate these in 5.25 gates. 127 bits costs 6.5 gates)
-    let borrow_shift: Field = TWO_POW_246; // 2^{246}
-    let borrow_carry: Field = TWO_POW_126; // 2^{246 - 120} = 2^{126}
-
-    // Get the product_limbs into the form where each entry is a 126-bit value
-    product_limbs[0] += (borrow_flags[0] as Field) * borrow_shift;
-    for i in 1..(N + N - 2) {
-        product_limbs[i] += (borrow_flags[i] as Field) * borrow_shift
-            - (borrow_flags[i - 1] as Field) * borrow_carry;
-    }
-    product_limbs[N + N - 2] -= (borrow_flags[N + N - 3] as Field) * borrow_carry;
-
-    // Final step: Validate `product_limbs` represents the integer value `0`
-    // Each element `i` in `product_limbs` overlaps in bit-range with element `i+1`, EXCEPT for the low 120 bits
-    // i.e. we need to do the following for each limb `i`:
-    //      1. validate the limb's low-120 bits equals zero
-    //      2. compute the limb "carry" by right-shifting by 2^{120}
-    //      3. add the carry into limb `i+1`
-    // We can efficiently do all of the above by multiplying the limb by 2^{-120} and constraining the result to be <2^{126}
-    // (if the low 120 bits are nonzero the result will underflow and product a large value that cannot be range constrained)
-    // (the probability of an underflow value satisfying a 126-bit range constraint is approx. 2^{k - 126},
-    //  where k is the number of bits in the prime field)
-    // We then add the result into the next limb and repeat.
-    let hi_shift: Field = TWO_POW_120 as Field;
-    let hi_downshift: Field = 1 / hi_shift;
-    for i in 0..N + N - 2 {
-        product_limbs[i] *= hi_downshift;
-        std::as_witness(product_limbs[i]);
-        product_limbs[i].assert_max_bit_size::<126>(); // N.B. is this sufficient? going beyond 126 costs us 1 gate per limb
-        product_limbs[i + 1] += product_limbs[i];
-    }
-    // the most significant limb has no limb to "carry" values into - the entire limb must equal zero
-    assert(product_limbs[N + N - 2] == 0);
+    let mut product_limbs: [Field; 2 * N - 1] = compute_quadratic_expression_with_modulus::<N, MOD_BITS, LHS_N, RHS_N, NUM_PRODUCTS, ADD_N>(
+        params,
+        lhs_terms,
+        lhs_flags,
+        rhs_terms,
+        rhs_flags,
+        linear_terms,
+        linear_flags,
+    );
+    validate_expression_is_zero(product_limbs);
 }
