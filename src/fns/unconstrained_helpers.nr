@@ -582,7 +582,7 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt_find_i<let N: u32, let MOD_BIT
 
     let mut i: u32 = 0;
     // Compute t^{2^k} until it hits 1 for the first time
-    while !__eq(t, one) {
+    while !__eq(c, one) {
         c = __sqr::<N, MOD_BITS>(params, c);
         i += 1;
     }
@@ -597,7 +597,7 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt_find_i<let N: u32, let MOD_BIT
 /// Then R^2 = a^{(MOD + 1)/ 4 * 2} = a^{(MOD + 1) / 2} = a^{(MOD - 1) / 2 + 1} = a
 ///
 /// ## Note
-/// The input is assumed to be nonzero
+/// The input is assumed to be a nonzero value
 ///
 /// This is much cheaper than `__tonelli_shanks_sqrt`
 pub(crate) unconstrained fn __easy_sqrt<let N: u32, let MOD_BITS: u32>(

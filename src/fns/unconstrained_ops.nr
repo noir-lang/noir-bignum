@@ -405,7 +405,7 @@ pub(crate) unconstrained fn __sqrt<let N: u32, let MOD_BITS: u32>(
 /// ## Note
 /// Only use for prime fields! Function may infinite loop if used for non-prime fields
 ///
-/// The input is assumed to be a non zero
+/// The input is assumed to be a nonzero value
 pub(crate) unconstrained fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     input: [u128; N],
