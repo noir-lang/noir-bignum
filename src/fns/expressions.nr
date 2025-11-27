@@ -2,7 +2,7 @@ use crate::utils::split_bits;
 
 use crate::constants::{TWO_POW_120, TWO_POW_126, TWO_POW_246};
 
-use crate::fns::constrained_ops::validate_quotient_in_range;
+use crate::fns::constrained_ops::{validate_in_range, validate_quotient_in_range};
 use crate::fns::unconstrained_helpers::__barrett_reduction;
 use crate::fns::unconstrained_ops::__is_zero;
 
@@ -519,21 +519,51 @@ fn validate_expression_is_zero<let N: u32>(mut limbs: [Field; 2 * N - 1]) {
 ///     The middle limb will contain a value that will definitely overflow the 2^{246} bound.
 ///
 /// ## Soundness
-/// TODO: finish after discussion
-
-/// NOTE FOR KHASHAYAR
-/// I believe that the soundness is conditionally broken here. Like in `add`, `sub` from constrained ops but even more
-/// due to the fact that we do not `validate_in_range` all the inputs. For example `div`:
+/// This function is conditionally sound: it enforces that the degree-2 relation
+/// holds modulo `MOD`, but it does not, by itself, enforce that any particular
+/// term (for example a result `z`) is a *canonical* representative in
+/// `[0, MOD)`.
 ///
-/// What we effectively evaluate is `rhs * result + 2 * MOD - lhs = Q * MOD`
-/// We do not `validate_in_range` the result anywhere so
-/// result = ((Q - 2)* MOD + lhs) / rhs
-/// Assuming `rhs`, `lhs` and `MOD` are in the same range we can add a few MODs to result
-/// since Q is constrained to be < 2^{MOD_BITS + 6} we effectively can add at least 2-3-4? MODs to result
-/// I think the validate_in_range checks on all the inputs won't be that expensive since we already do the `u128` range checks on them anyway
-/// After that there still will be a room for one extra modulus which is fine with the rest of the library
-/// And when we have something like x * y + z - w = 0, and z is the result of our computation, well, we can add a lot of moduli
-/// up until we bump into 2^128 * N
+/// In other words, if the surrounding relation is invariant under adding a
+/// multiple of `MOD` to one of its terms, then a dishonest prover can exploit
+/// this. For example, consider a multiplication relation:
+///
+///     x * y - z = 0 (mod MOD)
+///
+/// Internally we encode this as:
+///
+///     x * y + 2 * MOD - z - quotient * MOD = 0
+///
+/// which is equivalent to:
+///
+///     x * y - z = (quotient - 2) * MOD
+///
+/// Suppose the honest witness uses some `z` satisfying
+/// `0 <= z < MOD` and some `quotient`. If the `BigNum` encoding allows
+/// `z' = z + MOD` (i.e. `z' < 2^{MOD_BITS}` still holds), then a dishonest
+/// prover can instead provide:
+///
+///     z' = z + MOD
+///     quotient' = quotient - 1
+///
+/// and still satisfy:
+///
+///     x * y + 2 * MOD - z' - quotient' * MOD = 0
+///
+/// even though `z'` is no longer the canonical representative of `x * y mod MOD`.
+///
+/// The same consideration applies to almost every constrained `BigNum` relation:
+/// whenever a value participates *only* through a modular equality, and no
+/// separate range constraint is imposed on that value, the prover is free to
+/// shift it by an extra `MOD` as long as the resulting limb
+/// encoding still satisfies its bit-bounds. This is inherent in working with
+/// modular constraints; the responsibility for enforcing canonical
+/// representatives lies with the caller when it is required.
+///
+/// This is the same "extra modulus" phenomenon as in the `add`/`sub` functions:
+/// the constraints are sound for modular arithmetic, but any caller that
+/// requires canonical outputs in `[0, MOD)` must additionally enforce a
+/// range check (for example via `validate_in_field`) on the relevant terms.
 pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
     params: BigNumParams<N, MOD_BITS>,
     lhs_terms: [[[u128; N]; LHS_N]; NUM_PRODUCTS],
@@ -545,6 +575,14 @@ pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let L
 ) {
     assert(NUM_PRODUCTS < 64, f"evaluate_quadratic_expression overflow in operands count");
     // NUM_PRODUCTS < 64 is a light bound that tries to ensure each limb sum < 2^{246} so that the 126-bit bound is valid.
+
+    lhs_terms.for_each(|lhs_limbs: [[u128; N]; LHS_N]| {
+        lhs_limbs.for_each(|term: [u128; N]| validate_in_range::<u128, N, MOD_BITS>(term))
+    });
+    rhs_terms.for_each(|rhs_limbs: [[u128; N]; RHS_N]| {
+        rhs_limbs.for_each(|term: [u128; N]| validate_in_range::<u128, N, MOD_BITS>(term))
+    });
+    linear_terms.for_each(|term: [u128; N]| validate_in_range::<u128, N, MOD_BITS>(term));
 
     let mut product_limbs: [Field; 2 * N - 1] = compute_quadratic_expression_with_modulus::<N, MOD_BITS, LHS_N, RHS_N, NUM_PRODUCTS, ADD_N>(
         params,
