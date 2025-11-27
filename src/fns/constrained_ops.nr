@@ -119,6 +119,11 @@ pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
 ///  Then we accumulate the resulting BigNum values using:
 ///  B = 2^{120 * (N - 1)}
 ///  res = x3 + B * x2 + B^2 * x1 + B^3 * x0
+///
+/// ## Note
+/// This function will always produce an `x3` `BigNum`
+/// If `MOD = 2^{120 * (N - 1)}`
+/// It will use only `MOD_BITS - 1` bits of entropy
 pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(
     params: BigNumParams<N, MOD_BITS>,
     seed: [u8; SeedBytes],
@@ -161,11 +166,9 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
     }
 
     let num_bits: u32 = MOD_BITS * 2;
-    // TODO:  I actually don't see the point in this.
-    // it just complicates things. We can definitely just use `2 * N` bits of entropy
     let num_bytes: u32 = (num_bits + 7) / 8;
 
-    // Truncate the final byte that will be used in BigNum creation
+    // Truncate the final byte that will be used in `BigNum` creation
     let bits_in_last_byte: u8 = (num_bits as u8) % 8;
     if bits_in_last_byte != 0 {
         let last_byte_mask: u8 = ((1 as u8) << bits_in_last_byte) - 1;
@@ -231,7 +234,6 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
 
     // B = 2^{120 * (N - 1)}, we know it is \leq `MOD`, since the top limb
     // have to be at least one
-    // TODO: if MOD is 2^{120 * (N - 1)} then we sample zero
     let mut bigfield_rhs_limbs: [u128; N] = [0; N];
     bigfield_rhs_limbs[N - 1] = 1;
 
