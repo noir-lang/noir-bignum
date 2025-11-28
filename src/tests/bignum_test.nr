@@ -8,6 +8,7 @@ use crate::params::BigNumParams;
 use crate::fields::bls12_381Fq::BLS12_381_Fq;
 use crate::fields::bls12_381Fr::BLS12_381_Fr;
 use crate::fields::bn254Fq::BN254_Fq;
+use crate::fields::ed25519Fq::ED25519_Fq;
 use crate::fields::U256::U256;
 
 global TEST_2048_PARAMS: BigNumParams<18, 2048> = BigNumParams {
@@ -120,6 +121,15 @@ fn test_derive_from_seed() {
     let seed = [1, 2, 3, 4];
     let result_bn: BN254_Fq = BigNum::derive_from_seed(seed);
     result_bn.validate_in_field();
+}
+
+#[test]
+fn test_validate_derive_from_seed() {
+    let seed: [u8; 4] = [1, 2, 3, 4];
+    let result_bn = ED25519_Fq::derive_from_seed(seed);
+    assert(result_bn.get_limb(0) == 0x7ade1ed2cfc50de7855f7b290895cf);
+    assert(result_bn.get_limb(1) == 0x084a5fc748bdf0d52b06a5a8538ff6);
+    assert(result_bn.get_limb(2) == 0x0000000000000000000000000044e7);
 }
 
 #[test]

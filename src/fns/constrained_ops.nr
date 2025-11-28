@@ -112,29 +112,36 @@ pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
     result
 }
 
-/**
-* @brief given an input seed, generate a pseudorandom BigNum value
-* @details we hash the input seed into `modulus_bits * 2` bits of entropy,
-* which is then reduced into a BigNum value
-* We use a hash function that can be modelled as a random oracle
-* This function *should* produce an output that is a uniformly randomly distributed value modulo BigNum::modulus()
-**/
-
+/// Given an input seed, generate a pseudorandom `BigNum` value
+///
+/// This function *should* produce a uniformly randomly distributed value modulo `MOD`
+///
+///  First we take the seed and pack it's 31-byte chunks into `Field`s
+///  We use a hash function that can be modelled as a random oracle
+///  We hash the packed seed using Poseidon2 to produce `MOD_BITS * 2` bits of entropy
+///
+///  From these bits we construct 4(in case N = 2) or 3(N > 2) `BigNum` values:
+///  - We fill first `N - 1` limbs and leave the top limb empty
+///
+///  Then we accumulate the resulting BigNum values using:
+///  B = 2^{120 * (N - 1)}
+///  res = x3 + B * x2 + B^2 * x1 + B^3 * x0
+///
+/// ## Note
+/// This function will always produce an `x3` `BigNum`
+/// If `MOD = 2^{120 * (N - 1)}`
+/// It will use only `MOD_BITS - 1` bits of entropy
 pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(
     params: BigNumParams<N, MOD_BITS>,
     seed: [u8; SeedBytes],
 ) -> [u128; N] {
-    let mut rolling_seed: [u8; SeedBytes + 1] = [0; SeedBytes + 1];
-    for i in 0..SeedBytes {
-        rolling_seed[i] = seed[i];
-        assert_eq(rolling_seed[i], seed[i]);
-    }
-
-    let mut hash_buffer: [u8; N * 2 * 15] = [0; N * 2 * 15];
-
-    let mut rolling_hash_fields: [Field; (SeedBytes / 31) + 1] = [0; (SeedBytes / 31) + 1];
-    let mut seed_ptr = 0;
-    for i in 0..(SeedBytes / 31) + 1 {
+    // Pack seed bytes into Fields.
+    // For the seed of length M, we construct a rolling_hash_field of size ceil(M / 31).
+    // i.e.  31 bytes per Field
+    // NOTE: the Fields produced are 248 bits in size
+    let mut rolling_hash_fields: [Field; (SeedBytes + 30) / 31] = [0; (SeedBytes + 30) / 31];
+    let mut seed_ptr: u32 = 0;
+    for i in 0..(SeedBytes + 30) / 31 {
         let mut packed: Field = 0;
         for _ in 0..31 {
             if (seed_ptr < SeedBytes) {
@@ -146,12 +153,17 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
         rolling_hash_fields[i] = packed;
     }
 
-    let compressed =
-        poseidon::poseidon2::Poseidon2::hash(rolling_hash_fields, (SeedBytes / 31) + 1);
+    let compressed: Field =
+        poseidon::poseidon2::Poseidon2::hash(rolling_hash_fields, (SeedBytes + 30) / 31);
     let mut rolling_hash: [Field; 2] = [compressed, 0];
 
-    let num_hashes = (240 * N) / 254 + (((30 * N) % 32) != 0) as u32;
-    for i in 0..num_hashes - 1 {
+    // 120 bit limb has 15 bytes in it
+    // we buffer (N * 15) * 2 bytes for 2N limbs
+    let mut hash_buffer: [u8; N * 15 * 2] = [0; N * 15 * 2];
+
+    // We produce 32 bytes (254 bits) per hash iteration
+    // We take only 30 bytes, so we need ceil(N * 2 * 15 / 30) hashes to fill them up
+    for i in 0..N {
         let hash: Field = poseidon::poseidon2::Poseidon2::hash(rolling_hash, 2);
         let hash: [u8; 32] = hash.to_le_bytes();
         for j in 0..30 {
@@ -160,70 +172,83 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
         rolling_hash[1] += 1;
     }
 
-    {
-        let hash: Field = poseidon::poseidon2::Poseidon2::hash(rolling_hash, 2);
-        let hash: [u8; 32] = hash.to_le_bytes();
-        let remaining_bytes = 30 * N - (num_hashes - 1) * 30;
-        for j in 0..remaining_bytes {
-            hash_buffer[(num_hashes - 1) * 30 + j] = hash[j];
-        }
+    let num_bits: u32 = MOD_BITS * 2;
+    let num_bytes: u32 = (num_bits + 7) / 8;
+
+    // Truncate the final byte that will be used in `BigNum` creation
+    let bits_in_last_byte: u8 = (num_bits as u8) % 8;
+    if bits_in_last_byte != 0 {
+        let last_byte_mask: u8 = ((1 as u8) << bits_in_last_byte) - 1;
+        hash_buffer[num_bytes - 1] &= last_byte_mask;
     }
 
-    let num_bits = MOD_BITS * 2;
-    let num_bytes = num_bits / 8 + ((num_bits % 8) != 0) as u32;
+    let num_bigfield_chunks: u32 = if N == 2 { 4 } else { 3 };
+    let mut byte_ptr: u32 = 0;
 
-    let bits_in_last_byte = num_bits as u8 % 8;
-    let last_byte_mask = (1 as u8 << bits_in_last_byte) - 1;
-    hash_buffer[num_bytes - 1] = hash_buffer[num_bytes - 1] & last_byte_mask;
-
-    let num_bigfield_chunks = (2 * N) / (N - 1) + (((2 * N) % (N - 1)) != 0) as u32;
-    let mut byte_ptr = 0;
-
-    // we want to convert our byte array into bigfield chunks
-    // each chunk has at most N-1 limbs
-    // to determine the exact number of chunks, we need the `!=` or `>` operator which is not avaiable when defining array sizes
+    // We want to convert our hash_buffer into bigfield chunks, with each `BigNum` having at most N - 1 limbs filled
+    // We sample only N - 1 limbs mostly because we do not wont to deal with accidental overflows in the top limb
+    // In any case the security is preserved
+    //
+    // For all integer values N > 1, the number of chunks is either 4(for N = 2) or 3(for N > 2) (ceil(2*N / (N - 1)))
+    //
+    // To determine the exact number of chunks, we need the `!=` or `>` operator which is not available when defining array sizes
     // so we overestimate at 4
     // e.g. if N = 20, then we have 40 limbs we want to reduce, but each bigfield chunk is 19 limbs, so we need 3
     // if N = 2, we have 4 limbs we want to reduce but each bigfield chunk is only 1 limb, so we need 4
-    // max possible number of chunks is therefore 4
     let mut bigfield_chunks: [[u128; N]; 4] = [[0; N]; 4];
+
     for k in 0..num_bigfield_chunks {
         let mut bigfield_limbs: [u128; N] = [0; N];
-        let mut num_filled_bytes = (k * 30);
-        if num_bytes >= num_filled_bytes {
-            let mut num_remaining_bytes = num_bytes - num_filled_bytes;
-            let mut num_remaining_limbs =
-                (num_remaining_bytes / 15) + (num_remaining_bytes % 15 > 0) as u32;
-            let mut more_than_N_minus_one_limbs = (num_remaining_limbs > (N - 1)) as u32;
-            let mut num_limbs_in_bigfield = more_than_N_minus_one_limbs * (N - 1)
-                + num_remaining_limbs * (1 - more_than_N_minus_one_limbs);
 
-            for j in 0..num_limbs_in_bigfield {
-                let mut limb: u128 = 0;
+        // Before the current limb, we filled out (N - 1) limbs, k times
+        // 15 bytes per limb
+        // resulting in total of 15 * k * (N - 1)
+        let mut num_filled_bytes: u32 = 15 * k * (N - 1);
+        if num_bytes > num_filled_bytes {
+            // Static assert for completeness
+            assert(num_filled_bytes == byte_ptr);
+
+            let mut num_remaining_bytes_to_sample: u32 = num_bytes - num_filled_bytes;
+            let mut num_remaining_limbs_to_sample: u32 = (num_remaining_bytes_to_sample + 14) / 15;
+
+            // Sample at most (N - 1) limbs from hash_buffer
+            let mut num_limbs_to_sample: u32 = if num_remaining_limbs_to_sample > (N - 1) {
+                N - 1
+            } else {
+                num_remaining_limbs_to_sample
+            };
+
+            for j in 0..num_limbs_to_sample {
+                let mut limb: Field = 0;
+                // Construct a 120 bit limb
                 for _ in 0..15 {
-                    let need_more_bytes = (byte_ptr < num_bytes);
-                    let mut byte = hash_buffer[byte_ptr];
-                    limb *= (256 * need_more_bytes as u128 + (1 - need_more_bytes as u128));
-                    limb += byte as u128 * need_more_bytes as u128;
-                    byte_ptr += need_more_bytes as u32;
+                    if byte_ptr < num_bytes {
+                        let mut byte: u8 = hash_buffer[byte_ptr];
+                        limb *= 256;
+                        limb += byte as Field;
+                        byte_ptr += 1;
+                    }
                 }
-                bigfield_limbs[num_limbs_in_bigfield - 1 - j] = limb;
+                // crucial for performance
+                limb.assert_max_bit_size::<120>();
+                // Accumulate limbs from top to bottom
+                bigfield_limbs[num_limbs_to_sample - 1 - j] = limb as u128;
             }
+            // Accumulate `BigNum` values from top to bottom
             bigfield_chunks[num_bigfield_chunks - 1 - k] = bigfield_limbs;
         }
     }
 
+    // B = 2^{120 * (N - 1)}, we know it is \leq `MOD`, since the top limb
+    // have to be at least one
     let mut bigfield_rhs_limbs: [u128; N] = [0; N];
     bigfield_rhs_limbs[N - 1] = 1;
-    validate_in_range::<_, _, MOD_BITS>(bigfield_rhs_limbs);
 
-    let mut result: [u128; N] = [0; N];
+    let mut result: [u128; N] = bigfield_chunks[0];
 
-    for i in 0..num_bigfield_chunks {
-        let bigfield_lhs_limbs = bigfield_chunks[i];
-
+    for i in 1..num_bigfield_chunks {
         result = mul(params, result, bigfield_rhs_limbs);
-        result = add(params, result, bigfield_lhs_limbs);
+        result = add(params, result, bigfield_chunks[i]);
     }
 
     result
