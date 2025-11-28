@@ -2,7 +2,6 @@ use crate::bignum::BigNum;
 use crate::bignum::{compute_quadratic_expression, evaluate_quadratic_expression, to_field};
 use crate::bignum::derive_bignum;
 use crate::fns::unconstrained_helpers::__helper_add;
-use crate::fns::unconstrained_ops::__div;
 
 use crate::params::BigNumParams;
 
