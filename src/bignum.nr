@@ -210,7 +210,12 @@ pub comptime fn derive_bignum(
 
             unconstrained fn __sqrt(self: Self) -> std::option::Option<Self> {
                 let params = Self::params();
-                let maybe_limbs = $unconstrained_ops::__sqrt(params, self.get_limbs());
+                let sqrt_func = comptime { if (Self::params().modulus[0] % 4 == 3) {
+                    $unconstrained_ops::__easy_sqrt::<$N, $MOD_BITS>
+                } else {
+                    $unconstrained_ops::__tonelli_shanks_sqrt::<$N, $MOD_BITS>
+                } };
+                let maybe_limbs = sqrt_func(params, self.get_limbs());
                 maybe_limbs.map(|limbs| Self {limbs: limbs })
             }
 
