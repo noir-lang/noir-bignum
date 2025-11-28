@@ -1,6 +1,8 @@
+use crate::fields::bls12_381Fq::BLS12_381_Fq_PARAMS;
+use crate::fields::bls12_381Fr::BLS12_381_Fr_PARAMS;
 use crate::fields::bn254Fq::BN254_Fq_PARAMS;
 use crate::fns::constrained_ops::{sub, udiv};
-use crate::fns::unconstrained_helpers::__barrett_reduction;
+use crate::fns::unconstrained_helpers::{__barrett_reduction, __quadratic_non_residue};
 use crate::params::BigNumParams;
 use crate::runtime_bignum::RuntimeBigNum;
 
@@ -619,6 +621,23 @@ fn test_sqrt_BN() {
     let sqrt_x = maybe_sqrt_x.unwrap();
 
     assert(sqrt_x * sqrt_x == x);
+}
+
+#[test]
+fn test_sqrt_BLS12_381_Fq() {
+    let params = BLS12_381_Fq_PARAMS;
+    let a = RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
+    let b = a * a;
+
+    let c = b.__sqrt().unwrap();
+    assert((c == a) | (c == -a));
+
+    // Safety: test code
+    let qnr_limbs: [u128; 4] = unsafe { __quadratic_non_residue(params) };
+    let g = RuntimeBigNum { params: params, limbs: qnr_limbs };
+    // Safety: test code
+    let c = g.__sqrt();
+    assert(c.is_none());
 }
 
 // N.B. this test is only here to check that the barrett reduction is working correctly

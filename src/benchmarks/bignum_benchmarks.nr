@@ -214,7 +214,7 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
         #[export]
         fn $sqrt_bench_name(a: $typ) -> Option<$typ> {
            // Safety: Benchmarking 
-            unsafe { $BigNum::__tonelli_shanks_sqrt(a) }
+            unsafe { $BigNum::__sqrt(a) }
         }
    }
 }
