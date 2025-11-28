@@ -638,7 +638,7 @@ where
 
     // Safety: test code
     let c: Option<BN> = unsafe { g.__sqrt() };
-    assert(c == Option::none());
+    assert(c.is_none());
 }
 
 // MOD = 1 (mod 4)

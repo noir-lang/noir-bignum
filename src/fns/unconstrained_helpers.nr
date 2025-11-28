@@ -588,32 +588,3 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt_find_i<let N: u32, let MOD_BIT
     }
     i
 }
-
-/// Compute a modular square root for MOD = 3 (mod 4) (unconstrained)
-///
-/// In case MOD = 3 (mod 4), the square root can be computed using the formula:
-///     `R = a^{(MOD + 1) / 4} (mod MOD)`
-///
-/// Then R^2 = a^{(MOD + 1)/ 4 * 2} = a^{(MOD + 1) / 2} = a^{(MOD - 1) / 2 + 1} = a
-///
-/// ## Note
-/// The input is assumed to be a nonzero value
-///
-/// This is much cheaper than `__tonelli_shanks_sqrt`
-pub(crate) unconstrained fn __easy_sqrt<let N: u32, let MOD_BITS: u32>(
-    params: BigNumParams<N, MOD_BITS>,
-    input: [u128; N],
-) -> std::option::Option<[u128; N]> {
-    let mut result: Option<[u128; N]> = Option::none();
-
-    let one: [u128; N] = __one();
-    let p_minus_one_over_two: [u128; N] = __shr1(__helper_sub(params.modulus, one));
-    let mut check: [u128; N] = __pow(params, input, p_minus_one_over_two);
-    if (__eq(check, one)) {
-        // a = (MOD - 1) / 2
-        // b = (a + 1) / 2 = ((MOD - 1) / 2 + 1) / 2 = (MOD + 1) / 4
-        let p_plus_one_over_four: [u128; N] = __shr1(__increment(p_minus_one_over_two));
-        result = Option::some(__pow(params, input, p_plus_one_over_four));
-    }
-    result
-}
