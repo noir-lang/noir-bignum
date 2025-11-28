@@ -3,9 +3,9 @@
 use crate::fns::constrained_ops::derive_from_seed;
 
 use crate::fns::unconstrained_helpers::{
-    __barrett_reduction, __get_bit, __get_msb, __helper_add, __helper_mul,
-    __helper_sub, __increment, __one, __primitive_root_log_size, __quadratic_non_residue, __shl,
-    __shr, __shr1, __tonelli_shanks_sqrt_find_i,
+    __barrett_reduction, __get_bit, __get_msb, __helper_add, __helper_mul, __helper_sub,
+    __increment, __one, __primitive_root_log_size, __quadratic_non_residue, __shl, __shr, __shr1,
+    __tonelli_shanks_sqrt_find_i,
 };
 
 use crate::constants::TWO_POW_120;
