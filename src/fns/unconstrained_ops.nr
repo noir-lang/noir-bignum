@@ -349,7 +349,14 @@ pub(crate) unconstrained fn __sqrt<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     input: [u128; N],
 ) -> std::option::Option<[u128; N]> {
-    if (params.modulus[0] % 4 == 3) {
+    assert(
+        params.has_multiplicative_inverse,
+        "BigNum::__sqrt: Must be a field to take square roots",
+    );
+
+    if (__is_zero(input)) {
+        Option::some(input)
+    } else if (params.modulus[0] % 4 == 3) {
         __easy_sqrt(params, input)
     } else {
         __tonelli_shanks_sqrt(params, input)
@@ -403,83 +410,75 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>
     params: BigNumParams<N, MOD_BITS>,
     input: [u128; N],
 ) -> std::option::Option<[u128; N]> {
-    assert(
-        params.has_multiplicative_inverse,
-        "BigNum::__sqrt: Must be a field to take square roots",
-    );
-    if (__is_zero(input)) {
-        Option::some(input)
-    } else {
-        let mut result: Option<[u128; N]> = Option::none();
+    let mut result: Option<[u128; N]> = Option::none();
 
-        let one: [u128; N] = __one();
-        let s: u32 = __primitive_root_log_size::<N, MOD_BITS>(params); // p - 1 = 2^s * Q, where Q is odd
-        let Q: [u128; N] = __shr(__helper_sub(params.modulus, one), s);
-        let Q_minus_one_over_two: [u128; N] = __shr1(__helper_sub(Q, one)); // (Q - 1) / 2
+    let one: [u128; N] = __one();
+    let s: u32 = __primitive_root_log_size::<N, MOD_BITS>(params); // p - 1 = 2^s * Q, where Q is odd
+    let Q: [u128; N] = __shr(__helper_sub(params.modulus, one), s);
+    let Q_minus_one_over_two: [u128; N] = __shr1(__helper_sub(Q, one)); // (Q - 1) / 2
 
-        let z: [u128; N] = __quadratic_non_residue::<N, MOD_BITS>(params);
+    let z: [u128; N] = __quadratic_non_residue::<N, MOD_BITS>(params);
 
-        // Initialize:
-        // b = a^{(Q - 1)/2}
-        // R = a * b = a^{(Q + 1) / 2} => R^2 = a * a^Q
-        // t = R * b = a^Q
-        let mut b: [u128; N] = __pow::<_, MOD_BITS>(params, input, Q_minus_one_over_two);
-        let mut r: [u128; N] = __mul::<_, MOD_BITS>(params, input, b);
-        let mut t: [u128; N] = __mul::<_, MOD_BITS>(params, r, b);
+    // Initialize:
+    // b = a^{(Q - 1)/2}
+    // R = a * b = a^{(Q + 1) / 2} => R^2 = a * a^Q
+    // t = R * b = a^Q
+    let mut b: [u128; N] = __pow::<_, MOD_BITS>(params, input, Q_minus_one_over_two);
+    let mut r: [u128; N] = __mul::<_, MOD_BITS>(params, input, b);
+    let mut t: [u128; N] = __mul::<_, MOD_BITS>(params, r, b);
 
-        let mut check: [u128; N] = t;
-        // Assure t^{2^{s - 1}} = a^{(p -1)/2} = 1, otherwise we have met a non-residue
-        for _ in 0..s - 1 {
-            check = __sqr::<_, MOD_BITS>(params, check);
-        }
-        if (__eq(check, one)) {
-            let mut m: u32 = s;
-            let mut c: [u128; N] = __pow::<N, MOD_BITS>(params, z, Q); // z^Q - proper 2^{M}'th root of unity
-
-            // Tonelli-Shanks main loop
-
-            // At the beginning of each iteration we have:
-            // M - current exponent such that t lies in the subgroup of order 2^m
-            // t - element, whose order divides 2^m
-            // c - the proper 2^M'th root of unity
-            // R - accumulator with R^2 = a * t
-
-            // If t == 1, we are done and R is a square root
-            //
-            // Otherwise
-            // 1. We compute 1 <= i < M, such that t^{2^i} = 1, t^{2^{i - 1}} = -1
-            // 2. Set b = c^{2^{M - i - 1}}, so it becomes a proper 2^(i+1)'th root of unity
-            //      Then b^2 has order 2^i which matches the order of t
-            //
-            // 3. Update the state values:
-            //    R <- R * b
-            //    t <- t * b^2
-            //    c <- b^2 = c^{2^{M - i}}
-            //    M <- i
-            // reduces the order of t from 2^i to at most 2^{i - 1} and preserves R^2 = a * t
-            //
-            // The loop runs at most s times because M strictly decreases
-            for _ in 0..s {
-                if (__eq(t, one)) {
-                    result = Option::some(r);
-                    break;
-                }
-                let i: u32 = __tonelli_shanks_sqrt_find_i::<N, MOD_BITS>(params, t);
-                let mut j: u32 = m - i - 1;
-                b = c;
-                for _ in 0..j {
-                    b = __sqr(params, b);
-                }
-
-                let b2: [u128; N] = __sqr::<N, MOD_BITS>(params, b);
-                c = b2;
-                t = __mul::<N, MOD_BITS>(params, t, b2);
-                r = __mul::<N, MOD_BITS>(params, r, b);
-                m = i;
-            }
-        }
-        result
+    let mut check: [u128; N] = t;
+    // Assure t^{2^{s - 1}} = a^{(p -1)/2} = 1, otherwise we have met a non-residue
+    for _ in 0..s - 1 {
+        check = __sqr::<N, MOD_BITS>(params, check);
     }
+    if (__eq(check, one)) {
+        let mut m: u32 = s;
+        let mut c: [u128; N] = __pow::<N, MOD_BITS>(params, z, Q); // z^Q - proper 2^{M}'th root of unity
+
+        // Tonelli-Shanks main loop
+
+        // At the beginning of each iteration we have:
+        // M - current exponent such that t lies in the subgroup of order 2^m
+        // t - element, whose order divides 2^m
+        // c - the proper 2^M'th root of unity
+        // R - accumulator with R^2 = a * t
+
+        // If t == 1, we are done and R is a square root
+        //
+        // Otherwise
+        // 1. We compute 1 <= i < M, such that t^{2^i} = 1, t^{2^{i - 1}} = -1
+        // 2. Set b = c^{2^{M - i - 1}}, so it becomes a proper 2^(i+1)'th root of unity
+        //      Then b^2 has order 2^i which matches the order of t
+        //
+        // 3. Update the state values:
+        //    R <- R * b
+        //    t <- t * b^2
+        //    c <- b^2 = c^{2^{M - i}}
+        //    M <- i
+        // reduces the order of t from 2^i to at most 2^{i - 1} and preserves R^2 = a * t
+        //
+        // The loop runs at most s times because M strictly decreases
+        for _ in 0..s {
+            if (__eq(t, one)) {
+                result = Option::some(r);
+                break;
+            }
+            let i: u32 = __tonelli_shanks_sqrt_find_i::<N, MOD_BITS>(params, t);
+            let mut j: u32 = m - i - 1;
+            b = c;
+            for _ in 0..j {
+                b = __sqr(params, b);
+            }
+
+            let b2: [u128; N] = __sqr::<N, MOD_BITS>(params, b);
+            c = b2;
+            t = __mul::<N, MOD_BITS>(params, t, b2);
+            r = __mul::<N, MOD_BITS>(params, r, b);
+            m = i;
+        }
+    }
+    result
 }
 
 /// Compute a modular square root for MOD = 3 (mod 4) (unconstrained)
@@ -497,25 +496,16 @@ pub(crate) unconstrained fn __easy_sqrt<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     input: [u128; N],
 ) -> std::option::Option<[u128; N]> {
-    assert(
-        params.has_multiplicative_inverse,
-        "BigNum::__sqrt: Must be a field to take square roots",
-    );
+    let mut result: Option<[u128; N]> = Option::none();
 
-    if (__is_zero(input)) {
-        Option::some(input)
-    } else {
-        let mut result: Option<[u128; N]> = Option::none();
-
-        let one: [u128; N] = __one();
-        let p_minus_one_over_two: [u128; N] = __shr1(__helper_sub(params.modulus, one));
-        let mut check: [u128; N] = __pow(params, input, p_minus_one_over_two);
-        if (__eq(check, one)) {
-            // a = (MOD - 1) / 2
-            // b = (a + 1) / 2 = ((MOD - 1) / 2 + 1) / 2 = (MOD + 1) / 4
-            let p_plus_one_over_four: [u128; N] = __shr1(__increment(p_minus_one_over_two));
-            result = Option::some(__pow(params, input, p_plus_one_over_four));
-        }
-        result
+    let one: [u128; N] = __one();
+    let p_minus_one_over_two: [u128; N] = __shr1(__helper_sub(params.modulus, one));
+    let mut check: [u128; N] = __pow(params, input, p_minus_one_over_two);
+    if (__eq(check, one)) {
+        // a = (MOD - 1) / 2
+        // b = (a + 1) / 2 = ((MOD - 1) / 2 + 1) / 2 = (MOD + 1) / 4
+        let p_plus_one_over_four: [u128; N] = __shr1(__increment(p_minus_one_over_two));
+        result = Option::some(__pow(params, input, p_plus_one_over_four));
     }
+    result
 }
