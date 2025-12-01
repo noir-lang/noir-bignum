@@ -214,20 +214,20 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     pub fn udiv_mod(self, divisor: Self) -> (Self, Self) {
         let params = self.params;
         assert(params == divisor.params);
-        let (q, r) = udiv_mod::<_, MOD_BITS>(params, self.limbs, divisor.limbs);
+        let (q, r) = udiv_mod::<N, MOD_BITS>(self.limbs, divisor.limbs);
         (Self { limbs: q, params }, Self { limbs: r, params })
     }
 
     pub fn udiv(self, divisor: Self) -> Self {
         let params = self.params;
         assert(params == divisor.params);
-        Self { limbs: udiv::<_, MOD_BITS>(params, self.limbs, divisor.limbs), params }
+        Self { limbs: udiv::<N, MOD_BITS>(self.limbs, divisor.limbs), params }
     }
 
     pub fn umod(self, divisor: Self) -> Self {
         let params = self.params;
         assert(params == divisor.params);
-        Self { limbs: umod::<_, MOD_BITS>(params, self.limbs, divisor.limbs), params }
+        Self { limbs: umod::<N, MOD_BITS>(self.limbs, divisor.limbs), params }
     }
 
     pub fn is_zero(self) -> bool {

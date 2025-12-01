@@ -1,7 +1,7 @@
 use crate::constants::{GRUMPKIN_MODULUS, TWO_POW_120, TWO_POW_240};
 
 use crate::fns::{
-    expressions::evaluate_quadratic_expression,
+    expressions::{evaluate_quadratic_expression, validate_udiv_mod_expression},
     unconstrained_helpers::{
         __add_with_flags, __from_field, __neg_with_flags, __sub_with_flags,
         __validate_gte_with_flags, __validate_in_field_compute_borrow_flags,
@@ -1084,34 +1084,39 @@ pub(crate) fn div<let N: u32, let MOD_BITS: u32>(
     result
 }
 
-/**
-* @brief udiv_mod performs integer division between numerator, divisor
-*
-* i.e. 1. floor(numerator / divisor) = quotient
-*      2. numerator % divisor = remainder
-*      3. divisor * quotient + remainder = numerator
-**/
+/// Compute the `BigNum` integer division with remainder
+///
+/// Computes `quotient = floor(numerator / divisor)` and
+/// `remainder = numerator % divisor` by:
+///   1. Computing `(quotient, remainder)` out of circuit via `__udiv_mod`.
+///   2. Constraining the quadratic relation
+///        quotient * divisor + remainder - numerator = 0
+///      with `validate_udiv_mod_expression`.
+///   3. Enforcing `remainder < divisor`.
+///
+/// ## Soundness
+/// Soundness reduces to `validate_udiv_mod_expression` for the relation
+///     quotient * divisor + remainder - numerator = 0,
+/// together with `remainder < divisor` check enforced via `validate_gt`.
+///
+/// Under these checks, any satisfying assignment corresponds to a valid
+/// integer division `numerator = quotient * divisor + remainder` with
+/// `0 <= remainder < divisor`
+///
+/// ## Note
+/// Enforcing `divisor != 0` is not necessary. `remainder < divisor`
+/// Already enforces this.
 pub(crate) fn udiv_mod<let N: u32, let MOD_BITS: u32>(
-    params: BigNumParams<N, MOD_BITS>,
     numerator: [u128; N],
     divisor: [u128; N],
 ) -> ([u128; N], [u128; N]) {
-    let (quotient, remainder) = unsafe { __udiv_mod(numerator, divisor) };
+    // Safety: We constrain the result of __udiv_mod immediately after
+    let (quotient, remainder): ([u128; N], [u128; N]) = unsafe { __udiv_mod(numerator, divisor) };
     if !std::runtime::is_unconstrained() {
-        // self / divisor = quotient rounded
-        // quotient * divisor + remainder - self = 0
-        evaluate_quadratic_expression(
-            params,
-            [[quotient]],
-            [[false]],
-            [[divisor]],
-            [[false]],
-            [numerator, remainder],
-            [true, false],
-        );
-        // we need (remainder < divisor)
-        // implies (divisor - remainder > 0)
-        validate_gt::<_, MOD_BITS>(divisor, remainder);
+        // quotient * divisor + remainder - numerator = 0
+        validate_udiv_mod_expression::<N, MOD_BITS>(numerator, divisor, quotient, remainder);
+        // remainder < divisor
+        validate_gt::<N, MOD_BITS>(divisor, remainder);
     }
     (quotient, remainder)
 }
@@ -1121,11 +1126,10 @@ pub(crate) fn udiv_mod<let N: u32, let MOD_BITS: u32>(
 /// Returns `floor(numerator / divisor)`.
 /// All constraints and soundness details are handled inside `udiv_mod`.
 pub(crate) fn udiv<let N: u32, let MOD_BITS: u32>(
-    params: BigNumParams<N, MOD_BITS>,
     numerator: [u128; N],
     divisor: [u128; N],
 ) -> [u128; N] {
-    udiv_mod::<N, MOD_BITS>(params, numerator, divisor).0
+    udiv_mod::<N, MOD_BITS>(numerator, divisor).0
 }
 
 /// Compute the `BigNum` remainder
@@ -1133,9 +1137,8 @@ pub(crate) fn udiv<let N: u32, let MOD_BITS: u32>(
 /// Returns `numerator % divisor`.
 /// All constraints and soundness details are handled inside `udiv_mod`.
 pub(crate) fn umod<let N: u32, let MOD_BITS: u32>(
-    params: BigNumParams<N, MOD_BITS>,
     numerator: [u128; N],
     divisor: [u128; N],
 ) -> [u128; N] {
-    udiv_mod::<N, MOD_BITS>(params, numerator, divisor).1
+    udiv_mod::<N, MOD_BITS>(numerator, divisor).1
 }
