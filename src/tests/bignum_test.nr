@@ -2,6 +2,7 @@ use crate::bignum::BigNum;
 use crate::bignum::{compute_quadratic_expression, evaluate_quadratic_expression, to_field};
 use crate::bignum::derive_bignum;
 use crate::fns::unconstrained_helpers::{__helper_add, __quadratic_non_residue};
+use crate::fns::unconstrained_ops::__easy_sqrt;
 
 use crate::params::BigNumParams;
 
@@ -639,6 +640,20 @@ where
     // Safety: test code
     let c: Option<BN> = unsafe { g.__sqrt() };
     assert(c.is_none());
+}
+
+// Test that both functions behave similarly
+#[test]
+fn test_sqrt_equality_fuzz(seed: [u8; 3]) {
+    let a = BLS12_381_Fq::derive_from_seed(seed);
+    let b = a * a;
+    // Safety: test code
+    let c = unsafe { b.__tonelli_shanks_sqrt().unwrap() };
+    // Safety: test code
+    let d = unsafe {
+        BLS12_381_Fq::from_limbs(__easy_sqrt(BLS12_381_Fq::params(), b.get_limbs()).unwrap())
+    };
+    assert((c == d) | (c == -d));
 }
 
 // MOD = 1 (mod 4)
