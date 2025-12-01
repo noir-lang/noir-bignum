@@ -10,7 +10,7 @@ use crate::fns::{
     serialization::{from_be_bytes, from_le_bytes, to_be_bytes, to_le_bytes},
     unconstrained_ops::{
         __add, __derive_from_seed, __div, __eq, __invmod, __is_zero, __mul, __neg, __pow, __sqr,
-        __sub, __tonelli_shanks_sqrt, __udiv_mod,
+        __sqrt, __sub, __udiv_mod,
     },
 };
 use std::{cmp::Ordering, ops::Neg};
@@ -185,9 +185,17 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
+    #[deprecated("use __sqrt")]
     pub fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self> {
         let params = self.params;
-        let maybe_limbs = unsafe { __tonelli_shanks_sqrt(params, self.limbs) };
+        let maybe_limbs = unsafe { __sqrt(params, self.limbs) };
+        maybe_limbs.map(|limbs| Self { limbs, params })
+    }
+
+    // UNCONSTRAINED! (Hence `__` prefix).
+    pub fn __sqrt(self) -> std::option::Option<Self> {
+        let params = self.params;
+        let maybe_limbs = unsafe { __sqrt(params, self.limbs) };
         maybe_limbs.map(|limbs| Self { limbs, params })
     }
 

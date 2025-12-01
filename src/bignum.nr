@@ -43,6 +43,7 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     unconstrained fn __pow(self, exponent: Self) -> Self;
 
     unconstrained fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self>;
+    unconstrained fn __sqrt(self) -> std::option::Option<Self>;
 
     fn assert_is_not_equal(self: Self, other: Self);
 
@@ -201,12 +202,18 @@ pub comptime fn derive_bignum(
                 Self {limbs: $unconstrained_ops::__pow(params, self.get_limbs(), exponent.get_limbs())}
             }
 
+            #[deprecated("use __sqrt")]
             unconstrained fn __tonelli_shanks_sqrt(self: Self) -> std::option::Option<Self> {
                 let params = Self::params();
-                let maybe_limbs = $unconstrained_ops::__tonelli_shanks_sqrt(params, self.get_limbs());
+                let maybe_limbs = $unconstrained_ops::__sqrt(params, self.get_limbs());
                 maybe_limbs.map(|limbs| Self {limbs: limbs})
             }
 
+            unconstrained fn __sqrt(self: Self) -> std::option::Option<Self> {
+                let params = Self::params();
+                let maybe_limbs = $unconstrained_ops::__sqrt(params, self.get_limbs());
+                maybe_limbs.map(|limbs| Self {limbs: limbs })
+            }
 
             fn assert_is_not_equal(self: Self, other: Self) {
                 let params = Self::params();
