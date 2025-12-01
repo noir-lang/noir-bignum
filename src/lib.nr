@@ -3,7 +3,7 @@ mod runtime_bignum;
 
 mod constants;
 
-// Pre-defined fields and bignums for people to use:
+// Pre-defined fields and `BigNum`s for people to use:
 pub mod fields;
 
 // Structs enabling people to define their own bignum params

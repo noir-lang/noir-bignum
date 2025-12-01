@@ -14,22 +14,21 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     fn new() -> Self;
     fn zero() -> Self;
     fn one() -> Self;
+
     fn from_limbs(limbs: [u128; N]) -> Self;
     fn get_limbs(self) -> [u128; N];
     fn set_limb(self: &mut Self, idx: u32, value: u128);
+    fn get_limb(self: Self, idx: u32) -> u128;
+
     fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
     unconstrained fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
+
     fn from_be_bytes(x: [u8; (MOD_BITS + 7) / 8]) -> Self;
     fn to_be_bytes(self) -> [u8; (MOD_BITS + 7) / 8];
     fn from_le_bytes(x: [u8; (MOD_BITS + 7) / 8]) -> Self;
     fn to_le_bytes(self) -> [u8; (MOD_BITS + 7) / 8];
 
-    fn get_limb(self: Self, idx: u32) -> u128 {
-        self.get_limbs()[idx]
-    }
-
     unconstrained fn __eq(self: Self, other: Self) -> bool;
-
     unconstrained fn __is_zero(self: Self) -> bool;
 
     unconstrained fn __neg(self) -> Self;
@@ -45,7 +44,10 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     unconstrained fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self>;
 
     fn assert_is_not_equal(self: Self, other: Self);
-
+    fn is_zero(self) -> bool;
+    fn is_zero_integer(self) -> bool;
+    fn assert_is_not_zero(self);
+    fn assert_is_not_zero_integer(self);
     fn validate_in_range(self);
     fn validate_in_field(self);
 
@@ -54,14 +56,9 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     fn udiv_mod(self, divisor: Self) -> (Self, Self);
     fn udiv(self, divisor: Self) -> Self;
     fn umod(self, divisor: Self) -> Self;
-
-    fn is_zero(self) -> bool;
-    fn is_zero_integer(self) -> bool;
-    fn assert_is_not_zero(self);
-    fn assert_is_not_zero_integer(self);
 }
 
-// we need macros that implement the BigNum, Default, From, Neg, Add, Sub, Mul, Div, Eq, Ord traits for each bignum type
+// We need macros that implement the BigNum, Default, From, Neg, Add, Sub, Mul, Div, Eq, Ord traits for each bignum type
 pub comptime fn derive_bignum(
     strukt: TypeDefinition,
     N: u32,
@@ -91,14 +88,15 @@ pub comptime fn derive_bignum(
                 Self { limbs: Self::params().modulus }
             }
 
-            fn new() -> Self {
-                Self {limbs: [0; $N]}
-            }
-
             fn params() -> $crate::params::BigNumParams<$N, $MOD_BITS> {
                 $params
             }
 
+            fn new() -> Self {
+                Self {limbs: [0; $N]}
+            }
+
+            /// Note: You have to properly constrain the limbs prior calling this method
             fn from_limbs(limbs: [u128; $N]) -> Self {
                 Self { limbs }
             }
@@ -107,8 +105,13 @@ pub comptime fn derive_bignum(
                 self.limbs
             }
 
+            /// Note: You have to properly constrain the limb prior calling this method
             fn set_limb(self: &mut Self, idx: u32, value: u128) {
                 self.limbs[idx] = value;
+            }
+
+            fn get_limb(self: Self, idx: u32) -> u128 {
+                self.limbs[idx]
             }
 
             fn zero() -> Self {
@@ -123,28 +126,28 @@ pub comptime fn derive_bignum(
 
             fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self {
                 let params = Self::params();
-                $typ::from_limbs($constrained_ops::derive_from_seed::<_, $MOD_BITS, _>(params, seed))
+                $typ::from_limbs($constrained_ops::derive_from_seed::<$N, $MOD_BITS, SeedBytes>(params, seed))
             }
 
             unconstrained fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self {
                 let params = Self::params();
-                Self { limbs: $unconstrained_ops::__derive_from_seed::<_, $MOD_BITS, _>(params, seed) }
+                Self { limbs: $unconstrained_ops::__derive_from_seed::<$N, $MOD_BITS, SeedBytes>(params, seed) }
             }
 
             fn from_be_bytes(x: [u8; ($MOD_BITS + 7) / 8]) -> Self {
-                Self { limbs: $serialization::from_be_bytes::<_, $MOD_BITS>(x) }
+                Self { limbs: $serialization::from_be_bytes::<$N, $MOD_BITS>(x) }
             }
             
             fn to_be_bytes(self) -> [u8; ($MOD_BITS + 7) / 8] {
-                $serialization::to_be_bytes::<_, $MOD_BITS>(self.limbs)
+                $serialization::to_be_bytes::<$N, $MOD_BITS>(self.limbs)
             }
 
             fn from_le_bytes(x: [u8; ($MOD_BITS + 7) / 8]) -> Self {
-                Self { limbs: $serialization::from_le_bytes::<_, $MOD_BITS>(x) }
+                Self { limbs: $serialization::from_le_bytes::<$N, $MOD_BITS>(x) }
             }
 
             fn to_le_bytes(self) -> [u8; ($MOD_BITS + 7) / 8] {
-                $serialization::to_le_bytes::<_, $MOD_BITS>(self.limbs)
+                $serialization::to_le_bytes::<$N, $MOD_BITS>(self.limbs)
             }
 
             unconstrained fn __eq(self: Self, other: Self) -> bool {
@@ -219,11 +222,11 @@ pub comptime fn derive_bignum(
 
             fn validate_in_field(self: Self) {
                 let params = Self::params();
-                $constrained_ops::validate_in_field::<_, $MOD_BITS>(params, self.get_limbs());
+                $constrained_ops::validate_in_field::<$N, $MOD_BITS>(params, self.get_limbs());
             }
 
             fn validate_in_range(self: Self) {
-                $constrained_ops::validate_in_range::<_, _, $MOD_BITS>(self.get_limbs());
+                $constrained_ops::validate_in_range::<u128, $N, $MOD_BITS>(self.get_limbs());
             }
 
             fn sqr(self: Self) -> Self {
@@ -233,18 +236,18 @@ pub comptime fn derive_bignum(
 
             fn udiv_mod(self: Self, divisor: Self) -> (Self, Self) {
                 let params = Self::params();
-                let (q, r) = $constrained_ops::udiv_mod::<_, $MOD_BITS>(params, self.get_limbs(), divisor.get_limbs());
+                let (q, r) = $constrained_ops::udiv_mod::<$N, $MOD_BITS>(params, self.get_limbs(), divisor.get_limbs());
                 (Self {limbs: q}, Self {limbs: r})
             }
 
             fn udiv(self: Self, divisor: Self) -> Self {
                 let params = Self::params();
-                Self {limbs: $constrained_ops::udiv::<_, $MOD_BITS>(params, self.get_limbs(), divisor.get_limbs())}
+                Self {limbs: $constrained_ops::udiv::<$N, $MOD_BITS>(params, self.get_limbs(), divisor.get_limbs())}
             }
 
             fn umod(self: Self, divisor: Self) -> Self {
                 let params = Self::params();
-                Self {limbs: $constrained_ops::umod::<_, $MOD_BITS>(params, self.get_limbs(), divisor.get_limbs())}
+                Self {limbs: $constrained_ops::umod::<$N, $MOD_BITS>(params, self.get_limbs(), divisor.get_limbs())}
             }
 
             fn is_zero(self: Self) -> bool {
@@ -324,6 +327,9 @@ pub comptime fn derive_bignum(
     }
 }
 
+/// Select a value based on a `predicate`
+///
+/// Returns `lhs` if `predicate` else `rhs`
 pub fn conditional_select<T: BigNum>(lhs: T, rhs: T, predicate: bool) -> T {
     if predicate {
         lhs
