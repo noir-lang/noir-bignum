@@ -1066,3 +1066,65 @@ fn test_SecP224r1_mul_regression() {
     expected.validate_in_field();
     assert(res == expected);
 }
+
+// Tests to confirm that we can no longer pass more than 1 extra `MOD` as a part of the witness
+
+#[test(should_fail_with = "call to assert_max_bit_size")]
+fn test_evaluate_quadratic_expression_regression_div_extra_mod() {
+    let x: BLS12_381_Fq = BLS12_381_Fq::derive_from_seed([0x1, 0x3, 0x3, 0x7]);
+    let y: BLS12_381_Fq = BLS12_381_Fq::derive_from_seed([0xd, 0xe, 0xa, 0xd]);
+
+    let modulus: [u128; 4] = BLS12_381_Fq::modulus().get_limbs();
+
+    // compute honest z = x * y^{-1} (mod MOD)
+    // Safety: test code
+    let mut z_: [u128; 4] = unsafe { x.__div(y).get_limbs() };
+    // Safety: test code
+    z_ = unsafe { __helper_add(z_, modulus) };
+    // Safety: test code
+    z_ = unsafe { __helper_add(z_, modulus) };
+
+    let z: BLS12_381_Fq = BLS12_381_Fq::from_limbs(z_);
+
+    evaluate_quadratic_expression([[y]], [[false]], [[z]], [[false]], [x], [true]);
+}
+
+#[test(should_fail_with = "call to assert_max_bit_size")]
+fn test_evaluate_quadratic_expression_add_extra_mod_fuzz(xseed: [u8; 4], yseed: [u8; 3]) {
+    let x: BLS12_381_Fr = BLS12_381_Fr::derive_from_seed(xseed);
+    let y: BLS12_381_Fr = BLS12_381_Fr::derive_from_seed(yseed);
+
+    let modulus: [u128; 3] = BLS12_381_Fr::modulus().get_limbs();
+
+    // compute honest z = x + y (mod MOD)
+    // Safety: test code
+    let mut z_: [u128; 3] = unsafe { x.__add(y).get_limbs() };
+    // Safety: test code
+    z_ = unsafe { __helper_add(z_, modulus) };
+    // Safety: test code
+    z_ = unsafe { __helper_add(z_, modulus) };
+
+    let z: BLS12_381_Fr = BLS12_381_Fr::from_limbs(z_);
+
+    evaluate_quadratic_expression([[]], [[]], [[]], [[]], [x, y, z], [false, false, true]);
+}
+
+#[test(should_fail_with = "call to assert_max_bit_size")]
+fn test_evaluate_quadratic_expression_mul_extra_mod_fuzz(xseed: [u8; 1], yseed: [u8; 2]) {
+    let x: U256 = U256::derive_from_seed(xseed);
+    let y: U256 = U256::derive_from_seed(yseed);
+
+    let modulus: [u128; 3] = U256::modulus().get_limbs();
+
+    // compute honest z = x * y (mod MOD)
+    // Safety: test code
+    let mut z_: [u128; 3] = unsafe { x.__mul(y).get_limbs() };
+    // Safety: test code
+    z_ = unsafe { __helper_add(z_, modulus) };
+    // Safety: test code
+    z_ = unsafe { __helper_add(z_, modulus) };
+
+    let z: U256 = U256::from_limbs(z_);
+
+    evaluate_quadratic_expression([[x]], [[false]], [[y]], [[false]], [z], [true]);
+}
