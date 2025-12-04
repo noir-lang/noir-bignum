@@ -108,7 +108,7 @@ unconstrained fn __compute_borrow_flags<let N: u32>(
 
         // determine whether negative limb values are greater than positive limb values
         borrow_flags[i] = lhs_limbs[i].lt(subtrahend);
-        let minuend: Field = rhs_limbs[i] + (borrow_flags[i] as Field) * borrow_shift;
+        let minuend: Field = lhs_limbs[i] + (borrow_flags[i] as Field) * borrow_shift;
 
         hi_bits = (minuend - subtrahend) * downshift_120;
     }
