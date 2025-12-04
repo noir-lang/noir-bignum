@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.8.3](https://github.com/noir-lang/noir-bignum/compare/v0.8.2...v0.8.3) (2025-12-04)
+
+
+### Bug Fixes
+
+* **expressions:** Document, clean up and restructure `evaluate_quadratic_expression` ([#232](https://github.com/noir-lang/noir-bignum/issues/232)) ([2affae1](https://github.com/noir-lang/noir-bignum/commit/2affae1bf72574e2cb2b55edf17ac2f1a05f93e6))
+* **udiv_mod:** Change `udiv_mod` expression evaluation method ([#235](https://github.com/noir-lang/noir-bignum/issues/235)) ([f7debae](https://github.com/noir-lang/noir-bignum/commit/f7debae5f3cc329377315457303196baea2f6db1))
+
 ## [0.8.2](https://github.com/noir-lang/noir-bignum/compare/v0.8.1...v0.8.2) (2025-11-13)
 
 
