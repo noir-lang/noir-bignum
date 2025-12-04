@@ -2,7 +2,8 @@ use crate::bignum::BigNum;
 use crate::bignum::{compute_quadratic_expression, evaluate_quadratic_expression, to_field};
 use crate::bignum::derive_bignum;
 use crate::fns::expressions::validate_udiv_mod_expression;
-use crate::fns::unconstrained_helpers::__helper_add;
+use crate::fns::unconstrained_helpers::{__helper_add, __quadratic_non_residue};
+use crate::fns::unconstrained_ops::__easy_sqrt;
 
 use crate::params::BigNumParams;
 
@@ -625,6 +626,69 @@ fn test_mul_BN_with_one() {
 
     let c = a * b;
     assert(c == a);
+}
+
+fn test_sqrt<BN>()
+where
+    BN: BigNum,
+{
+    let a: BN = BN::derive_from_seed([1, 2, 3, 4]);
+    let b: BN = a * a;
+
+    // Safety: test code
+    let c: BN = unsafe { b.__sqrt().unwrap() };
+    assert((c == a) | (c == -a));
+}
+
+fn test_sqrt_fail<BN>()
+where
+    BN: BigNum,
+{
+    // Safety: test code
+    let qnr_limbs = unsafe { __quadratic_non_residue(BN::params()) };
+    let g: BN = BN::from_limbs(qnr_limbs);
+
+    // Safety: test code
+    let c: Option<BN> = unsafe { g.__sqrt() };
+    assert(c.is_none());
+}
+
+// Test that both functions behave similarly
+#[test]
+fn test_sqrt_equality_fuzz(seed: [u8; 3]) {
+    let a = BLS12_381_Fq::derive_from_seed(seed);
+    let b = a * a;
+    // Safety: test code
+    let c = unsafe { b.__tonelli_shanks_sqrt().unwrap() };
+    // Safety: test code
+    let d = unsafe {
+        BLS12_381_Fq::from_limbs(__easy_sqrt(BLS12_381_Fq::params(), b.get_limbs()).unwrap())
+    };
+    assert((c == d) | (c == -d));
+}
+
+// MOD = 1 (mod 4)
+#[test]
+fn test_sqrt_BLS12_381_Fr() {
+    test_sqrt::<BLS12_381_Fr>();
+}
+
+// MOD = 3 (mod 4)
+#[test]
+fn test_sqrt_BLS12_381_Fq() {
+    test_sqrt::<BLS12_381_Fq>();
+}
+
+// MOD = 1 (mod 4)
+#[test]
+fn test_sqrt_fail_BLS12_381_Fr() {
+    test_sqrt_fail::<BLS12_381_Fr>();
+}
+
+// MOD = 3 (mod 4)
+#[test]
+fn test_sqrt_fail_BLS12_381_Fq() {
+    test_sqrt_fail::<BLS12_381_Fq>();
 }
 
 fn test_div<let N: u32, BN>()
