@@ -239,19 +239,18 @@ pub comptime fn derive_bignum(
             }
 
             fn udiv_mod(self: Self, divisor: Self) -> (Self, Self) {
-                let params = Self::params();
-                let (q, r) = $constrained_ops::udiv_mod::<_, $MOD_BITS>(params, self.get_limbs(), divisor.get_limbs());
+                let (q, r) = $constrained_ops::udiv_mod::<$N, $MOD_BITS>(self.get_limbs(), divisor.get_limbs());
                 (Self {limbs: q}, Self {limbs: r})
             }
 
             fn udiv(self: Self, divisor: Self) -> Self {
                 let params = Self::params();
-                Self {limbs: $constrained_ops::udiv::<_, $MOD_BITS>(params, self.get_limbs(), divisor.get_limbs())}
+                Self {limbs: $constrained_ops::udiv::<$N, $MOD_BITS>(self.get_limbs(), divisor.get_limbs())}
             }
 
             fn umod(self: Self, divisor: Self) -> Self {
                 let params = Self::params();
-                Self {limbs: $constrained_ops::umod::<_, $MOD_BITS>(params, self.get_limbs(), divisor.get_limbs())}
+                Self {limbs: $constrained_ops::umod::<$N, $MOD_BITS>(self.get_limbs(), divisor.get_limbs())}
             }
 
             fn is_zero(self: Self) -> bool {

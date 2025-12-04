@@ -392,10 +392,10 @@ fn test_cmp_fuzz(seed: [u8; 2]){
     one[0] = 1;
     if modulus[0] % 2 == 0 {
         // if modulus is even, half_modulus is modulus / 2
-        half_modulus = $RuntimeBigNum {limbs: $udiv(params, modulus, two), params};
+        half_modulus = $RuntimeBigNum {limbs: $udiv::<$N, $MOD_BITS>(modulus, two), params};
     } else {
         // if modulus is odd, half_modulus is (modulus - 1) / 2
-        half_modulus = $RuntimeBigNum {limbs: $udiv(params, $sub(params,modulus, one), two), params};
+        half_modulus = $RuntimeBigNum {limbs: $udiv::<$N, $MOD_BITS>($sub(params,modulus, one), two), params};
     }
 
 

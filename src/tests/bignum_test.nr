@@ -1,6 +1,7 @@
 use crate::bignum::BigNum;
 use crate::bignum::{compute_quadratic_expression, evaluate_quadratic_expression, to_field};
 use crate::bignum::derive_bignum;
+use crate::fns::expressions::validate_udiv_mod_expression;
 use crate::fns::unconstrained_helpers::{__helper_add, __quadratic_non_residue};
 use crate::fns::unconstrained_ops::__easy_sqrt;
 
@@ -1191,4 +1192,24 @@ fn test_evaluate_quadratic_expression_mul_extra_mod_fuzz(xseed: [u8; 1], yseed: 
     let z: U256 = U256::from_limbs(z_);
 
     evaluate_quadratic_expression([[x]], [[false]], [[y]], [[false]], [z], [true]);
+}
+
+// This tests that we no longer validate udiv_mod expression `(mod MOD)`
+// This would have passed previously with `evaluate_quadratic_expression` call
+#[test(should_fail)]
+fn test_udiv_mod_extra_modulus_regression(xseed: [u8; 1], yseed: [u8; 2]) {
+    let x: U256 = U256::derive_from_seed(xseed);
+    let y: U256 = U256::derive_from_seed(yseed);
+
+    let modulus: [u128; 3] = U256::modulus().get_limbs();
+
+    // compute honest z = x * y (mod MOD)
+    // Safety: test code
+    let (q, r): (U256, U256) = unsafe { x.__udiv_mod(y) };
+
+    let mut q_: [u128; 3] = q.get_limbs();
+    // Safety: test code
+    q_ = unsafe { __helper_add(q_, modulus) };
+
+    validate_udiv_mod_expression::<3, 257>(x.get_limbs(), y.get_limbs(), q_, r.get_limbs());
 }
