@@ -234,7 +234,7 @@ pub(crate) unconstrained fn __validate_gte_with_flags<let N: u32>(
 ///
 /// maximum value = modulus^2 << BARRETT_REDUCTION_OVERFLOW_BITS
 /// see __barrett_reduction for more details
-comptime global BARRETT_REDUCTION_OVERFLOW_BITS: u32 = 4;
+comptime global BARRETT_REDUCTION_OVERFLOW_BITS: u32 = 6;
 
 /// Optimized modular multiplication (unconstrained)
 ///
@@ -246,8 +246,8 @@ comptime global BARRETT_REDUCTION_OVERFLOW_BITS: u32 = 4;
 /// where p = modulus,
 ///       x = reduction input
 ///
-/// If x > p * p, we need k to be larger than modulus_bits()
-/// We hardcode k = 4, which means that the maximum value of x is approx. 16 * p * p
+/// If x > p * p, we need s to be larger than modulus_bits()
+/// We hardcode s = BARRET_REDUCTION_OVERFLOW_BITS = 6, which means that the maximum value of x is approx. 64 * p * p
 /// This should be larger than most values put into `evaluate_quadratic_expression`
 ///
 /// ## TODO
@@ -263,8 +263,8 @@ comptime global BARRETT_REDUCTION_OVERFLOW_BITS: u32 = 4;
 ///
 /// Assumptions:
 ///  - k = ceil(log2 p), so p <= 2^k
-///  - s = 4, m = redc_param = floor(2^{2*k + s}/p)
-///  - x < 16 * p^2 (x < 2^{2 * k + s})
+///  - s = 6, m = redc_param = floor(2^{2*k + s}/p)
+///  - x < 64 * p^2 (x < 2^{2 * k + s})
 ///
 /// Let m' = 2^{2*k + s} / p, and write m = m' - \epsilon, \epsilon \in [0, 1)
 //
@@ -280,24 +280,16 @@ comptime global BARRETT_REDUCTION_OVERFLOW_BITS: u32 = 4;
 ///
 /// x / 2^{2 * k + s} < C * p^2 / 2^{2 * k + s} <= C * 2^{2 * k} / 2^{2 * k + s} = C / 2^s
 ///
-/// When the assumption holds (C = 16), ceil(x / 2^{2 * k + s}) = 1, for x > 0
+/// When the assumption holds (C = 64), ceil(x / 2^{2 * k + s}) = 1, for x > 0
 /// Therefore quo = {floor(x/p), floor(x/p) - 1}
 ///
 /// In first case: rem = x - quo * p = x - floor(x/p) * p < p
 /// In second case: rem = x - (floor(x/p) - 1) * p = (x - floor(x/p) * p) + p -> need 1 subtraction
 ///
 /// ### Note
-/// We allow 64 products to be summed inside the `evaluate_quadratic_expression`
-/// In that case x / 2^{2 * k + s} < 64 / 2^4 = 4 => hence we need to subtract modulus at most 4 times
-/// We can leave it 2 for now as it is unlikely to reach beyond 32 * p^2
-///
-/// In the worst case though, we will have the input > 64 * p^2
+/// In the worst case, we will have the input > 64 * p^2
 /// (for example (a1 + b1) * (c1 + d1) + ... 64 times)
-/// This is highly unlikely though.
-///
-/// ### TODO:
-/// Possibly change the `BARRETT_REDUCTION_OVERFLOW_BITS` to 6, so that we need only 1 reduction here
-/// However we will have to recompute all the fields `redc_param`s and fix paramgen
+/// This is highly unlikely though, but there should be more reductions in that case.
 pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     x: [u128; 2 * N],
     redc_param: [u128; N],
@@ -331,11 +323,9 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
         remainder[i] = long_remainder[i];
     }
 
-    for _ in 0..2 {
-        if (__gte(remainder, modulus)) {
-            remainder = __helper_sub(remainder, modulus);
-            smaller_quotient = __increment(smaller_quotient);
-        }
+    if (__gte(remainder, modulus)) {
+        remainder = __helper_sub(remainder, modulus);
+        smaller_quotient = __increment(smaller_quotient);
     }
 
     (smaller_quotient, remainder)
