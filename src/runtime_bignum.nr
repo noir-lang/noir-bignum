@@ -197,13 +197,13 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         // Safety: Unconstrained function simulation
         let maybe_limbs: Option<[u128; N]> = unsafe { __sqrt(params, self.limbs) };
-        maybe_limbs.map(|limbs| Self { limbs, params })
+        maybe_limbs.map(|limbs: [u128; N]| Self { limbs, params })
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
     pub fn __sqrt(self) -> std::option::Option<Self> {
         let params = self.params;
-        let maybe_limbs = unsafe { __sqrt(params, self.limbs) };
+        let maybe_limbs: Option<[u128; N]> = unsafe { __sqrt(params, self.limbs) };
         maybe_limbs.map(|limbs: [u128; N]| Self { limbs, params })
     }
 

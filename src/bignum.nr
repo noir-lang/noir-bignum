@@ -208,13 +208,13 @@ pub comptime fn derive_bignum(
             #[deprecated("use __sqrt")]
             unconstrained fn __tonelli_shanks_sqrt(self: Self) -> std::option::Option<Self> {
                 let params = Self::params();
-                let maybe_limbs = $unconstrained_ops::__sqrt(params, self.get_limbs());
+                let maybe_limbs: Option<[u128; N]> = $unconstrained_ops::__sqrt(params, self.get_limbs());
                 maybe_limbs.map(|limbs| Self {limbs: limbs})
             }
 
             unconstrained fn __sqrt(self: Self) -> std::option::Option<Self> {
                 let params = Self::params();
-                let maybe_limbs = $unconstrained_ops::__sqrt(params, self.get_limbs());
+                let maybe_limbs: Option<[u128; N]> = $unconstrained_ops::__sqrt(params, self.get_limbs());
                 maybe_limbs.map(|limbs| Self {limbs: limbs })
             }
 
