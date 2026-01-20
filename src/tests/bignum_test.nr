@@ -3,7 +3,7 @@ use crate::bignum::{compute_quadratic_expression, evaluate_quadratic_expression,
 use crate::bignum::derive_bignum;
 use crate::fns::expressions::validate_udiv_mod_expression;
 use crate::fns::unconstrained_helpers::{__helper_add, __quadratic_non_residue};
-use crate::fns::unconstrained_ops::__easy_sqrt;
+use crate::fns::unconstrained_ops::{__easy_sqrt, __tonelli_shanks_sqrt};
 
 use crate::params::BigNumParams;
 
@@ -659,7 +659,7 @@ fn test_sqrt_equality_fuzz(seed: [u8; 3]) {
     let a = BLS12_381_Fq::derive_from_seed(seed);
     let b = a * a;
     // Safety: test code
-    let c = unsafe { b.__tonelli_shanks_sqrt().unwrap() };
+    let c = unsafe { BLS12_381_Fq::from_limbs(__tonelli_shanks_sqrt(BLS12_381_Fq::params(), b.get_limbs()).unwrap()) };
     // Safety: test code
     let d = unsafe {
         BLS12_381_Fq::from_limbs(__easy_sqrt(BLS12_381_Fq::params(), b.get_limbs()).unwrap())
@@ -1126,6 +1126,7 @@ fn test_SecP224r1_mul_regression() {
     let mut x: SecP224r1 =
         SecP224r1 { limbs: [0x03c1d356c21122343280d6115c1d21, 0xb70e0cbd6bb4bf7f321390b94a] };
     let res = x * x;
+    // Safety: test code
     let expected = unsafe { SecP224r1::__mul(x, x) };
     res.validate_in_field();
     expected.validate_in_field();

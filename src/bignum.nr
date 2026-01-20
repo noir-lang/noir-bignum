@@ -247,12 +247,10 @@ pub comptime fn derive_bignum(
             }
 
             fn udiv(self: Self, divisor: Self) -> Self {
-                let params = Self::params();
                 Self {limbs: $constrained_ops::udiv::<$N, $MOD_BITS>(self.get_limbs(), divisor.get_limbs())}
             }
 
             fn umod(self: Self, divisor: Self) -> Self {
-                let params = Self::params();
                 Self {limbs: $constrained_ops::umod::<$N, $MOD_BITS>(self.get_limbs(), divisor.get_limbs())}
             }
 

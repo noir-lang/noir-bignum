@@ -195,7 +195,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     #[deprecated("use __sqrt")]
     pub fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self> {
         let params: BigNumParams<N, MOD_BITS> = self.params;
-        // Safety: Unconstrained function simulation
+        // Safety: out-of-circuit sqrt computation
         let maybe_limbs: Option<[u128; N]> = unsafe { __sqrt(params, self.limbs) };
         maybe_limbs.map(|limbs: [u128; N]| Self { limbs, params })
     }
@@ -203,6 +203,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     // UNCONSTRAINED! (Hence `__` prefix).
     pub fn __sqrt(self) -> std::option::Option<Self> {
         let params = self.params;
+        // Safety: out-of-circuit sqrt computation
         let maybe_limbs: Option<[u128; N]> = unsafe { __sqrt(params, self.limbs) };
         maybe_limbs.map(|limbs: [u128; N]| Self { limbs, params })
     }

@@ -1,5 +1,4 @@
 use crate::fields::bls12_381Fq::BLS12_381_Fq_PARAMS;
-use crate::fields::bls12_381Fr::BLS12_381_Fr_PARAMS;
 use crate::fields::bn254Fq::BN254_Fq_PARAMS;
 use crate::fns::constrained_ops::{sub, udiv};
 use crate::fns::unconstrained_helpers::{__barrett_reduction, __quadratic_non_residue};
@@ -616,7 +615,7 @@ fn test_sqrt_BN() {
 
     let x = RuntimeBigNum { limbs: [9, 0, 0], params };
 
-    let maybe_sqrt_x = x.__tonelli_shanks_sqrt();
+    let maybe_sqrt_x = x.__sqrt();
 
     let sqrt_x = maybe_sqrt_x.unwrap();
 
