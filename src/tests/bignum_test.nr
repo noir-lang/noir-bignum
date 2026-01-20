@@ -659,7 +659,10 @@ fn test_sqrt_equality_fuzz(seed: [u8; 3]) {
     let a = BLS12_381_Fq::derive_from_seed(seed);
     let b = a * a;
     // Safety: test code
-    let c = unsafe { BLS12_381_Fq::from_limbs(__tonelli_shanks_sqrt(BLS12_381_Fq::params(), b.get_limbs()).unwrap()) };
+    let c = unsafe {
+        BLS12_381_Fq::from_limbs(__tonelli_shanks_sqrt(BLS12_381_Fq::params(), b.get_limbs())
+            .unwrap())
+    };
     // Safety: test code
     let d = unsafe {
         BLS12_381_Fq::from_limbs(__easy_sqrt(BLS12_381_Fq::params(), b.get_limbs()).unwrap())
