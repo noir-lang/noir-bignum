@@ -104,10 +104,9 @@ fn test_add() {
     a.validate_in_field();
     b.validate_in_range();
     b.validate_in_field();
+
     let mut c = a + b;
-    
     c = c + c;
-    
     let d = (a + b) * (one + one);
     assert(c == d);
 
@@ -512,20 +511,6 @@ fn test_invmod_BN() {
     // Safety: test code
     unsafe { test_invmod(params) };
 }
-
-// N.B. witness generation times make these tests take ~15 minutes each! Uncomment at your peril
-// #[test]
-// fn test_div_2048() {
-// let params = get_2048_params();
-//     test_div(params);
-// }
-
-// N.B. witness generation times make these tests take ~15 minutes each! Uncomment at your peril
-// #[test]
-// fn test_invmod_2048() {
-// let params = get_2048_params();
-//     test_invmod(params);
-// }
 
 #[test]
 fn test_2048_bit_quadratic_expression() {
