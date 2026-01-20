@@ -1213,3 +1213,140 @@ fn test_udiv_mod_extra_modulus_regression(xseed: [u8; 1], yseed: [u8; 2]) {
 
     validate_udiv_mod_expression::<3, 257>(x.get_limbs(), y.get_limbs(), q_, r.get_limbs());
 }
+
+// Other
+
+#[test]
+fn test_mul_u1024() {
+    test_mul::<9, crate::fields::U1024::U1024>();
+}
+
+#[test]
+fn test_mul_u2048() {
+    test_mul::<18, crate::fields::U2048::U2048>();
+}
+
+#[test]
+fn test_mul_u384() {
+    test_mul::<4, crate::fields::U384::U384>();
+}
+
+#[test]
+fn test_mul_u4096() {
+    test_mul::<35, crate::fields::U4096::U4096>();
+}
+
+#[test]
+fn test_mul_u512() {
+    test_mul::<5, crate::fields::U512::U512>();
+}
+
+#[test]
+fn test_mul_u768() {
+    test_mul::<7, crate::fields::U768::U768>();
+}
+
+#[test]
+fn test_mul_u8192() {
+    test_mul::<69, crate::fields::U8192::U8192>();
+}
+
+#[test]
+fn test_mul_bls12_377_fq() {
+    test_mul::<4, crate::fields::bls12_377Fq::BLS12_377_Fq>();
+}
+
+#[test]
+fn test_mul_bls12_377_fr() {
+    test_mul::<3, crate::fields::bls12_377Fr::BLS12_377_Fr>();
+}
+
+#[test]
+fn test_mul_bls12_381_fq() {
+    test_mul::<4, crate::fields::bls12_381Fq::BLS12_381_Fq>();
+}
+
+#[test]
+fn test_mul_bls12_381_fr() {
+    test_mul::<3, crate::fields::bls12_381Fr::BLS12_381_Fr>();
+}
+
+#[test]
+fn test_mul_ed25519_fq() {
+    test_mul::<3, crate::fields::ed25519Fq::ED25519_Fq>();
+}
+
+#[test]
+fn test_mul_ed25519_fr() {
+    test_mul::<3, crate::fields::ed25519Fr::ED25519_Fr>();
+}
+
+#[test]
+fn test_mul_mnt4_753_fq() {
+    test_mul::<7, crate::fields::mnt4_753Fq::MNT4_753_Fq>();
+}
+
+#[test]
+fn test_mul_mnt4_753_fr() {
+    test_mul::<7, crate::fields::mnt4_753Fr::MNT4_753_Fr>();
+}
+
+#[test]
+fn test_mul_mnt6_753_fq() {
+    test_mul::<7, crate::fields::mnt6_753Fq::MNT6_753_Fq>();
+}
+
+#[test]
+fn test_mul_mnt6_753_fr() {
+    test_mul::<7, crate::fields::mnt6_753Fr::MNT6_753_Fr>();
+}
+
+#[test]
+fn test_mul_pallas_fq() {
+    test_mul::<3, crate::fields::pallasFq::Pallas_Fq>();
+}
+
+#[test]
+fn test_mul_pallas_fr() {
+    test_mul::<3, crate::fields::pallasFr::Pallas_Fr>();
+}
+
+#[test]
+fn test_mul_secp256k1_fq() {
+    test_mul::<3, crate::fields::secp256k1Fq::Secp256k1_Fq>();
+}
+
+#[test]
+fn test_mul_secp256k1_fr() {
+    test_mul::<3, crate::fields::secp256k1Fr::Secp256k1_Fr>();
+}
+
+#[test]
+fn test_mul_secp256r1_fq() {
+    test_mul::<3, crate::fields::secp256r1Fq::Secp256r1_Fq>();
+}
+
+#[test]
+fn test_mul_secp256r1_fr() {
+    test_mul::<3, crate::fields::secp256r1Fr::Secp256r1_Fr>();
+}
+
+#[test]
+fn test_mul_secp384r1_fq() {
+    test_mul::<4, crate::fields::secp384r1Fq::Secp384r1_Fq>();
+}
+
+#[test]
+fn test_mul_secp384r1_fr() {
+    test_mul::<4, crate::fields::secp384r1Fr::Secp384r1_Fr>();
+}
+
+#[test]
+fn test_mul_vesta_fq() {
+    test_mul::<3, crate::fields::vestaFq::Vesta_Fq>();
+}
+
+#[test]
+fn test_mul_vesta_fr() {
+    test_mul::<3, crate::fields::vestaFr::Vesta_Fr>();
+}
