@@ -258,7 +258,10 @@ Other constrained functions:
 
 **Range operators**
 - `validate_in_range`, validates the bignum doesn't have more bits than `modulus_bits` and each limb is a strict `120-bit` value
-- `validate_in_field`, validates `self <= modulus` **Note:** we allow the value to be `modulus` as it is consistent with the rest of the library.
+- `validate_in_field` – validates `self <= modulus`.
+  - **Note:** `self == modulus` is allowed (consistent with the rest of the library).
+  - **Note:** `validate_in_range` constraints are *deduplicated* (cached) per value, so calling it multiple times on the same `BigNum` will not add duplicate constraints. `validate_in_field` is *not* deduplicated, so repeated calls will add the check again.
+  - **Note:** `validate_in_field` is a stronger assertion than `validate_in_range`
 
 **Additional helpers**
 - `conditional_select(lhs, rhs, predicate)`, if `predicate` is 0 returns `lhs`, else if `predicate` is 1 returns `rhs` 
