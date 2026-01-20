@@ -1,5 +1,4 @@
 use crate::fields::bls12_381Fq::BLS12_381_Fq_PARAMS;
-use crate::fields::bls12_381Fr::BLS12_381_Fr_PARAMS;
 use crate::fields::bn254Fq::BN254_Fq_PARAMS;
 use crate::fns::constrained_ops::{sub, udiv};
 use crate::fns::unconstrained_helpers::{__barrett_reduction, __quadratic_non_residue};
@@ -105,10 +104,9 @@ fn test_add() {
     a.validate_in_field();
     b.validate_in_range();
     b.validate_in_field();
+
     let mut c = a + b;
-    
     c = c + c;
-    
     let d = (a + b) * (one + one);
     assert(c == d);
 
@@ -514,20 +512,6 @@ fn test_invmod_BN() {
     unsafe { test_invmod(params) };
 }
 
-// N.B. witness generation times make these tests take ~15 minutes each! Uncomment at your peril
-// #[test]
-// fn test_div_2048() {
-// let params = get_2048_params();
-//     test_div(params);
-// }
-
-// N.B. witness generation times make these tests take ~15 minutes each! Uncomment at your peril
-// #[test]
-// fn test_invmod_2048() {
-// let params = get_2048_params();
-//     test_invmod(params);
-// }
-
 #[test]
 fn test_2048_bit_quadratic_expression() {
     let params = TEST_2048_PARAMS;
@@ -616,7 +600,7 @@ fn test_sqrt_BN() {
 
     let x = RuntimeBigNum { limbs: [9, 0, 0], params };
 
-    let maybe_sqrt_x = x.__tonelli_shanks_sqrt();
+    let maybe_sqrt_x = x.__sqrt();
 
     let sqrt_x = maybe_sqrt_x.unwrap();
 
