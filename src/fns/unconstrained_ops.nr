@@ -317,7 +317,7 @@ pub(crate) unconstrained fn batch_invert_slice<let N: u32, let MOD_BITS: u32>(
     vals: [[u128; N]],
 ) -> [[u128; N]] {
     let mut accumulator: [u128; N] = __one();
-    let mut temporaries: [[u128; N]] = @[];
+    let mut temporaries: [[u128; N]] = $[];
 
     let M: u32 = vals.len();
 
