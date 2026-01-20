@@ -10,7 +10,7 @@ use crate::fns::{
     serialization::{from_be_bytes, from_le_bytes, to_be_bytes, to_le_bytes},
     unconstrained_ops::{
         __add, __derive_from_seed, __div, __eq, __invmod, __is_zero, __mul, __neg, __pow, __sqr,
-        __sub, __tonelli_shanks_sqrt, __udiv_mod,
+        __sqrt, __sub, __udiv_mod,
     },
 };
 use std::{cmp::Ordering, ops::Neg};
@@ -192,10 +192,18 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
+    #[deprecated("use __sqrt")]
     pub fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self> {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         // Safety: Unconstrained function simulation
-        let maybe_limbs: Option<[u128; N]> = unsafe { __tonelli_shanks_sqrt(params, self.limbs) };
+        let maybe_limbs: Option<[u128; N]> = unsafe { __sqrt(params, self.limbs) };
+        maybe_limbs.map(|limbs| Self { limbs, params })
+    }
+
+    // UNCONSTRAINED! (Hence `__` prefix).
+    pub fn __sqrt(self) -> std::option::Option<Self> {
+        let params = self.params;
+        let maybe_limbs = unsafe { __sqrt(params, self.limbs) };
         maybe_limbs.map(|limbs: [u128; N]| Self { limbs, params })
     }
 
@@ -222,21 +230,20 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     pub fn udiv_mod(self, divisor: Self) -> (Self, Self) {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == divisor.params);
-        let (q, r): ([u128; N], [u128; N]) =
-            udiv_mod::<N, MOD_BITS>(params, self.limbs, divisor.limbs);
+        let (q, r) = udiv_mod::<N, MOD_BITS>(self.limbs, divisor.limbs);
         (Self { limbs: q, params }, Self { limbs: r, params })
     }
 
     pub fn udiv(self, divisor: Self) -> Self {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == divisor.params);
-        Self { limbs: udiv::<N, MOD_BITS>(params, self.limbs, divisor.limbs), params }
+        Self { limbs: udiv::<N, MOD_BITS>(self.limbs, divisor.limbs), params }
     }
 
     pub fn umod(self, divisor: Self) -> Self {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == divisor.params);
-        Self { limbs: umod::<N, MOD_BITS>(params, self.limbs, divisor.limbs), params }
+        Self { limbs: umod::<N, MOD_BITS>(self.limbs, divisor.limbs), params }
     }
 
     pub fn is_zero(self) -> bool {

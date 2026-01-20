@@ -1,7 +1,9 @@
 use crate::bignum::BigNum;
 use crate::bignum::{compute_quadratic_expression, evaluate_quadratic_expression, to_field};
 use crate::bignum::derive_bignum;
-use crate::fns::unconstrained_helpers::__helper_add;
+use crate::fns::expressions::validate_udiv_mod_expression;
+use crate::fns::unconstrained_helpers::{__helper_add, __quadratic_non_residue};
+use crate::fns::unconstrained_ops::__easy_sqrt;
 
 use crate::params::BigNumParams;
 
@@ -626,6 +628,69 @@ fn test_mul_BN_with_one() {
     assert(c == a);
 }
 
+fn test_sqrt<BN>()
+where
+    BN: BigNum,
+{
+    let a: BN = BN::derive_from_seed([1, 2, 3, 4]);
+    let b: BN = a * a;
+
+    // Safety: test code
+    let c: BN = unsafe { b.__sqrt().unwrap() };
+    assert((c == a) | (c == -a));
+}
+
+fn test_sqrt_fail<BN>()
+where
+    BN: BigNum,
+{
+    // Safety: test code
+    let qnr_limbs = unsafe { __quadratic_non_residue(BN::params()) };
+    let g: BN = BN::from_limbs(qnr_limbs);
+
+    // Safety: test code
+    let c: Option<BN> = unsafe { g.__sqrt() };
+    assert(c.is_none());
+}
+
+// Test that both functions behave similarly
+#[test]
+fn test_sqrt_equality_fuzz(seed: [u8; 3]) {
+    let a = BLS12_381_Fq::derive_from_seed(seed);
+    let b = a * a;
+    // Safety: test code
+    let c = unsafe { b.__tonelli_shanks_sqrt().unwrap() };
+    // Safety: test code
+    let d = unsafe {
+        BLS12_381_Fq::from_limbs(__easy_sqrt(BLS12_381_Fq::params(), b.get_limbs()).unwrap())
+    };
+    assert((c == d) | (c == -d));
+}
+
+// MOD = 1 (mod 4)
+#[test]
+fn test_sqrt_BLS12_381_Fr() {
+    test_sqrt::<BLS12_381_Fr>();
+}
+
+// MOD = 3 (mod 4)
+#[test]
+fn test_sqrt_BLS12_381_Fq() {
+    test_sqrt::<BLS12_381_Fq>();
+}
+
+// MOD = 1 (mod 4)
+#[test]
+fn test_sqrt_fail_BLS12_381_Fr() {
+    test_sqrt_fail::<BLS12_381_Fr>();
+}
+
+// MOD = 3 (mod 4)
+#[test]
+fn test_sqrt_fail_BLS12_381_Fq() {
+    test_sqrt_fail::<BLS12_381_Fq>();
+}
+
 fn test_div<let N: u32, BN>()
 where
     BN: BigNum,
@@ -1065,4 +1130,86 @@ fn test_SecP224r1_mul_regression() {
     res.validate_in_field();
     expected.validate_in_field();
     assert(res == expected);
+}
+
+// Tests to confirm that we can no longer pass more than 1 extra `MOD` as a part of the witness
+
+#[test(should_fail_with = "call to assert_max_bit_size")]
+fn test_evaluate_quadratic_expression_regression_div_extra_mod() {
+    let x: BLS12_381_Fq = BLS12_381_Fq::derive_from_seed([0x1, 0x3, 0x3, 0x7]);
+    let y: BLS12_381_Fq = BLS12_381_Fq::derive_from_seed([0xd, 0xe, 0xa, 0xd]);
+
+    let modulus: [u128; 4] = BLS12_381_Fq::modulus().get_limbs();
+
+    // compute honest z = x * y^{-1} (mod MOD)
+    // Safety: test code
+    let mut z_: [u128; 4] = unsafe { x.__div(y).get_limbs() };
+    // Safety: test code
+    z_ = unsafe { __helper_add(z_, modulus) };
+    // Safety: test code
+    z_ = unsafe { __helper_add(z_, modulus) };
+
+    let z: BLS12_381_Fq = BLS12_381_Fq::from_limbs(z_);
+
+    evaluate_quadratic_expression([[y]], [[false]], [[z]], [[false]], [x], [true]);
+}
+
+#[test(should_fail_with = "call to assert_max_bit_size")]
+fn test_evaluate_quadratic_expression_add_extra_mod_fuzz(xseed: [u8; 4], yseed: [u8; 3]) {
+    let x: BLS12_381_Fr = BLS12_381_Fr::derive_from_seed(xseed);
+    let y: BLS12_381_Fr = BLS12_381_Fr::derive_from_seed(yseed);
+
+    let modulus: [u128; 3] = BLS12_381_Fr::modulus().get_limbs();
+
+    // compute honest z = x + y (mod MOD)
+    // Safety: test code
+    let mut z_: [u128; 3] = unsafe { x.__add(y).get_limbs() };
+    // Safety: test code
+    z_ = unsafe { __helper_add(z_, modulus) };
+    // Safety: test code
+    z_ = unsafe { __helper_add(z_, modulus) };
+
+    let z: BLS12_381_Fr = BLS12_381_Fr::from_limbs(z_);
+
+    evaluate_quadratic_expression([[]], [[]], [[]], [[]], [x, y, z], [false, false, true]);
+}
+
+#[test(should_fail_with = "call to assert_max_bit_size")]
+fn test_evaluate_quadratic_expression_mul_extra_mod_fuzz(xseed: [u8; 1], yseed: [u8; 2]) {
+    let x: U256 = U256::derive_from_seed(xseed);
+    let y: U256 = U256::derive_from_seed(yseed);
+
+    let modulus: [u128; 3] = U256::modulus().get_limbs();
+
+    // compute honest z = x * y (mod MOD)
+    // Safety: test code
+    let mut z_: [u128; 3] = unsafe { x.__mul(y).get_limbs() };
+    // Safety: test code
+    z_ = unsafe { __helper_add(z_, modulus) };
+    // Safety: test code
+    z_ = unsafe { __helper_add(z_, modulus) };
+
+    let z: U256 = U256::from_limbs(z_);
+
+    evaluate_quadratic_expression([[x]], [[false]], [[y]], [[false]], [z], [true]);
+}
+
+// This tests that we no longer validate udiv_mod expression `(mod MOD)`
+// This would have passed previously with `evaluate_quadratic_expression` call
+#[test(should_fail)]
+fn test_udiv_mod_extra_modulus_regression(xseed: [u8; 1], yseed: [u8; 2]) {
+    let x: U256 = U256::derive_from_seed(xseed);
+    let y: U256 = U256::derive_from_seed(yseed);
+
+    let modulus: [u128; 3] = U256::modulus().get_limbs();
+
+    // compute honest z = x * y (mod MOD)
+    // Safety: test code
+    let (q, r): (U256, U256) = unsafe { x.__udiv_mod(y) };
+
+    let mut q_: [u128; 3] = q.get_limbs();
+    // Safety: test code
+    q_ = unsafe { __helper_add(q_, modulus) };
+
+    validate_udiv_mod_expression::<3, 257>(x.get_limbs(), y.get_limbs(), q_, r.get_limbs());
 }

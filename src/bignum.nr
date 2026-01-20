@@ -42,6 +42,7 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     unconstrained fn __pow(self, exponent: Self) -> Self;
 
     unconstrained fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self>;
+    unconstrained fn __sqrt(self) -> std::option::Option<Self>;
 
     fn assert_is_not_equal(self: Self, other: Self);
     fn is_zero(self) -> bool;
@@ -204,12 +205,18 @@ pub comptime fn derive_bignum(
                 Self {limbs: $unconstrained_ops::__pow(params, self.get_limbs(), exponent.get_limbs())}
             }
 
+            #[deprecated("use __sqrt")]
             unconstrained fn __tonelli_shanks_sqrt(self: Self) -> std::option::Option<Self> {
                 let params = Self::params();
-                let maybe_limbs = $unconstrained_ops::__tonelli_shanks_sqrt(params, self.get_limbs());
+                let maybe_limbs = $unconstrained_ops::__sqrt(params, self.get_limbs());
                 maybe_limbs.map(|limbs| Self {limbs: limbs})
             }
 
+            unconstrained fn __sqrt(self: Self) -> std::option::Option<Self> {
+                let params = Self::params();
+                let maybe_limbs = $unconstrained_ops::__sqrt(params, self.get_limbs());
+                maybe_limbs.map(|limbs| Self {limbs: limbs })
+            }
 
             fn assert_is_not_equal(self: Self, other: Self) {
                 let params = Self::params();
@@ -235,19 +242,18 @@ pub comptime fn derive_bignum(
             }
 
             fn udiv_mod(self: Self, divisor: Self) -> (Self, Self) {
-                let params = Self::params();
-                let (q, r) = $constrained_ops::udiv_mod::<$N, $MOD_BITS>(params, self.get_limbs(), divisor.get_limbs());
+                let (q, r) = $constrained_ops::udiv_mod::<$N, $MOD_BITS>(self.get_limbs(), divisor.get_limbs());
                 (Self {limbs: q}, Self {limbs: r})
             }
 
             fn udiv(self: Self, divisor: Self) -> Self {
                 let params = Self::params();
-                Self {limbs: $constrained_ops::udiv::<$N, $MOD_BITS>(params, self.get_limbs(), divisor.get_limbs())}
+                Self {limbs: $constrained_ops::udiv::<$N, $MOD_BITS>(self.get_limbs(), divisor.get_limbs())}
             }
 
             fn umod(self: Self, divisor: Self) -> Self {
                 let params = Self::params();
-                Self {limbs: $constrained_ops::umod::<$N, $MOD_BITS>(params, self.get_limbs(), divisor.get_limbs())}
+                Self {limbs: $constrained_ops::umod::<$N, $MOD_BITS>(self.get_limbs(), divisor.get_limbs())}
             }
 
             fn is_zero(self: Self) -> bool {
