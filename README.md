@@ -87,6 +87,23 @@ pub struct MyU256 {
 }
 ```
 
+Or
+
+```rust
+global SecP224r1_PARAMS: BigNumParams<2, 224> = BigNumParams {
+    has_multiplicative_inverse: true,
+    modulus: [0xffffff000000000000000000000001, 0xffffffffffffffffffffffffff],
+    double_modulus: [0x01fffffe000000000000000000000002, 0x01fffffffffffffffffffffffffe],
+    redc_param: [0x0ffffffffffffffffffffffff0, 0x1000000000000000000000000000],
+};
+
+#[derive_bignum(2, 224, quote {SecP224r1_PARAMS})]
+struct SecP224r1 {
+    limbs: [u128; 2],
+}
+```
+
+
 ### Quick example: Addition in U256
 
 A simple `1 + 2 = 3` check in 256-bit unsigned integers. Note that for performing multiple arithmetic operations up to degree 2 it is recommended to use `evaluate_quadratic_expression` (see explanation below). 
