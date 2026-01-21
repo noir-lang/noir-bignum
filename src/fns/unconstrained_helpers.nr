@@ -2,7 +2,7 @@
 
 use crate::constants::TWO_POW_120;
 
-use crate::fns::unconstrained_ops::{__add, __eq, __gte, __mul, __neg, __pow, __sqr};
+use crate::fns::unconstrained_ops::{__eq, __gte, __neg, __pow, __sqr};
 
 use crate::utils::msb::get_msb;
 use crate::utils::split_bits::{__normalize_limbs, __split_120_bits};
