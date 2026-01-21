@@ -10,7 +10,7 @@ pub mod fields;
 pub mod params;
 
 // Free functions and other utils, called by the BigNum and RuntimeBigNum structs
-pub(crate) mod fns;
+pub mod fns;
 pub(crate) mod utils;
 
 mod benchmarks;
