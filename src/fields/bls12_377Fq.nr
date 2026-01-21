@@ -35,14 +35,14 @@ pub global BLS12_377_Fq_PARAMS: BigNumParams<4, 377> = BigNumParams {
         0x035c73,
     ],
     redc_param: [
-        0xd687789c42a591f9fd58c5e4daffcc,
-        0x0de6776b1a06af2d488d85a6d02d0e,
-        0xd0cc4060e976c3ca0582ef4f73bbad,
-        0x261508,
+        0x5a1de2710a9647e7f56317936bff32,
+        0x3799ddac681abcb52236169b40b43b,
+        0x43310183a5db0f28160bbd3dceeeb4,
+        0x985423,
     ],
 };
 
-#[derive_bignum(4, 377, quote {BLS12_377_Fq_PARAMS})]
+#[derive_bignum(4, 377, quote { BLS12_377_Fq_PARAMS })]
 pub struct BLS12_377_Fq {
     limbs: [u128; 4],
 }

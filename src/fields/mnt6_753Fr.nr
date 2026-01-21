@@ -44,17 +44,17 @@ pub global MNT6_753_Fr_PARAMS: BigNumParams<7, 753> = BigNumParams {
         0x03898c5b24,
     ],
     redc_param: [
-        0x5dcc95da918349f4965a2aee8fd750,
-        0x82372b75580c27c4d1f1f57a96a114,
-        0x58326e3c0552419849e3c7171d8522,
-        0x300e0ede1965cbf72f0aa9bf03479d,
-        0x7fb932cae2aba9a5d17c1ff73538ba,
-        0x82727c6eaef38056aaa0aaedb05746,
-        0x242f916cfa,
+        0x7732576a460d27d25968abba3f5d42,
+        0x08dcadd560309f1347c7d5ea5a8451,
+        0x60c9b8f015490661278f1c5c76148a,
+        0xc0383b7865972fdcbc2aa6fc0d1e75,
+        0xfee4cb2b8aaea69745f07fdcd4e2e8,
+        0x09c9f1babbce015aaa82abb6c15d19,
+        0x90be45b3ea,
     ],
 };
 
-#[derive_bignum(7, 753, quote {MNT6_753_Fr_PARAMS})]
+#[derive_bignum(7, 753, quote { MNT6_753_Fr_PARAMS })]
 pub struct MNT6_753_Fr {
     limbs: [u128; 7],
 }

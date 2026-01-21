@@ -30,11 +30,11 @@ pub global U2048_PARAMS: BigNumParams<18, 2049> = BigNumParams {
     ],
     redc_param: [
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x4000,
+        0x00, 0x00, 0x010000,
     ],
 };
 
-#[derive_bignum(18, 2049, quote {U2048_PARAMS})]
+#[derive_bignum(18, 2049, quote { U2048_PARAMS })]
 pub struct U2048 {
     limbs: [u128; 18],
 }

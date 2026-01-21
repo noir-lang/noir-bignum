@@ -16,10 +16,10 @@ pub global Secp384r1_Fq_PARAMS: BigNumParams<4, 384> = BigNumParams {
         0x01fffffffffffffffffffffffffffffe,
         0x01fffffe,
     ],
-    redc_param: [0x0ffffffffffffffff000000010, 0x1000, 0x00, 0x10000000],
+    redc_param: [0x3fffffffffffffffc000000040, 0x4000, 0x00, 0x40000000],
 };
 
-#[derive_bignum(4, 384, quote {Secp384r1_Fq_PARAMS})]
+#[derive_bignum(4, 384, quote { Secp384r1_Fq_PARAMS })]
 pub struct Secp384r1_Fq {
     limbs: [u128; 4],
 }

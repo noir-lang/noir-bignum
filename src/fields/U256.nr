@@ -10,10 +10,10 @@ pub global U256_PARAMS: BigNumParams<3, 257> = BigNumParams {
         0xffffffffffffffffffffffffffffff,
         0x01ffff,
     ],
-    redc_param: [0x00, 0x00, 0x400000],
+    redc_param: [0x00, 0x00, 0x01000000],
 };
 
-#[derive_bignum(3, 257, quote {U256_PARAMS})]
+#[derive_bignum(3, 257, quote { U256_PARAMS })]
 pub struct U256 {
     limbs: [u128; 3],
 }

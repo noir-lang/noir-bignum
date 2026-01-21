@@ -26,10 +26,10 @@ pub global Vesta_Fr_PARAMS: BigNumParams<3, 255> = BigNumParams {
         0x01000000000000000000000000000043,
         0x7fff,
     ],
-    redc_param: [0x59c0fdacc1b919b4b3c4bfffffffc4, 0xfffffffffffffffffffffffffff76e, 0x0fffff],
+    redc_param: [0x6703f6b306e466d2cf12ffffffff12, 0xffffffffffffffffffffffffffddb9, 0x3fffff],
 };
 
-#[derive_bignum(3, 255, quote {Vesta_Fr_PARAMS})]
+#[derive_bignum(3, 255, quote { Vesta_Fr_PARAMS })]
 pub struct Vesta_Fr {
     limbs: [u128; 3],
 }
