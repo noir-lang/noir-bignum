@@ -28,7 +28,7 @@ To start using the library:
 If the `BigNum` you need is in the predefined list, import it and use it:
 
 ```rust
-use dep::noir_bignum::U256;
+use dep::bignum::U256;
 ```
 
 If the `BigNum` you need is not in the predefined list, you'll need to create it:
@@ -57,7 +57,7 @@ In your _Nargo.toml_ file, add the version of this library you would like to ins
 
 ```
 [dependencies]
-noir_bignum = { tag = "v0.4.2", git = "https://github.com/noir-lang/noir-bignum" }
+bignum = { tag = "v0.4.2", git = "https://github.com/noir-lang/noir-bignum" }
 ```
 
 ### Import a predefined bignum:
@@ -65,7 +65,7 @@ noir_bignum = { tag = "v0.4.2", git = "https://github.com/noir-lang/noir-bignum"
 Add imports at the top of your Noir code, for example:
 
 ```rust
-use dep::noir_bignum::U256;
+use dep::bignum::U256;
 ```
 
 ### Create a custom bignum:
@@ -75,8 +75,8 @@ use dep::noir_bignum::U256;
 Use the `paramgen` tool to generate your bignum's params (see below). Then define your custom bignum from those params:
 
 ```rust
-use dep::noir_bignum::U256;
-use dep::noir_bignum::BigNum;
+use dep::bignum::U256;
+use dep::bignum::BigNum;
 
 // Define (compile-time) BigNum type
 // number of limbs, number of bits of modulus, parameter set
@@ -109,7 +109,7 @@ struct SecP224r1 {
 A simple `1 + 2 = 3` check in 256-bit unsigned integers. Note that for performing multiple arithmetic operations up to degree 2 it is recommended to use `evaluate_quadratic_expression` (see explanation below). 
 
 ```rust
-use dep::noir_bignum::U256;
+use dep::bignum::U256;
 
 fn main() {
     let one = U256::from_limbs([1, 0, 0]);
@@ -356,10 +356,10 @@ evaluate_quadratic_expression(lhs_terms, lhs_flags, rhs_terms, rhs_flags, add_te
 In the base field of Ed25519, which is the integers mod $2^{255}-19$, perform simple arithmetic operations `(x1 * x2) + x3` and assert this equals `expected`. 
 
 ```rust
-use dep::noir_bignum::BigNum;
-use dep::noir_bignum::bignum::evaluate_quadratic_expression;
+use dep::bignum::BigNum;
+use dep::bignum::bignum::evaluate_quadratic_expression;
 
-use dep::noir_bignum::ED25519_Fq as Fq;
+use dep::bignum::ED25519_Fq as Fq;
 
 // Check that (x1 * x2) + x3 equals `expected`
 fn main(x1: Fq, x2: Fq, x3: Fq, expected: Fq) {
@@ -404,8 +404,8 @@ BigNum supports operations over unsigned integers, with predefined types for 256
 All arithmetic operations are supported including integer div and mod functions (make sure to use udiv, umod, and udiv_mod). Bit shifts and other bit operators are not yet implemented.
 
 ```rust
-use dep::noir_bignum::U256;
-use dep::noir_bignum::BigNum;
+use dep::bignum::U256;
+use dep::bignum::BigNum;
 
 fn foo(x: U256, y: U256) -> U256 {
     x.udiv(y)
@@ -443,10 +443,10 @@ For example, after cloning and building the tool, for a `modulus` of 1024 bits f
 For a modulus that is known at runtime, the needed parameters in `BigNumParams` can be provided as witnesses. In the program, use `RuntimeBigNum`, which only requires the number of limbs and number of bits of modulus at the type definition.  
 
 ```rust
-use dep::noir_bignum::BigNum;
-use dep::noir_bignum::BN254_Fq;
+use dep::bignum::BigNum;
+use dep::bignum::BN254_Fq;
 
-use dep::noir_bignum::RuntimeBigNum;
+use dep::bignum::RuntimeBigNum;
 
 // Notice how we don't provide the params here, because we're pretending they're
 // not known at compile-time, for illustration purposes.
@@ -496,12 +496,12 @@ TODO
 Elliptic curve point doubling using `evaluate_quadratic_expression`:
 
 ```rust
-use dep::noir_bignum::BigNum;
-use dep::noir_bignum::BN254_Fq as Fq;
+use dep::bignum::BigNum;
+use dep::bignum::BN254_Fq as Fq;
 
-use dep::noir_bignum::RuntimeBigNum;
+use dep::bignum::RuntimeBigNum;
 
-use dep::noir_bignum::bignum::evaluate_quadratic_expression;
+use dep::bignum::bignum::evaluate_quadratic_expression;
 
 fn example_ecc_double(x: Fq, y: Fq) -> (Fq, Fq) {
     // Step 1: construct witnesses
