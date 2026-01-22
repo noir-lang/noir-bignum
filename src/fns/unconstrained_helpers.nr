@@ -296,8 +296,8 @@ comptime global BARRETT_REDUCTION_OVERFLOW_BITS: u32 = 4;
 /// This is highly unlikely though.
 ///
 /// ### TODO:
-/// Possibly change the `BARRETT_REDUCTION_OVERFLOW_BITS` to 6, so that we need only 1 reduction here
-/// However we will have to recompute all the fields `redc_param`s and fix paramgen
+/// Possibly change the `BARRETT_REDUCTION_OVERFLOW_BITS` to 6, so that we need only 1 reduction here.
+/// Not a significant decrease in brillig opcodes though (https://github.com/noir-lang/noir-bignum/pull/241).
 pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     x: [u128; 2 * N],
     redc_param: [u128; N],
@@ -331,7 +331,7 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
         remainder[i] = long_remainder[i];
     }
 
-    for _ in 0..2 {
+    for _ in 0..4 {
         if (__gte(remainder, modulus)) {
             remainder = __helper_sub(remainder, modulus);
             smaller_quotient = __increment(smaller_quotient);
