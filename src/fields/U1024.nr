@@ -19,7 +19,7 @@ pub global U1024_PARAMS: BigNumParams<9, 1025> = BigNumParams {
     redc_param: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x400000000000000000],
 };
 
-#[derive_bignum(9, 1025, quote {U1024_PARAMS})]
+#[derive_bignum(9, 1025, quote { U1024_PARAMS })]
 pub struct U1024 {
     limbs: [u128; 9],
 }

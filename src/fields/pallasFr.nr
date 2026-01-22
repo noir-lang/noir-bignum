@@ -28,7 +28,7 @@ pub global Pallas_Fr_PARAMS: BigNumParams<3, 255> = BigNumParams {
     redc_param: [0x59c0fd9ad5c89cee4537bfffffffc4, 0xfffffffffffffffffffffffffff76e, 0x0fffff],
 };
 
-#[derive_bignum(3, 255, quote {Pallas_Fr_PARAMS})]
+#[derive_bignum(3, 255, quote { Pallas_Fr_PARAMS })]
 pub struct Pallas_Fr {
     limbs: [u128; 3],
 }

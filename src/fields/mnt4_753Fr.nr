@@ -54,7 +54,7 @@ pub global MNT4_753_Fr_PARAMS: BigNumParams<7, 753> = BigNumParams {
     ],
 };
 
-#[derive_bignum(7, 753, quote {MNT4_753_Fr_PARAMS})]
+#[derive_bignum(7, 753, quote { MNT4_753_Fr_PARAMS })]
 pub struct MNT4_753_Fr {
     limbs: [u128; 7],
 }

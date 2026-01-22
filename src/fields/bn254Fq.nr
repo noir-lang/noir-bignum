@@ -13,7 +13,7 @@ pub global BN254_Fq_PARAMS: BigNumParams<3, 254> = BigNumParams {
     redc_param: [0x65e1767cd4c086f3aed8a19bf90e51, 0x462623a04a7ab074a5868073013ae9, 0x054a47],
 };
 
-#[derive_bignum(3, 254, quote {BN254_Fq_PARAMS})]
+#[derive_bignum(3, 254, quote { BN254_Fq_PARAMS })]
 pub struct BN254_Fq {
     limbs: [u128; 3],
 }

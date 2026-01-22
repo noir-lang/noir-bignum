@@ -13,7 +13,7 @@ pub global Secp256k1_Fq_PARAMS: BigNumParams<3, 256> = BigNumParams {
     redc_param: [0x1000003d10, 0x00, 0x100000],
 };
 
-#[derive_bignum(3, 256, quote {Secp256k1_Fq_PARAMS})]
+#[derive_bignum(3, 256, quote { Secp256k1_Fq_PARAMS })]
 pub struct Secp256k1_Fq {
     limbs: [u128; 3],
 }
