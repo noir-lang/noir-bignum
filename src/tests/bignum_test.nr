@@ -88,7 +88,7 @@ pub struct BN2048 {
 
 /// `MOD_BITS` parameter was incorrect in ed5519_Fr
 #[test]
-fn test_mul_ed25519_fr() {
+fn test_mul_ed25519_fr_regression() {
     test_mul::<3, crate::fields::ed25519Fr::ED25519_Fr>();
 }
 
