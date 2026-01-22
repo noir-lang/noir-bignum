@@ -42,7 +42,7 @@ pub global BLS12_377_Fq_PARAMS: BigNumParams<4, 377> = BigNumParams {
     ],
 };
 
-#[derive_bignum(4, 377, quote {BLS12_377_Fq_PARAMS})]
+#[derive_bignum(4, 377, quote { BLS12_377_Fq_PARAMS })]
 pub struct BLS12_377_Fq {
     limbs: [u128; 4],
 }

@@ -13,7 +13,7 @@ pub global ED25519_Fq_PARAMS: BigNumParams<3, 255> = BigNumParams {
     redc_param: [0x0130, 0x00, 0x080000],
 };
 
-#[derive_bignum(3, 255, quote {ED25519_Fq_PARAMS})]
+#[derive_bignum(3, 255, quote { ED25519_Fq_PARAMS })]
 pub struct ED25519_Fq {
     limbs: [u128; 3],
 }
