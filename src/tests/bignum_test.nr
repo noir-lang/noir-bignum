@@ -86,6 +86,12 @@ pub struct BN2048 {
 
 // ------------------------------ REGRESSION TESTS ------------------------------
 
+/// `MOD_BITS` parameter was incorrect in ed5519_Fr
+#[test]
+fn test_mul_ed25519_fr() {
+    test_mul::<3, crate::fields::ed25519Fr::ED25519_Fr>();
+}
+
 /// This example was failing - sanity test to validate it now works
 #[test]
 fn test_bls_reduction() {
@@ -1412,3 +1418,7 @@ fn test_sqrt_equality_fuzz(seed: [u8; 3]) {
     };
     assert((c == d) | (c == -d));
 }
+
+// ------------------------------ FIELD SANITY TESTS ------------------------------
+
+// TODO: a set of basic tests to check that the fields in our directory all behave normally
