@@ -53,7 +53,7 @@ pub(crate) fn limbs_to_field<let N: u32, let MOD_BITS: u32>(
 ///     - MOD_BITS = 253: verify that `val < min(MOD, GRUMPKIN_MODULUS)`
 /// Next we verify that all the limbs are properly ranged
 /// and that the accumulated limbs are equal to the input `Field` value
-pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
+pub fn from_field<let N: u32, let MOD_BITS: u32>(
     _params: BigNumParams<N, MOD_BITS>,
     val: Field,
 ) -> [u128; N] {
@@ -132,7 +132,7 @@ pub(crate) fn from_field<let N: u32, let MOD_BITS: u32>(
 /// This function will always produce an `x3` `BigNum`
 /// If `MOD = 2^{120 * (N - 1)}`
 /// It will use only `MOD_BITS - 1` bits of entropy
-pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(
+pub fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(
     params: BigNumParams<N, MOD_BITS>,
     seed: [u8; SeedBytes],
 ) -> [u128; N] {
@@ -291,7 +291,7 @@ pub(crate) fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32
 /// roughly 3/p.
 ///
 /// In case `MOD` < `p` this function becomes *complete*
-pub(crate) fn assert_is_not_equal<let N: u32, let MOD_BITS: u32>(
+pub fn assert_is_not_equal<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     lhs: [u128; N],
     rhs: [u128; N],
@@ -328,7 +328,7 @@ pub(crate) fn assert_is_not_equal<let N: u32, let MOD_BITS: u32>(
 ///
 /// ## TODO
 /// can do this more efficiently via witngen in unconstrained functions?
-pub(crate) fn eq<let N: u32, let MOD_BITS: u32>(
+pub fn eq<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     lhs: [u128; N],
     rhs: [u128; N],
@@ -362,7 +362,7 @@ pub(crate) fn eq<let N: u32, let MOD_BITS: u32>(
 /// ## Note
 /// This is slightly cheaper than doing `val != [0; N]`, as we avoid
 /// creating per-limb boolean equalities and chaining them with `and`s.
-pub(crate) fn assert_is_not_zero_integer<let N: u32>(val: [u128; N]) {
+pub fn assert_is_not_zero_integer<let N: u32>(val: [u128; N]) {
     let mut limb_sum: Field = 0;
     for i in 0..N {
         limb_sum += val[i] as Field;
@@ -380,7 +380,7 @@ pub(crate) fn assert_is_not_zero_integer<let N: u32>(val: [u128; N]) {
 /// ## Note
 /// This is slightly cheaper than testing `val == [0; N]`, as we avoid
 /// creating per-limb boolean equalities and chaining them with `and`s.
-pub(crate) fn is_zero_integer<let N: u32>(val: [u128; N]) -> bool {
+pub fn is_zero_integer<let N: u32>(val: [u128; N]) -> bool {
     let mut limb_sum: Field = 0;
     for i in 0..N {
         limb_sum += val[i] as Field;
@@ -391,7 +391,7 @@ pub(crate) fn is_zero_integer<let N: u32>(val: [u128; N]) -> bool {
 /// Validate that a `BigNum` value is not zero modulo `MOD`.
 ///
 /// Convenience wrapper around `assert_is_not_equal`.
-pub(crate) fn assert_is_not_zero<let N: u32, let MOD_BITS: u32>(
+pub fn assert_is_not_zero<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     val: [u128; N],
 ) {
@@ -407,7 +407,7 @@ pub(crate) fn assert_is_not_zero<let N: u32, let MOD_BITS: u32>(
 ///
 /// ## Note
 /// This is cheaper than calling `eq(val, [0; N])`
-pub(crate) fn is_zero<let N: u32, let MOD_BITS: u32>(
+pub fn is_zero<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     val: [u128; N],
 ) -> bool {
@@ -431,7 +431,7 @@ pub(crate) fn is_zero<let N: u32, let MOD_BITS: u32>(
 /// It is nicely decomposed into
 /// 14-bit range check and 3-bit range check - much much cheaper, since 14-bit range checks
 /// are already pretty common for 120-bit range checks
-pub(crate) fn validate_in_range<T, let N: u32, let MOD_BITS: u32>(limbs: [T; N])
+pub fn validate_in_range<T, let N: u32, let MOD_BITS: u32>(limbs: [T; N])
 where
     T: Into<Field>,
 {
@@ -538,7 +538,7 @@ pub(crate) fn check_gte_with_flags<let N: u32>(
 /// ## Note
 /// In contrast to `validate_gt`, we allow the value to be `MOD`
 /// Since it is consistent with the rest of the library
-pub(crate) fn validate_in_field<let N: u32, let MOD_BITS: u32>(
+pub fn validate_in_field<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     val: [u128; N],
 ) {
@@ -568,7 +568,7 @@ pub(crate) fn validate_in_field<let N: u32, let MOD_BITS: u32>(
 /// ## Note
 /// This is a strict value comparison over the integers,
 /// the values do not have to be reduced modulo `MOD`.
-pub(crate) fn cmp<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N]) -> Ordering {
+pub fn cmp<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N]) -> Ordering {
     // Safety: we constrain:
     //        - `result` and `borrow_flags` with `check_gte_with_flags`
     //        - `borrow_flags` are also booleans
@@ -628,7 +628,7 @@ pub(crate) fn cmp<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N])
 ///
 /// ## Note
 /// This function returns `MOD` when `val` is zero.
-pub(crate) fn neg<let N: u32, let MOD_BITS: u32>(
+pub fn neg<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     val: [u128; N],
 ) -> [u128; N] {
@@ -765,7 +765,7 @@ pub(crate) fn neg<let N: u32, let MOD_BITS: u32>(
 /// as limb arrays and may admit satisfying witnesses, but then the operation
 /// no longer corresponds to a unique, well-defined addition in the field
 /// `Z / MOD Z`. Such uses are outside the intended semantics of this function.
-pub(crate) fn add<let N: u32, let MOD_BITS: u32>(
+pub fn add<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     lhs: [u128; N],
     rhs: [u128; N],
@@ -913,7 +913,7 @@ pub(crate) fn add<let N: u32, let MOD_BITS: u32>(
 /// as limb arrays and may admit satisfying witnesses, but then the operation
 /// no longer corresponds to a unique, well-defined subtraction in the field
 /// `Z / MOD Z`. Such uses are outside the intended semantics of this function.
-pub(crate) fn sub<let N: u32, let MOD_BITS: u32>(
+pub fn sub<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     lhs: [u128; N],
     rhs: [u128; N],
@@ -975,7 +975,7 @@ pub(crate) fn sub<let N: u32, let MOD_BITS: u32>(
 /// ## Note
 /// When possible, prefer expressing your computation directly as a quadratic
 ///   relation and calling `evaluate_quadratic_expression` instead of using `mul`
-pub(crate) fn mul<let N: u32, let MOD_BITS: u32>(
+pub fn mul<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     lhs: [u128; N],
     rhs: [u128; N],
@@ -1011,7 +1011,7 @@ pub(crate) fn mul<let N: u32, let MOD_BITS: u32>(
 /// ## Note
 /// When possible, prefer expressing your computation directly as a quadratic
 ///   relation and calling `evaluate_quadratic_expression` instead of using `sqr`
-pub(crate) fn sqr<let N: u32, let MOD_BITS: u32>(
+pub fn sqr<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     val: [u128; N],
 ) -> [u128; N] {
@@ -1052,7 +1052,7 @@ pub(crate) fn sqr<let N: u32, let MOD_BITS: u32>(
 ///   relation and calling `evaluate_quadratic_expression` instead of using `div`.
 /// - In the unconstrained runtime, the behavior of `__div` on zero divisors is
 ///   not constrained by this function.
-pub(crate) fn div<let N: u32, let MOD_BITS: u32>(
+pub fn div<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     lhs: [u128; N],
     rhs: [u128; N],
@@ -1101,7 +1101,7 @@ pub(crate) fn div<let N: u32, let MOD_BITS: u32>(
 /// ## Note
 /// Enforcing `divisor != 0` is not necessary. `remainder < divisor`
 /// Already enforces this.
-pub(crate) fn udiv_mod<let N: u32, let MOD_BITS: u32>(
+pub fn udiv_mod<let N: u32, let MOD_BITS: u32>(
     numerator: [u128; N],
     divisor: [u128; N],
 ) -> ([u128; N], [u128; N]) {
@@ -1120,10 +1120,7 @@ pub(crate) fn udiv_mod<let N: u32, let MOD_BITS: u32>(
 ///
 /// Returns `floor(numerator / divisor)`.
 /// All constraints and soundness details are handled inside `udiv_mod`.
-pub(crate) fn udiv<let N: u32, let MOD_BITS: u32>(
-    numerator: [u128; N],
-    divisor: [u128; N],
-) -> [u128; N] {
+pub fn udiv<let N: u32, let MOD_BITS: u32>(numerator: [u128; N], divisor: [u128; N]) -> [u128; N] {
     udiv_mod::<N, MOD_BITS>(numerator, divisor).0
 }
 
@@ -1131,9 +1128,6 @@ pub(crate) fn udiv<let N: u32, let MOD_BITS: u32>(
 ///
 /// Returns `numerator % divisor`.
 /// All constraints and soundness details are handled inside `udiv_mod`.
-pub(crate) fn umod<let N: u32, let MOD_BITS: u32>(
-    numerator: [u128; N],
-    divisor: [u128; N],
-) -> [u128; N] {
+pub fn umod<let N: u32, let MOD_BITS: u32>(numerator: [u128; N], divisor: [u128; N]) -> [u128; N] {
     udiv_mod::<N, MOD_BITS>(numerator, divisor).1
 }
