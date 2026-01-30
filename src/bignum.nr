@@ -124,100 +124,100 @@ pub comptime fn derive_bignum(
 
             fn derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self {
                 let params = Self::params();
-                $typ::from_limbs($crate::derive_from_seed::<$N, $MOD_BITS, SeedBytes>(params, seed))
+                $typ::from_limbs($crate::internal::derive_from_seed::<$N, $MOD_BITS, SeedBytes>(params, seed))
             }
 
             unconstrained fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self {
                 let params = Self::params();
-                Self { limbs: $crate::__derive_from_seed::<$N, $MOD_BITS, SeedBytes>(params, seed) }
+                Self { limbs: $crate::internal::__derive_from_seed::<$N, $MOD_BITS, SeedBytes>(params, seed) }
             }
 
             fn from_be_bytes(x: [u8; ($MOD_BITS + 7) / 8]) -> Self {
-                Self { limbs: $crate::from_be_bytes::<$N, $MOD_BITS>(x) }
+                Self { limbs: $crate::internal::from_be_bytes::<$N, $MOD_BITS>(x) }
             }
-            
+
             fn to_be_bytes(self) -> [u8; ($MOD_BITS + 7) / 8] {
-                $crate::to_be_bytes::<$N, $MOD_BITS>(self.limbs)
+                $crate::internal::to_be_bytes::<$N, $MOD_BITS>(self.limbs)
             }
 
             fn from_le_bytes(x: [u8; ($MOD_BITS + 7) / 8]) -> Self {
-                Self { limbs: $crate::from_le_bytes::<$N, $MOD_BITS>(x) }
+                Self { limbs: $crate::internal::from_le_bytes::<$N, $MOD_BITS>(x) }
             }
 
             fn to_le_bytes(self) -> [u8; ($MOD_BITS + 7) / 8] {
-                $crate::to_le_bytes::<$N, $MOD_BITS>(self.limbs)
+                $crate::internal::to_le_bytes::<$N, $MOD_BITS>(self.limbs)
             }
 
             unconstrained fn __eq(self: Self, other: Self) -> bool {
-                $crate::__eq(self.get_limbs(), other.get_limbs())
+                $crate::internal::__eq(self.get_limbs(), other.get_limbs())
             }
 
             unconstrained fn __is_zero(self: Self) -> bool {
-                $crate::__is_zero(self.get_limbs())
+                $crate::internal::__is_zero(self.get_limbs())
             }
 
             unconstrained fn __neg(self: Self) -> Self {
                 let params = Self::params();
-                Self {limbs: $crate::__neg(params.modulus, self.get_limbs())}
+                Self {limbs: $crate::internal::__neg(params.modulus, self.get_limbs())}
             }
 
             unconstrained fn __add(self: Self, other: Self) -> Self {
                 let params = Self::params();
-                Self {limbs: $crate::__add(params.modulus, self.get_limbs(), other.get_limbs())}
+                Self {limbs: $crate::internal::__add(params.modulus, self.get_limbs(), other.get_limbs())}
             }
 
             unconstrained fn __sub(self: Self, other: Self) -> Self {
                 let params = Self::params();
-                Self {limbs: $crate::__sub(params.modulus, self.get_limbs(), other.get_limbs())}
+                Self {limbs: $crate::internal::__sub(params.modulus, self.get_limbs(), other.get_limbs())}
             }
 
             unconstrained fn __mul(self: Self, other: Self) -> Self {
                 let params = Self::params();
-                Self {limbs: $crate::__mul(params, self.get_limbs(), other.get_limbs())}
+                Self {limbs: $crate::internal::__mul(params, self.get_limbs(), other.get_limbs())}
             }
 
             unconstrained fn __sqr(self: Self) -> Self {
                 let params = Self::params();
-                Self {limbs: $crate::__sqr(params, self.get_limbs()) }
+                Self {limbs: $crate::internal::__sqr(params, self.get_limbs()) }
             }
 
             unconstrained fn __div(self: Self, divisor: Self) -> Self {
                 let params = Self::params();
-                Self {limbs: $crate::__div(params, self.get_limbs(), divisor.get_limbs())}
+                Self {limbs: $crate::internal::__div(params, self.get_limbs(), divisor.get_limbs())}
             }
 
             unconstrained fn __udiv_mod(self: Self, divisor: Self) -> (Self, Self) {
-                let (q, r) = $crate::__udiv_mod(self.get_limbs(), divisor.get_limbs());
+                let (q, r) = $crate::internal::__udiv_mod(self.get_limbs(), divisor.get_limbs());
                 (Self{limbs: q}, Self{limbs: r})
             }
 
             unconstrained fn __invmod(self: Self) -> Self {
                 let params = Self::params();
                 assert(params.has_multiplicative_inverse);
-                Self {limbs: $crate::__invmod(params, self.get_limbs())}
+                Self {limbs: $crate::internal::__invmod(params, self.get_limbs())}
             }
 
             unconstrained fn __pow(self: Self, exponent: Self) -> Self {
                 let params = Self::params();
-                Self {limbs: $crate::__pow(params, self.get_limbs(), exponent.get_limbs())}
+                Self {limbs: $crate::internal::__pow(params, self.get_limbs(), exponent.get_limbs())}
             }
 
             #[deprecated("use __sqrt")]
             unconstrained fn __tonelli_shanks_sqrt(self: Self) -> std::option::Option<Self> {
                 let params = Self::params();
-                let maybe_limbs: Option<[u128; $N]> = $crate::__sqrt(params, self.get_limbs());
+                let maybe_limbs: Option<[u128; $N]> = $crate::internal::__sqrt(params, self.get_limbs());
                 maybe_limbs.map(|limbs| Self {limbs: limbs})
             }
 
             unconstrained fn __sqrt(self: Self) -> std::option::Option<Self> {
                 let params = Self::params();
-                let maybe_limbs: Option<[u128; $N]> = $crate::__sqrt(params, self.get_limbs());
+                let maybe_limbs: Option<[u128; $N]> = $crate::internal::__sqrt(params, self.get_limbs());
                 maybe_limbs.map(|limbs| Self {limbs: limbs })
             }
 
             fn assert_is_not_equal(self: Self, other: Self) {
                 let params = Self::params();
-                $crate::assert_is_not_equal(
+                $crate::internal::assert_is_not_equal(
                     params,
                     self.get_limbs(),
                     other.get_limbs(),
@@ -226,47 +226,47 @@ pub comptime fn derive_bignum(
 
             fn validate_in_field(self: Self) {
                 let params = Self::params();
-                $crate::validate_in_field::<$N, $MOD_BITS>(params, self.get_limbs());
+                $crate::internal::validate_in_field::<$N, $MOD_BITS>(params, self.get_limbs());
             }
 
             fn validate_in_range(self: Self) {
-                $crate::validate_in_range::<u128, $N, $MOD_BITS>(self.get_limbs());
+                $crate::internal::validate_in_range::<u128, $N, $MOD_BITS>(self.get_limbs());
             }
 
             fn sqr(self: Self) -> Self {
                 let params = Self::params();
-                Self { limbs: $crate::sqr::<$N, $MOD_BITS>(params, self.get_limbs()) }
+                Self { limbs: $crate::internal::sqr::<$N, $MOD_BITS>(params, self.get_limbs()) }
             }
 
             fn udiv_mod(self: Self, divisor: Self) -> (Self, Self) {
-                let (q, r) = $crate::udiv_mod::<$N, $MOD_BITS>(self.get_limbs(), divisor.get_limbs());
+                let (q, r) = $crate::internal::udiv_mod::<$N, $MOD_BITS>(self.get_limbs(), divisor.get_limbs());
                 (Self {limbs: q}, Self {limbs: r})
             }
 
             fn udiv(self: Self, divisor: Self) -> Self {
-                Self {limbs: $crate::udiv::<$N, $MOD_BITS>(self.get_limbs(), divisor.get_limbs())}
+                Self {limbs: $crate::internal::udiv::<$N, $MOD_BITS>(self.get_limbs(), divisor.get_limbs())}
             }
 
             fn umod(self: Self, divisor: Self) -> Self {
-                Self {limbs: $crate::umod::<$N, $MOD_BITS>(self.get_limbs(), divisor.get_limbs())}
+                Self {limbs: $crate::internal::umod::<$N, $MOD_BITS>(self.get_limbs(), divisor.get_limbs())}
             }
 
             fn is_zero(self: Self) -> bool {
                 let params = Self::params();
-                $crate::is_zero::<$N, $MOD_BITS>(params, self.get_limbs())
+                $crate::internal::is_zero::<$N, $MOD_BITS>(params, self.get_limbs())
             }
 
             fn is_zero_integer(self: Self) -> bool {
-                $crate::is_zero_integer(self.get_limbs())
+                $crate::internal::is_zero_integer(self.get_limbs())
             }
 
             fn assert_is_not_zero(self: Self) {
                 let params = Self::params();
-                $crate::assert_is_not_zero::<$N, $MOD_BITS>(params, self.get_limbs());
+                $crate::internal::assert_is_not_zero::<$N, $MOD_BITS>(params, self.get_limbs());
             }
 
             fn assert_is_not_zero_integer(self: Self) {
-                $crate::assert_is_not_zero_integer(self.get_limbs());
+                $crate::internal::assert_is_not_zero_integer(self.get_limbs());
             }
         }
 
@@ -279,49 +279,49 @@ pub comptime fn derive_bignum(
 
         impl std::convert::From<Field> for $typ {
             fn from(input: Field) -> Self {
-                $typ { limbs: $crate::from_field::<$N, $MOD_BITS>($params, input) }
+                $typ { limbs: $crate::internal::from_field::<$N, $MOD_BITS>($params, input) }
             }
         }
 
         impl std::ops::Neg for $typ {
             fn neg(self) -> Self {
-                $typ { limbs: $crate::neg::<$N, $MOD_BITS>($params, self.limbs) }
+                $typ { limbs: $crate::internal::neg::<$N, $MOD_BITS>($params, self.limbs) }
             }
         }
 
         impl std::ops::Add for $typ {
             fn add(self, other: Self) -> Self {
-                $typ { limbs: $crate::add::<$N, $MOD_BITS>($params, self.limbs, other.limbs) }
+                $typ { limbs: $crate::internal::add::<$N, $MOD_BITS>($params, self.limbs, other.limbs) }
             }
         }
 
         impl std::ops::Sub for $typ {
             fn sub(self, other: Self) -> Self {
-                $typ { limbs: $crate::sub::<$N, $MOD_BITS>($params, self.limbs, other.limbs) }
+                $typ { limbs: $crate::internal::sub::<$N, $MOD_BITS>($params, self.limbs, other.limbs) }
             }
         }
 
         impl std::ops::Mul for $typ {
             fn mul(self, other: Self) -> Self {
-                $typ { limbs: $crate::mul::<$N, $MOD_BITS>($params, self.limbs, other.limbs) }
+                $typ { limbs: $crate::internal::mul::<$N, $MOD_BITS>($params, self.limbs, other.limbs) }
             }
         }
 
         impl std::ops::Div for $typ {
             fn div(self, other: Self) -> Self {
-                $typ { limbs: $crate::div::<$N, $MOD_BITS>($params, self.limbs, other.limbs) }
+                $typ { limbs: $crate::internal::div::<$N, $MOD_BITS>($params, self.limbs, other.limbs) }
             }
         }
 
         impl std::cmp::Eq for $typ {
             fn eq(self, other: Self) -> bool {
-                $crate::eq::<$N, $MOD_BITS>($params, self.limbs, other.limbs)
+                $crate::internal::eq::<$N, $MOD_BITS>($params, self.limbs, other.limbs)
             }
         }
 
         impl std::cmp::Ord for $typ {
             fn cmp(self, other: Self) -> std::cmp::Ordering {
-                $crate::cmp::<$N, $MOD_BITS>(self.limbs, other.limbs)
+                $crate::internal::cmp::<$N, $MOD_BITS>(self.limbs, other.limbs)
             }
         }
 

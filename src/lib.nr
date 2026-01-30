@@ -16,51 +16,53 @@ pub(crate) mod utils;
 mod benchmarks;
 mod tests;
 
-// Re-export functions required by derive macros for external crates
-// They are not intended as public API, but must be accessible to macro-generated code
+// Internal functions required by derive macros for external crates
+// Exported through the `internal` submodule to make it clear they are not
+// intended for direct use by end users
+pub mod internal {
+    // Constrained operations
+    pub use crate::fns::constrained_ops::add;
+    pub use crate::fns::constrained_ops::assert_is_not_equal;
+    pub use crate::fns::constrained_ops::assert_is_not_zero;
+    pub use crate::fns::constrained_ops::assert_is_not_zero_integer;
+    pub use crate::fns::constrained_ops::cmp;
+    pub use crate::fns::constrained_ops::derive_from_seed;
+    pub use crate::fns::constrained_ops::div;
+    pub use crate::fns::constrained_ops::eq;
+    pub use crate::fns::constrained_ops::from_field;
+    pub use crate::fns::constrained_ops::is_zero;
+    pub use crate::fns::constrained_ops::is_zero_integer;
+    pub use crate::fns::constrained_ops::mul;
+    pub use crate::fns::constrained_ops::neg;
+    pub use crate::fns::constrained_ops::sqr;
+    pub use crate::fns::constrained_ops::sub;
+    pub use crate::fns::constrained_ops::udiv;
+    pub use crate::fns::constrained_ops::udiv_mod;
+    pub use crate::fns::constrained_ops::umod;
+    pub use crate::fns::constrained_ops::validate_in_field;
+    pub use crate::fns::constrained_ops::validate_in_range;
 
-// Constrained operations
-pub use fns::constrained_ops::add;
-pub use fns::constrained_ops::assert_is_not_equal;
-pub use fns::constrained_ops::assert_is_not_zero;
-pub use fns::constrained_ops::assert_is_not_zero_integer;
-pub use fns::constrained_ops::cmp;
-pub use fns::constrained_ops::derive_from_seed;
-pub use fns::constrained_ops::div;
-pub use fns::constrained_ops::eq;
-pub use fns::constrained_ops::from_field;
-pub use fns::constrained_ops::is_zero;
-pub use fns::constrained_ops::is_zero_integer;
-pub use fns::constrained_ops::mul;
-pub use fns::constrained_ops::neg;
-pub use fns::constrained_ops::sqr;
-pub use fns::constrained_ops::sub;
-pub use fns::constrained_ops::udiv;
-pub use fns::constrained_ops::udiv_mod;
-pub use fns::constrained_ops::umod;
-pub use fns::constrained_ops::validate_in_field;
-pub use fns::constrained_ops::validate_in_range;
+    // Unconstrained operations
+    pub use crate::fns::unconstrained_ops::__add;
+    pub use crate::fns::unconstrained_ops::__derive_from_seed;
+    pub use crate::fns::unconstrained_ops::__div;
+    pub use crate::fns::unconstrained_ops::__eq;
+    pub use crate::fns::unconstrained_ops::__invmod;
+    pub use crate::fns::unconstrained_ops::__is_zero;
+    pub use crate::fns::unconstrained_ops::__mul;
+    pub use crate::fns::unconstrained_ops::__neg;
+    pub use crate::fns::unconstrained_ops::__pow;
+    pub use crate::fns::unconstrained_ops::__sqr;
+    pub use crate::fns::unconstrained_ops::__sqrt;
+    pub use crate::fns::unconstrained_ops::__sub;
+    pub use crate::fns::unconstrained_ops::__udiv_mod;
 
-// Unconstrained operations
-pub use fns::unconstrained_ops::__add;
-pub use fns::unconstrained_ops::__derive_from_seed;
-pub use fns::unconstrained_ops::__div;
-pub use fns::unconstrained_ops::__eq;
-pub use fns::unconstrained_ops::__invmod;
-pub use fns::unconstrained_ops::__is_zero;
-pub use fns::unconstrained_ops::__mul;
-pub use fns::unconstrained_ops::__neg;
-pub use fns::unconstrained_ops::__pow;
-pub use fns::unconstrained_ops::__sqr;
-pub use fns::unconstrained_ops::__sqrt;
-pub use fns::unconstrained_ops::__sub;
-pub use fns::unconstrained_ops::__udiv_mod;
-
-// Serialization functions
-pub use fns::serialization::from_be_bytes;
-pub use fns::serialization::from_le_bytes;
-pub use fns::serialization::to_be_bytes;
-pub use fns::serialization::to_le_bytes;
+    // Serialization functions
+    pub use crate::fns::serialization::from_be_bytes;
+    pub use crate::fns::serialization::from_le_bytes;
+    pub use crate::fns::serialization::to_be_bytes;
+    pub use crate::fns::serialization::to_le_bytes;
+}
 
 // Re-export the main structs so that users don't have to specify the paths
 pub use bignum::BigNum;
