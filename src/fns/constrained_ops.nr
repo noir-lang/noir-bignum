@@ -4,7 +4,8 @@ use crate::fns::{
     expressions::{evaluate_quadratic_expression, validate_udiv_mod_expression},
     unconstrained_helpers::{
         __add_with_flags, __from_field, __neg_with_flags, __sub_with_flags,
-        __validate_gte_with_flags, __validate_in_field_compute_borrow_flags,
+        __validate_gt_with_flags, __validate_gte_with_flags,
+        __validate_in_field_compute_borrow_flags,
     },
     unconstrained_ops::{__add, __div, __mul, __neg, __sqr, __sub, __udiv_mod},
 };
@@ -481,16 +482,10 @@ pub(crate) fn validate_quotient_in_range<let N: u32, let MOD_BITS: u32>(limbs: [
 /// `assert_is_not_zero_integer(result)` is crucial. Without it, we could always provide
 /// two identical inputs `x`, `x` and set `borrow_flags = [false; N]`,
 /// which would satisfy the limb constraints.
-///
-/// Also note that `underflow` is not properly constrained, so it just hangs there for
-/// completeness
 pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N]) {
-    // Safety: compute borrow flags out-of-circuit
-    let (underflow, result, borrow_flags): (bool, [u128; N], [bool; N - 1]) =
-        unsafe { __validate_gte_with_flags(lhs, rhs) };
-
-    // Completeness: require that no underflow occurred
-    assert(!underflow, "validate_gt fail");
+    // Safety: compute witness values out-of-circuit
+    let (result, borrow_flags): ([u128; N], [bool; N - 1]) =
+        unsafe { __validate_gt_with_flags(lhs, rhs) };
 
     // Constrain the `result` to be a valid `BigNum` value
     validate_in_range::<u128, N, MOD_BITS>(result);

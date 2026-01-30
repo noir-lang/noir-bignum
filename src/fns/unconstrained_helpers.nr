@@ -189,34 +189,19 @@ pub(crate) unconstrained fn __validate_in_field_compute_borrow_flags<let N: u32,
     borrow_flags
 }
 
-/// Validate that lhs - rhs does not underflow (unconstrained)
-///
-/// Compute underflow flag (lhs < rhs)
-///       then perform subtraction with borrow flags
-///
-/// ## Note
-/// The `borrow` must be equal to 0 at the end of the loop.
-/// And it can't be nonzero, since we swap the terms at the beginning
-pub(crate) unconstrained fn __validate_gte_with_flags<let N: u32>(
+/// Compute `lhs - rhs` with borrow flags (unconstrained)
+/// Return the result of the subtraction and the borrow flags
+pub(crate) unconstrained fn __validate_gt_with_flags<let N: u32>(
     lhs: [u128; N],
     rhs: [u128; N],
-) -> (bool, [u128; N], [bool; N - 1]) {
-    let mut a: [u128; N] = lhs;
-    let mut b: [u128; N] = rhs;
-
-    let underflow: bool = !__gte(lhs, rhs);
-    // swap a and b if there's an underflow
-    let (a, b): ([u128; N], [u128; N]) = if underflow { (b, a) } else { (a, b) };
-
+) -> ([u128; N], [bool; N - 1]) {
     let mut result: [u128; N] = [0; N];
-
     let mut borrow_flags: [bool; N - 1] = [false; N - 1];
 
     let mut borrow: u128 = 0;
     for i in 0..N {
-        let mut add_term: u128 = a[i];
-
-        let sub_term: u128 = b[i] + borrow;
+        let add_term: u128 = lhs[i];
+        let sub_term: u128 = rhs[i] + borrow;
         borrow = (sub_term > add_term) as u128;
 
         result[i] = borrow * TWO_POW_120 + add_term - sub_term;
@@ -225,6 +210,28 @@ pub(crate) unconstrained fn __validate_gte_with_flags<let N: u32>(
             borrow_flags[i] = borrow != 0;
         }
     }
+    (result, borrow_flags)
+}
+
+/// Validate that lhs - rhs does not underflow (unconstrained)
+///
+/// Compute underflow flag (lhs < rhs), then perform subtraction with borrow flags.
+/// Always computes max(lhs, rhs) - min(lhs, rhs) by swapping if needed.
+///
+/// ## Note
+/// The `borrow` must be equal to 0 at the end of the loop
+/// And it can't be nonzero, since we swap the terms at the beginning
+pub(crate) unconstrained fn __validate_gte_with_flags<let N: u32>(
+    lhs: [u128; N],
+    rhs: [u128; N],
+) -> (bool, [u128; N], [bool; N - 1]) {
+    let underflow: bool = !__gte(lhs, rhs);
+    // swap a and b if there's an underflow
+    let (a, b): ([u128; N], [u128; N]) = if underflow { (rhs, lhs) } else { (lhs, rhs) };
+
+    // Compute max - min using the basic subtraction helper
+    let (result, borrow_flags) = __validate_gt_with_flags(a, b);
+
     (underflow, result, borrow_flags)
 }
 
