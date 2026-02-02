@@ -1,14 +1,17 @@
+use crate::constants::TWO_POW_120;
+
 pub struct BigNumParams<let N: u32, let MOD_BITS: u32> {
     pub has_multiplicative_inverse: bool,
 
-    // @brief modulus: all BigNum operations are evaluated modulo this value
+    // `modulus`: all `BigNum` operations are evaluated modulo this value
     pub modulus: [u128; N],
 
-    // @brief double_modulus: used when performing negations and subtractions
-    // @note we borrow 1 from the last limb. This is for easing up the operations that might underflow
+    // `double_modulus`: used when performing negations and subtractions
+    // Note: we borrow 1 from the last limb. This is for easing up the operations that might underflow
     pub double_modulus: [u128; N],
 
-    // @brief redc_param used for __barrett_reduction. See https://en.wikipedia.org/wiki/Barrett_reduction
+    // `redc_param` used for __barrett_reduction. See https://en.wikipedia.org/wiki/Barrett_reduction
+    // and `__barrett_reduction` in `fns/unconstrained_helpers.nr`
     pub redc_param: [u128; N],
 }
 
@@ -37,7 +40,6 @@ impl<let N: u32, let MOD_BITS: u32> std::cmp::Eq for BigNumParams<N, MOD_BITS> {
 }
 
 fn get_double_modulus<let N: u32>(modulus: [u128; N]) -> [u128; N] {
-    let TWO_POW_120: u128 = 0x1000000000000000000000000000000;
     let mut result: [u128; N] = [0; N];
     let mut carry: u128 = 0;
     for i in 0..N {
