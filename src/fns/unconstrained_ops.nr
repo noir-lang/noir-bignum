@@ -509,3 +509,91 @@ pub(crate) unconstrained fn __easy_sqrt<let N: u32, let MOD_BITS: u32>(
     }
     result
 }
+
+pub(crate) unconstrained fn __egcd_div<let N: u32, let MOD_BITS: u32>(
+    params: BigNumParams<N, MOD_BITS>,
+    lhs: [u128; N],
+    rhs: [u128; N]
+) -> ([u128; N], [u128; N], [u128; N]){
+    let mut (old_r, r): ([u128; N], [u128; N]) = (lhs, rhs);
+    let mut (old_s, s): ([u128; N], [u128; N])= (__one::<N>(), [0; N]);
+    let mut (old_t, t): ([u128; N], [u128; N])= ([0; N], __one::<N>());
+
+    while !__is_zero(r){
+        let quotient: [u128; N] = __udiv_mod(old_r, r).0;
+
+        let mut new_prod_r: [u128; 2 * N] = __helper_mul(quotient, r);
+        let mut new_r: [u128; N] = [0; N];
+
+        let mut new_prod_s: [u128; 2 * N] = __helper_mul(quotient, s);
+        let mut new_s: [u128; N] = [0; N];
+
+        let mut new_prod_t: [u128; 2 * N] = __helper_mul(quotient, t);
+        let mut new_t: [u128; N] = [0; N];
+
+        for i in 0..N {
+            new_r[i] = new_prod_r[i];
+            new_s[i] = new_prod_s[i];
+            new_t[i] = new_prod_t[i];
+        }
+
+        new_r = __helper_sub(old_r, new_r);
+        new_s = __sub(params.modulus, old_s, new_s);
+        new_t = __sub(params.modulus, old_t, new_t);
+
+        old_r = r;
+        r = new_r;
+
+        old_s = s;
+        s = new_s;
+
+        old_t = t;
+        t = new_t;
+    }
+
+    (old_s, old_t, old_r)
+}
+
+//pub(crate) unconstrained fn __egcd_sub<let N: u32, let MOD_BITS: u32>(
+//    params: BigNumParams<N, MOD_BITS>,
+//    lhs: [u128; N],
+//    rhs: [u128; N]
+//) -> ([u128; N], [u128; N], [u128; N]){
+//    let mut (old_r, r): ([u128; N], [u128; N]) = (lhs, rhs);
+//    let mut (old_s, s): ([u128; N], [u128; N])= (__one::<N>(), [0; N]);
+//    let mut (old_t, t): ([u128; N], [u128; N])= ([0; N], __one::<N>());
+//
+//    while !__is_zero(r){
+//        let difference: [u128; N] = __udiv_mod(old_r, r).0;
+//
+//        let mut new_prod_r: [u128; 2 * N] = __helper_mul(quotient, r);
+//        let mut new_r: [u128; N] = [0; N];
+//
+//        let mut new_prod_s: [u128; 2 * N] = __helper_mul(quotient, s);
+//        let mut new_s: [u128; N] = [0; N];
+//
+//        let mut new_prod_t: [u128; 2 * N] = __helper_mul(quotient, t);
+//        let mut new_t: [u128; N] = [0; N];
+//
+//        for i in 0..N {
+//            new_r[i] = new_prod_r[i];
+//            new_s[i] = new_prod_s[i];
+//            new_t[i] = new_prod_t[i];
+//        }
+//
+//        new_r = __helper_sub(old_r, new_r);
+//        new_s = __helper_sub(old_s, new_s);
+//        new_t = __helper_sub(old_t, new_t);
+//
+//        old_r = r;
+//        r = new_r;
+//
+//        old_s = s;
+//        s = new_s;
+//
+//        old_t = t;
+//        t = new_t;
+//    }
+//
+//    (old_s, old_t, old_r)
+//}
