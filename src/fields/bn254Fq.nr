@@ -10,10 +10,10 @@ pub global BN254_Fq_PARAMS: BigNumParams<3, 254> = BigNumParams {
         0x019ce5c263405370a08b6d0302b0bb2e,
         0x60c7,
     ],
-    redc_param: [0x65e1767cd4c086f3aed8a19bf90e51, 0x462623a04a7ab074a5868073013ae9, 0x054a47],
+    redc_param: [0x9785d9f353021bcebb62866fe43944, 0x18988e8129eac1d2961a01cc04eba5, 0x15291d],
 };
 
-#[derive_bignum(3, 254, quote {BN254_Fq_PARAMS})]
+#[derive_bignum(3, 254, quote { BN254_Fq_PARAMS })]
 pub struct BN254_Fq {
     limbs: [u128; 3],
 }

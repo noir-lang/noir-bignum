@@ -2,7 +2,7 @@ use crate::bignum::BigNum;
 use crate::bignum::derive_bignum;
 use crate::params::BigNumParams;
 
-global U8192_PARAMS: BigNumParams<69, 8193> = BigNumParams {
+pub global U8192_PARAMS: BigNumParams<69, 8193> = BigNumParams {
     has_multiplicative_inverse: false,
     modulus: [
         0x00,
@@ -215,11 +215,11 @@ global U8192_PARAMS: BigNumParams<69, 8193> = BigNumParams {
         0x00,
         0x00,
         0x00,
-        0x4000000000,
+        0x010000000000,
     ],
 };
 
-#[derive_bignum(69, 8193, quote {U8192_PARAMS})]
+#[derive_bignum(69, 8193, quote { U8192_PARAMS })]
 pub struct U8192 {
     limbs: [u128; 69],
 }

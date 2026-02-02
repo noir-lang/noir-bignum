@@ -11,10 +11,10 @@ pub global U384_PARAMS: BigNumParams<4, 385> = BigNumParams {
         0xffffffffffffffffffffffffffffff,
         0x01ffffff,
     ],
-    redc_param: [0x00, 0x00, 0x00, 0x40000000],
+    redc_param: [0x00, 0x00, 0x00, 0x0100000000],
 };
 
-#[derive_bignum(4, 385, quote {U384_PARAMS})]
+#[derive_bignum(4, 385, quote { U384_PARAMS })]
 pub struct U384 {
     limbs: [u128; 4],
 }

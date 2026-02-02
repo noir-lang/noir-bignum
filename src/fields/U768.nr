@@ -14,10 +14,10 @@ pub global U768_PARAMS: BigNumParams<7, 769> = BigNumParams {
         0xffffffffffffffffffffffffffffff,
         0x01ffffffffffff,
     ],
-    redc_param: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40000000000000],
+    redc_param: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0100000000000000],
 };
 
-#[derive_bignum(7, 769, quote {U768_PARAMS})]
+#[derive_bignum(7, 769, quote { U768_PARAMS })]
 pub struct U768 {
     limbs: [u128; 7],
 }

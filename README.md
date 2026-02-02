@@ -165,7 +165,7 @@ To define a `BigNum` or `RuntimeBigNum`, you need to provide a `BigNumParams`. F
 
 - `modulus` represents the `BigNum` modulus, encoded as an array of `u128` elements that each encode 120 bits of the modulus. The first array element represents the least significant 120 bits
 
-- `redc_param` is equal to `(1 << (2 * Params::modulus_bits() + BARRET_REDUCTION_OVERFLOW_BITS)) / modulus`. Where `BARRET_REDUCTION_OVERFLOW_BITS=4`. This must be computed outside of the circuit and provided either as a private witness or hardcoded constant. (computing it via an unconstrained function would be very expensive until noir witness computation times improve). You can read more about this value [here](./src/fns/unconstrained_helpers.nr)
+- `redc_param` is equal to `(1 << (2 * Params::modulus_bits() + BARRET_REDUCTION_OVERFLOW_BITS)) / modulus`. Where `BARRET_REDUCTION_OVERFLOW_BITS=6`. This must be computed outside of the circuit and provided either as a private witness or hardcoded constant. (computing it via an unconstrained function would be very expensive until noir witness computation times improve). You can read more about this value [here](./src/fns/unconstrained_helpers.nr)
 
 - `double_modulus` is derived via the method `get_double_modulus` in `params.nr`. If you want to provide this value as a compile-time constant (see `fields/bn254Fq.nr` for an example), follow the algorithm `get_double_modulus` as this parameter is _not_ strictly `2 * modulus`. Each limb except the most significant limb borrows `2^120` from the next most significant limb. This ensures that when performing limb subtractions `double_modulus.limbs[i] - x.limbs[i]`, we know that the result will not underflow
 

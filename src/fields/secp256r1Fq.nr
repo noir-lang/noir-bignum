@@ -10,10 +10,10 @@ pub global Secp256r1_Fq_PARAMS: BigNumParams<3, 256> = BigNumParams {
         0x01fffe00000001ffffffffffffffffff,
         0x01fffe,
     ],
-    redc_param: [0xffffeffffffff00000000000000030, 0x0fffffffffffffffefffffffefff, 0x100000],
+    redc_param: [0xffffbfffffffc000000000000000c0, 0x3fffffffffffffffbfffffffbfff, 0x400000],
 };
 
-#[derive_bignum(3, 256, quote {Secp256r1_Fq_PARAMS})]
+#[derive_bignum(3, 256, quote { Secp256r1_Fq_PARAMS })]
 pub struct Secp256r1_Fq {
     limbs: [u128; 3],
 }
