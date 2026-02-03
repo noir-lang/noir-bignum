@@ -377,7 +377,7 @@ where
 /// ## Note
 /// This is slightly cheaper than testing `val == [0; N]`, as we avoid
 /// creating per-limb boolean equalities and chaining them with `and`s.
-pub fn is_zero_integer<T, let N: u32>(val: [u128; N]) -> bool
+pub fn is_zero_integer<T, let N: u32>(val: [T; N]) -> bool
 where
     T: Into<Field>,
 {
