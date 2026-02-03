@@ -175,16 +175,14 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32>(
 ///
 /// Same as `__validate_gte_with_flags`, but we don't compute the
 /// result of a subtraction
-pub(crate) unconstrained fn __validate_in_field_compute_borrow_flags<let N: u32, let MOD_BITS: u32>(
-    params: BigNumParams<N, MOD_BITS>,
-    val: [u128; N],
+pub(crate) unconstrained fn __validate_in_field_compute_borrow_flags<let N: u32>(
+    lhs: [u128; N],
+    rhs: [u128; N],
 ) -> [bool; N - 1] {
-    let modulus: [u128; N] = params.modulus;
-
     let mut borrow_flags: [bool; N - 1] = [false; N - 1];
-    borrow_flags[0] = modulus[0] < val[0];
+    borrow_flags[0] = lhs[0] < rhs[0];
     for i in 1..N - 1 {
-        borrow_flags[i] = modulus[i] < val[i] + (borrow_flags[i - 1] as u128);
+        borrow_flags[i] = lhs[i] < rhs[i] + (borrow_flags[i - 1] as u128);
     }
     borrow_flags
 }
@@ -525,9 +523,9 @@ pub(crate) fn __get_bit<let N: u32>(input: [u128; N], bit: u32) -> bool {
 /// Find the maximum value s such that `MOD = 2^s * q + 1`, where `q` is odd
 ///       This is needed for our Tonelli-Shanks sqrt algorithm
 pub(crate) unconstrained fn __primitive_root_log_size<let N: u32, let MOD_BITS: u32>(
-    params: BigNumParams<N, MOD_BITS>,
+    modulus: [u128; N],
 ) -> u32 {
-    let mut target: [u128; N] = __helper_sub(params.modulus, __one());
+    let mut target: [u128; N] = __helper_sub(modulus, __one());
     let mut result: u32 = 0;
     while !__get_bit(target, result) {
         result += 1;
