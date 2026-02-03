@@ -4,8 +4,8 @@ use crate::fns::{
     expressions::{evaluate_quadratic_expression, validate_udiv_mod_expression},
     unconstrained_helpers::{
         __add_with_flags, __from_field, __neg_with_flags, __sub_with_flags,
-        __validate_gt_with_flags, __validate_gte_with_flags,
-        __validate_in_field_compute_borrow_flags,
+        compute_borrow_flags_for_sub, compute_sub_with_borrow_flags,
+        compute_sub_with_borrow_flags_and_overflow,
     },
     unconstrained_ops::{__add, __div, __mul, __neg, __sqr, __sub, __udiv_mod},
 };
@@ -485,7 +485,7 @@ pub(crate) fn validate_quotient_in_range<let N: u32, let MOD_BITS: u32>(limbs: [
 pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N]) {
     // Safety: compute witness values out-of-circuit
     let (result, borrow_flags): ([u128; N], [bool; N - 1]) =
-        unsafe { __validate_gt_with_flags(lhs, rhs) };
+        unsafe { compute_sub_with_borrow_flags(lhs, rhs) };
 
     // Constrain the `result` to be a valid `BigNum` value
     validate_in_range::<u128, N, MOD_BITS>(result);
@@ -545,8 +545,7 @@ pub fn validate_in_field<let N: u32, let MOD_BITS: u32>(
     let modulus: [u128; N] = params.modulus;
 
     // Safety: compute borrow flags out-of-circuit
-    let borrow_flags: [bool; (N - 1)] =
-        unsafe { __validate_in_field_compute_borrow_flags(modulus, val) };
+    let borrow_flags: [bool; (N - 1)] = unsafe { compute_borrow_flags_for_sub(modulus, val) };
 
     let mut p_minus_self: [Field; N] = [0; N];
     p_minus_self[0] = (modulus[0] as Field) - (val[0] as Field)
@@ -574,7 +573,7 @@ pub fn cmp<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N]) -> Ord
     //        - `borrow_flags` are also booleans
     //        - `underflow` with the following swap and (bool)
     let (underflow, result, borrow_flags): (bool, [u128; N], [bool; N - 1]) =
-        unsafe { __validate_gte_with_flags(lhs, rhs) };
+        unsafe { compute_sub_with_borrow_flags_and_overflow(lhs, rhs) };
 
     // if underflow is true, swap lhs and rhs
     let (lhs, rhs): ([u128; N], [u128; N]) = if underflow { (rhs, lhs) } else { (lhs, rhs) };

@@ -173,9 +173,9 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32>(
 
 /// Validate that lhs - rhs does not underflow (unconstrained)
 ///
-/// Same as `__validate_gte_with_flags`, but we don't compute the
+/// Same as `compute_sub_with_borrow_flags_and_overflow`, but we don't compute the
 /// result of a subtraction
-pub(crate) unconstrained fn __validate_in_field_compute_borrow_flags<let N: u32>(
+pub(crate) unconstrained fn compute_borrow_flags_for_sub<let N: u32>(
     lhs: [u128; N],
     rhs: [u128; N],
 ) -> [bool; N - 1] {
@@ -189,7 +189,7 @@ pub(crate) unconstrained fn __validate_in_field_compute_borrow_flags<let N: u32>
 
 /// Compute `lhs - rhs` with borrow flags (unconstrained)
 /// Return the result of the subtraction and the borrow flags
-pub(crate) unconstrained fn __validate_gt_with_flags<let N: u32>(
+pub(crate) unconstrained fn compute_sub_with_borrow_flags<let N: u32>(
     lhs: [u128; N],
     rhs: [u128; N],
 ) -> ([u128; N], [bool; N - 1]) {
@@ -211,7 +211,7 @@ pub(crate) unconstrained fn __validate_gt_with_flags<let N: u32>(
     (result, borrow_flags)
 }
 
-/// Validate that lhs - rhs does not underflow (unconstrained)
+/// Compute hints to check that lhs - rhs does not underflow (unconstrained)
 ///
 /// Compute underflow flag (lhs < rhs), then perform subtraction with borrow flags.
 /// Always computes max(lhs, rhs) - min(lhs, rhs) by swapping if needed.
@@ -219,7 +219,7 @@ pub(crate) unconstrained fn __validate_gt_with_flags<let N: u32>(
 /// ## Note
 /// The `borrow` must be equal to 0 at the end of the loop
 /// And it can't be nonzero, since we swap the terms at the beginning
-pub(crate) unconstrained fn __validate_gte_with_flags<let N: u32>(
+pub(crate) unconstrained fn compute_sub_with_borrow_flags_and_overflow<let N: u32>(
     lhs: [u128; N],
     rhs: [u128; N],
 ) -> (bool, [u128; N], [bool; N - 1]) {
@@ -228,7 +228,7 @@ pub(crate) unconstrained fn __validate_gte_with_flags<let N: u32>(
     let (a, b): ([u128; N], [u128; N]) = if underflow { (rhs, lhs) } else { (lhs, rhs) };
 
     // Compute max - min using the basic subtraction helper
-    let (result, borrow_flags) = __validate_gt_with_flags(a, b);
+    let (result, borrow_flags) = compute_sub_with_borrow_flags(a, b);
 
     (underflow, result, borrow_flags)
 }
