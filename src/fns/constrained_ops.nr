@@ -551,7 +551,7 @@ pub fn validate_in_field<let N: u32, let MOD_BITS: u32>(
 
     // Safety: compute borrow flags out-of-circuit
     let borrow_flags: [bool; (N - 1)] =
-        unsafe { __validate_in_field_compute_borrow_flags(params, val) };
+        unsafe { __validate_in_field_compute_borrow_flags(modulus, val) };
 
     let mut p_minus_self: [Field; N] = [0; N];
     p_minus_self[0] = (modulus[0] as Field) - (val[0] as Field)

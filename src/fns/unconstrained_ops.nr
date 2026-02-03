@@ -413,7 +413,7 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>
     let mut result: Option<[u128; N]> = Option::none();
 
     let one: [u128; N] = __one();
-    let s: u32 = __primitive_root_log_size::<N, MOD_BITS>(params); // p - 1 = 2^s * Q, where Q is odd
+    let s: u32 = __primitive_root_log_size(params.modulus); // p - 1 = 2^s * Q, where Q is odd
     let Q: [u128; N] = __shr(__helper_sub(params.modulus, one), s);
     let Q_minus_one_over_two: [u128; N] = __shr1(__helper_sub(Q, one)); // (Q - 1) / 2
 
