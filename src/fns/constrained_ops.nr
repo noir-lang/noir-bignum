@@ -3,8 +3,8 @@ use crate::constants::{GRUMPKIN_MODULUS, TWO_POW_120, TWO_POW_240};
 use crate::fns::{
     expressions::{evaluate_quadratic_expression, validate_udiv_mod_expression},
     unconstrained_helpers::{
-        __add_with_flags, __from_field, __neg_with_flags, __sub_with_flags,
-        __validate_gte_with_flags, __validate_in_field_compute_borrow_flags,
+        __from_field, compute_add_flags, compute_borrow_flags, compute_gte_flags,
+        compute_sub_flags,
     },
     unconstrained_ops::{__add, __div, __mul, __neg, __sqr, __sub, __udiv_mod},
 };
@@ -361,10 +361,13 @@ pub fn eq<let N: u32, let MOD_BITS: u32>(
 /// ## Note
 /// This is slightly cheaper than doing `val != [0; N]`, as we avoid
 /// creating per-limb boolean equalities and chaining them with `and`s.
-pub fn assert_is_not_zero_integer<let N: u32>(val: [u128; N]) {
+pub fn assert_is_not_zero_integer<T, let N: u32>(val: [T; N])
+where
+    T: Into<Field>,
+{
     let mut limb_sum: Field = 0;
     for i in 0..N {
-        limb_sum += val[i] as Field;
+        limb_sum += val[i].into();
     }
     assert(limb_sum != 0, "assert_is_not_zero_integer fail");
 }
@@ -486,50 +489,167 @@ pub(crate) fn validate_quotient_in_range<let N: u32, let MOD_BITS: u32>(limbs: [
 /// completeness
 pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N]) {
     // Safety: compute borrow flags out-of-circuit
-    let (underflow, result, borrow_flags): (bool, [u128; N], [bool; N - 1]) =
-        unsafe { __validate_gte_with_flags(lhs, rhs) };
+    let borrow_flags: [bool; N - 1] =
+        unsafe { compute_borrow_flags(lhs, rhs) };
 
-    // Completeness: require that no underflow occurred
-    assert(!underflow, "validate_gt fail");
+    // Compute and validate the result in constrained code
+    let result: [u128; N] = assert_sub_no_overflow::<N, MOD_BITS>(lhs, rhs, borrow_flags);
 
-    // Constrain the `result` to be a valid `BigNum` value
-    validate_in_range::<u128, N, MOD_BITS>(result);
     // Constrain it to be strict inequality
     assert_is_not_zero_integer(result);
-
-    // Constrain `result` and `borrow_flags` to match the expected arithmetic
-    check_gte_with_flags(lhs, rhs, result, borrow_flags);
 }
 
-/// Constraining function for the results of `__validate_gte_with_flags`,
-/// used by both `cmp` and `validate gt`
+/// Compute the result of lhs - rhs given borrow flags and validate it
 ///
-/// This function checks the relations between `lhs`, `rhs`, `result` adn `borrow_flags`:
-///     lhs[0]     - rhs[0]     - result[0]     + bf[0] * 2^{120}             = 0
-///     lhs[i]     - rhs[i]     - result[i]     + bf[i] * 2^{120} - bf[i - 1] = 0,  i = 1..N-2
-///     lhs[N - 1] - rhs[N - 1] - result[N - 1]                   - bf[N - 2] = 0
-pub(crate) fn check_gte_with_flags<let N: u32>(
+/// This is the constrained analog of the result computation in the unconstrained helpers.
+/// Given borrow_flags, computes result such that:
+///     result[0]     = lhs[0]     - rhs[0]     + bf[0] * 2^{120}
+///     result[i]     = lhs[i]     - rhs[i]     + bf[i] * 2^{120} - bf[i - 1],  i = 1..N-2
+///     result[N - 1] = lhs[N - 1] - rhs[N - 1]                   - bf[N - 2]
+///
+/// Also validates that the result is a valid BigNum value (each limb in range).
+/// If lhs < rhs, the result will have a negative value (wrapped in Field) and fail validation.
+fn assert_sub_no_overflow<let N: u32, let MOD_BITS: u32>(
     lhs: [u128; N],
     rhs: [u128; N],
-    result: [u128; N],
     borrow_flags: [bool; N - 1],
-) {
-    let result_limb: Field = (lhs[0] as Field) - (rhs[0] as Field) - (result[0] as Field)
-        + (borrow_flags[0] as Field) * TWO_POW_120 as Field;
-    assert(result_limb == 0);
+) -> [u128; N] {
+    let mut result: [u128; N] = [0; N];
 
+    // Compute first limb
+    let limb_0: Field = (lhs[0] as Field) - (rhs[0] as Field)
+        + (borrow_flags[0] as Field) * (TWO_POW_120 as Field);
+    limb_0.assert_max_bit_size::<128>();
+    result[0] = limb_0 as u128;
+
+    // Compute middle limbs
     for i in 1..N - 1 {
-        let result_limb: Field = (lhs[i] as Field) - (rhs[i] as Field) - (result[i] as Field)
+        let limb_i: Field = (lhs[i] as Field) - (rhs[i] as Field)
             + (borrow_flags[i] as Field) * (TWO_POW_120 as Field)
             - (borrow_flags[i - 1] as Field);
-        assert(result_limb == 0);
+        limb_i.assert_max_bit_size::<128>();
+        result[i] = limb_i as u128;
     }
 
-    let result_limb: Field = (lhs[N - 1] as Field)
+    // Compute last limb
+    let limb_last: Field = (lhs[N - 1] as Field)
         - (rhs[N - 1] as Field)
-        - (result[N - 1] as Field)
         - (borrow_flags[N - 2] as Field);
-    assert(result_limb == 0);
+    limb_last.assert_max_bit_size::<128>();
+    result[N - 1] = limb_last as u128;
+
+    // Validate that the result is a valid BigNum value (120-bit limbs, TOP_LIMB_BITS for last)
+    validate_in_range::<u128, N, MOD_BITS>(result);
+
+    result
+}
+
+/// Compute the result of modular subtraction given flags and validate it
+///
+/// Computes `result = lhs - rhs + (underflow ? modulus : 0)` given carry and borrow flags.
+/// The formula for each limb is:
+///     result[0]     = lhs[0]     - rhs[0]     + addend[0]     + bf[0] * 2^120 - cf[0] * 2^120
+///     result[i]     = lhs[i]     - rhs[i]     + addend[i]     + bf[i] * 2^120 - cf[i] * 2^120 - bf[i-1] + cf[i-1],  i = 1..N-2
+///     result[N - 1] = lhs[N - 1] - rhs[N - 1] + addend[N - 1]                               - bf[N-2] + cf[N-2]
+///
+/// Also validates that the result is a valid BigNum value (each limb in range).
+fn compute_sub_result<let N: u32, let MOD_BITS: u32>(
+    modulus: [u128; N],
+    lhs: [u128; N],
+    rhs: [u128; N],
+    carry_flags: [bool; N - 1],
+    borrow_flags: [bool; N - 1],
+    underflow: bool,
+) -> [u128; N] {
+    let addend: [u128; N] = if underflow { modulus } else { [0; N] };
+
+    let mut result: [u128; N] = [0; N];
+
+    // Compute first limb
+    let limb_0: Field = (lhs[0] as Field) - (rhs[0] as Field) + (addend[0] as Field)
+        + (borrow_flags[0] as Field) * (TWO_POW_120 as Field)
+        - (carry_flags[0] as Field) * (TWO_POW_120 as Field);
+    limb_0.assert_max_bit_size::<128>();
+    result[0] = limb_0 as u128;
+
+    // Compute middle limbs
+    for i in 1..N - 1 {
+        let limb_i: Field = (lhs[i] as Field) - (rhs[i] as Field) + (addend[i] as Field)
+            + (borrow_flags[i] as Field) * (TWO_POW_120 as Field)
+            - (carry_flags[i] as Field) * (TWO_POW_120 as Field)
+            - (borrow_flags[i - 1] as Field)
+            + (carry_flags[i - 1] as Field);
+        limb_i.assert_max_bit_size::<128>();
+        result[i] = limb_i as u128;
+    }
+
+    // Compute last limb
+    let limb_last: Field = (lhs[N - 1] as Field)
+        - (rhs[N - 1] as Field)
+        + (addend[N - 1] as Field)
+        - (borrow_flags[N - 2] as Field)
+        + (carry_flags[N - 2] as Field);
+    limb_last.assert_max_bit_size::<128>();
+    result[N - 1] = limb_last as u128;
+
+    // Validate that the result is a valid BigNum value (120-bit limbs, TOP_LIMB_BITS for last)
+    validate_in_range::<u128, N, MOD_BITS>(result);
+
+    result
+}
+
+/// Compute the result of modular addition given flags and validate it
+///
+/// Computes `result = lhs + rhs - (overflow ? modulus : 0)` given carry and borrow flags.
+/// The formula for each limb is:
+///     result[0]     = lhs[0]     + rhs[0]     - subtrahend[0]     + bf[0] * 2^120 - cf[0] * 2^120
+///     result[i]     = lhs[i]     + rhs[i]     - subtrahend[i]     + bf[i] * 2^120 - cf[i] * 2^120 - bf[i-1] + cf[i-1],  i = 1..N-2
+///     result[N - 1] = lhs[N - 1] + rhs[N - 1] - subtrahend[N - 1]                               - bf[N-2] + cf[N-2]
+///
+/// Also validates that the result is a valid BigNum value (each limb in range).
+fn compute_add_result<let N: u32, let MOD_BITS: u32>(
+    modulus: [u128; N],
+    lhs: [u128; N],
+    rhs: [u128; N],
+    carry_flags: [bool; N - 1],
+    borrow_flags: [bool; N - 1],
+    overflow: bool,
+) -> [u128; N] {
+    let subtrahend: [u128; N] = if overflow { modulus } else { [0; N] };
+
+    let mut result: [u128; N] = [0; N];
+
+    // Compute first limb
+    let limb_0: Field = (lhs[0] as Field) + (rhs[0] as Field) - (subtrahend[0] as Field)
+        + (borrow_flags[0] as Field) * (TWO_POW_120 as Field)
+        - (carry_flags[0] as Field) * (TWO_POW_120 as Field);
+    limb_0.assert_max_bit_size::<128>();
+    result[0] = limb_0 as u128;
+
+    // Compute middle limbs
+    for i in 1..N - 1 {
+        let limb_i: Field = (lhs[i] as Field) + (rhs[i] as Field) - (subtrahend[i] as Field)
+            - (borrow_flags[i - 1] as Field)
+            + (carry_flags[i - 1] as Field)
+            + (borrow_flags[i] as Field) * (TWO_POW_120 as Field)
+            - (carry_flags[i] as Field) * (TWO_POW_120 as Field);
+        limb_i.assert_max_bit_size::<128>();
+        result[i] = limb_i as u128;
+    }
+
+    // Compute last limb
+    let limb_last: Field = (lhs[N - 1] as Field)
+        + (rhs[N - 1] as Field)
+        - (subtrahend[N - 1] as Field)
+        - (borrow_flags[N - 2] as Field)
+        + (carry_flags[N - 2] as Field);
+    limb_last.assert_max_bit_size::<128>();
+    result[N - 1] = limb_last as u128;
+
+    // Validate that the result is a valid BigNum value (120-bit limbs, TOP_LIMB_BITS for last)
+    validate_in_range::<u128, N, MOD_BITS>(result);
+
+    result
 }
 
 /// Validate that `val` <= `MOD`
@@ -551,7 +671,7 @@ pub fn validate_in_field<let N: u32, let MOD_BITS: u32>(
 
     // Safety: compute borrow flags out-of-circuit
     let borrow_flags: [bool; (N - 1)] =
-        unsafe { __validate_in_field_compute_borrow_flags(modulus, val) };
+        unsafe { compute_borrow_flags(modulus, val) };
 
     let mut p_minus_self: [Field; N] = [0; N];
     p_minus_self[0] = (modulus[0] as Field) - (val[0] as Field)
@@ -574,21 +694,16 @@ pub fn validate_in_field<let N: u32, let MOD_BITS: u32>(
 /// This is a strict value comparison over the integers,
 /// the values do not have to be reduced modulo `MOD`.
 pub fn cmp<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N]) -> Ordering {
-    // Safety: we constrain:
-    //        - `result` and `borrow_flags` with `check_gte_with_flags`
-    //        - `borrow_flags` are also booleans
-    //        - `underflow` with the following swap and (bool)
-    let (underflow, result, borrow_flags): (bool, [u128; N], [bool; N - 1]) =
-        unsafe { __validate_gte_with_flags(lhs, rhs) };
+    // Safety: compute underflow and borrow flags out-of-circuit
+    // borrow_flags correspond to max(lhs, rhs) - min(lhs, rhs)
+    let (underflow, borrow_flags): (bool, [bool; N - 1]) =
+        unsafe { compute_gte_flags(lhs, rhs) };
 
-    // if underflow is true, swap lhs and rhs
-    let (lhs, rhs): ([u128; N], [u128; N]) = if underflow { (rhs, lhs) } else { (lhs, rhs) };
+    // if underflow is true, swap lhs and rhs so we compute larger - smaller
+    let (a, b): ([u128; N], [u128; N]) = if underflow { (rhs, lhs) } else { (lhs, rhs) };
 
-    // Constrain the `result` to be a valid `BigNum` value
-    validate_in_range::<u128, N, MOD_BITS>(result);
-
-    // Constrain subtraction: result = lhs - rhs with borrow_flags
-    check_gte_with_flags(lhs, rhs, result, borrow_flags);
+    // Enforce correctness of `underflow` by asserting that the subtraction does not overflow.
+    let _: [u128; N] = assert_sub_no_overflow::<N, MOD_BITS>(a, b, borrow_flags);
 
     if lhs == rhs {
         Ordering::equal()
@@ -643,32 +758,13 @@ pub fn neg<let N: u32, let MOD_BITS: u32>(
             __neg(params.modulus, val)
         }
     } else {
-        // Safety: compute borrow flags out-of-circuit
-        let (result, borrow_flags): ([u128; N], [bool; N - 1]) =
-            unsafe { __neg_with_flags(params.modulus, val) };
-        validate_in_range::<u128, N, MOD_BITS>(result);
+        // Safety: compute borrow flags out-of-circuit, result computed in-circuit
+        // neg(val) = modulus - val, which is the same as assert_sub_no_overflow(modulus, val, borrow_flags)
+        let borrow_flags: [bool; N - 1] =
+            unsafe { compute_borrow_flags(params.modulus, val) };
 
-        let result_limb: Field = (params.modulus[0] as Field)
-            - (val[0] as Field)
-            - (result[0] as Field)
-            + (borrow_flags[0] as Field) * (TWO_POW_120 as Field);
-        assert(result_limb == 0);
-
-        for i in 1..N - 1 {
-            let result_limb: Field = (params.modulus[i] as Field)
-                - (val[i] as Field)
-                - (result[i] as Field)
-                + (borrow_flags[i] as Field) * (TWO_POW_120 as Field)
-                - (borrow_flags[i - 1] as Field);
-            assert(result_limb == 0);
-        }
-
-        let result_limb: Field = (params.modulus[N - 1] as Field)
-            - (val[N - 1] as Field)
-            - (result[N - 1] as Field)
-            - (borrow_flags[N - 2] as Field);
-        assert(result_limb == 0);
-        result
+        // Subtract `val` from the modulus to negate.
+        assert_sub_no_overflow::<N, MOD_BITS>(params.modulus, val, borrow_flags)
     }
 }
 
@@ -715,7 +811,7 @@ pub fn neg<let N: u32, let MOD_BITS: u32>(
 ///         * `overflow_modulus = 1`  =>  `sub = MOD`
 ///
 /// If `lhs`, `rhs` and `MOD` are valid `BigNum` limbs and the witness for
-/// `(bf, cf, overflow_modulus)` is the honest one produced by `__add_with_flags`,
+/// `(bf, cf, overflow_modulus)` is the honest one produced by `compute_add_flags`,
 /// these constraints enforce:
 ///   - a valid limb-wise carry chain for `lhs + rhs`, and
 ///   - a valid limb-wise subtraction chain for either `lhs + rhs` or
@@ -756,14 +852,14 @@ pub fn neg<let N: u32, let MOD_BITS: u32>(
 ///   witness
 ///
 /// Consequently, this function is only *conditionally* sound: we rely on the
-/// out-of-circuit implementation of `__add_with_flags` to provide the honest
+/// out-of-circuit implementation of `compute_add_flags` to provide the honest
 /// `(borrow_flags, carry_flags, overflow_modulus)` witness. Under that
 /// assumption, the constrained `result` matches `lhs + rhs (mod MOD)`.
 ///
 /// ## Completeness
 ///
 /// For inputs in the range `0 <= lhs, rhs < MOD` and honest flags from
-/// `__add_with_flags`, the constraints are complete: every valid `BigNum` sum
+/// `compute_add_flags`, the constraints are complete: every valid `BigNum` sum
 /// `lhs + rhs (mod MOD)` admits a satisfying assignment.
 ///
 /// Inputs with `lhs` or `rhs` in `[MOD, 2^{MOD_BITS})` are still representable
@@ -781,40 +877,19 @@ pub fn add<let N: u32, let MOD_BITS: u32>(
             __add(params.modulus, lhs, rhs)
         }
     } else {
-        // Safety: compute borrow/carry flags out-of-circuit
-        let (result, carry_flags, borrow_flags, overflow_modulus): ([u128; N], [bool; N - 1], [bool; N - 1], bool) =
-            unsafe { __add_with_flags(params.modulus, lhs, rhs) };
-        validate_in_range::<u128, N, MOD_BITS>(result);
+        // Safety: compute flags out-of-circuit, result computed and validated in-circuit
+        let (carry_flags, borrow_flags, overflow): ([bool; N - 1], [bool; N - 1], bool) =
+            unsafe { compute_add_flags(params.modulus, lhs, rhs) };
 
-        let mut subtrahend: [u128; N] = if overflow_modulus {
-            params.modulus
-        } else {
-            [0; N]
-        };
-
-        let result_limb: Field = (lhs[0] as Field) + (rhs[0] as Field)
-            - (result[0] as Field)
-            - (subtrahend[0] as Field)
-            + (borrow_flags[0] as Field) * (TWO_POW_120 as Field)
-            - (carry_flags[0] as Field) * (TWO_POW_120 as Field);
-        assert(result_limb == 0);
-        for i in 1..N - 1 {
-            let result_limb: Field = (lhs[i] as Field) + (rhs[i] as Field)
-                - (result[i] as Field)
-                - (subtrahend[i] as Field)
-                - (borrow_flags[i - 1] as Field)
-                + (carry_flags[i - 1] as Field)
-                + (borrow_flags[i] as Field) * (TWO_POW_120 as Field)
-                - (carry_flags[i] as Field) * (TWO_POW_120 as Field);
-            assert(result_limb == 0);
-        }
-        let result_limb: Field = (lhs[N - 1] as Field) + (rhs[N - 1] as Field)
-            - (result[N - 1] as Field)
-            - (subtrahend[N - 1] as Field)
-            - (borrow_flags[N - 2] as Field)
-            + (carry_flags[N - 2] as Field);
-        assert(result_limb == 0);
-        result
+        // Compute and validate the result in constrained code
+        compute_add_result::<N, MOD_BITS>(
+            params.modulus,
+            lhs,
+            rhs,
+            carry_flags,
+            borrow_flags,
+            overflow,
+        )
     }
 }
 
@@ -861,7 +936,7 @@ pub fn add<let N: u32, let MOD_BITS: u32>(
 ///         * `underflow_modulus = 1`  =>  `add = MOD`
 ///
 /// If `lhs`, `rhs` and `MOD` are valid `BigNum` limbs and the witness for
-/// `(bf, cf, underflow_modulus)` is the honest one produced by `__sub_with_flags`,
+/// `(bf, cf, underflow_modulus)` is the honest one produced by `compute_sub_flags`,
 /// these constraints enforce:
 ///   - a valid limb-wise borrow chain for `lhs - rhs`, and
 ///   - a valid limb-wise addition chain for either `lhs - rhs` or
@@ -904,14 +979,14 @@ pub fn add<let N: u32, let MOD_BITS: u32>(
 ///   `MOD` for some inputs with `lhs < rhs`.
 ///
 /// Consequently, this function is only *conditionally* sound: we rely on the
-/// out-of-circuit implementation of `__sub_with_flags` to provide the honest
+/// out-of-circuit implementation of `compute_sub_flags` to provide the honest
 /// `(borrow_flags, carry_flags, underflow_modulus)` witness. Under that
 /// assumption, the constrained `result` matches `lhs - rhs (mod MOD)`.
 ///
 /// ## Completeness
 ///
 /// For inputs in the range `0 <= lhs, rhs < MOD` and honest flags from
-/// `__sub_with_flags`, the constraints are complete: every valid `BigNum`
+/// `compute_sub_flags`, the constraints are complete: every valid `BigNum`
 /// difference `lhs - rhs (mod MOD)` admits a satisfying assignment.
 ///
 /// Inputs with `lhs` or `rhs` in `[MOD, 2^{MOD_BITS})` are still representable
@@ -929,40 +1004,19 @@ pub fn sub<let N: u32, let MOD_BITS: u32>(
             __sub(params.modulus, lhs, rhs)
         }
     } else {
-        // Safety: we constrain carry, borrow, underflow and result immediately
-        let (result, carry_flags, borrow_flags, underflow_modulus): ([u128; N], [bool; N - 1], [bool; N - 1], bool) =
-            unsafe { __sub_with_flags(params.modulus, lhs, rhs) };
-        validate_in_range::<u128, N, MOD_BITS>(result);
+        // Safety: compute flags out-of-circuit, result computed and validated in-circuit
+        let (carry_flags, borrow_flags, underflow): ([bool; N - 1], [bool; N - 1], bool) =
+            unsafe { compute_sub_flags(params.modulus, lhs, rhs) };
 
-        let mut addend: [u128; N] = if underflow_modulus {
-            params.modulus
-        } else {
-            [0; N]
-        };
-
-        let result_limb: Field = (lhs[0] as Field) - (rhs[0] as Field) - (result[0] as Field)
-            + (addend[0] as Field)
-            + (borrow_flags[0] as Field) * (TWO_POW_120 as Field)
-            - (carry_flags[0] as Field) * (TWO_POW_120 as Field);
-        assert(result_limb == 0);
-
-        for i in 1..N - 1 {
-            let result_limb: Field = (lhs[i] as Field) - (rhs[i] as Field) - (result[i] as Field)
-                + (addend[i] as Field)
-                + (borrow_flags[i] as Field) * (TWO_POW_120 as Field)
-                - (carry_flags[i] as Field) * (TWO_POW_120 as Field)
-                - (borrow_flags[i - 1] as Field)
-                + (carry_flags[i - 1] as Field);
-            assert(result_limb == 0);
-        }
-        let result_limb: Field = (lhs[N - 1] as Field)
-            - (rhs[N - 1] as Field)
-            - (result[N - 1] as Field)
-            + (addend[N - 1] as Field)
-            - (borrow_flags[N - 2] as Field)
-            + (carry_flags[N - 2] as Field);
-        assert(result_limb == 0);
-        result
+        // Compute and validate the result in constrained code
+        compute_sub_result::<N, MOD_BITS>(
+            params.modulus,
+            lhs,
+            rhs,
+            carry_flags,
+            borrow_flags,
+            underflow,
+        )
     }
 }
 

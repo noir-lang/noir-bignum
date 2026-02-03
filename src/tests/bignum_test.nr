@@ -383,7 +383,7 @@ fn test_to_field_three_digits() {
     assert(result == field);
 }
 
-#[test(should_fail_with = "validate_gt fail")]
+#[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_to_field_three_digits_overflow() {
     let bn: BN254_Fq = BN254_Fq::from_limbs([
         0x4e6405505a33bb9b9c0563df2bd59a,
@@ -393,7 +393,7 @@ fn test_to_field_three_digits_overflow() {
     let _: Field = to_field(bn);
 }
 
-#[test(should_fail_with = "validate_gt fail")]
+#[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_to_field_too_many_digits() {
     let bn: BLS12_381_Fq = BLS12_381_Fq::from_limbs([
         0xea1742447ee9d92f9f18e1c80a481e,
