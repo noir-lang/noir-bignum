@@ -3,8 +3,7 @@ use crate::constants::{GRUMPKIN_MODULUS, TWO_POW_120, TWO_POW_240};
 use crate::fns::{
     expressions::{evaluate_quadratic_expression, validate_udiv_mod_expression},
     unconstrained_helpers::{
-        __from_field, compute_add_flags, compute_borrow_flags, compute_gte_flags,
-        compute_sub_flags,
+        __from_field, compute_add_flags, compute_borrow_flags, compute_gte_flags, compute_sub_flags,
     },
     unconstrained_ops::{__add, __div, __mul, __neg, __sqr, __sub, __udiv_mod},
 };
@@ -489,8 +488,7 @@ pub(crate) fn validate_quotient_in_range<let N: u32, let MOD_BITS: u32>(limbs: [
 /// completeness
 pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N]) {
     // Safety: compute borrow flags out-of-circuit
-    let borrow_flags: [bool; N - 1] =
-        unsafe { compute_borrow_flags(lhs, rhs) };
+    let borrow_flags: [bool; N - 1] = unsafe { compute_borrow_flags(lhs, rhs) };
 
     // Compute and validate the result in constrained code
     let result: [u128; N] = assert_sub_no_overflow::<N, MOD_BITS>(lhs, rhs, borrow_flags);
@@ -517,8 +515,8 @@ fn assert_sub_no_overflow<let N: u32, let MOD_BITS: u32>(
     let mut result: [u128; N] = [0; N];
 
     // Compute first limb
-    let limb_0: Field = (lhs[0] as Field) - (rhs[0] as Field)
-        + (borrow_flags[0] as Field) * (TWO_POW_120 as Field);
+    let limb_0: Field =
+        (lhs[0] as Field) - (rhs[0] as Field) + (borrow_flags[0] as Field) * (TWO_POW_120 as Field);
     limb_0.assert_max_bit_size::<128>();
     result[0] = limb_0 as u128;
 
@@ -532,9 +530,8 @@ fn assert_sub_no_overflow<let N: u32, let MOD_BITS: u32>(
     }
 
     // Compute last limb
-    let limb_last: Field = (lhs[N - 1] as Field)
-        - (rhs[N - 1] as Field)
-        - (borrow_flags[N - 2] as Field);
+    let limb_last: Field =
+        (lhs[N - 1] as Field) - (rhs[N - 1] as Field) - (borrow_flags[N - 2] as Field);
     limb_last.assert_max_bit_size::<128>();
     result[N - 1] = limb_last as u128;
 
@@ -566,7 +563,8 @@ fn compute_sub_result<let N: u32, let MOD_BITS: u32>(
     let mut result: [u128; N] = [0; N];
 
     // Compute first limb
-    let limb_0: Field = (lhs[0] as Field) - (rhs[0] as Field) + (addend[0] as Field)
+    let limb_0: Field = (lhs[0] as Field) - (rhs[0] as Field)
+        + (addend[0] as Field)
         + (borrow_flags[0] as Field) * (TWO_POW_120 as Field)
         - (carry_flags[0] as Field) * (TWO_POW_120 as Field);
     limb_0.assert_max_bit_size::<128>();
@@ -574,7 +572,8 @@ fn compute_sub_result<let N: u32, let MOD_BITS: u32>(
 
     // Compute middle limbs
     for i in 1..N - 1 {
-        let limb_i: Field = (lhs[i] as Field) - (rhs[i] as Field) + (addend[i] as Field)
+        let limb_i: Field = (lhs[i] as Field) - (rhs[i] as Field)
+            + (addend[i] as Field)
             + (borrow_flags[i] as Field) * (TWO_POW_120 as Field)
             - (carry_flags[i] as Field) * (TWO_POW_120 as Field)
             - (borrow_flags[i - 1] as Field)
@@ -584,9 +583,7 @@ fn compute_sub_result<let N: u32, let MOD_BITS: u32>(
     }
 
     // Compute last limb
-    let limb_last: Field = (lhs[N - 1] as Field)
-        - (rhs[N - 1] as Field)
-        + (addend[N - 1] as Field)
+    let limb_last: Field = (lhs[N - 1] as Field) - (rhs[N - 1] as Field) + (addend[N - 1] as Field)
         - (borrow_flags[N - 2] as Field)
         + (carry_flags[N - 2] as Field);
     limb_last.assert_max_bit_size::<128>();
@@ -628,7 +625,8 @@ fn compute_add_result<let N: u32, let MOD_BITS: u32>(
 
     // Compute middle limbs
     for i in 1..N - 1 {
-        let limb_i: Field = (lhs[i] as Field) + (rhs[i] as Field) - (subtrahend[i] as Field)
+        let limb_i: Field = (lhs[i] as Field) + (rhs[i] as Field)
+            - (subtrahend[i] as Field)
             - (borrow_flags[i - 1] as Field)
             + (carry_flags[i - 1] as Field)
             + (borrow_flags[i] as Field) * (TWO_POW_120 as Field)
@@ -638,8 +636,7 @@ fn compute_add_result<let N: u32, let MOD_BITS: u32>(
     }
 
     // Compute last limb
-    let limb_last: Field = (lhs[N - 1] as Field)
-        + (rhs[N - 1] as Field)
+    let limb_last: Field = (lhs[N - 1] as Field) + (rhs[N - 1] as Field)
         - (subtrahend[N - 1] as Field)
         - (borrow_flags[N - 2] as Field)
         + (carry_flags[N - 2] as Field);
@@ -670,8 +667,7 @@ pub fn validate_in_field<let N: u32, let MOD_BITS: u32>(
     let modulus: [u128; N] = params.modulus;
 
     // Safety: compute borrow flags out-of-circuit
-    let borrow_flags: [bool; (N - 1)] =
-        unsafe { compute_borrow_flags(modulus, val) };
+    let borrow_flags: [bool; (N - 1)] = unsafe { compute_borrow_flags(modulus, val) };
 
     let mut p_minus_self: [Field; N] = [0; N];
     p_minus_self[0] = (modulus[0] as Field) - (val[0] as Field)
@@ -696,8 +692,7 @@ pub fn validate_in_field<let N: u32, let MOD_BITS: u32>(
 pub fn cmp<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N]) -> Ordering {
     // Safety: compute underflow and borrow flags out-of-circuit
     // borrow_flags correspond to max(lhs, rhs) - min(lhs, rhs)
-    let (underflow, borrow_flags): (bool, [bool; N - 1]) =
-        unsafe { compute_gte_flags(lhs, rhs) };
+    let (underflow, borrow_flags): (bool, [bool; N - 1]) = unsafe { compute_gte_flags(lhs, rhs) };
 
     // if underflow is true, swap lhs and rhs so we compute larger - smaller
     let (a, b): ([u128; N], [u128; N]) = if underflow { (rhs, lhs) } else { (lhs, rhs) };
@@ -760,8 +755,7 @@ pub fn neg<let N: u32, let MOD_BITS: u32>(
     } else {
         // Safety: compute borrow flags out-of-circuit, result computed in-circuit
         // neg(val) = modulus - val, which is the same as assert_sub_no_overflow(modulus, val, borrow_flags)
-        let borrow_flags: [bool; N - 1] =
-            unsafe { compute_borrow_flags(params.modulus, val) };
+        let borrow_flags: [bool; N - 1] = unsafe { compute_borrow_flags(params.modulus, val) };
 
         // Subtract `val` from the modulus to negate.
         assert_sub_no_overflow::<N, MOD_BITS>(params.modulus, val, borrow_flags)
