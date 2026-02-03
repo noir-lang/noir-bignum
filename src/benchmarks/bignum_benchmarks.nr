@@ -10,7 +10,7 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
 
     let mul_bench_name = f"mul_{module_name}".quoted_contents();
 
-    let div_bench_name = f"div_{module_name}".quoted_contents();
+    let unconstrained_div_bench_name = f"unconstrained_div_{module_name}".quoted_contents();
 
     let udiv_mod_bench_name = f"udiv_mod_{module_name}".quoted_contents();
     let udiv_bench_name = f"udiv_{module_name}".quoted_contents();
@@ -81,8 +81,9 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
         }
 
         #[export]
-        fn $div_bench_name(a: $typ, b: $typ) -> $typ {
-            a / b
+        fn $unconstrained_div_bench_name(a: $typ, b: $typ) -> $typ {
+            // Safety: Benchmarking 
+            unsafe { $BigNum::__div(a, b) }
         }
 
         #[export]  
@@ -221,18 +222,15 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
 
 // the types we will be benchmarking
 // type BN254Fq
-// type U256
 // type BLS12_381Fq
 // type BLS12_381Fr
 // type BLS12_377Fq
 // type BLS12_377Fr
+// type U256
 // type U2048
 
 #[make_bench(quote { crate::fields::bn254Fq::BN254_Fq })]
 mod BN254_Fq_Bench {}
-
-#[make_bench(quote { crate::fields::U256::U256 })]
-mod U256_Bench {}
 
 #[make_bench(quote { crate::fields::bls12_381Fq::BLS12_381_Fq })]
 mod BLS12_381Fq_Bench {}
@@ -245,6 +243,9 @@ mod BLS12_377Fq_Bench {}
 
 #[make_bench(quote { crate::fields::bls12_377Fr::BLS12_377_Fr })]
 mod BLS12_377Fr_Bench {}
+
+#[make_bench(quote { crate::fields::U256::U256 })]
+mod U256_Bench {}
 
 #[make_bench(quote { crate::fields::U2048::U2048 })]
 mod U2048_Bench {}

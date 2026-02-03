@@ -15,6 +15,7 @@ NUM_ARTIFACTS=$(ls -1q "$artifacts_path" | wc -l)
 
 ITER="1"
 for artifact in $artifacts; do    
+    echo -ne "$artifact: "
     ARTIFACT_NAME=$(basename "$artifact")
 
     GATES_INFO=$($BACKEND gates -b "$artifacts_path/$artifact")
