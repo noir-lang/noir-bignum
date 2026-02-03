@@ -486,7 +486,9 @@ pub(crate) fn validate_quotient_in_range<let N: u32, let MOD_BITS: u32>(limbs: [
 /// Also note that `underflow` is not properly constrained, so it just hangs there for
 /// completeness
 pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N]) {
-    // Safety: compute borrow flags out-of-circuit
+    // Safety: borrow_flags are constrained by `assert_sub_no_overflow`:
+    // - incorrect flags cause the computed result to fail 128-bit range checks
+    // - if lhs < rhs, the subtraction overflows Field and fails range checks
     let borrow_flags: [bool; N - 1] = unsafe { compute_borrow_flags(lhs, rhs) };
 
     // Compute and validate the result in constrained code
@@ -665,7 +667,9 @@ pub fn validate_in_field<let N: u32, let MOD_BITS: u32>(
 ) {
     let modulus: [u128; N] = params.modulus;
 
-    // Safety: compute borrow flags out-of-circuit
+    // Safety: borrow_flags are constrained by the `validate_in_range` check on `p_minus_self`:
+    // - incorrect flags cause `p_minus_self` limbs to overflow Field, failing range checks
+    // - if val > modulus, the subtraction overflows and fails the range check
     let borrow_flags: [bool; (N - 1)] = unsafe { compute_borrow_flags(modulus, val) };
 
     let mut p_minus_self: [Field; N] = [0; N];
@@ -689,8 +693,10 @@ pub fn validate_in_field<let N: u32, let MOD_BITS: u32>(
 /// This is a strict value comparison over the integers,
 /// the values do not have to be reduced modulo `MOD`.
 pub fn cmp<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N]) -> Ordering {
-    // Safety: compute underflow and borrow flags out-of-circuit
-    // borrow_flags correspond to max(lhs, rhs) - min(lhs, rhs)
+    // Safety: underflow and borrow_flags are constrained by `assert_sub_no_overflow`:
+    // - we swap (a, b) based on underflow, then compute a - b
+    // - if underflow is wrong, a < b and the subtraction overflows, failing range checks
+    // - if borrow_flags are wrong, the computed limbs fail 128-bit range checks
     let (underflow, borrow_flags): (bool, [bool; N - 1]) = unsafe { compute_gte_flags(lhs, rhs) };
 
     // if underflow is true, swap lhs and rhs so we compute larger - smaller
@@ -747,13 +753,15 @@ pub fn neg<let N: u32, let MOD_BITS: u32>(
     val: [u128; N],
 ) -> [u128; N] {
     if std::runtime::is_unconstrained() {
-        // Safety: no need to constrain in an unconstrained runtime
+        // Safety: unconstrained runtime requires no constraints
         unsafe {
             __neg(params.modulus, val)
         }
     } else {
-        // Safety: compute borrow flags out-of-circuit, result computed in-circuit
-        // neg(val) = modulus - val, which is the same as assert_sub_no_overflow(modulus, val, borrow_flags)
+        // Safety: borrow_flags are constrained by `assert_sub_no_overflow`:
+        // - incorrect flags cause computed limbs to fail 128-bit range checks
+        // - if val > modulus, the subtraction overflows and fails range checks
+        // (but val > modulus violates function preconditions)
         let borrow_flags: [bool; N - 1] = unsafe { compute_borrow_flags(params.modulus, val) };
 
         // Subtract `val` from the modulus to negate.
@@ -865,12 +873,14 @@ pub fn add<let N: u32, let MOD_BITS: u32>(
     rhs: [u128; N],
 ) -> [u128; N] {
     if std::runtime::is_unconstrained() {
-        // Safety: no need to constrain in unconstrained runtime
+        // Safety: unconstrained runtime requires no constraints
         unsafe {
             __add(params.modulus, lhs, rhs)
         }
     } else {
-        // Safety: compute flags out-of-circuit, result computed and validated in-circuit
+        // Safety: flags are constrained by `compute_add_result`:
+        // - incorrect flags cause computed limbs to fail 128-bit range checks
+        // - wrong overflow causes result to be off by modulus, failing `validate_in_range`
         let (carry_flags, borrow_flags, overflow): ([bool; N - 1], [bool; N - 1], bool) =
             unsafe { compute_add_flags(params.modulus, lhs, rhs) };
 
@@ -992,12 +1002,14 @@ pub fn sub<let N: u32, let MOD_BITS: u32>(
     rhs: [u128; N],
 ) -> [u128; N] {
     if std::runtime::is_unconstrained() {
-        // Safety: no need to constrain in unconstrained runtime
+        // Safety: unconstrained runtime requires no constraints
         unsafe {
             __sub(params.modulus, lhs, rhs)
         }
     } else {
-        // Safety: compute flags out-of-circuit, result computed and validated in-circuit
+        // Safety: flags are constrained by `compute_sub_result`:
+        // - incorrect flags cause computed limbs to fail 128-bit range checks
+        // - wrong underflow causes result to be off by modulus, failing `validate_in_range`
         let (carry_flags, borrow_flags, underflow): ([bool; N - 1], [bool; N - 1], bool) =
             unsafe { compute_sub_flags(params.modulus, lhs, rhs) };
 
