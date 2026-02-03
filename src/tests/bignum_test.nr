@@ -58,24 +58,24 @@ global TEST_2048_PARAMS: BigNumParams<18, 2048> = BigNumParams {
         0x0170,
     ],
     redc_param: [
-        0x1697def7100cd5cf8d890b4ef2ec3f,
-        0x765ba8304214dac764d3f4adc31859,
-        0x8404bd14d927ea230e60d4bebf9406,
-        0xc4d53a23bacc251ecbfc4b7ba5a0b4,
-        0x3eaf3499474a6f5b2fff83f1259c87,
-        0xbff4c737b97281f1a5f2384a8c16d9,
-        0x1b4cf2f55358476b53237829990555,
-        0xe7a804e8eacfe3a2a5673bc3885b86,
-        0xabadeae4282906c817adf70eab4ae1,
-        0x66f7df257fe2bf27f0809aceed9b0e,
-        0xd90fb7428901b8bed11f6b81e36bf1,
-        0x36e6ba885c60b7024c563605df7e07,
-        0x2b7c58d2fb5d2c8478963ae6d4a44f,
-        0x6ee761de26635f114ccc3f7d74f855,
-        0x3fb726a10cf2220897513f05243de3,
-        0x43a26bbd732496eb4d828591b8056e,
-        0xf4e42304e60fb3a54fca735499f2cf,
-        0x162f,
+        0x5a5f7bdc4033573e36242d3bcbb0fe,
+        0xd96ea0c108536b1d934fd2b70c6164,
+        0x1012f453649fa88c398352fafe5019,
+        0x1354e88eeb30947b2ff12dee9682d2,
+        0xfabcd2651d29bd6cbffe0fc496721f,
+        0xffd31cdee5ca07c697c8e12a305b64,
+        0x6d33cbd54d611dad4c8de0a6641556,
+        0x9ea013a3ab3f8e8a959cef0e216e18,
+        0xaeb7ab90a0a41b205eb7dc3aad2b87,
+        0x9bdf7c95ff8afc9fc2026b3bb66c3a,
+        0x643edd0a2406e2fb447dae078dafc5,
+        0xdb9aea217182dc093158d8177df81f,
+        0xadf1634bed74b211e258eb9b52913c,
+        0xbb9d8778998d7c453330fdf5d3e154,
+        0xfedc9a8433c888225d44fc1490f78d,
+        0x0e89aef5cc925bad360a1646e015b8,
+        0xd3908c13983ece953f29cd5267cb3d,
+        0x58bf,
     ],
 };
 
@@ -134,7 +134,7 @@ global SecP224r1_PARAMS: BigNumParams<2, 224> = BigNumParams {
     has_multiplicative_inverse: true,
     modulus: [0xffffff000000000000000000000001, 0xffffffffffffffffffffffffff],
     double_modulus: [0x01fffffe000000000000000000000002, 0x01fffffffffffffffffffffffffe],
-    redc_param: [0x0ffffffffffffffffffffffff0, 0x1000000000000000000000000000],
+    redc_param: [0x3fffffffffffffffffffffffc0, 0x4000000000000000000000000000],
 };
 
 #[test]
@@ -1198,6 +1198,143 @@ fn test_mul_BN2048() {
 #[test]
 fn test_sqr_BN2048() {
     test_sqr::<18, BN2048>();
+}
+
+// Other
+
+#[test]
+fn test_mul_u1024() {
+    test_mul::<9, crate::fields::U1024::U1024>();
+}
+
+#[test]
+fn test_mul_u2048() {
+    test_mul::<18, crate::fields::U2048::U2048>();
+}
+
+#[test]
+fn test_mul_u384() {
+    test_mul::<4, crate::fields::U384::U384>();
+}
+
+#[test]
+fn test_mul_u4096() {
+    test_mul::<35, crate::fields::U4096::U4096>();
+}
+
+#[test]
+fn test_mul_u512() {
+    test_mul::<5, crate::fields::U512::U512>();
+}
+
+#[test]
+fn test_mul_u768() {
+    test_mul::<7, crate::fields::U768::U768>();
+}
+
+#[test]
+fn test_mul_u8192() {
+    test_mul::<69, crate::fields::U8192::U8192>();
+}
+
+#[test]
+fn test_mul_bls12_377_fq() {
+    test_mul::<4, crate::fields::bls12_377Fq::BLS12_377_Fq>();
+}
+
+#[test]
+fn test_mul_bls12_377_fr() {
+    test_mul::<3, crate::fields::bls12_377Fr::BLS12_377_Fr>();
+}
+
+#[test]
+fn test_mul_bls12_381_fq() {
+    test_mul::<4, crate::fields::bls12_381Fq::BLS12_381_Fq>();
+}
+
+#[test]
+fn test_mul_bls12_381_fr() {
+    test_mul::<3, crate::fields::bls12_381Fr::BLS12_381_Fr>();
+}
+
+#[test]
+fn test_mul_ed25519_fq() {
+    test_mul::<3, crate::fields::ed25519Fq::ED25519_Fq>();
+}
+
+#[test]
+fn test_mul_ed25519_fr() {
+    test_mul::<3, crate::fields::ed25519Fr::ED25519_Fr>();
+}
+
+#[test]
+fn test_mul_mnt4_753_fq() {
+    test_mul::<7, crate::fields::mnt4_753Fq::MNT4_753_Fq>();
+}
+
+#[test]
+fn test_mul_mnt4_753_fr() {
+    test_mul::<7, crate::fields::mnt4_753Fr::MNT4_753_Fr>();
+}
+
+#[test]
+fn test_mul_mnt6_753_fq() {
+    test_mul::<7, crate::fields::mnt6_753Fq::MNT6_753_Fq>();
+}
+
+#[test]
+fn test_mul_mnt6_753_fr() {
+    test_mul::<7, crate::fields::mnt6_753Fr::MNT6_753_Fr>();
+}
+
+#[test]
+fn test_mul_pallas_fq() {
+    test_mul::<3, crate::fields::pallasFq::Pallas_Fq>();
+}
+
+#[test]
+fn test_mul_pallas_fr() {
+    test_mul::<3, crate::fields::pallasFr::Pallas_Fr>();
+}
+
+#[test]
+fn test_mul_secp256k1_fq() {
+    test_mul::<3, crate::fields::secp256k1Fq::Secp256k1_Fq>();
+}
+
+#[test]
+fn test_mul_secp256k1_fr() {
+    test_mul::<3, crate::fields::secp256k1Fr::Secp256k1_Fr>();
+}
+
+#[test]
+fn test_mul_secp256r1_fq() {
+    test_mul::<3, crate::fields::secp256r1Fq::Secp256r1_Fq>();
+}
+
+#[test]
+fn test_mul_secp256r1_fr() {
+    test_mul::<3, crate::fields::secp256r1Fr::Secp256r1_Fr>();
+}
+
+#[test]
+fn test_mul_secp384r1_fq() {
+    test_mul::<4, crate::fields::secp384r1Fq::Secp384r1_Fq>();
+}
+
+#[test]
+fn test_mul_secp384r1_fr() {
+    test_mul::<4, crate::fields::secp384r1Fr::Secp384r1_Fr>();
+}
+
+#[test]
+fn test_mul_vesta_fq() {
+    test_mul::<3, crate::fields::vestaFq::Vesta_Fq>();
+}
+
+#[test]
+fn test_mul_vesta_fr() {
+    test_mul::<3, crate::fields::vestaFr::Vesta_Fr>();
 }
 
 // ------------------------------ EXPRESSIONS TESTS ------------------------------

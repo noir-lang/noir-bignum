@@ -29,10 +29,10 @@ pub global BLS12_377_Fr_PARAMS: BigNumParams<3, 253> = BigNumParams {
         0x01cabd34594aacc1689a3cb86f6002b2,
         0x2555,
     ],
-    redc_param: [0xa180b8d69e258f5204c21151e79ea1, 0x91ec40b2c9ee4e51e49faa80548fd0, 0x036d94],
+    redc_param: [0x8602e35a78963d48130845479e7a85, 0x47b102cb27b93947927eaa01523f42, 0x0db652],
 };
 
-#[derive_bignum(3, 253, quote {BLS12_377_Fr_PARAMS})]
+#[derive_bignum(3, 253, quote { BLS12_377_Fr_PARAMS })]
 pub struct BLS12_377_Fr {
     limbs: [u128; 3],
 }

@@ -33,14 +33,14 @@ pub global BLS12_381_Fq_PARAMS: BigNumParams<4, 381> = BigNumParams {
         0x340222,
     ],
     redc_param: [
-        0x5c59e8163c701ec4f881fd59646e8b,
-        0x9d07fda82a52f7d1dc780a19de74e6,
-        0xbcf32791738a0406c331e9ae8a46e0,
-        0x02760d74,
+        0x7167a058f1c07b13e207f56591ba2e,
+        0x741ff6a0a94bdf4771e0286779d399,
+        0xf3cc9e45ce28101b0cc7a6ba291b82,
+        0x09d835d2,
     ],
 };
 
-#[derive_bignum(4, 381, quote {BLS12_381_Fq_PARAMS})]
+#[derive_bignum(4, 381, quote { BLS12_381_Fq_PARAMS })]
 pub struct BLS12_381_Fq {
     limbs: [u128; 4],
 }
