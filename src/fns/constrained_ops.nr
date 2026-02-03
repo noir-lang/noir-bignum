@@ -362,11 +362,7 @@ pub fn eq<let N: u32, let MOD_BITS: u32>(
 /// This is slightly cheaper than doing `val != [0; N]`, as we avoid
 /// creating per-limb boolean equalities and chaining them with `and`s.
 pub fn assert_is_not_zero_integer<let N: u32>(val: [u128; N]) {
-    let mut limb_sum: Field = 0;
-    for i in 0..N {
-        limb_sum += val[i] as Field;
-    }
-    assert(limb_sum != 0, "assert_is_not_zero_integer fail");
+    assert(!is_zero_integer(val), "assert_is_not_zero_integer fail");
 }
 
 /// Check whether `val` is the zero `BigNum` in the integer sense.
