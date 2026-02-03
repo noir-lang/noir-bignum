@@ -364,11 +364,7 @@ pub fn assert_is_not_zero_integer<T, let N: u32>(val: [T; N])
 where
     T: Into<Field>,
 {
-    let mut limb_sum: Field = 0;
-    for i in 0..N {
-        limb_sum += val[i].into();
-    }
-    assert(limb_sum != 0, "assert_is_not_zero_integer fail");
+    assert(!is_zero_integer(val), "assert_is_not_zero_integer fail");
 }
 
 /// Check whether `val` is the zero `BigNum` in the integer sense.
@@ -381,10 +377,13 @@ where
 /// ## Note
 /// This is slightly cheaper than testing `val == [0; N]`, as we avoid
 /// creating per-limb boolean equalities and chaining them with `and`s.
-pub fn is_zero_integer<let N: u32>(val: [u128; N]) -> bool {
+pub fn is_zero_integer<T, let N: u32>(val: [u128; N]) -> bool
+where
+    T: Into<Field>,
+{
     let mut limb_sum: Field = 0;
     for i in 0..N {
-        limb_sum += val[i] as Field;
+        limb_sum += val[i].into();
     }
     limb_sum == 0
 }
