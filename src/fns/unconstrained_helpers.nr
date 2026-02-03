@@ -522,9 +522,7 @@ pub(crate) fn __get_bit<let N: u32>(input: [u128; N], bit: u32) -> bool {
 ///
 /// Find the maximum value s such that `MOD = 2^s * q + 1`, where `q` is odd
 ///       This is needed for our Tonelli-Shanks sqrt algorithm
-pub(crate) unconstrained fn __primitive_root_log_size<let N: u32>(
-    modulus: [u128; N],
-) -> u32 {
+pub(crate) unconstrained fn __primitive_root_log_size<let N: u32>(modulus: [u128; N]) -> u32 {
     let mut target: [u128; N] = __helper_sub(modulus, __one());
     let mut result: u32 = 0;
     while !__get_bit(target, result) {
