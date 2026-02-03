@@ -309,7 +309,11 @@ pub comptime fn derive_bignum(
 
         impl std::ops::Div for $typ {
             fn div(self, other: Self) -> Self {
-                $typ { limbs: $crate::internal::div::<$N, $MOD_BITS>($params, self.limbs, other.limbs) }
+                if $params.has_multiplicative_inverse {
+                    $typ { limbs: $crate::internal::div::<$N, $MOD_BITS>($params, self.limbs, other.limbs) }
+                } else {
+                    $typ { limbs: $crate::internal::udiv::<$N, $MOD_BITS>(self.limbs, other.limbs) }
+                }
             }
         }
 
