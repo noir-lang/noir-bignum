@@ -12,10 +12,10 @@ pub global U512_PARAMS: BigNumParams<5, 513> = BigNumParams {
         0xffffffffffffffffffffffffffffff,
         0x01ffffffff,
     ],
-    redc_param: [0x00, 0x00, 0x00, 0x00, 0x4000000000],
+    redc_param: [0x00, 0x00, 0x00, 0x00, 0x010000000000],
 };
 
-#[derive_bignum(5, 513, quote {U512_PARAMS})]
+#[derive_bignum(5, 513, quote { U512_PARAMS })]
 pub struct U512 {
     limbs: [u128; 5],
 }

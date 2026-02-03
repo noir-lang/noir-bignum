@@ -19,7 +19,7 @@ use crate::params::BigNumParams;
 /// Takes a seed byte array and generates a `BigNum` in the range [0, modulus-1].
 ///
 /// See more information in `constrained_ops.nr`: `derive_from_seed`
-pub(crate) unconstrained fn __derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(
+pub unconstrained fn __derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(
     params: BigNumParams<N, MOD_BITS>,
     seed: [u8; SeedBytes],
 ) -> [u128; N] {
@@ -29,12 +29,12 @@ pub(crate) unconstrained fn __derive_from_seed<let N: u32, let MOD_BITS: u32, le
 // ------------------------------ COMPARISON FUNCTIONS ------------------------------
 
 /// Compare two limb arrays for equality (unconstrained)
-pub(crate) unconstrained fn __eq<let N: u32>(lhs: [u128; N], rhs: [u128; N]) -> bool {
+pub unconstrained fn __eq<let N: u32>(lhs: [u128; N], rhs: [u128; N]) -> bool {
     lhs == rhs
 }
 
 /// Compare a limb array to a zero array (unconstrained)
-pub(crate) unconstrained fn __is_zero<let N: u32>(limbs: [u128; N]) -> bool {
+pub unconstrained fn __is_zero<let N: u32>(limbs: [u128; N]) -> bool {
     limbs == [0; N]
 }
 
@@ -60,7 +60,7 @@ pub(crate) unconstrained fn __gte<let N: u32>(lhs: [u128; N], rhs: [u128; N]) ->
 ///
 /// ## Note
 /// The input is assumed to be less than modulus
-pub(crate) unconstrained fn __neg<let N: u32>(modulus: [u128; N], limbs: [u128; N]) -> [u128; N] {
+pub unconstrained fn __neg<let N: u32>(modulus: [u128; N], limbs: [u128; N]) -> [u128; N] {
     __helper_sub(modulus, limbs)
 }
 
@@ -72,7 +72,7 @@ pub(crate) unconstrained fn __neg<let N: u32>(modulus: [u128; N], limbs: [u128; 
 /// ## Note
 /// The `carry` must be `0` at the end of the loop.
 /// No explicit assertion is made, as this condition is validated during evaluation.
-pub(crate) unconstrained fn __add<let N: u32>(
+pub unconstrained fn __add<let N: u32>(
     modulus: [u128; N],
     lhs: [u128; N],
     rhs: [u128; N],
@@ -98,7 +98,7 @@ pub(crate) unconstrained fn __add<let N: u32>(
 /// Subtracts two `BigNum` values with modular reduction (unconstrained).
 ///
 /// Computes `x + (m - y)` (mod m)
-pub(crate) unconstrained fn __sub<let N: u32>(
+pub unconstrained fn __sub<let N: u32>(
     modulus: [u128; N],
     lhs: [u128; N],
     rhs: [u128; N],
@@ -123,7 +123,7 @@ pub(crate) unconstrained fn __mul_with_quotient<let N: u32, let MOD_BITS: u32>(
 }
 
 /// Multiplies two `BigNum` values with modular reduction (unconstrained).
-pub(crate) unconstrained fn __mul<let N: u32, let MOD_BITS: u32>(
+pub unconstrained fn __mul<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     lhs: [u128; N],
     rhs: [u128; N],
@@ -132,7 +132,7 @@ pub(crate) unconstrained fn __mul<let N: u32, let MOD_BITS: u32>(
 }
 
 /// Squares a `BigNum` value with modular reduction (unconstrained).
-pub(crate) unconstrained fn __sqr<let N: u32, let MOD_BITS: u32>(
+pub unconstrained fn __sqr<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     val: [u128; N],
 ) -> [u128; N] {
@@ -146,7 +146,7 @@ pub(crate) unconstrained fn __sqr<let N: u32, let MOD_BITS: u32>(
 /// ## Note
 /// For the loop, we are using `MOD_BITS` instead of `__get_msb`
 /// because it is much much cheaper
-pub(crate) unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
+pub unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     val: [u128; N],
     exponent: [u128; N],
@@ -172,7 +172,7 @@ pub(crate) unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
 /// ## Note
 /// The input value must be nonzero and modulus has to be prime
 /// No explicit assertion is made, as this condition is validated during evaluation
-pub(crate) unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
+pub unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     val: [u128; N],
 ) -> [u128; N] {
@@ -188,7 +188,7 @@ pub(crate) unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
 /// ## Note
 /// The divisor must be nonzero
 /// No explicit assertion is made, as this condition is validated during evaluation
-pub(crate) unconstrained fn __div<let N: u32, let MOD_BITS: u32>(
+pub unconstrained fn __div<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     numerator: [u128; N],
     divisor: [u128; N],
@@ -207,7 +207,7 @@ pub(crate) unconstrained fn __div<let N: u32, let MOD_BITS: u32>(
 /// ## Note
 /// The divisor must be nonzero
 /// No explicit assertion is made, as this condition is validated during evaluation
-pub(crate) unconstrained fn __udiv_mod<let N: u32>(
+pub unconstrained fn __udiv_mod<let N: u32>(
     numerator: [u128; N],
     divisor: [u128; N],
 ) -> ([u128; N], [u128; N]) {
@@ -345,7 +345,7 @@ pub(crate) unconstrained fn batch_invert_slice<let N: u32, let MOD_BITS: u32>(
 }
 
 /// Compute a modular square root in a prime field (unconstrained)
-pub(crate) unconstrained fn __sqrt<let N: u32, let MOD_BITS: u32>(
+pub unconstrained fn __sqrt<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     input: [u128; N],
 ) -> std::option::Option<[u128; N]> {
