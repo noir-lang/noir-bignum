@@ -51,54 +51,27 @@ pub(crate) unconstrained fn __from_field<let N: u32>(val: Field) -> [u128; N] {
 // ------------------------------ ARITHMETIC WITH FLAGS HELPER FUNCTIONS ------------------------------
 // These are the functions that compute modular operations results as well as borrow and carry flags for constraints
 
-/// Compute the `MOD - val` and the corresponding borrow flags (unconstrained)
+/// Compute flags for modular addition (unconstrained)
 ///
-/// Negate the value and compute the flags indicating whether we need
-///      to borrow a `bit` from the upper limb when subtracting the value from modulus
+/// Given `lhs, rhs, modulus`, computes the carry and borrow flags needed
+/// for `lhs + rhs - (overflow ? modulus : 0)`.
+/// The result is computed in constrained code using `compute_add_result`.
 ///
-/// ## Note
-/// The `borrow_in` must be `0` at the end of the loop.
-/// No explicit assertion is made, as this condition is validated during evaluation.
-pub(crate) unconstrained fn __neg_with_flags<let N: u32>(
-    modulus: [u128; N],
-    val: [u128; N],
-) -> ([u128; N], [bool; N - 1]) {
-    let mut result: [u128; N] = [0; N];
-    let mut borrow_in: u128 = 0;
-
-    let mut borrow_flags: [bool; N - 1] = [false; N - 1];
-    for i in 0..N {
-        let sub_term: u128 = val[i] + borrow_in;
-        borrow_in = (sub_term > modulus[i]) as u128;
-        result[i] = borrow_in * TWO_POW_120 + modulus[i] - sub_term;
-        if (i < N - 1) {
-            borrow_flags[i] = (borrow_in != 0);
-        }
-    }
-    (result, borrow_flags)
-}
-
-/// Compute modular addition and the corresponding borrow and carry flags (unconstrained)
-///
-/// Given `x, y, MOD` compute x + y or x + y - MOD in case it overflows
-/// Additionally compute all the carries from addition (x + y)
-/// and borrows from subtraction  (- MOD)
-///
-/// ## Note
-/// The `borrow` must be equal to `carry` at the end of the loop.
-/// No explicit assertion is made, as this condition is validated during evaluation.
-pub(crate) unconstrained fn __add_with_flags<let N: u32>(
+/// Returns (carry_flags, borrow_flags, overflow) where:
+/// - carry_flags: carries from adding lhs + rhs
+/// - borrow_flags: borrows from subtracting modulus when overflow occurs
+/// - overflow: true if lhs + rhs >= modulus (so we need to subtract modulus)
+pub(crate) unconstrained fn compute_add_flags<let N: u32>(
     modulus: [u128; N],
     lhs: [u128; N],
     rhs: [u128; N],
-) -> ([u128; N], [bool; N - 1], [bool; N - 1], bool) {
+) -> ([bool; N - 1], [bool; N - 1], bool) {
     let mask: u128 = TWO_POW_120 - 1;
 
     let add_res: [u128; N] = __helper_add(lhs, rhs);
     let overflow: bool = __gte(add_res, modulus);
 
-    let mut subtrahend: [u128; N] = if overflow { modulus } else { [0; N] };
-    let mut result: [u128; N] = [0; N];
+    let subtrahend: [u128; N] = if overflow { modulus } else { [0; N] };
 
     let mut borrow_flags: [bool; N - 1] = [false; N - 1];
     let mut carry_flags: [bool; N - 1] = [false; N - 1];
@@ -113,8 +86,6 @@ pub(crate) unconstrained fn __add_with_flags<let N: u32>(
         let sub_term: u128 = subtrahend[i] + borrow;
         borrow = (sub_term > add_term) as u128;
 
-        result[i] = borrow * TWO_POW_120 + add_term - sub_term;
-
         // Only set `borrow` and `carry` if they differ
         // And if it's not the last limb
         if (carry != borrow) & (i < N - 1) {
@@ -122,29 +93,29 @@ pub(crate) unconstrained fn __add_with_flags<let N: u32>(
             borrow_flags[i] = borrow != 0;
         }
     }
-    (result, carry_flags, borrow_flags, overflow)
+    (carry_flags, borrow_flags, overflow)
 }
 
-/// Compute modular subtraction and the corresponding borrow and carry flags (unconstrained)
+/// Compute flags for modular subtraction (unconstrained)
 ///
-/// Given `x, y, MOD` compute x - y or x - y + MOD in case it overflows
-/// Additionally compute all the carries from addition (x + MOD)
-/// and borrows from subtraction  (- y)
+/// Given `lhs, rhs, modulus`, computes the carry and borrow flags needed
+/// for `lhs - rhs + (underflow ? modulus : 0)`.
+/// The result is computed in constrained code using `compute_sub_result`.
 ///
-/// ## Note
-/// The `borrow` must be equal to `carry` at the end of the loop.
-/// No explicit assertion is made, as this condition is validated during evaluation.
-pub(crate) unconstrained fn __sub_with_flags<let N: u32>(
+/// Returns (carry_flags, borrow_flags, underflow) where:
+/// - carry_flags: carries from adding (lhs + modulus) when underflow occurs
+/// - borrow_flags: borrows from subtracting rhs
+/// - underflow: true if lhs < rhs (so we need to add modulus)
+pub(crate) unconstrained fn compute_sub_flags<let N: u32>(
     modulus: [u128; N],
     lhs: [u128; N],
     rhs: [u128; N],
-) -> ([u128; N], [bool; N - 1], [bool; N - 1], bool) {
+) -> ([bool; N - 1], [bool; N - 1], bool) {
     let mask: u128 = TWO_POW_120 - 1;
 
     let underflow: bool = !__gte(lhs, rhs);
 
     let addend: [u128; N] = if underflow { modulus } else { [0; N] };
-    let mut result: [u128; N] = [0; N];
 
     let mut borrow_flags: [bool; N - 1] = [false; N - 1];
     let mut carry_flags: [bool; N - 1] = [false; N - 1];
@@ -159,8 +130,6 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32>(
         let sub_term: u128 = rhs[i] + borrow;
         borrow = (sub_term > add_term) as u128;
 
-        result[i] = borrow * TWO_POW_120 + add_term - sub_term;
-
         // Only set `borrow` and `carry` if they differ
         // And if it's not the last limb
         if (carry != borrow) & (i < N - 1) {
@@ -168,64 +137,39 @@ pub(crate) unconstrained fn __sub_with_flags<let N: u32>(
             borrow_flags[i] = borrow != 0;
         }
     }
-    (result, carry_flags, borrow_flags, underflow)
+    (carry_flags, borrow_flags, underflow)
 }
 
-/// Validate that lhs - rhs does not underflow (unconstrained)
+/// Compute borrow flags for lhs - rhs (unconstrained)
 ///
-/// Same as `__validate_gte_with_flags`, but we don't compute the
-/// result of a subtraction
-pub(crate) unconstrained fn __validate_in_field_compute_borrow_flags<let N: u32, let MOD_BITS: u32>(
-    params: BigNumParams<N, MOD_BITS>,
-    val: [u128; N],
+/// The result is computed in constrained code using `compute_gte_result`
+pub(crate) unconstrained fn compute_borrow_flags<let N: u32>(
+    lhs: [u128; N],
+    rhs: [u128; N],
 ) -> [bool; N - 1] {
-    let modulus: [u128; N] = params.modulus;
-
     let mut borrow_flags: [bool; N - 1] = [false; N - 1];
-    borrow_flags[0] = modulus[0] < val[0];
+    borrow_flags[0] = lhs[0] < rhs[0];
     for i in 1..N - 1 {
-        borrow_flags[i] = modulus[i] < val[i] + (borrow_flags[i - 1] as u128);
+        borrow_flags[i] = lhs[i] < rhs[i] + (borrow_flags[i - 1] as u128);
     }
     borrow_flags
 }
 
-/// Validate that lhs - rhs does not underflow (unconstrained)
+/// Compute underflow and borrow flags for gte comparison (unconstrained)
 ///
-/// Compute underflow flag (lhs < rhs)
-///       then perform subtraction with borrow flags
-///
-/// ## Note
-/// The `borrow` must be equal to 0 at the end of the loop.
-/// And it can't be nonzero, since we swap the terms at the beginning
-pub(crate) unconstrained fn __validate_gte_with_flags<let N: u32>(
+/// Returns (underflow, borrow_flags) where:
+/// - underflow is true if lhs < rhs
+/// - borrow_flags correspond to max(lhs, rhs) - min(lhs, rhs)
+pub(crate) unconstrained fn compute_gte_flags<let N: u32>(
     lhs: [u128; N],
     rhs: [u128; N],
-) -> (bool, [u128; N], [bool; N - 1]) {
-    let mut a: [u128; N] = lhs;
-    let mut b: [u128; N] = rhs;
-
+) -> (bool, [bool; N - 1]) {
     let underflow: bool = !__gte(lhs, rhs);
-    // swap a and b if there's an underflow
-    let (a, b): ([u128; N], [u128; N]) = if underflow { (b, a) } else { (a, b) };
+    // swap if underflow so we're computing borrow flags for larger - smaller
+    let (a, b): ([u128; N], [u128; N]) = if underflow { (rhs, lhs) } else { (lhs, rhs) };
 
-    let mut result: [u128; N] = [0; N];
-
-    let mut borrow_flags: [bool; N - 1] = [false; N - 1];
-
-    let mut borrow: u128 = 0;
-    for i in 0..N {
-        let mut add_term: u128 = a[i];
-
-        let sub_term: u128 = b[i] + borrow;
-        borrow = (sub_term > add_term) as u128;
-
-        result[i] = borrow * TWO_POW_120 + add_term - sub_term;
-
-        if (i < N - 1) {
-            borrow_flags[i] = borrow != 0;
-        }
-    }
-    (underflow, result, borrow_flags)
+    let borrow_flags = compute_borrow_flags(a, b);
+    (underflow, borrow_flags)
 }
 
 // ------------------------------ BARRETT REDUCTION ------------------------------
@@ -524,10 +468,8 @@ pub(crate) fn __get_bit<let N: u32>(input: [u128; N], bit: u32) -> bool {
 ///
 /// Find the maximum value s such that `MOD = 2^s * q + 1`, where `q` is odd
 ///       This is needed for our Tonelli-Shanks sqrt algorithm
-pub(crate) unconstrained fn __primitive_root_log_size<let N: u32, let MOD_BITS: u32>(
-    params: BigNumParams<N, MOD_BITS>,
-) -> u32 {
-    let mut target: [u128; N] = __helper_sub(params.modulus, __one());
+pub(crate) unconstrained fn __primitive_root_log_size<let N: u32>(modulus: [u128; N]) -> u32 {
+    let mut target: [u128; N] = __helper_sub(modulus, __one());
     let mut result: u32 = 0;
     while !__get_bit(target, result) {
         result += 1;

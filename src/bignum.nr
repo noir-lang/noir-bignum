@@ -257,7 +257,7 @@ pub comptime fn derive_bignum(
             }
 
             fn is_zero_integer(self: Self) -> bool {
-                $crate::internal::is_zero_integer(self.get_limbs())
+                $crate::internal::is_zero_integer::<u128,$N>(self.get_limbs())
             }
 
             fn assert_is_not_zero(self: Self) {
