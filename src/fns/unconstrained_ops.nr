@@ -297,7 +297,7 @@ pub(crate) unconstrained fn batch_invert<let N: u32, let MOD_BITS: u32, let M: u
     }
 
     let mut result: [[u128; N]; M] = [[0; N]; M];
-    accumulator = __invmod::<N, MOD_BITS>(params, accumulator);
+    accumulator = __binary_gcd_invmod::<N>(params.modulus, accumulator);
     for i in 0..M {
         let idx: u32 = M - 1 - i;
         if (!__is_zero(vals[idx])) {
@@ -329,7 +329,7 @@ pub(crate) unconstrained fn batch_invert_slice<let N: u32, let MOD_BITS: u32>(
     }
 
     let mut result: [[u128; N]] = [];
-    accumulator = __invmod::<N, MOD_BITS>(params, accumulator);
+    accumulator = __binary_gcd_invmod::<N>(params.modulus, accumulator);
     for i in 0..M {
         let idx: u32 = M - 1 - i;
         if (!__is_zero(vals[idx])) {
