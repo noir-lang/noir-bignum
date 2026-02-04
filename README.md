@@ -189,7 +189,7 @@ All the constrained arithmetic methods have their unconstrained counterpart and 
 - `__mul`
 - `__sqr`
 - `__div`
-  - **Note:** this method behaves as `__udiv`, if we are not working with a field(i.e. `U256`).
+  - **Note:** this method behaves as `__udiv`, if we are not working with a field (e.g. `U256`).
 - `__udiv`/`__udiv_mod`
 - `__pow`
 - `__sqrt`
@@ -218,7 +218,7 @@ Constrained arithmetic operations. These perform the expected arithmetic operati
 - `sub`
 - `mul`
 - `div` - Expensive!
-  - **Note:** this method behaves as `udiv`, if we are not working with a field(i.e. `U256`).
+  - **Note:** this method behaves as `udiv`, if we are not working with a field (e.g. `U256`).
 
 These methods can be used using operators (`+`, `-`, `*`, `/`). 
 
