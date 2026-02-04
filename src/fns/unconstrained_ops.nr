@@ -5,7 +5,7 @@ use crate::fns::constrained_ops::derive_from_seed;
 use crate::fns::unconstrained_helpers::{
     __barrett_reduction, __get_bit, __get_msb, __helper_add, __helper_mul, __helper_sub,
     __increment, __one, __primitive_root_log_size, __quadratic_non_residue, __shl, __shr, __shr1,
-    __tonelli_shanks_sqrt_find_i,
+    __tonelli_shanks_sqrt_find_i, __is_even, __half_mod_odd
 };
 
 use crate::constants::TWO_POW_120;
@@ -172,13 +172,78 @@ pub unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
 /// ## Note
 /// The input value must be nonzero and modulus has to be prime
 /// No explicit assertion is made, as this condition is validated during evaluation
+pub unconstrained fn __pow_invmod<let N: u32, let MOD_BITS: u32>(
+    params: BigNumParams<N, MOD_BITS>,
+    val: [u128; N],
+) -> [u128; N] {
+    let mut two: [u128; N] = [0; N];
+    two[0] = 2;
+
+    let exp: [u128; N] = __helper_sub(params.modulus, two);
+    __pow::<N, MOD_BITS>(params, val, exp)
+}
+
+/// Computes `val^{-1} (mod modulus)` (unconstrained).
+///
+/// This is an alternative to Fermat inversion(`__pow_invmod`) (`val^(modulus-2) mod modulus`) that uses
+/// the (extended) binary GCD / Stein algorithm. 
+/// See [Binary GCD algorithm](https://en.wikipedia.org/wiki/Binary_GCD_algorithm)
+///
+/// ## Note
+/// - `modulus` must be odd (required by `__half_mod_odd`).
+/// - `gcd(val, modulus) == 1` (i.e. `val` is invertible modulo `modulus`).
+pub unconstrained fn __binary_gcd_invmod<let N: u32>(
+    modulus: [u128; N],
+    val: [u128; N],
+) -> [u128; N] {
+    if (__is_zero(val)) {
+        [0; N]
+    } else {
+        let mut u: [u128; N] = val;
+        let mut v: [u128; N] = modulus;
+
+        let one: [u128; N] = __one::<N>();
+
+        let mut x1: [u128; N] = one;
+        let mut x2: [u128; N] = [0; N];
+
+        while (!__eq(u, one) & !__eq(v, one)) {
+            // Get rid of the even part of u
+            while __is_even(u) {
+                u = __shr1(u);
+                x1 = __half_mod_odd(modulus, x1);
+            }
+
+            // Get rid of the even part of v
+            while __is_even(v) {
+                v = __shr1(v);
+                x2 = __half_mod_odd(modulus, x2);
+            }
+
+            // Update the intermediate values after both (u, v) are odd
+            if __gte(u, v) {
+                u = __helper_sub(u, v);
+                x1 = __sub(modulus, x1, x2);
+            } else {
+                v = __helper_sub(v, u);
+                x2 = __sub(modulus, x2, x1);
+            }
+        }
+
+        if __eq(u, one) {
+            x1
+        } else {
+            x2
+        }
+    }
+}
+
+/// Wrapper around `__binary_gcd_invmod` (unconstrained)
 pub unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
     params: BigNumParams<N, MOD_BITS>,
     val: [u128; N],
 ) -> [u128; N] {
-    let one: [u128; N] = __one();
-    let exp: [u128; N] = __helper_sub(params.modulus, __helper_add(one, one));
-    __pow::<N, MOD_BITS>(params, val, exp)
+    __binary_gcd_invmod(params.modulus, val)
 }
 
 /// Divides two `BigNum` values with modular reduction (unconstrained).
@@ -423,9 +488,9 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>
     // b = a^{(Q - 1)/2}
     // R = a * b = a^{(Q + 1) / 2} => R^2 = a * a^Q
     // t = R * b = a^Q
-    let mut b: [u128; N] = __pow::<_, MOD_BITS>(params, input, Q_minus_one_over_two);
-    let mut r: [u128; N] = __mul::<_, MOD_BITS>(params, input, b);
-    let mut t: [u128; N] = __mul::<_, MOD_BITS>(params, r, b);
+    let mut b: [u128; N] = __pow::<N, MOD_BITS>(params, input, Q_minus_one_over_two);
+    let mut r: [u128; N] = __mul::<N, MOD_BITS>(params, input, b);
+    let mut t: [u128; N] = __mul::<N, MOD_BITS>(params, r, b);
 
     let mut check: [u128; N] = t;
     // Assure t^{2^{s - 1}} = a^{(p -1)/2} = 1, otherwise we have met a non-residue
@@ -508,64 +573,4 @@ pub(crate) unconstrained fn __easy_sqrt<let N: u32, let MOD_BITS: u32>(
         result = Option::some(__pow(params, input, p_plus_one_over_four));
     }
     result
-}
-
-pub(crate) unconstrained fn __is_even<let N: u32>(x: [u128; N]) -> bool {
-    (x[0] & 1) == 0
-}
-
-pub(crate) unconstrained fn __half_mod_odd<let N: u32>(
-    modulus: [u128; N],
-    x: [u128; N],
-) -> [u128; N] {
-    if __is_even::<N>(x) {
-        __shr1(x)
-    } else {
-        __shr1(__helper_add(x, modulus))
-    }
-}
-
-pub(crate) unconstrained fn __binary_gcd_invmod<let N: u32>(
-    modulus: [u128; N],
-    val: [u128; N],
-) -> [u128; N] {
-    if (__is_zero(val)) {
-        [0; N]
-    } else {
-        let mut u: [u128; N] = val;
-        let mut v: [u128; N] = modulus;
-
-        let one: [u128; N] = __one::<N>();
-
-        let mut x1: [u128; N] = one;
-        let mut x2: [u128; N] = [0; N];
-
-        while (!__eq(u, one) & !__eq(v, one)) {
-            // Get rid of the even part
-            while __is_even(u) {
-                u = __shr1(u);
-                x1 = __half_mod_odd(modulus, x1);
-            }
-
-            // Get rid of the even part
-            while __is_even(v) {
-                v = __shr1(v);
-                x2 = __half_mod_odd(modulus, x2);
-            }
-
-            if __gte(u, v) {
-                u = __helper_sub(u, v);
-                x1 = __sub(modulus, x1, x2);
-            } else {
-                v = __helper_sub(v, u);
-                x2 = __sub(modulus, x2, x1);
-            }
-        }
-
-        if __eq(u, one) {
-            x1
-        } else {
-            x2
-        }
-    }
 }
