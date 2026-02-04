@@ -927,7 +927,7 @@ where
 #[test]
 unconstrained fn test_batch_inversion_slice_BN381(seeds: [[u8; 2]; 3]) {
     let fields: [BLS12_381_Fq] =
-        seeds.map(|seed: [u8; 2]| BLS12_381_Fq::derive_from_seed(seed)).as_slice();
+        seeds.map(|seed: [u8; 2]| BLS12_381_Fq::derive_from_seed(seed)).as_vector();
     test_batch_inversion_slice(fields)
 }
 

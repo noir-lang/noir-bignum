@@ -189,14 +189,13 @@ All the constrained arithmetic methods have their unconstrained counterpart and 
 - `__mul`
 - `__sqr`
 - `__div`
-  - **Note:** this method is only available for fields, i.e if all elements have a multiplicative inverse. If this is not the case, use `__udiv`
+  - **Note:** this method behaves as `__udiv`, if we are not working with a field (e.g. `U256`).
 - `__udiv`/`__udiv_mod`
-  - **Note:** only use if you're not working with a field
 - `__pow`
 - `__sqrt`
   - **Note:** this method is only available for fields, i.e. if all elements have a multiplicative inverse
 
-> **Note:** `__div`, `__udiv`, `__pow` and `__sqrt` are expensive due to requiring modular exponentiations during witness computation. It is worth modifying witness generation algorithms to minimize the number of modular exponentiations required. (for example, using batch inverses, mentioned below)
+> **Note:** `__div`, `__pow` and `__sqrt` are expensive due to requiring modular exponentiations during witness computation. It is worth modifying witness generation algorithms to minimize the number of modular exponentiations required. (for example, using batch inverses, mentioned below)
 
 Use the following unconstrained operations only when working with a field (otherwise the inverse is not defined):
 
@@ -219,13 +218,12 @@ Constrained arithmetic operations. These perform the expected arithmetic operati
 - `sub`
 - `mul`
 - `div` - Expensive!
-  - **Note:** this method is only available for fields, i.e if all elements have a multiplicative inverse. If this is not the case, use `udiv`
+  - **Note:** this method behaves as `udiv`, if we are not working with a field (e.g. `U256`).
 
 These methods can be used using operators (`+`, `-`, `*`, `/`). 
 
 - `sqr`
 - `udiv`/`udiv_mod` - Expensive!
-  - **Note:** only use if you're not working with a field
 - `umod` - Expensive!
   - Integer modular reduction which uses `udiv`
 
@@ -412,6 +410,14 @@ fn foo(x: U256, y: U256) -> U256 {
 }
 ```
 
+```rust
+use dep::bignum::U256;
+use dep::bignum::BigNum;
+
+fn foo(x: U256, y: U256) -> U256 {
+    x / y // Note that it is `udiv` in this case. Not a modular inversion.
+}
+```
 ### Predefined Fields
 
 This library includes the following field presets:

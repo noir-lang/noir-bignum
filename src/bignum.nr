@@ -183,7 +183,11 @@ pub comptime fn derive_bignum(
 
             unconstrained fn __div(self: Self, divisor: Self) -> Self {
                 let params = Self::params();
-                Self {limbs: $crate::internal::__div(params, self.get_limbs(), divisor.get_limbs())}
+                if $params.has_multiplicative_inverse {
+                    Self { limbs: $crate::internal::__div(params, self.get_limbs(), divisor.get_limbs()) }
+                } else {
+                    Self { limbs: $crate::internal::__udiv_mod(self.get_limbs(), divisor.get_limbs()).0 }
+                }
             }
 
             unconstrained fn __udiv_mod(self: Self, divisor: Self) -> (Self, Self) {
@@ -309,7 +313,11 @@ pub comptime fn derive_bignum(
 
         impl std::ops::Div for $typ {
             fn div(self, other: Self) -> Self {
-                $typ { limbs: $crate::internal::div::<$N, $MOD_BITS>($params, self.limbs, other.limbs) }
+                if $params.has_multiplicative_inverse {
+                    $typ { limbs: $crate::internal::div::<$N, $MOD_BITS>($params, self.limbs, other.limbs) }
+                } else {
+                    $typ { limbs: $crate::internal::udiv::<$N, $MOD_BITS>(self.limbs, other.limbs) }
+                }
             }
         }
 
