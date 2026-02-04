@@ -482,9 +482,6 @@ pub(crate) fn validate_quotient_in_range<let N: u32, let MOD_BITS: u32>(limbs: [
 /// `assert_is_not_zero_integer(result)` is crucial. Without it, we could always provide
 /// two identical inputs `x`, `x` and set `borrow_flags = [false; N]`,
 /// which would satisfy the limb constraints.
-///
-/// Also note that `underflow` is not properly constrained, so it just hangs there for
-/// completeness
 pub(crate) fn validate_gt<let N: u32, let MOD_BITS: u32>(lhs: [u128; N], rhs: [u128; N]) {
     // Safety: borrow_flags are constrained by `assert_sub_no_overflow`:
     // - incorrect flags cause the computed result to fail 128-bit range checks
