@@ -193,7 +193,7 @@ pub unconstrained fn __div<let N: u32, let MOD_BITS: u32>(
     numerator: [u128; N],
     divisor: [u128; N],
 ) -> [u128; N] {
-    let inv_divisor: [u128; N] = __invmod::<N, MOD_BITS>(params, divisor);
+    let inv_divisor: [u128; N] = __binary_gcd_invmod::<N>(params.modulus, divisor);
     __mul::<N, MOD_BITS>(params, numerator, inv_divisor)
 }
 
@@ -317,7 +317,7 @@ pub(crate) unconstrained fn batch_invert_slice<let N: u32, let MOD_BITS: u32>(
     vals: [[u128; N]],
 ) -> [[u128; N]] {
     let mut accumulator: [u128; N] = __one();
-    let mut temporaries: [[u128; N]] = &[];
+    let mut temporaries: [[u128; N]] = @[];
 
     let M: u32 = vals.len();
 
@@ -510,90 +510,62 @@ pub(crate) unconstrained fn __easy_sqrt<let N: u32, let MOD_BITS: u32>(
     result
 }
 
-pub(crate) unconstrained fn __egcd_div<let N: u32, let MOD_BITS: u32>(
-    params: BigNumParams<N, MOD_BITS>,
-    lhs: [u128; N],
-    rhs: [u128; N]
-) -> ([u128; N], [u128; N], [u128; N]){
-    let mut (old_r, r): ([u128; N], [u128; N]) = (lhs, rhs);
-    let mut (old_s, s): ([u128; N], [u128; N])= (__one::<N>(), [0; N]);
-    let mut (old_t, t): ([u128; N], [u128; N])= ([0; N], __one::<N>());
-
-    while !__is_zero(r){
-        let quotient: [u128; N] = __udiv_mod(old_r, r).0;
-
-        let mut new_prod_r: [u128; 2 * N] = __helper_mul(quotient, r);
-        let mut new_r: [u128; N] = [0; N];
-
-        let mut new_prod_s: [u128; 2 * N] = __helper_mul(quotient, s);
-        let mut new_s: [u128; N] = [0; N];
-
-        let mut new_prod_t: [u128; 2 * N] = __helper_mul(quotient, t);
-        let mut new_t: [u128; N] = [0; N];
-
-        for i in 0..N {
-            new_r[i] = new_prod_r[i];
-            new_s[i] = new_prod_s[i];
-            new_t[i] = new_prod_t[i];
-        }
-
-        new_r = __helper_sub(old_r, new_r);
-        new_s = __sub(params.modulus, old_s, new_s);
-        new_t = __sub(params.modulus, old_t, new_t);
-
-        old_r = r;
-        r = new_r;
-
-        old_s = s;
-        s = new_s;
-
-        old_t = t;
-        t = new_t;
-    }
-
-    (old_s, old_t, old_r)
+pub(crate) unconstrained fn __is_even<let N: u32>(x: [u128; N]) -> bool {
+    (x[0] & 1) == 0
 }
 
-//pub(crate) unconstrained fn __egcd_sub<let N: u32, let MOD_BITS: u32>(
-//    params: BigNumParams<N, MOD_BITS>,
-//    lhs: [u128; N],
-//    rhs: [u128; N]
-//) -> ([u128; N], [u128; N], [u128; N]){
-//    let mut (old_r, r): ([u128; N], [u128; N]) = (lhs, rhs);
-//    let mut (old_s, s): ([u128; N], [u128; N])= (__one::<N>(), [0; N]);
-//    let mut (old_t, t): ([u128; N], [u128; N])= ([0; N], __one::<N>());
-//
-//    while !__is_zero(r){
-//        let difference: [u128; N] = __udiv_mod(old_r, r).0;
-//
-//        let mut new_prod_r: [u128; 2 * N] = __helper_mul(quotient, r);
-//        let mut new_r: [u128; N] = [0; N];
-//
-//        let mut new_prod_s: [u128; 2 * N] = __helper_mul(quotient, s);
-//        let mut new_s: [u128; N] = [0; N];
-//
-//        let mut new_prod_t: [u128; 2 * N] = __helper_mul(quotient, t);
-//        let mut new_t: [u128; N] = [0; N];
-//
-//        for i in 0..N {
-//            new_r[i] = new_prod_r[i];
-//            new_s[i] = new_prod_s[i];
-//            new_t[i] = new_prod_t[i];
-//        }
-//
-//        new_r = __helper_sub(old_r, new_r);
-//        new_s = __helper_sub(old_s, new_s);
-//        new_t = __helper_sub(old_t, new_t);
-//
-//        old_r = r;
-//        r = new_r;
-//
-//        old_s = s;
-//        s = new_s;
-//
-//        old_t = t;
-//        t = new_t;
-//    }
-//
-//    (old_s, old_t, old_r)
-//}
+pub(crate) unconstrained fn __half_mod_odd<let N: u32>(
+    modulus: [u128; N],
+    x: [u128; N],
+) -> [u128; N] {
+    if __is_even::<N>(x) {
+        __shr1(x)
+    } else {
+        __shr1(__helper_add(x, modulus))
+    }
+}
+
+pub(crate) unconstrained fn __binary_gcd_invmod<let N: u32>(
+    modulus: [u128; N],
+    val: [u128; N],
+) -> [u128; N] {
+    if (__is_zero(val)) {
+        [0; N]
+    } else {
+        let mut u: [u128; N] = val;
+        let mut v: [u128; N] = modulus;
+
+        let one: [u128; N] = __one::<N>();
+
+        let mut x1: [u128; N] = one;
+        let mut x2: [u128; N] = [0; N];
+
+        while (!__eq(u, one) & !__eq(v, one)) {
+            // Get rid of the even part
+            while __is_even(u) {
+                u = __shr1(u);
+                x1 = __half_mod_odd(modulus, x1);
+            }
+
+            // Get rid of the even part
+            while __is_even(v) {
+                v = __shr1(v);
+                x2 = __half_mod_odd(modulus, x2);
+            }
+
+            if __gte(u, v) {
+                u = __helper_sub(u, v);
+                x1 = __sub(modulus, x1, x2);
+            } else {
+                v = __helper_sub(v, u);
+                x2 = __sub(modulus, x2, x1);
+            }
+        }
+
+        if __eq(u, one) {
+            x1
+        } else {
+            x2
+        }
+    }
+}
