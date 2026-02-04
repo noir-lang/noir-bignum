@@ -164,25 +164,6 @@ pub unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
     accumulator
 }
 
-/// Given a `BigNum` value `x` compute x^{-1} (mod m) (unconstrained)
-///
-/// x^{p-1} = 1 (mod p) (Fermat's little theorem)
-/// x^{p-2} = x^{-1} (mod p)
-///
-/// ## Note
-/// The input value must be nonzero and modulus has to be prime
-/// No explicit assertion is made, as this condition is validated during evaluation
-pub unconstrained fn __pow_invmod<let N: u32, let MOD_BITS: u32>(
-    params: BigNumParams<N, MOD_BITS>,
-    val: [u128; N],
-) -> [u128; N] {
-    let mut two: [u128; N] = [0; N];
-    two[0] = 2;
-
-    let exp: [u128; N] = __helper_sub(params.modulus, two);
-    __pow::<N, MOD_BITS>(params, val, exp)
-}
-
 /// Computes `val^{-1} (mod modulus)` (unconstrained).
 ///
 /// This is an alternative to Fermat inversion(`__pow_invmod`) (`val^(modulus-2) mod modulus`) that uses
@@ -192,10 +173,7 @@ pub unconstrained fn __pow_invmod<let N: u32, let MOD_BITS: u32>(
 /// ## Note
 /// - `modulus` must be odd (required by `__half_mod_odd`).
 /// - `gcd(val, modulus) == 1` (i.e. `val` is invertible modulo `modulus`).
-pub unconstrained fn __binary_gcd_invmod<let N: u32>(
-    modulus: [u128; N],
-    val: [u128; N],
-) -> [u128; N] {
+pub unconstrained fn __invmod<let N: u32>(modulus: [u128; N], val: [u128; N]) -> [u128; N] {
     if (__is_zero(val)) {
         [0; N]
     } else {
@@ -238,14 +216,6 @@ pub unconstrained fn __binary_gcd_invmod<let N: u32>(
     }
 }
 
-/// Wrapper around `__binary_gcd_invmod` (unconstrained)
-pub unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
-    params: BigNumParams<N, MOD_BITS>,
-    val: [u128; N],
-) -> [u128; N] {
-    __binary_gcd_invmod(params.modulus, val)
-}
-
 /// Divides two `BigNum` values with modular reduction (unconstrained).
 ///
 /// Computes `x * y^{-1}` (mod m)
@@ -258,7 +228,7 @@ pub unconstrained fn __div<let N: u32, let MOD_BITS: u32>(
     numerator: [u128; N],
     divisor: [u128; N],
 ) -> [u128; N] {
-    let inv_divisor: [u128; N] = __binary_gcd_invmod::<N>(params.modulus, divisor);
+    let inv_divisor: [u128; N] = __invmod::<N>(params.modulus, divisor);
     __mul::<N, MOD_BITS>(params, numerator, inv_divisor)
 }
 
@@ -362,7 +332,7 @@ pub(crate) unconstrained fn batch_invert<let N: u32, let MOD_BITS: u32, let M: u
     }
 
     let mut result: [[u128; N]; M] = [[0; N]; M];
-    accumulator = __binary_gcd_invmod::<N>(params.modulus, accumulator);
+    accumulator = __invmod::<N>(params.modulus, accumulator);
     for i in 0..M {
         let idx: u32 = M - 1 - i;
         if (!__is_zero(vals[idx])) {
@@ -394,7 +364,7 @@ pub(crate) unconstrained fn batch_invert_slice<let N: u32, let MOD_BITS: u32>(
     }
 
     let mut result: [[u128; N]] = [];
-    accumulator = __binary_gcd_invmod::<N>(params.modulus, accumulator);
+    accumulator = __invmod::<N>(params.modulus, accumulator);
     for i in 0..M {
         let idx: u32 = M - 1 - i;
         if (!__is_zero(vals[idx])) {

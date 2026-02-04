@@ -194,7 +194,7 @@ pub comptime fn derive_bignum(
             unconstrained fn __invmod(self: Self) -> Self {
                 let params = Self::params();
                 assert(params.has_multiplicative_inverse);
-                Self {limbs: $crate::internal::__invmod(params, self.get_limbs())}
+                Self {limbs: $crate::internal::__invmod(params.modulus, self.get_limbs())}
             }
 
             unconstrained fn __pow(self: Self, exponent: Self) -> Self {

@@ -178,7 +178,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params.has_multiplicative_inverse);
         // Safety: Unconstrained function simulation
-        let limbs: [u128; N] = unsafe { __invmod::<_, MOD_BITS>(params, self.limbs) };
+        let limbs: [u128; N] = unsafe { __invmod::<N>(params.modulus, self.limbs) };
         Self { limbs, params }
     }
 
