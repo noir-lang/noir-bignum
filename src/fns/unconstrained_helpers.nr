@@ -365,11 +365,12 @@ pub(crate) unconstrained fn __half_mod_odd<let N: u32>(
     modulus: [u128; N],
     x: [u128; N],
 ) -> [u128; N] {
-    if __is_even::<N>(x) {
-        __shr1(x)
+    let temp = if __is_even::<N>(x) {
+        x
     } else {
-        __shr1(__helper_add(x, modulus))
-    }
+        __helper_add(x, modulus)
+    };
+    __shr1(temp)
 }
 
 // ------------------------------ LOGIC HELPER FUNCTIONS ------------------------------
