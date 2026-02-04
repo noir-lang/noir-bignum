@@ -164,15 +164,15 @@ pub unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
     accumulator
 }
 
-/// Computes `val^{-1} (mod modulus)` (unconstrained).
+/// Given a `BigNum` value `x` compute x^{-1} (mod MOD) (unconstrained)
 ///
-/// This is an alternative to Fermat inversion(`__pow_invmod`) (`val^(modulus-2) mod modulus`) that uses
+/// This is an alternative to Fermat inversion(`__pow_invmod`) (`val^(modulus-2) mod MOD`) that uses
 /// the (extended) binary GCD / Stein algorithm.
 /// See [Binary GCD algorithm](https://en.wikipedia.org/wiki/Binary_GCD_algorithm)
 ///
 /// ## Note
-/// - `modulus` must be odd (required by `__half_mod_odd`).
-/// - `gcd(val, modulus) == 1` (i.e. `val` is invertible modulo `modulus`).
+/// - `modulus` must be odd (required by `__half_mod_odd`)
+/// - `gcd(val, modulus) == 1` (i.e. `val` is invertible modulo `modulus`)
 pub unconstrained fn __invmod<let N: u32>(modulus: [u128; N], val: [u128; N]) -> [u128; N] {
     if (__is_zero(val)) {
         [0; N]
