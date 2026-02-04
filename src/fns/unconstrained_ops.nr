@@ -3,9 +3,9 @@
 use crate::fns::constrained_ops::derive_from_seed;
 
 use crate::fns::unconstrained_helpers::{
-    __barrett_reduction, __get_bit, __get_msb, __helper_add, __helper_mul, __helper_sub,
-    __increment, __one, __primitive_root_log_size, __quadratic_non_residue, __shl, __shr, __shr1,
-    __tonelli_shanks_sqrt_find_i, __is_even, __half_mod_odd
+    __barrett_reduction, __get_bit, __get_msb, __half_mod_odd, __helper_add, __helper_mul,
+    __helper_sub, __increment, __is_even, __one, __primitive_root_log_size, __quadratic_non_residue,
+    __shl, __shr, __shr1, __tonelli_shanks_sqrt_find_i,
 };
 
 use crate::constants::TWO_POW_120;
@@ -186,7 +186,7 @@ pub unconstrained fn __pow_invmod<let N: u32, let MOD_BITS: u32>(
 /// Computes `val^{-1} (mod modulus)` (unconstrained).
 ///
 /// This is an alternative to Fermat inversion(`__pow_invmod`) (`val^(modulus-2) mod modulus`) that uses
-/// the (extended) binary GCD / Stein algorithm. 
+/// the (extended) binary GCD / Stein algorithm.
 /// See [Binary GCD algorithm](https://en.wikipedia.org/wiki/Binary_GCD_algorithm)
 ///
 /// ## Note
