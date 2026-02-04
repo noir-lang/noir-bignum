@@ -353,6 +353,26 @@ pub(crate) unconstrained fn __helper_mul<let N: u32>(
     __normalize_limbs(result)
 }
 
+/// Computes `x * 2^{-1} (mod MOD)` (unconstrained).
+///
+/// For odd `MOD`, this is equivalent to:
+/// - `x/2` if `x` is even
+/// - `(x + MOD)/2` if `x` is odd  (since `x + MOD` is even)
+///
+/// ## Note
+/// - `MOD` must be odd.
+pub(crate) unconstrained fn __half_mod_odd<let N: u32>(
+    modulus: [u128; N],
+    x: [u128; N],
+) -> [u128; N] {
+    let temp = if __is_even::<N>(x) {
+        x
+    } else {
+        __helper_add(x, modulus)
+    };
+    __shr1(temp)
+}
+
 // ------------------------------ LOGIC HELPER FUNCTIONS ------------------------------
 // These are the functions that operate on limbs as if they were just big integers
 
@@ -461,6 +481,11 @@ pub(crate) fn __get_bit<let N: u32>(input: [u128; N], bit: u32) -> bool {
     value == 1
 }
 
+/// Returns `true` if the `BigNum` value is even (unconstrained)
+pub(crate) unconstrained fn __is_even<let N: u32>(x: [u128; N]) -> bool {
+    (x[0] & 1) == 0
+}
+
 // ------------------------------ SQRT HELPER FUNCTIONS ------------------------------
 // These are the functions that are used during taking a square root
 
@@ -492,7 +517,9 @@ pub(crate) unconstrained fn __quadratic_non_residue<let N: u32, let MOD_BITS: u3
     let p_minus_one_over_two: [u128; N] = __shr1(__helper_sub(params.modulus, __one()));
 
     // We start with 2
-    let mut target: [u128; N] = __increment(one);
+    let mut target: [u128; N] = [0; N];
+    target[0] = 2;
+
     let mut expd: [u128; N] = __pow(params, target, p_minus_one_over_two);
     while !__eq(expd, neg_one) {
         target = __increment(target);

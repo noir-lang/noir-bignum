@@ -3,9 +3,9 @@
 use crate::fns::constrained_ops::derive_from_seed;
 
 use crate::fns::unconstrained_helpers::{
-    __barrett_reduction, __get_bit, __get_msb, __helper_add, __helper_mul, __helper_sub,
-    __increment, __one, __primitive_root_log_size, __quadratic_non_residue, __shl, __shr, __shr1,
-    __tonelli_shanks_sqrt_find_i,
+    __barrett_reduction, __get_bit, __get_msb, __half_mod_odd, __helper_add, __helper_mul,
+    __helper_sub, __increment, __is_even, __one, __primitive_root_log_size, __quadratic_non_residue,
+    __shl, __shr, __shr1, __tonelli_shanks_sqrt_find_i,
 };
 
 use crate::constants::TWO_POW_120;
@@ -164,21 +164,56 @@ pub unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
     accumulator
 }
 
-/// Given a `BigNum` value `x` compute x^{-1} (mod m) (unconstrained)
+/// Given a `BigNum` value `x` compute x^{-1} (mod MOD) (unconstrained)
 ///
-/// x^{p-1} = 1 (mod p) (Fermat's little theorem)
-/// x^{p-2} = x^{-1} (mod p)
+/// This is an alternative to Fermat inversion(`__pow_invmod`) (`val^(modulus-2) mod MOD`) that uses
+/// the (extended) binary GCD / Stein algorithm.
+/// See [Binary GCD algorithm](https://en.wikipedia.org/wiki/Binary_GCD_algorithm)
 ///
 /// ## Note
-/// The input value must be nonzero and modulus has to be prime
-/// No explicit assertion is made, as this condition is validated during evaluation
-pub unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
-    params: BigNumParams<N, MOD_BITS>,
-    val: [u128; N],
-) -> [u128; N] {
-    let one: [u128; N] = __one();
-    let exp: [u128; N] = __helper_sub(params.modulus, __helper_add(one, one));
-    __pow::<N, MOD_BITS>(params, val, exp)
+/// - `modulus` must be odd (required by `__half_mod_odd`)
+/// - `gcd(val, modulus) == 1` (i.e. `val` is invertible modulo `modulus`)
+pub unconstrained fn __invmod<let N: u32>(modulus: [u128; N], val: [u128; N]) -> [u128; N] {
+    if (__is_zero(val)) {
+        [0; N]
+    } else {
+        let mut u: [u128; N] = val;
+        let mut v: [u128; N] = modulus;
+
+        let one: [u128; N] = __one::<N>();
+
+        let mut x1: [u128; N] = one;
+        let mut x2: [u128; N] = [0; N];
+
+        while (!__eq(u, one) & !__eq(v, one)) {
+            // Get rid of the even part of u
+            while __is_even(u) {
+                u = __shr1(u);
+                x1 = __half_mod_odd(modulus, x1);
+            }
+
+            // Get rid of the even part of v
+            while __is_even(v) {
+                v = __shr1(v);
+                x2 = __half_mod_odd(modulus, x2);
+            }
+
+            // Update the intermediate values after both (u, v) are odd
+            if __gte(u, v) {
+                u = __helper_sub(u, v);
+                x1 = __sub(modulus, x1, x2);
+            } else {
+                v = __helper_sub(v, u);
+                x2 = __sub(modulus, x2, x1);
+            }
+        }
+
+        if __eq(u, one) {
+            x1
+        } else {
+            x2
+        }
+    }
 }
 
 /// Divides two `BigNum` values with modular reduction (unconstrained).
@@ -193,7 +228,7 @@ pub unconstrained fn __div<let N: u32, let MOD_BITS: u32>(
     numerator: [u128; N],
     divisor: [u128; N],
 ) -> [u128; N] {
-    let inv_divisor: [u128; N] = __invmod::<N, MOD_BITS>(params, divisor);
+    let inv_divisor: [u128; N] = __invmod::<N>(params.modulus, divisor);
     __mul::<N, MOD_BITS>(params, numerator, inv_divisor)
 }
 
@@ -297,7 +332,7 @@ pub(crate) unconstrained fn batch_invert<let N: u32, let MOD_BITS: u32, let M: u
     }
 
     let mut result: [[u128; N]; M] = [[0; N]; M];
-    accumulator = __invmod::<N, MOD_BITS>(params, accumulator);
+    accumulator = __invmod::<N>(params.modulus, accumulator);
     for i in 0..M {
         let idx: u32 = M - 1 - i;
         if (!__is_zero(vals[idx])) {
@@ -329,7 +364,7 @@ pub(crate) unconstrained fn batch_invert_slice<let N: u32, let MOD_BITS: u32>(
     }
 
     let mut result: [[u128; N]] = [];
-    accumulator = __invmod::<N, MOD_BITS>(params, accumulator);
+    accumulator = __invmod::<N>(params.modulus, accumulator);
     for i in 0..M {
         let idx: u32 = M - 1 - i;
         if (!__is_zero(vals[idx])) {
@@ -423,9 +458,9 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>
     // b = a^{(Q - 1)/2}
     // R = a * b = a^{(Q + 1) / 2} => R^2 = a * a^Q
     // t = R * b = a^Q
-    let mut b: [u128; N] = __pow::<_, MOD_BITS>(params, input, Q_minus_one_over_two);
-    let mut r: [u128; N] = __mul::<_, MOD_BITS>(params, input, b);
-    let mut t: [u128; N] = __mul::<_, MOD_BITS>(params, r, b);
+    let mut b: [u128; N] = __pow::<N, MOD_BITS>(params, input, Q_minus_one_over_two);
+    let mut r: [u128; N] = __mul::<N, MOD_BITS>(params, input, b);
+    let mut t: [u128; N] = __mul::<N, MOD_BITS>(params, r, b);
 
     let mut check: [u128; N] = t;
     // Assure t^{2^{s - 1}} = a^{(p -1)/2} = 1, otherwise we have met a non-residue
