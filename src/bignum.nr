@@ -16,7 +16,7 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 ///   generate circuit constraints. Use them for witness computation, then constrain results with
 ///   `evaluate_quadratic_expression` for optimal performance.
 ///
-/// - **Performance**: The overloaded operators (`+`, `-`, `*`, `/`, `==`) are constrained and
+/// - **Performance**: The overloaded operators (`+`, `-`, `*`, `/`) are constrained and
 ///   expensive. For multiple operations, prefer using unconstrained methods followed by
 ///   `evaluate_quadratic_expression`.
 ///
@@ -167,6 +167,9 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     unconstrained fn __is_zero(self: Self) -> bool;
 
     /// Unconstrained negation: computes `-self (mod MOD)`.
+    ///
+    /// # Note
+    /// When `self` is zero, this returns the modulus (which is equivalent to zero mod MOD).
     ///
     /// # Safety
     /// No constraints are generated. Constrain the result using `evaluate_quadratic_expression`.
@@ -344,7 +347,7 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     /// and `0 <= remainder < divisor`.
     ///
     /// # Performance Warning
-    /// **EXPENSIVE**: Requires modular exponentiation during witness computation.
+    /// **EXPENSIVE**: Requires long binary division.
     ///
     /// # Panics
     /// Will fail constraint if `divisor == 0`.
@@ -812,7 +815,7 @@ pub fn evaluate_quadratic_expression<T: BigNum, let LHS_N: u32, let RHS_N: u32, 
 ///
 /// # Requirements
 /// - `MOD` must be prime (`params.has_multiplicative_inverse == true`)
-/// - All elements in `x` must be non-zero
+/// - Zero elements are allowed and will map to zero in the output
 ///
 /// # Performance
 /// Computes M inverses using:
@@ -846,7 +849,7 @@ pub unconstrained fn batch_invert<T: BigNum, let M: u32>(x: [T; M]) -> [T; M] {
 ///
 /// # Requirements
 /// - `MOD` must be prime (`params.has_multiplicative_inverse == true`)
-/// - All elements in `x` must be non-zero
+/// - Zero elements are allowed and will map to zero in the output
 ///
 /// # Safety
 /// **UNCONSTRAINED**: No constraints are generated.
