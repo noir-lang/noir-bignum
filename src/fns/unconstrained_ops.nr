@@ -186,6 +186,11 @@ pub unconstrained fn __invmod<let N: u32>(modulus: [u128; N], val: [u128; N]) ->
         let mut x2: [u128; N] = [0; N];
 
         while (!__eq(u, one) & !__eq(v, one)) {
+            // prevent infinite loop (when val == modulus)
+            if (__is_zero(u) | __is_zero(v)) {
+                break;
+            }
+
             // Get rid of the even part of u
             while __is_even(u) {
                 u = __shr1(u);
@@ -543,4 +548,80 @@ pub(crate) unconstrained fn __easy_sqrt<let N: u32, let MOD_BITS: u32>(
         result = Option::some(__pow(params, input, p_plus_one_over_four));
     }
     result
+}
+
+mod test_invmod {
+    use crate::bignum::BigNum;
+    use crate::fields::bls12_381Fq::BLS12_381_Fq;
+    use crate::fields::bn254Fq::BN254_Fq;
+    use crate::fields::ed25519Fq::ED25519_Fq;
+
+    /// test inverting neg(zero)
+    unconstrained fn helper_invmod_neg_zero<BN: BigNum>() {
+        let zero: BN = BN::zero();
+        let neg_zero: BN = zero.__neg();
+        let modulus: BN = BN::modulus();
+
+        assert(neg_zero == modulus, "neg(zero) should equal modulus");
+
+        let result: BN = neg_zero.__invmod();
+
+        assert(result.__is_zero(), "invmod(modulus) should return zero");
+    }
+
+    #[test]
+    unconstrained fn test_invmod_neg_zero() {
+        helper_invmod_neg_zero::<BN254_Fq>();
+        helper_invmod_neg_zero::<ED25519_Fq>();
+        helper_invmod_neg_zero::<BLS12_381_Fq>();
+    }
+
+    /// test inverting modulus
+    unconstrained fn helper_invmod_on_modulus_value<BN: BigNum>() {
+        let modulus: BN = BN::modulus();
+        let result: BN = modulus.__invmod();
+        assert(result.__is_zero(), "invmod(modulus) should return zero");
+    }
+
+    #[test]
+    unconstrained fn test_invmod_on_modulus_value() {
+        helper_invmod_on_modulus_value::<BN254_Fq>();
+        helper_invmod_on_modulus_value::<ED25519_Fq>();
+        helper_invmod_on_modulus_value::<BLS12_381_Fq>();
+    }
+
+    /// test that zero returns zero
+    unconstrained fn helper_invmod_zero_returns_zero<BN: BigNum>() {
+        let zero: BN = BN::zero();
+        let result: BN = zero.__invmod();
+        assert(result.__is_zero(), "invmod(0) should return 0");
+    }
+
+    #[test]
+    unconstrained fn test_invmod_zero_returns_zero() {
+        helper_invmod_zero_returns_zero::<BN254_Fq>();
+        helper_invmod_zero_returns_zero::<ED25519_Fq>();
+        helper_invmod_zero_returns_zero::<BLS12_381_Fq>();
+    }
+
+    /// test invmod via division
+    unconstrained fn helper_invmod_via_division<BN: BigNum>(x: [u8; 4], y: [u8; 4]) {
+        let a: BN = BN::derive_from_seed(x);
+        let b: BN = BN::derive_from_seed(y);
+
+        // a / b should equal a * invmod(b)
+        let div_result: BN = a.__div(b);
+        let inv_b: BN = b.__invmod();
+        let mul_result: BN = a.__mul(inv_b);
+        assert(b.__mul(inv_b) == BN::one(), "b * invmod(b) should equal 1");
+
+        assert(div_result == mul_result, "division should equal multiply by inverse");
+    }
+
+    #[test]
+    unconstrained fn test_invmod_via_division(x: [u8; 4], y: [u8; 4]) {
+        helper_invmod_via_division::<BN254_Fq>(x, y);
+        helper_invmod_via_division::<ED25519_Fq>(x, y);
+        helper_invmod_via_division::<BLS12_381_Fq>(x, y);
+    }
 }
