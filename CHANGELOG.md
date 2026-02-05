@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.9.0](https://github.com/noir-lang/noir-bignum/compare/v0.8.3...v0.9.0) (2026-02-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* Dispatch to udiv from `Div` trait impl for bignums without a multiplicative inverse. ([#253](https://github.com/noir-lang/noir-bignum/issues/253))
+
+### Features
+
+* Barrett reduciton optimization ([#241](https://github.com/noir-lang/noir-bignum/issues/241)) ([e7d5cb0](https://github.com/noir-lang/noir-bignum/commit/e7d5cb0a8c150282bca0a2ef01429ffd7dbf11fb))
+* Re-export macro-required functions from pub(crate) modules ([#245](https://github.com/noir-lang/noir-bignum/issues/245)) ([c02db37](https://github.com/noir-lang/noir-bignum/commit/c02db375ceacb6f8f963c1aed6086c4c3acd9bab))
+* Remove redundant hinting of `result` on various operations ([#252](https://github.com/noir-lang/noir-bignum/issues/252)) ([9c4d299](https://github.com/noir-lang/noir-bignum/commit/9c4d299c2240da7f57387d329ef2e9a88784cc93))
+* Split params object to avoid passing unused data ([#249](https://github.com/noir-lang/noir-bignum/issues/249)) ([16d4ba6](https://github.com/noir-lang/noir-bignum/commit/16d4ba665232699083c4154de1c17c4a50eeac34))
+* Switch to gcd algorithm for `__invmod` ([#255](https://github.com/noir-lang/noir-bignum/issues/255)) ([2d2d6d7](https://github.com/noir-lang/noir-bignum/commit/2d2d6d7fe5b66d32f8ec52c9909dd85d2f84c0a0))
+
+
+### Bug Fixes
+
+* Dispatch to udiv from `Div` trait impl for bignums without a multiplicative inverse. ([#253](https://github.com/noir-lang/noir-bignum/issues/253)) ([cd4ad0e](https://github.com/noir-lang/noir-bignum/commit/cd4ad0e39f1dd9c63fde0186c01c5535a3724e2a))
+* Prevent infinite loop when inverting modulus value and add testing ([#256](https://github.com/noir-lang/noir-bignum/issues/256)) ([5293dc6](https://github.com/noir-lang/noir-bignum/commit/5293dc6471f7571485261e0255550a4b1fdb2390))
+
 ## [0.8.3](https://github.com/noir-lang/noir-bignum/compare/v0.8.2...v0.8.3) (2025-12-04)
 
 
