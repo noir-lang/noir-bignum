@@ -178,7 +178,7 @@ pub unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
     val: [u128; N],
 ) -> [u128; N] {
     assert(params.has_multiplicative_inverse);
-    if (__is_zero(val)) {
+    if (__is_zero(val) | __eq(val, params.modulus)) {
         [0; N]
     } else {
         let mut u: [u128; N] = val;
@@ -190,11 +190,6 @@ pub unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
         let mut x2: [u128; N] = [0; N];
 
         while (!__eq(u, one) & !__eq(v, one)) {
-            // prevent infinite loop (when val == modulus)
-            if (__is_zero(u) | __is_zero(v)) {
-                break;
-            }
-
             // Get rid of the even part of u
             while __is_even(u) {
                 u = __shr1(u);
