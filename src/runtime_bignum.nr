@@ -176,9 +176,8 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     // UNCONSTRAINED! (Hence `__` prefix).
     pub fn __invmod(self) -> Self {
         let params: BigNumParams<N, MOD_BITS> = self.params;
-        assert(params.has_multiplicative_inverse);
         // Safety: Unconstrained function simulation
-        let limbs: [u128; N] = unsafe { __invmod::<N>(params.modulus, self.limbs) };
+        let limbs: [u128; N] = unsafe { __invmod::<N, MOD_BITS>(params, self.limbs) };
         Self { limbs, params }
     }
 

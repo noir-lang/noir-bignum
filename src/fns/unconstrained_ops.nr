@@ -173,12 +173,16 @@ pub unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
 /// ## Note
 /// - `modulus` must be odd (required by `__half_mod_odd`)
 /// - `gcd(val, modulus) == 1` (i.e. `val` is invertible modulo `modulus`)
-pub unconstrained fn __invmod<let N: u32>(modulus: [u128; N], val: [u128; N]) -> [u128; N] {
+pub unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
+    params: BigNumParams<N, MOD_BITS>,
+    val: [u128; N],
+) -> [u128; N] {
+    assert(params.has_multiplicative_inverse);
     if (__is_zero(val)) {
         [0; N]
     } else {
         let mut u: [u128; N] = val;
-        let mut v: [u128; N] = modulus;
+        let mut v: [u128; N] = params.modulus;
 
         let one: [u128; N] = __one::<N>();
 
@@ -194,22 +198,22 @@ pub unconstrained fn __invmod<let N: u32>(modulus: [u128; N], val: [u128; N]) ->
             // Get rid of the even part of u
             while __is_even(u) {
                 u = __shr1(u);
-                x1 = __half_mod_odd(modulus, x1);
+                x1 = __half_mod_odd(params.modulus, x1);
             }
 
             // Get rid of the even part of v
             while __is_even(v) {
                 v = __shr1(v);
-                x2 = __half_mod_odd(modulus, x2);
+                x2 = __half_mod_odd(params.modulus, x2);
             }
 
             // Update the intermediate values after both (u, v) are odd
             if __gte(u, v) {
                 u = __helper_sub(u, v);
-                x1 = __sub(modulus, x1, x2);
+                x1 = __sub(params.modulus, x1, x2);
             } else {
                 v = __helper_sub(v, u);
-                x2 = __sub(modulus, x2, x1);
+                x2 = __sub(params.modulus, x2, x1);
             }
         }
 
@@ -233,7 +237,7 @@ pub unconstrained fn __div<let N: u32, let MOD_BITS: u32>(
     numerator: [u128; N],
     divisor: [u128; N],
 ) -> [u128; N] {
-    let inv_divisor: [u128; N] = __invmod::<N>(params.modulus, divisor);
+    let inv_divisor: [u128; N] = __invmod::<N, MOD_BITS>(params, divisor);
     __mul::<N, MOD_BITS>(params, numerator, inv_divisor)
 }
 
@@ -337,7 +341,7 @@ pub(crate) unconstrained fn batch_invert<let N: u32, let MOD_BITS: u32, let M: u
     }
 
     let mut result: [[u128; N]; M] = [[0; N]; M];
-    accumulator = __invmod::<N>(params.modulus, accumulator);
+    accumulator = __invmod::<N, MOD_BITS>(params, accumulator);
     for i in 0..M {
         let idx: u32 = M - 1 - i;
         if (!__is_zero(vals[idx])) {
@@ -369,7 +373,7 @@ pub(crate) unconstrained fn batch_invert_slice<let N: u32, let MOD_BITS: u32>(
     }
 
     let mut result: [[u128; N]] = [];
-    accumulator = __invmod::<N>(params.modulus, accumulator);
+    accumulator = __invmod::<N, MOD_BITS>(params, accumulator);
     for i in 0..M {
         let idx: u32 = M - 1 - i;
         if (!__is_zero(vals[idx])) {
