@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.1](https://github.com/noir-lang/noir-bignum/compare/v0.9.0...v0.9.1) (2026-02-19)
+
+
+### Bug Fixes
+
+* Unnecessary comptime global & Update poseidon ([#257](https://github.com/noir-lang/noir-bignum/issues/257)) ([d438539](https://github.com/noir-lang/noir-bignum/commit/d438539bf6e29d52cc79f3165532a3c8404d3eeb))
+
 ## [0.9.0](https://github.com/noir-lang/noir-bignum/compare/v0.8.3...v0.9.0) (2026-02-05)
 
 
