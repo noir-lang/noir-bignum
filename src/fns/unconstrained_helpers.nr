@@ -178,7 +178,7 @@ pub(crate) unconstrained fn compute_gte_flags<let N: u32>(
 ///
 /// maximum value = modulus^2 << BARRETT_REDUCTION_OVERFLOW_BITS
 /// see __barrett_reduction for more details
-comptime global BARRETT_REDUCTION_OVERFLOW_BITS: u32 = 6;
+global BARRETT_REDUCTION_OVERFLOW_BITS: u32 = 6;
 
 /// Optimized modular multiplication (unconstrained)
 ///
