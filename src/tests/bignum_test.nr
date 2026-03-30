@@ -97,7 +97,7 @@ fn test_bls_reduction() {
     ]);
     X1.validate_in_field();
     // Safety: test code
-    let mut (_, XX_mul_3): (BLS12_381_Fq, BLS12_381_Fq) = unsafe {
+    let (_, XX_mul_3): (BLS12_381_Fq, BLS12_381_Fq) = unsafe {
         compute_quadratic_expression(
             [[X1, X1, X1]],
             [[false, false, false]],
@@ -139,8 +139,7 @@ global SecP224r1_PARAMS: BigNumParams<2, 224> = BigNumParams {
 
 #[test]
 fn test_SecP224r1_mul_regression() {
-    let mut x: SecP224r1 =
-        SecP224r1 { limbs: [0x03c1d356c21122343280d6115c1d21, 0xb70e0cbd6bb4bf7f321390b94a] };
+    let x = SecP224r1 { limbs: [0x03c1d356c21122343280d6115c1d21, 0xb70e0cbd6bb4bf7f321390b94a] };
     let res = x * x;
     // Safety: test code
     let expected = unsafe { SecP224r1::__mul(x, x) };
@@ -731,8 +730,9 @@ fn test_add_BN() {
 #[test]
 fn test_add_test_BN_wrap_around() {
     let mut a: BN254_Fq = BN254_Fq::modulus();
-    let mut b: BN254_Fq = BN254_Fq::from_limbs([3, 0, 0]);
-    let mut expected: BN254_Fq = BN254_Fq::one();
+    let b: BN254_Fq = BN254_Fq::from_limbs([3, 0, 0]);
+    let expected: BN254_Fq = BN254_Fq::one();
+
     a.set_limb(0, a.get_limb(0) - 2);
 
     let c: BN254_Fq = a + b;
@@ -772,8 +772,8 @@ fn test_add_modulus_overflow() {
 #[test]
 fn test_sub_test_BN() {
     // 0 - 1 should equal p - 1
-    let mut a: BN254_Fq = BN254_Fq::zero();
-    let mut b: BN254_Fq = BN254_Fq::one();
+    let a: BN254_Fq = BN254_Fq::zero();
+    let b: BN254_Fq = BN254_Fq::one();
     let mut expected: BN254_Fq = BN254_Fq::modulus();
     expected.set_limb(0, expected.get_limb(0) - 1); // p - 1
     let result: BN254_Fq = a - b;
@@ -785,9 +785,9 @@ fn test_sub_modulus_limit() {
     // if we underflow, maximum result should be ...
     // 0 - 1 = o-1
     // 0 - p = 0
-    let mut a: BN254_Fq = BN254_Fq::zero();
-    let mut b: BN254_Fq = BN254_Fq::modulus();
-    let mut expected: BN254_Fq = BN254_Fq::zero();
+    let a: BN254_Fq = BN254_Fq::zero();
+    let b: BN254_Fq = BN254_Fq::modulus();
+    let expected: BN254_Fq = BN254_Fq::zero();
 
     let result = a - b;
     assert(result == expected);
@@ -796,10 +796,10 @@ fn test_sub_modulus_limit() {
 #[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_sub_modulus_underflow() {
     // 0 - (p + 1) is smaller than p and should produce unsatisfiable constraints
-    let mut a: BN254_Fq = BN254_Fq::zero();
+    let a: BN254_Fq = BN254_Fq::zero();
     let mut b: BN254_Fq = BN254_Fq::modulus();
     b.set_limb(0, b.get_limb(0) + 1);
-    let mut expected: BN254_Fq = BN254_Fq::one();
+    let expected: BN254_Fq = BN254_Fq::one();
 
     let result: BN254_Fq = a - b;
     assert(result == expected);

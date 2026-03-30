@@ -180,7 +180,7 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, le
     );
 
     // `__normalize_limbs` will validate that we do not overflow 2N, normally we should not overflow 2N-1
-    let mut relation_result: [u128; 2 * N] = split_bits::__normalize_limbs(mulout_p);
+    let relation_result: [u128; 2 * N] = split_bits::__normalize_limbs(mulout_p);
     let (quotient, remainder): ([u128; N], [u128; N]) =
         __barrett_reduction(relation_result, params.redc_param, MOD_BITS, params.modulus);
 
@@ -230,7 +230,7 @@ pub(crate) unconstrained fn __compute_quadratic_expression<let N: u32, let MOD_B
         linear_flags,
     );
     // __normalize_limbs will validate that we do not overflow 2N, normally we should not overflow 2N-1
-    let mut relation_result: [u128; 2 * N] = split_bits::__normalize_limbs(mulout);
+    let relation_result: [u128; 2 * N] = split_bits::__normalize_limbs(mulout);
 
     let (quotient, remainder): ([u128; N], [u128; N]) =
         __barrett_reduction(relation_result, params.redc_param, MOD_BITS, params.modulus);

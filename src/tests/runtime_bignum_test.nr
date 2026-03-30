@@ -149,7 +149,7 @@ fn test_add_modulus_overflow() {
     let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: unsafe { $__helper_add(p, one) }, params };
 
     // Safety: test code
-    let mut two_pow_modulus_bits_minus_one: [u128; $N] =  unsafe { $__helper_sub($__shl(one, $MOD_BITS), one) };
+    let two_pow_modulus_bits_minus_one: [u128; $N] =  unsafe { $__helper_sub($__shl(one, $MOD_BITS), one) };
 
     let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: two_pow_modulus_bits_minus_one, params };
     let result = a + b;
@@ -161,8 +161,8 @@ fn test_sub() {
     let params: crate::params::BigNumParams<_,_> = $params;
 
     // 0 - 1 should equal p - 1
-    let mut a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::zero(params);
-    let mut b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::one(params);
+    let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::zero(params);
+    let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::one(params);
     let mut expected: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: params.modulus, params };
 
     expected.limbs[0] -= 1; // p - 1
@@ -178,9 +178,9 @@ fn test_sub_modulus_limit() {
     // if we underflow, maximum result should be ...
     // 0 - 1 = o-1
     // 0 - p = 0
-    let mut a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::zero(params);
-    let mut b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: params.modulus, params };
-    let mut expected: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::zero(params);
+    let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::zero(params);
+    let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: params.modulus, params };
+    let expected: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::zero(params);
 
     let result = a - b;
     assert(result == expected);
@@ -192,10 +192,10 @@ fn test_sub_modulus_underflow() {
     let params: crate::params::BigNumParams<_,_> = $params;
 
     // 0 - (p + 1) is smaller than p and should produce unsatisfiable constraints
-    let mut a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::zero(params);
+    let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::zero(params);
     let mut b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: params.modulus, params };
     b.limbs[0] += 1;
-    let mut expected: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::one(params);
+    let expected: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::one(params);
 
     let result = a - b;
 
@@ -415,7 +415,7 @@ fn test_quadratic_expression() {
         let Z1: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::one(params);
 
         let (_, YY_mul_2): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = crate::runtime_bignum::__compute_quadratic_expression(params, [[Y1]], [[false]], [[Y1, Y1]], [[false, false]], [], []);
-        let mut (_, XX_mul_3): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = crate::runtime_bignum::__compute_quadratic_expression(
+        let (_, XX_mul_3): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = crate::runtime_bignum::__compute_quadratic_expression(
             params,
             [[X1]],
             [[false]],
@@ -425,7 +425,7 @@ fn test_quadratic_expression() {
             []
         );
         let (_, D): ($RuntimeBigNum<$N, $MOD_BITS>, $RuntimeBigNum<$N, $MOD_BITS>) = crate::runtime_bignum::__compute_quadratic_expression(params, [[X1, X1]], [[false, false]], [[YY_mul_2]], [[false]], [], []);
-        let mut (_, X3) =  crate::runtime_bignum::__compute_quadratic_expression(
+        let (_, X3) =  crate::runtime_bignum::__compute_quadratic_expression(
             params,
             [[XX_mul_3]],
             [[false]],

@@ -259,7 +259,7 @@ pub unconstrained fn __udiv_mod<let N: u32>(
     if divisor_msb > numerator_msb {
         ([0; N], numerator)
     } else {
-        let mut bit_difference: u32 = __get_msb(remainder) - __get_msb(divisor);
+        let bit_difference: u32 = __get_msb(remainder) - __get_msb(divisor);
         let mut divisor: [u128; N] = __shl(divisor, bit_difference);
         let mut accumulator: [u128; N] = __shl(__one(), bit_difference);
 
@@ -504,7 +504,7 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>
                 break;
             }
             let i: u32 = __tonelli_shanks_sqrt_find_i::<N, MOD_BITS>(params, t);
-            let mut j: u32 = m - i - 1;
+            let j: u32 = m - i - 1;
             b = c;
             for _ in 0..j {
                 b = __sqr(params, b);
@@ -539,7 +539,7 @@ pub(crate) unconstrained fn __easy_sqrt<let N: u32, let MOD_BITS: u32>(
 
     let one: [u128; N] = __one();
     let p_minus_one_over_two: [u128; N] = __shr1(__helper_sub(params.modulus, one));
-    let mut check: [u128; N] = __pow(params, input, p_minus_one_over_two);
+    let check: [u128; N] = __pow(params, input, p_minus_one_over_two);
     if (__eq(check, one)) {
         // a = (MOD - 1) / 2
         // b = (a + 1) / 2 = ((MOD - 1) / 2 + 1) / 2 = (MOD + 1) / 4
