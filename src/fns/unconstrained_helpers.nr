@@ -22,7 +22,7 @@ pub(crate) unconstrained fn __one<let N: u32>() -> [u128; N] {
 ///
 /// Split the native `Field` value into `N` 120-bit limbs
 pub(crate) unconstrained fn __from_field<let N: u32>(val: Field) -> [u128; N] {
-    let mut x: Field = val;
+    let x: Field = val;
     let mut result: [u128; N] = [0; N];
 
     if (N == 1) {
@@ -494,7 +494,7 @@ pub(crate) unconstrained fn __is_even<let N: u32>(x: [u128; N]) -> bool {
 /// Find the maximum value s such that `MOD = 2^s * q + 1`, where `q` is odd
 ///       This is needed for our Tonelli-Shanks sqrt algorithm
 pub(crate) unconstrained fn __primitive_root_log_size<let N: u32>(modulus: [u128; N]) -> u32 {
-    let mut target: [u128; N] = __helper_sub(modulus, __one());
+    let target: [u128; N] = __helper_sub(modulus, __one());
     let mut result: u32 = 0;
     while !__get_bit(target, result) {
         result += 1;

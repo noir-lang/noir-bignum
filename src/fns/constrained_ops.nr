@@ -202,16 +202,16 @@ pub fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(
         // Before the current limb, we filled out (N - 1) limbs, k times
         // 15 bytes per limb
         // resulting in total of 15 * k * (N - 1)
-        let mut num_filled_bytes: u32 = 15 * k * (N - 1);
+        let num_filled_bytes: u32 = 15 * k * (N - 1);
         if num_bytes > num_filled_bytes {
             // Static assert for completeness
             assert(num_filled_bytes == byte_ptr);
 
-            let mut num_remaining_bytes_to_sample: u32 = num_bytes - num_filled_bytes;
-            let mut num_remaining_limbs_to_sample: u32 = (num_remaining_bytes_to_sample + 14) / 15;
+            let num_remaining_bytes_to_sample: u32 = num_bytes - num_filled_bytes;
+            let num_remaining_limbs_to_sample: u32 = (num_remaining_bytes_to_sample + 14) / 15;
 
             // Sample at most (N - 1) limbs from hash_buffer
-            let mut num_limbs_to_sample: u32 = if num_remaining_limbs_to_sample > (N - 1) {
+            let num_limbs_to_sample: u32 = if num_remaining_limbs_to_sample > (N - 1) {
                 N - 1
             } else {
                 num_remaining_limbs_to_sample
@@ -222,7 +222,7 @@ pub fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(
                 // Construct a 120 bit limb
                 for _ in 0..15 {
                     if byte_ptr < num_bytes {
-                        let mut byte: u8 = hash_buffer[byte_ptr];
+                        let byte: u8 = hash_buffer[byte_ptr];
                         limb *= 256;
                         limb += byte as Field;
                         byte_ptr += 1;
