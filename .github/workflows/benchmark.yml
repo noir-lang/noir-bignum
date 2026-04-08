@@ -2,12 +2,12 @@ name: Benchmarks
 
 on:
   push:
-   branches:
-    - main
+    branches:
+      - main
   pull_request:
 
 env:
-  MINIMUM_NOIR_VERSION: 1.0.0-beta.18
+  MINIMUM_NOIR_VERSION: nightly-2026-04-08
 
 jobs:
   test:
@@ -27,9 +27,8 @@ jobs:
 
       - name: Install bb
         run: |
-          curl -L https://raw.githubusercontent.com/AztecProtocol/aztec-packages/refs/heads/next/barretenberg/bbup/install | bash
-          ~/.bb/bbup -nv ${{env.MINIMUM_NOIR_VERSION}}
-          sudo apt install libc++-dev
+          curl -L https://bbup.aztec.network | bash
+          ~/.bb/bbup -v 4.0.0-nightly.20260120
 
       - name: Build Noir benchmark programs
         run: nargo export
@@ -45,7 +44,7 @@ jobs:
         with:
           report: gates_report.json
           summaryQuantile: 0.9 # only display the 10% most significant circuit size diffs in the summary (defaults to 20%)
-      
+
       - name: Store ACIR opcode benchmark result
         uses: benchmark-action/github-action-benchmark@v1
         with:
@@ -59,9 +58,9 @@ jobs:
           comment-always: ${{ contains( github.event.pull_request.labels.*.name, 'bench-show') }}
           comment-on-alert: true
           alert-threshold: "101%"
-          fail-on-alert: false 
+          fail-on-alert: false
           max-items-in-chart: 50
-      
+
       - name: Store gates benchmark result
         uses: benchmark-action/github-action-benchmark@v1
         with:
@@ -75,7 +74,7 @@ jobs:
           comment-always: ${{ contains( github.event.pull_request.labels.*.name, 'bench-show') }}
           comment-on-alert: true
           alert-threshold: "101%"
-          fail-on-alert: false 
+          fail-on-alert: false
           max-items-in-chart: 50
           skip-fetch-gh-pages: true
 
@@ -120,7 +119,7 @@ jobs:
           comment-always: ${{ contains( github.event.pull_request.labels.*.name, 'bench-show') }}
           comment-on-alert: true
           alert-threshold: "101%"
-          fail-on-alert: false 
+          fail-on-alert: false
           max-items-in-chart: 50
           skip-fetch-gh-pages: true
 

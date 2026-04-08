@@ -2,13 +2,13 @@ name: Noir tests
 
 on:
   push:
-   branches:
-    - main
+    branches:
+      - main
   pull_request:
 
 env:
   CARGO_TERM_COLOR: always
-  MINIMUM_NOIR_VERSION: 1.0.0-beta.18
+  MINIMUM_NOIR_VERSION: nightly-2026-04-08
 
 jobs:
   noir-version-list:
@@ -20,7 +20,7 @@ jobs:
     steps:
       - name: Checkout sources
         id: get_versions
-        run: |         
+        run: |
           # gh returns the Noir releases in reverse chronological order so we keep all releases published after the minimum supported version.
           VERSIONS=$(gh release list -R noir-lang/noir --exclude-pre-releases --json tagName -q 'map(.tagName) | index(env.MINIMUM_NOIR_VERSION) as $index | if $index then .[0:$index+1] else [env.MINIMUM_NOIR_VERSION] end')
           echo "versions=$VERSIONS"
@@ -71,7 +71,7 @@ jobs:
     runs-on: ubuntu-latest
     # We want this job to always run (even if the dependant jobs fail) as we want this job to fail rather than skipping.
     if: ${{ always() }}
-    needs: 
+    needs:
       - test
       - format
 
