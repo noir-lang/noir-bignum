@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.10.0](https://github.com/noir-lang/noir-bignum/compare/v0.9.2...v0.10.0) (2026-04-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* update poseidon2 dependency ([#263](https://github.com/noir-lang/noir-bignum/issues/263))
+
+### Bug Fixes
+
+* Update poseidon2 dependency ([#263](https://github.com/noir-lang/noir-bignum/issues/263)) ([b76ce95](https://github.com/noir-lang/noir-bignum/commit/b76ce951d258f76019d958aaef2413b308a0309b))
+
 ## [0.9.2](https://github.com/noir-lang/noir-bignum/compare/v0.9.1...v0.9.2) (2026-02-20)
 
 
