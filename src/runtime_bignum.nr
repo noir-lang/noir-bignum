@@ -69,15 +69,15 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
         Self { limbs: from_le_bytes::<N, MOD_BITS>(x), params }
     }
 
-    pub fn to_be_bytes(self) -> [u8; (MOD_BITS + 7) / 8] {
+    pub fn to_be_bytes(&self) -> [u8; (MOD_BITS + 7) / 8] {
         to_be_bytes::<N, MOD_BITS>(self.limbs)
     }
 
-    pub fn to_le_bytes(self) -> [u8; (MOD_BITS + 7) / 8] {
+    pub fn to_le_bytes(&self) -> [u8; (MOD_BITS + 7) / 8] {
         to_le_bytes::<N, MOD_BITS>(self.limbs)
     }
 
-    pub fn modulus(self) -> Self {
+    pub fn modulus(&self) -> Self {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         Self { limbs: params.modulus, params }
     }
@@ -90,11 +90,11 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
         N
     }
 
-    pub fn get_limbs(self) -> [u128; N] {
+    pub fn get_limbs(&self) -> [u128; N] {
         self.limbs
     }
 
-    pub fn get_limb(self, idx: u32) -> u128 {
+    pub fn get_limb(&self, idx: u32) -> u128 {
         self.limbs[idx]
     }
 
@@ -103,17 +103,17 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
         self.limbs[idx] = value;
     }
 
-    pub unconstrained fn __eq(self, other: Self) -> bool {
+    pub unconstrained fn __eq(&self, other: &Self) -> bool {
         assert(self.params == other.params);
         __eq(self.limbs, other.limbs)
     }
 
-    pub unconstrained fn __is_zero(self) -> bool {
+    pub unconstrained fn __is_zero(&self) -> bool {
         __is_zero(self.limbs)
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
-    pub fn __neg(self) -> Self {
+    pub fn __neg(&self) -> Self {
         let params = self.params;
         // Safety: Unconstrained function simulation
         let limbs: [u128; N] = unsafe { __neg(params.modulus, self.limbs) };
@@ -121,7 +121,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
-    pub fn __add(self, other: Self) -> Self {
+    pub fn __add(&self, other: &Self) -> Self {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == other.params);
         // Safety: Unconstrained function simulation
@@ -130,7 +130,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
-    pub fn __sub(self, other: Self) -> Self {
+    pub fn __sub(&self, other: &Self) -> Self {
         let params = self.params;
         assert(params == other.params);
         // Safety: Unconstrained function simulation
@@ -139,7 +139,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
-    pub fn __mul(self, other: Self) -> Self {
+    pub fn __mul(&self, other: &Self) -> Self {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == other.params);
         // Safety: Unconstrained function simulation
@@ -148,7 +148,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
-    pub fn __sqr(self) -> Self {
+    pub fn __sqr(&self) -> Self {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         // Safety: Unconstrained function simulation
         let limbs: [u128; N] = unsafe { __sqr::<_, MOD_BITS>(params, self.limbs) };
@@ -156,7 +156,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
-    pub fn __div(self, divisor: Self) -> Self {
+    pub fn __div(&self, divisor: &Self) -> Self {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == divisor.params);
         // Safety: Unconstrained function simulation
@@ -165,7 +165,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
-    pub fn __udiv_mod(self, divisor: Self) -> (Self, Self) {
+    pub fn __udiv_mod(&self, divisor: &Self) -> (Self, Self) {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == divisor.params);
         // Safety: Unconstrained function simulation
@@ -174,7 +174,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
-    pub fn __invmod(self) -> Self {
+    pub fn __invmod(&self) -> Self {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         // Safety: Unconstrained function simulation
         let limbs: [u128; N] = unsafe { __invmod::<N, MOD_BITS>(params, self.limbs) };
@@ -182,7 +182,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
-    pub fn __pow(self, exponent: Self) -> Self {
+    pub fn __pow(&self, exponent: &Self) -> Self {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == exponent.params);
         // Safety: Unconstrained function simulation
@@ -192,7 +192,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
 
     // UNCONSTRAINED! (Hence `__` prefix).
     #[deprecated("use __sqrt")]
-    pub fn __tonelli_shanks_sqrt(self) -> std::option::Option<Self> {
+    pub fn __tonelli_shanks_sqrt(&self) -> std::option::Option<Self> {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         // Safety: out-of-circuit sqrt computation
         let maybe_limbs: Option<[u128; N]> = unsafe { __sqrt(params, self.limbs) };
@@ -200,67 +200,67 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
-    pub fn __sqrt(self) -> std::option::Option<Self> {
+    pub fn __sqrt(&self) -> std::option::Option<Self> {
         let params = self.params;
         // Safety: out-of-circuit sqrt computation
         let maybe_limbs: Option<[u128; N]> = unsafe { __sqrt(params, self.limbs) };
         maybe_limbs.map(|limbs: [u128; N]| Self { limbs, params })
     }
 
-    pub fn validate_in_field(self: Self) {
+    pub fn validate_in_field(&self) {
         let params = self.params;
         validate_in_field::<N, MOD_BITS>(params, self.limbs);
     }
 
-    pub fn validate_in_range(self) {
+    pub fn validate_in_range(&self) {
         validate_in_range::<u128, N, MOD_BITS>(self.limbs);
     }
 
-    pub fn assert_is_not_equal(self, other: Self) {
+    pub fn assert_is_not_equal(&self, other: &Self) {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == other.params);
         assert_is_not_equal(params, self.limbs, other.limbs);
     }
 
-    pub fn sqr(self) -> Self {
+    pub fn sqr(&self) -> Self {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         Self { limbs: sqr(params, self.limbs), params: params }
     }
 
-    pub fn udiv_mod(self, divisor: Self) -> (Self, Self) {
+    pub fn udiv_mod(&self, divisor: &Self) -> (Self, Self) {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == divisor.params);
         let (q, r) = udiv_mod::<N, MOD_BITS>(self.limbs, divisor.limbs);
         (Self { limbs: q, params }, Self { limbs: r, params })
     }
 
-    pub fn udiv(self, divisor: Self) -> Self {
+    pub fn udiv(&self, divisor: &Self) -> Self {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == divisor.params);
         Self { limbs: udiv::<N, MOD_BITS>(self.limbs, divisor.limbs), params }
     }
 
-    pub fn umod(self, divisor: Self) -> Self {
+    pub fn umod(&self, divisor: &Self) -> Self {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == divisor.params);
         Self { limbs: umod::<N, MOD_BITS>(self.limbs, divisor.limbs), params }
     }
 
-    pub fn is_zero(self) -> bool {
+    pub fn is_zero(&self) -> bool {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         is_zero(params, self.limbs)
     }
 
-    pub fn is_zero_integer(self: Self) -> bool {
+    pub fn is_zero_integer(&self) -> bool {
         is_zero_integer(self.limbs)
     }
 
-    pub fn assert_is_not_zero(self: Self) {
+    pub fn assert_is_not_zero(&self) {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert_is_not_zero::<N, MOD_BITS>(params, self.limbs);
     }
 
-    pub fn assert_is_not_zero_integer(self: Self) {
+    pub fn assert_is_not_zero_integer(&self) {
         assert_is_not_zero_integer(self.limbs);
     }
 }
