@@ -355,11 +355,11 @@ pub fn __compute_quadratic_expression<let N: u32, let MOD_BITS: u32, let LHS_N: 
     let (q_limbs, r_limbs): ([u128; N], [u128; N]) = unsafe {
         crate::fns::expressions::__compute_quadratic_expression::<N, MOD_BITS, LHS_N, RHS_N, NUM_PRODUCTS, ADD_N>(
             params,
-            map(lhs_terms, |bns| map(bns, |bn| RuntimeBigNum::get_limbs(bn))),
+            map(lhs_terms, |bns| map(bns, |bn| bn.get_limbs())),
             lhs_flags,
-            map(rhs_terms, |bns| map(bns, |bn| RuntimeBigNum::get_limbs(bn))),
+            map(rhs_terms, |bns| map(bns, |bn| bn.get_limbs())),
             rhs_flags,
-            map(linear_terms, |bn| RuntimeBigNum::get_limbs(bn)),
+            map(linear_terms, |bn| bn.get_limbs()),
             linear_flags,
         )
     };
@@ -377,11 +377,11 @@ pub fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let LHS_N: u
 ) {
     crate::fns::expressions::evaluate_quadratic_expression::<N, MOD_BITS, LHS_N, RHS_N, NUM_PRODUCTS, ADD_N>(
         params,
-        map(lhs_terms, |bns| map(bns, |bn| RuntimeBigNum::get_limbs(bn))),
+        map(lhs_terms, |bns| map(bns, |bn| bn.get_limbs())),
         lhs_flags,
-        map(rhs_terms, |bns| map(bns, |bn| RuntimeBigNum::get_limbs(bn))),
+        map(rhs_terms, |bns| map(bns, |bn| bn.get_limbs())),
         rhs_flags,
-        map(linear_terms, |bn| RuntimeBigNum::get_limbs(bn)),
+        map(linear_terms, |bn| bn.get_limbs()),
         linear_flags,
     )
 }
@@ -396,7 +396,7 @@ pub fn __batch_invert<let N: u32, let MOD_BITS: u32, let M: u32>(
     let all_limbs: [[u128; N]; M] = unsafe {
         crate::fns::unconstrained_ops::batch_invert::<_, MOD_BITS, _>(
             params,
-            x.map(|bn| RuntimeBigNum::get_limbs(bn)),
+            x.map(|bn| bn.get_limbs()),
         )
     };
     all_limbs.map(|limbs: [u128; N]| RuntimeBigNum { limbs, params })
@@ -409,7 +409,7 @@ pub unconstrained fn __batch_invert_slice<let N: u32, let MOD_BITS: u32, let M: 
     assert(params.has_multiplicative_inverse);
     let all_limbs: [[u128; N]] = crate::fns::unconstrained_ops::batch_invert_slice::<N, MOD_BITS>(
         params,
-        x.map(|bn| RuntimeBigNum::get_limbs(bn)),
+        x.map(|bn| bn.get_limbs()),
     );
 
     all_limbs.map(|limbs: [u128; N]| RuntimeBigNum { limbs, params })

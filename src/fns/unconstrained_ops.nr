@@ -609,10 +609,10 @@ mod test_invmod {
         let b: BN = BN::derive_from_seed(y);
 
         // a / b should equal a * invmod(b)
-        let div_result: BN = a.__div(b);
+        let div_result: BN = a.__div(&b);
         let inv_b: BN = b.__invmod();
-        let mul_result: BN = a.__mul(inv_b);
-        assert(b.__mul(inv_b) == BN::one(), "b * invmod(b) should equal 1");
+        let mul_result: BN = a.__mul(&inv_b);
+        assert(b.__mul(&inv_b) == BN::one(), "b * invmod(b) should equal 1");
 
         assert(div_result == mul_result, "division should equal multiply by inverse");
     }

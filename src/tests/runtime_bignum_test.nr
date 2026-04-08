@@ -221,7 +221,7 @@ fn assert_is_not_equal() {
     let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
     let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [4, 5, 6, 7]);
 
-    a.assert_is_not_equal(b);
+    a.assert_is_not_equal(&b);
 }
 
 #[test(should_fail_with = "assert_is_not_equal fail")]
@@ -231,7 +231,7 @@ fn assert_is_not_equal_fail() {
     let a: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
     let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
 
-    a.assert_is_not_equal(b);
+    a.assert_is_not_equal(&b);
 }
 
 #[test(should_fail_with = "assert_is_not_equal fail")]
@@ -248,7 +248,7 @@ fn assert_is_not_equal_overloaded_lhs_fail() {
     // Safety: test code
     let a_plus_modulus: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: unsafe { $__helper_add(t0, t1) }, params };
 
-    a_plus_modulus.assert_is_not_equal(b);
+    a_plus_modulus.assert_is_not_equal(&b);
 }
 
 #[test(should_fail_with = "assert_is_not_equal fail")]
@@ -265,7 +265,7 @@ fn assert_is_not_equal_overloaded_rhs_fail() {
     // Safety: test code
     let b_plus_modulus: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: unsafe { $__helper_add(t0, t1) }, params };
 
-    a.assert_is_not_equal(b_plus_modulus);
+    a.assert_is_not_equal(&b_plus_modulus);
 }
 
 #[test(should_fail_with = "assert_is_not_equal fail")]
@@ -286,7 +286,7 @@ fn assert_is_not_equal_overloaded_fail() {
     // Safety: test code
     let b_plus_modulus: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum { limbs: unsafe { $__helper_add(t1, t2) }, params };
 
-    a_plus_modulus.assert_is_not_equal(b_plus_modulus);
+    a_plus_modulus.assert_is_not_equal(&b_plus_modulus);
 }
 
 #[test]
@@ -493,7 +493,7 @@ unconstrained fn test_invmod<let N: u32, let MOD_BITS: u32>(params: BigNumParams
     let u: RuntimeBigNum<N, MOD_BITS> = RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
     for _ in 0..1 {
         let v = u.__invmod();
-        let result = u.__mul(v);
+        let result = u.__mul(&v);
         let expected: RuntimeBigNum<N, MOD_BITS> = RuntimeBigNum::one(params);
         assert(result.limbs == expected.limbs);
     }

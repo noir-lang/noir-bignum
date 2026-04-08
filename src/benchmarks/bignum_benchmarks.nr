@@ -87,12 +87,12 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
 
         #[export]  
         fn $udiv_mod_bench_name(a: $typ, b: $typ) -> ($typ, $typ) {
-            $BigNum::udiv_mod(a, b)
+            $BigNum::udiv_mod(&a, &b)
         }
 
         #[export]
         fn $udiv_bench_name(a: $typ, b: $typ) -> $typ {
-            $BigNum::udiv(a, b)
+            $BigNum::udiv(&a, &b)
         }
 
         #[export]
@@ -107,37 +107,37 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
 
         #[export]
         fn $is_zero_bench_name(a: $typ) -> bool {
-            $BigNum::is_zero(a)
+            $BigNum::is_zero(&a)
         }
 
         #[export]
         fn $is_zero_integer_bench_name(a: $typ) -> bool {
-            $BigNum::is_zero_integer(a)
+            $BigNum::is_zero_integer(&a)
         }
 
         #[export]
         fn $assert_is_not_equal_bench_name(a: $typ, b: $typ) {
-            $BigNum::assert_is_not_equal(a, b)
+            $BigNum::assert_is_not_equal(&a, &b)
         }
 
         #[export]
         fn $assert_is_not_zero_bench_name(a: $typ) {
-            $BigNum::assert_is_not_zero(a)
+            $BigNum::assert_is_not_zero(&a)
         }
 
         #[export]
         fn $assert_is_not_zero_integer_bench_name(a: $typ) {
-            $BigNum::assert_is_not_zero_integer(a)
+            $BigNum::assert_is_not_zero_integer(&a)
         }
 
         #[export]
         fn $validate_in_range_bench_name(a: $typ) {
-            $BigNum::validate_in_range(a)
+            $BigNum::validate_in_range(&a)
         }
 
         #[export]
         fn $validate_in_field_bench_name(a: $typ) {
-            $BigNum::validate_in_field(a)
+            $BigNum::validate_in_field(&a)
         }        
 
         #[export]
@@ -157,7 +157,7 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
 
         #[export]
         fn $to_be_bytes_bench_name(a: $typ) -> [u8; ($MOD_BITS+7) / 8] {
-            crate::fns::serialization::to_be_bytes($BigNum::get_limbs(a))
+            crate::fns::serialization::to_be_bytes($BigNum::get_limbs(&a))
         }
 
         #[export]
@@ -167,7 +167,7 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
 
         #[export]
         fn $to_le_bytes_bench_name(a: $typ) -> [u8; ($MOD_BITS+7) / 8] {
-            crate::fns::serialization::to_le_bytes($BigNum::get_limbs(a))
+            crate::fns::serialization::to_le_bytes($BigNum::get_limbs(&a))
         }
 
         #[export]
@@ -208,13 +208,13 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
         #[export]
         fn $pow_bench_name(a: $typ, b: $typ) -> $typ{
            // Safety: Benchmarking 
-           unsafe { $BigNum::__pow(a, b) }                         
+           unsafe { $BigNum::__pow(&a, &b) }                         
         }
 
         #[export]
         fn $sqrt_bench_name(a: $typ) -> Option<$typ> {
            // Safety: Benchmarking 
-            unsafe { $BigNum::__sqrt(a) }
+            unsafe { $BigNum::__sqrt(&a) }
         }
    }
 }

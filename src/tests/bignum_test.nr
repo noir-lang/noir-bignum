@@ -142,7 +142,7 @@ fn test_SecP224r1_mul_regression() {
     let x = SecP224r1 { limbs: [0x03c1d356c21122343280d6115c1d21, 0xb70e0cbd6bb4bf7f321390b94a] };
     let res = x * x;
     // Safety: test code
-    let expected = unsafe { SecP224r1::__mul(x, x) };
+    let expected = unsafe { x.__mul(&x) };
     res.validate_in_field();
     expected.validate_in_field();
     assert(res == expected);
@@ -171,7 +171,7 @@ fn test_evaluate_quadratic_expression_regression_div_extra_mod() {
 
     // compute honest z = x * y^{-1} (mod MOD)
     // Safety: test code
-    let mut z_: [u128; 4] = unsafe { x.__div(y).get_limbs() };
+    let mut z_: [u128; 4] = unsafe { x.__div(&y).get_limbs() };
     // Safety: test code
     z_ = unsafe { __helper_add(z_, modulus) };
     // Safety: test code
@@ -191,7 +191,7 @@ fn test_evaluate_quadratic_expression_add_extra_mod_fuzz(xseed: [u8; 4], yseed: 
 
     // compute honest z = x + y (mod MOD)
     // Safety: test code
-    let mut z_: [u128; 3] = unsafe { x.__add(y).get_limbs() };
+    let mut z_: [u128; 3] = unsafe { x.__add(&y).get_limbs() };
     // Safety: test code
     z_ = unsafe { __helper_add(z_, modulus) };
     // Safety: test code
@@ -211,7 +211,7 @@ fn test_evaluate_quadratic_expression_mul_extra_mod_fuzz(xseed: [u8; 1], yseed: 
 
     // compute honest z = x * y (mod MOD)
     // Safety: test code
-    let mut z_: [u128; 3] = unsafe { x.__mul(y).get_limbs() };
+    let mut z_: [u128; 3] = unsafe { x.__mul(&y).get_limbs() };
     // Safety: test code
     z_ = unsafe { __helper_add(z_, modulus) };
     // Safety: test code
@@ -233,7 +233,7 @@ fn test_udiv_mod_extra_modulus_regression(xseed: [u8; 1], yseed: [u8; 2]) {
 
     // compute honest z = x * y (mod MOD)
     // Safety: test code
-    let (q, r): (U256, U256) = unsafe { x.__udiv_mod(y) };
+    let (q, r): (U256, U256) = unsafe { x.__udiv_mod(&y) };
 
     let mut q_: [u128; 3] = q.get_limbs();
     // Safety: test code
@@ -510,7 +510,7 @@ where
     let a: BN = BN::derive_from_seed([1, 2, 3, 4]);
     let b: BN = BN::derive_from_seed([4, 5, 6, 7]);
 
-    a.assert_is_not_equal(b);
+    a.assert_is_not_equal(&b);
 }
 
 fn test_assert_is_not_equal_fail<let N: u32, BN>()
@@ -520,7 +520,7 @@ where
     let a: BN = BN::derive_from_seed([1, 2, 3, 4]);
     let b: BN = BN::derive_from_seed([1, 2, 3, 4]);
 
-    a.assert_is_not_equal(b);
+    a.assert_is_not_equal(&b);
 }
 
 fn test_assert_is_not_equal_overloaded_lhs_fail<let N: u32, BN>()
@@ -536,7 +536,7 @@ where
     let t1 = modulus.get_limbs();
     // Safety: test code
     let a_plus_modulus: BN = BN::from_limbs(unsafe { __helper_add(t0, t1) });
-    a_plus_modulus.assert_is_not_equal(b);
+    a_plus_modulus.assert_is_not_equal(&b);
 }
 
 fn test_assert_is_not_equal_overloaded_rhs_fail<let N: u32, BN>()
@@ -552,7 +552,7 @@ where
     let t1 = modulus.get_limbs();
     // Safety: test code
     let b_plus_modulus = BN::from_limbs(unsafe { __helper_add(t0, t1) });
-    a.assert_is_not_equal(b_plus_modulus);
+    a.assert_is_not_equal(&b_plus_modulus);
 }
 
 fn test_assert_is_not_equal_overloaded_fail<let N: u32, BN>()
@@ -571,7 +571,7 @@ where
     let a_plus_modulus: BN = BN::from_limbs(unsafe { __helper_add(t0, t2) });
     // Safety: test code
     let b_plus_modulus: BN = BN::from_limbs(unsafe { __helper_add(t1, t2) });
-    a_plus_modulus.assert_is_not_equal(b_plus_modulus);
+    a_plus_modulus.assert_is_not_equal(&b_plus_modulus);
 }
 
 #[test]
@@ -661,7 +661,7 @@ fn test_do_nothing() {
     // Safety: test code
     let c: [u128; 3] = unsafe { __helper_add(a.get_limbs(), b.get_limbs()) };
     // Safety: test code
-    let d: BN254_Fq = unsafe { a.__add(b) };
+    let d: BN254_Fq = unsafe { a.__add(&b) };
     let e: BN254_Fq = a + b;
     assert(c == d.get_limbs());
     assert(c == e.get_limbs());
@@ -877,7 +877,7 @@ where
     let two: BN = BN::one() + BN::one();
 
     let c: BN = a / two;
-    let d: BN = a.udiv(two);
+    let d: BN = a.udiv(&two);
 
     assert(c == d);
 }
@@ -890,7 +890,7 @@ where
     // Safety: test code
     let v: BN = unsafe { u.__invmod() };
     // Safety: test code
-    let result: BN = unsafe { u.__mul(v) };
+    let result: BN = unsafe { u.__mul(&v) };
     let expected: BN = BN::one();
     assert(result == expected);
 }
@@ -940,10 +940,10 @@ fn test_udiv_mod_U256() {
     ]);
     let b: U256 = U256::from_limbs([12, 0, 0]);
 
-    let (q, r): (U256, U256) = a.udiv_mod(b);
+    let (q, r): (U256, U256) = a.udiv_mod(&b);
 
     // Safety: test code
-    let product: U256 = unsafe { q.__mul(b).__add(r) };
+    let product: U256 = unsafe { q.__mul(&b).__add(&r) };
     assert(product == a);
 }
 
@@ -951,7 +951,8 @@ fn test_udiv_mod_U256() {
 fn test_1_udiv_mod_2() {
     let _0: U256 = U256::zero();
     let _1: U256 = U256::one();
-    assert(_1.udiv_mod(_1 + _1) == (_0, _1));
+    let _2: U256 = _1 + _1;
+    assert(_1.udiv_mod(&_2) == (_0, _1));
 }
 
 #[test]
@@ -959,7 +960,8 @@ fn test_20_udiv_mod_11() {
     let _1: U256 = U256::one();
     let _2_POW_120: U256 = U256::from_limbs([0, 1, 0]);
     let _2_POW_121: U256 = U256::from_limbs([0, 2, 0]);
-    assert(_2_POW_121.udiv_mod(_2_POW_120 + _1) == (_1, _2_POW_120 - _1));
+    let divisor: U256 = _2_POW_120 + _1;
+    assert(_2_POW_121.udiv_mod(&divisor) == (_1, _2_POW_120 - _1));
 }
 
 //// Set up parametrized tests
@@ -1353,7 +1355,7 @@ fn test_expressions() {
     let y: BN254_Fq = BN254_Fq::from_limbs([0x1, 0x1, 0x0]);
     let z: BN254_Fq = BN254_Fq::from_limbs([0x2, 0x2, 0x0]);
     // Safety: test code
-    let yy: BN254_Fq = unsafe { y.__add(y) };
+    let yy: BN254_Fq = unsafe { y.__add(&y) };
 
     assert(yy.get_limbs() == z.get_limbs());
 
@@ -1379,13 +1381,13 @@ fn test_expressions() {
         0x0000000000000000000000000000000000000000000000000000000000000f93,
     ]);
     // Safety: test code
-    let wx: BN254_Fq = unsafe { w.__mul(x) };
+    let wx: BN254_Fq = unsafe { w.__mul(&x) };
     // Safety: test code
-    let uv: BN254_Fq = unsafe { uu.__mul(vv) };
+    let uv: BN254_Fq = unsafe { uu.__mul(&vv) };
     // Safety: test code
-    let y: BN254_Fq = unsafe { (uv.__add(wx)).__neg() };
+    let y: BN254_Fq = unsafe { (uv.__add(&wx)).__neg() };
     // Safety: test code
-    let z: BN254_Fq = unsafe { uv.__add(wx) };
+    let z: BN254_Fq = unsafe { uv.__add(&wx) };
 
     evaluate_quadratic_expression(
         [[uu], [w]],
@@ -1475,7 +1477,7 @@ fn test_2048_bit_quadratic_expression() {
     let b_bn: BN2048 = BN2048::from_limbs(b);
 
     // Safety: test code
-    let c_bn: BN2048 = unsafe { a_bn.__mul(b_bn) };
+    let c_bn: BN2048 = unsafe { a_bn.__mul(&b_bn) };
 
     assert(c_bn.limbs == c_expected);
 
