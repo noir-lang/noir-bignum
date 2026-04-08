@@ -152,22 +152,22 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
 
         #[export]
         fn $from_be_bytes_bench_name(a: [u8; ($MOD_BITS+7) / 8]) -> [u128; $N] {
-            crate::fns::serialization::from_be_bytes(a)
+            crate::fns::serialization::from_be_bytes::<$N, $MOD_BITS>(&a)
         }
 
         #[export]
         fn $to_be_bytes_bench_name(a: $typ) -> [u8; ($MOD_BITS+7) / 8] {
-            crate::fns::serialization::to_be_bytes($BigNum::get_limbs(&a))
+            crate::fns::serialization::to_be_bytes::<$N, $MOD_BITS>(&$BigNum::get_limbs(&a))
         }
 
         #[export]
         fn $from_le_bytes_bench_name(a: [u8; ($MOD_BITS+7) / 8]) -> [u128; $N] {
-            crate::fns::serialization::from_le_bytes(a)
-        }      
+            crate::fns::serialization::from_le_bytes::<$N, $MOD_BITS>(&a)
+        }
 
         #[export]
         fn $to_le_bytes_bench_name(a: $typ) -> [u8; ($MOD_BITS+7) / 8] {
-            crate::fns::serialization::to_le_bytes($BigNum::get_limbs(&a))
+            crate::fns::serialization::to_le_bytes::<$N, $MOD_BITS>(&$BigNum::get_limbs(&a))
         }
 
         #[export]

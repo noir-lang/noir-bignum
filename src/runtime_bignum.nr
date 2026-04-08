@@ -62,19 +62,19 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     }
 
     pub fn from_be_bytes(params: BigNumParams<N, MOD_BITS>, x: [u8; (MOD_BITS + 7) / 8]) -> Self {
-        Self { limbs: from_be_bytes::<N, MOD_BITS>(x), params }
+        Self { limbs: from_be_bytes::<N, MOD_BITS>(&x), params }
     }
 
     pub fn from_le_bytes(params: BigNumParams<N, MOD_BITS>, x: [u8; (MOD_BITS + 7) / 8]) -> Self {
-        Self { limbs: from_le_bytes::<N, MOD_BITS>(x), params }
+        Self { limbs: from_le_bytes::<N, MOD_BITS>(&x), params }
     }
 
     pub fn to_be_bytes(&self) -> [u8; (MOD_BITS + 7) / 8] {
-        to_be_bytes::<N, MOD_BITS>(self.limbs)
+        to_be_bytes::<N, MOD_BITS>(&self.limbs)
     }
 
     pub fn to_le_bytes(&self) -> [u8; (MOD_BITS + 7) / 8] {
-        to_le_bytes::<N, MOD_BITS>(self.limbs)
+        to_le_bytes::<N, MOD_BITS>(&self.limbs)
     }
 
     pub fn modulus(&self) -> Self {

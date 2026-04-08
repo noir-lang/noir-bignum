@@ -173,9 +173,9 @@ fn test_evaluate_quadratic_expression_regression_div_extra_mod() {
     // Safety: test code
     let mut z_: [u128; 4] = unsafe { x.__div(&y).get_limbs() };
     // Safety: test code
-    z_ = unsafe { __helper_add(z_, modulus) };
+    z_ = unsafe { __helper_add(&z_, &modulus) };
     // Safety: test code
-    z_ = unsafe { __helper_add(z_, modulus) };
+    z_ = unsafe { __helper_add(&z_, &modulus) };
 
     let z: BLS12_381_Fq = BLS12_381_Fq::from_limbs(z_);
 
@@ -193,9 +193,9 @@ fn test_evaluate_quadratic_expression_add_extra_mod_fuzz(xseed: [u8; 4], yseed: 
     // Safety: test code
     let mut z_: [u128; 3] = unsafe { x.__add(&y).get_limbs() };
     // Safety: test code
-    z_ = unsafe { __helper_add(z_, modulus) };
+    z_ = unsafe { __helper_add(&z_, &modulus) };
     // Safety: test code
-    z_ = unsafe { __helper_add(z_, modulus) };
+    z_ = unsafe { __helper_add(&z_, &modulus) };
 
     let z: BLS12_381_Fr = BLS12_381_Fr::from_limbs(z_);
 
@@ -213,9 +213,9 @@ fn test_evaluate_quadratic_expression_mul_extra_mod_fuzz(xseed: [u8; 1], yseed: 
     // Safety: test code
     let mut z_: [u128; 3] = unsafe { x.__mul(&y).get_limbs() };
     // Safety: test code
-    z_ = unsafe { __helper_add(z_, modulus) };
+    z_ = unsafe { __helper_add(&z_, &modulus) };
     // Safety: test code
-    z_ = unsafe { __helper_add(z_, modulus) };
+    z_ = unsafe { __helper_add(&z_, &modulus) };
 
     let z: U256 = U256::from_limbs(z_);
 
@@ -237,7 +237,7 @@ fn test_udiv_mod_extra_modulus_regression(xseed: [u8; 1], yseed: [u8; 2]) {
 
     let mut q_: [u128; 3] = q.get_limbs();
     // Safety: test code
-    q_ = unsafe { __helper_add(q_, modulus) };
+    q_ = unsafe { __helper_add(&q_, &modulus) };
 
     validate_udiv_mod_expression::<3, 257>(&x.get_limbs(), &y.get_limbs(), &q_, &r.get_limbs());
 }
@@ -537,7 +537,7 @@ where
     let t0 = a.get_limbs();
     let t1 = modulus.get_limbs();
     // Safety: test code
-    let a_plus_modulus: BN = BN::from_limbs(unsafe { __helper_add(t0, t1) });
+    let a_plus_modulus: BN = BN::from_limbs(unsafe { __helper_add(&t0, &t1) });
     a_plus_modulus.assert_is_not_equal(&b);
 }
 
@@ -553,7 +553,7 @@ where
     let t0 = b.get_limbs();
     let t1 = modulus.get_limbs();
     // Safety: test code
-    let b_plus_modulus = BN::from_limbs(unsafe { __helper_add(t0, t1) });
+    let b_plus_modulus = BN::from_limbs(unsafe { __helper_add(&t0, &t1) });
     a.assert_is_not_equal(&b_plus_modulus);
 }
 
@@ -570,9 +570,9 @@ where
     let t1 = b.get_limbs();
     let t2 = modulus.get_limbs();
     // Safety: test code
-    let a_plus_modulus: BN = BN::from_limbs(unsafe { __helper_add(t0, t2) });
+    let a_plus_modulus: BN = BN::from_limbs(unsafe { __helper_add(&t0, &t2) });
     // Safety: test code
-    let b_plus_modulus: BN = BN::from_limbs(unsafe { __helper_add(t1, t2) });
+    let b_plus_modulus: BN = BN::from_limbs(unsafe { __helper_add(&t1, &t2) });
     a_plus_modulus.assert_is_not_equal(&b_plus_modulus);
 }
 
@@ -661,7 +661,7 @@ fn test_do_nothing() {
     let a: BN254_Fq = BN254_Fq::from_limbs([1, 2, 0]);
     let b: BN254_Fq = BN254_Fq::from_limbs([1, 2, 0]);
     // Safety: test code
-    let c: [u128; 3] = unsafe { __helper_add(a.get_limbs(), b.get_limbs()) };
+    let c: [u128; 3] = unsafe { __helper_add(&a.get_limbs(), &b.get_limbs()) };
     // Safety: test code
     let d: BN254_Fq = unsafe { a.__add(&b) };
     let e: BN254_Fq = a + b;
@@ -765,7 +765,7 @@ fn test_add_modulus_overflow() {
         [0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x3fff];
     let one = [1, 0, 0];
     // Safety: test code
-    let a: BN254_Fq = BN254_Fq::from_limbs(unsafe { __helper_add(p, one) });
+    let a: BN254_Fq = BN254_Fq::from_limbs(unsafe { __helper_add(&p, &one) });
     let b: BN254_Fq = BN254_Fq::from_limbs(two_pow_254_minus_1);
     let result = a + b;
     assert(result == b);
@@ -857,7 +857,7 @@ where
     let inv_two: BN = unsafe {
         BN::from_limbs(
             __shr(
-                __helper_add(BN::modulus().get_limbs(), BN::one().get_limbs()),
+                &__helper_add(&BN::modulus().get_limbs(), &BN::one().get_limbs()),
                 1,
             ),
         )
@@ -1517,7 +1517,7 @@ where
     BN: BigNum,
 {
     // Safety: test code
-    let qnr_limbs = unsafe { __quadratic_non_residue(BN::params()) };
+    let qnr_limbs = unsafe { __quadratic_non_residue(&BN::params()) };
     let g: BN = BN::from_limbs(qnr_limbs);
 
     // Safety: test code

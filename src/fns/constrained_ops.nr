@@ -1046,17 +1046,23 @@ pub fn mul<let N: u32, let MOD_BITS: u32>(
     rhs: [u128; N],
 ) -> [u128; N] {
     // Safety: we constrain the multiplication result immediately after
-    let result: [u128; N] = unsafe { __mul::<N, MOD_BITS>(params, lhs, rhs) };
+    let result: [u128; N] = unsafe { __mul::<N, MOD_BITS>(&params, &lhs, &rhs) };
     if !std::runtime::is_unconstrained() {
         // lhs * rhs - result = 0
-        evaluate_quadratic_expression(
+        let lhs_terms: [[[u128; N]; 1]; 1] = [[lhs]];
+        let lhs_flags: [[bool; 1]; 1] = [[false]];
+        let rhs_terms: [[[u128; N]; 1]; 1] = [[rhs]];
+        let rhs_flags: [[bool; 1]; 1] = [[false]];
+        let linear_terms: [[u128; N]; 1] = [result];
+        let linear_flags: [bool; 1] = [true];
+        evaluate_quadratic_expression::<N, MOD_BITS, 1, 1, 1, 1>(
             &params,
-            &[[lhs]],
-            &[[false]],
-            &[[rhs]],
-            &[[false]],
-            &[result],
-            &[true],
+            &lhs_terms,
+            &lhs_flags,
+            &rhs_terms,
+            &rhs_flags,
+            &linear_terms,
+            &linear_flags,
         );
     }
     result
@@ -1081,17 +1087,23 @@ pub fn sqr<let N: u32, let MOD_BITS: u32>(
     val: [u128; N],
 ) -> [u128; N] {
     // Safety: we constrain the multiplication result immediately after
-    let result: [u128; N] = unsafe { __sqr::<_, MOD_BITS>(params, val) };
+    let result: [u128; N] = unsafe { __sqr::<_, MOD_BITS>(&params, &val) };
     if !std::runtime::is_unconstrained() {
         // val * val - result = 0
-        evaluate_quadratic_expression(
+        let lhs_terms: [[[u128; N]; 1]; 1] = [[val]];
+        let lhs_flags: [[bool; 1]; 1] = [[false]];
+        let rhs_terms: [[[u128; N]; 1]; 1] = [[val]];
+        let rhs_flags: [[bool; 1]; 1] = [[false]];
+        let linear_terms: [[u128; N]; 1] = [result];
+        let linear_flags: [bool; 1] = [true];
+        evaluate_quadratic_expression::<N, MOD_BITS, 1, 1, 1, 1>(
             &params,
-            &[[val]],
-            &[[false]],
-            &[[val]],
-            &[[false]],
-            &[result],
-            &[true],
+            &lhs_terms,
+            &lhs_flags,
+            &rhs_terms,
+            &rhs_flags,
+            &linear_terms,
+            &linear_flags,
         );
     }
     result
@@ -1127,17 +1139,23 @@ pub fn div<let N: u32, let MOD_BITS: u32>(
         "BigNum has no multiplicative inverse. Use udiv for unsigned integer division",
     );
     // Safety: We constrain the result of division immediately after
-    let result: [u128; N] = unsafe { __div::<_, MOD_BITS>(params, lhs, rhs) };
+    let result: [u128; N] = unsafe { __div::<_, MOD_BITS>(&params, &lhs, &rhs) };
     if !std::runtime::is_unconstrained() {
         // result * rhs - lhs = 0
-        evaluate_quadratic_expression(
+        let lhs_terms: [[[u128; N]; 1]; 1] = [[result]];
+        let lhs_flags: [[bool; 1]; 1] = [[false]];
+        let rhs_terms: [[[u128; N]; 1]; 1] = [[rhs]];
+        let rhs_flags: [[bool; 1]; 1] = [[false]];
+        let linear_terms: [[u128; N]; 1] = [lhs];
+        let linear_flags: [bool; 1] = [true];
+        evaluate_quadratic_expression::<N, MOD_BITS, 1, 1, 1, 1>(
             &params,
-            &[[result]],
-            &[[false]],
-            &[[rhs]],
-            &[[false]],
-            &[lhs],
-            &[true],
+            &lhs_terms,
+            &lhs_flags,
+            &rhs_terms,
+            &rhs_flags,
+            &linear_terms,
+            &linear_flags,
         );
         assert_is_not_zero(&params, &rhs);
     }
