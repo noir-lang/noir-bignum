@@ -40,7 +40,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
         params: BigNumParams<N, MOD_BITS>,
         seed: [u8; SeedBytes],
     ) -> Self {
-        let limbs: [u128; N] = derive_from_seed::<_, MOD_BITS, _>(params, seed);
+        let limbs: [u128; N] = derive_from_seed::<_, MOD_BITS, _>(&params, seed);
         Self { limbs, params }
     }
 
@@ -49,7 +49,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
         params: BigNumParams<N, MOD_BITS>,
         seed: [u8; SeedBytes],
     ) -> Self {
-        let limbs: [u128; N] = __derive_from_seed::<_, MOD_BITS, _>(params, seed);
+        let limbs: [u128; N] = __derive_from_seed::<_, MOD_BITS, _>(&params, seed);
         Self { limbs, params }
     }
 
@@ -105,18 +105,18 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
 
     pub unconstrained fn __eq(&self, other: &Self) -> bool {
         assert(self.params == other.params);
-        __eq(self.limbs, other.limbs)
+        __eq(&self.limbs, &other.limbs)
     }
 
     pub unconstrained fn __is_zero(&self) -> bool {
-        __is_zero(self.limbs)
+        __is_zero(&self.limbs)
     }
 
     // UNCONSTRAINED! (Hence `__` prefix).
     pub fn __neg(&self) -> Self {
         let params = self.params;
         // Safety: Unconstrained function simulation
-        let limbs: [u128; N] = unsafe { __neg(params.modulus, self.limbs) };
+        let limbs: [u128; N] = unsafe { __neg(&params.modulus, &self.limbs) };
         Self { params, limbs }
     }
 
@@ -125,7 +125,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == other.params);
         // Safety: Unconstrained function simulation
-        let limbs: [u128; N] = unsafe { __add(params.modulus, self.limbs, other.limbs) };
+        let limbs: [u128; N] = unsafe { __add(&params.modulus, &self.limbs, &other.limbs) };
         Self { params, limbs }
     }
 
@@ -134,7 +134,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
         let params = self.params;
         assert(params == other.params);
         // Safety: Unconstrained function simulation
-        let limbs: [u128; N] = unsafe { __sub(params.modulus, self.limbs, other.limbs) };
+        let limbs: [u128; N] = unsafe { __sub(&params.modulus, &self.limbs, &other.limbs) };
         Self { params, limbs }
     }
 
@@ -143,7 +143,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == other.params);
         // Safety: Unconstrained function simulation
-        let limbs: [u128; N] = unsafe { __mul::<_, MOD_BITS>(params, self.limbs, other.limbs) };
+        let limbs: [u128; N] = unsafe { __mul::<_, MOD_BITS>(&params, &self.limbs, &other.limbs) };
         Self { params, limbs }
     }
 
@@ -151,7 +151,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     pub fn __sqr(&self) -> Self {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         // Safety: Unconstrained function simulation
-        let limbs: [u128; N] = unsafe { __sqr::<_, MOD_BITS>(params, self.limbs) };
+        let limbs: [u128; N] = unsafe { __sqr::<_, MOD_BITS>(&params, &self.limbs) };
         Self { params: params, limbs: limbs }
     }
 
@@ -160,7 +160,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == divisor.params);
         // Safety: Unconstrained function simulation
-        let limbs: [u128; N] = unsafe { __div::<_, MOD_BITS>(params, self.limbs, divisor.limbs) };
+        let limbs: [u128; N] = unsafe { __div::<_, MOD_BITS>(&params, &self.limbs, &divisor.limbs) };
         Self { params, limbs }
     }
 
@@ -169,7 +169,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == divisor.params);
         // Safety: Unconstrained function simulation
-        let (q, r): ([u128; N], [u128; N]) = unsafe { __udiv_mod(self.limbs, divisor.limbs) };
+        let (q, r): ([u128; N], [u128; N]) = unsafe { __udiv_mod(&self.limbs, &divisor.limbs) };
         (Self { limbs: q, params }, Self { limbs: r, params })
     }
 
@@ -177,7 +177,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     pub fn __invmod(&self) -> Self {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         // Safety: Unconstrained function simulation
-        let limbs: [u128; N] = unsafe { __invmod::<N, MOD_BITS>(params, self.limbs) };
+        let limbs: [u128; N] = unsafe { __invmod::<N, MOD_BITS>(&params, &self.limbs) };
         Self { limbs, params }
     }
 
@@ -186,7 +186,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == exponent.params);
         // Safety: Unconstrained function simulation
-        let limbs: [u128; N] = unsafe { __pow::<_, MOD_BITS>(params, self.limbs, exponent.limbs) };
+        let limbs: [u128; N] = unsafe { __pow::<_, MOD_BITS>(&params, &self.limbs, &exponent.limbs) };
         Self { limbs, params }
     }
 
@@ -195,7 +195,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     pub fn __tonelli_shanks_sqrt(&self) -> std::option::Option<Self> {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         // Safety: out-of-circuit sqrt computation
-        let maybe_limbs: Option<[u128; N]> = unsafe { __sqrt(params, self.limbs) };
+        let maybe_limbs: Option<[u128; N]> = unsafe { __sqrt(&params, &self.limbs) };
         maybe_limbs.map(|limbs: [u128; N]| Self { limbs, params })
     }
 
@@ -203,23 +203,23 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     pub fn __sqrt(&self) -> std::option::Option<Self> {
         let params = self.params;
         // Safety: out-of-circuit sqrt computation
-        let maybe_limbs: Option<[u128; N]> = unsafe { __sqrt(params, self.limbs) };
+        let maybe_limbs: Option<[u128; N]> = unsafe { __sqrt(&params, &self.limbs) };
         maybe_limbs.map(|limbs: [u128; N]| Self { limbs, params })
     }
 
     pub fn validate_in_field(&self) {
         let params = self.params;
-        validate_in_field::<N, MOD_BITS>(params, self.limbs);
+        validate_in_field::<N, MOD_BITS>(&params, &self.limbs);
     }
 
     pub fn validate_in_range(&self) {
-        validate_in_range::<u128, N, MOD_BITS>(self.limbs);
+        validate_in_range::<u128, N, MOD_BITS>(&self.limbs);
     }
 
     pub fn assert_is_not_equal(&self, other: &Self) {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == other.params);
-        assert_is_not_equal(params, self.limbs, other.limbs);
+        assert_is_not_equal(&params, &self.limbs, &other.limbs);
     }
 
     pub fn sqr(&self) -> Self {
@@ -230,38 +230,38 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     pub fn udiv_mod(&self, divisor: &Self) -> (Self, Self) {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == divisor.params);
-        let (q, r) = udiv_mod::<N, MOD_BITS>(self.limbs, divisor.limbs);
+        let (q, r) = udiv_mod::<N, MOD_BITS>(&self.limbs, &divisor.limbs);
         (Self { limbs: q, params }, Self { limbs: r, params })
     }
 
     pub fn udiv(&self, divisor: &Self) -> Self {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == divisor.params);
-        Self { limbs: udiv::<N, MOD_BITS>(self.limbs, divisor.limbs), params }
+        Self { limbs: udiv::<N, MOD_BITS>(&self.limbs, &divisor.limbs), params }
     }
 
     pub fn umod(&self, divisor: &Self) -> Self {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == divisor.params);
-        Self { limbs: umod::<N, MOD_BITS>(self.limbs, divisor.limbs), params }
+        Self { limbs: umod::<N, MOD_BITS>(&self.limbs, &divisor.limbs), params }
     }
 
     pub fn is_zero(&self) -> bool {
         let params: BigNumParams<N, MOD_BITS> = self.params;
-        is_zero(params, self.limbs)
+        is_zero(&params, &self.limbs)
     }
 
     pub fn is_zero_integer(&self) -> bool {
-        is_zero_integer(self.limbs)
+        is_zero_integer(&self.limbs)
     }
 
     pub fn assert_is_not_zero(&self) {
         let params: BigNumParams<N, MOD_BITS> = self.params;
-        assert_is_not_zero::<N, MOD_BITS>(params, self.limbs);
+        assert_is_not_zero::<N, MOD_BITS>(&params, &self.limbs);
     }
 
     pub fn assert_is_not_zero_integer(&self) {
-        assert_is_not_zero_integer(self.limbs);
+        assert_is_not_zero_integer(&self.limbs);
     }
 }
 
@@ -274,7 +274,7 @@ impl<let N: u32, let MOD_BITS: u32> std::ops::Add for RuntimeBigNum<N, MOD_BITS>
     fn add(self, other: Self) -> Self {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == other.params);
-        Self { limbs: add::<N, MOD_BITS>(params, self.limbs, other.limbs), params }
+        Self { limbs: add::<N, MOD_BITS>(&params, &self.limbs, &other.limbs), params }
     }
 }
 
@@ -287,7 +287,7 @@ impl<let N: u32, let MOD_BITS: u32> std::ops::Sub for RuntimeBigNum<N, MOD_BITS>
     fn sub(self, other: Self) -> Self {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == other.params);
-        Self { limbs: sub::<N, MOD_BITS>(params, self.limbs, other.limbs), params }
+        Self { limbs: sub::<N, MOD_BITS>(&params, &self.limbs, &other.limbs), params }
     }
 }
 
@@ -322,7 +322,7 @@ impl<let N: u32, let MOD_BITS: u32> Neg for RuntimeBigNum<N, MOD_BITS> {
     ///      will create much fewer constraints than calling `mul` directly
     fn neg(self) -> Self {
         let params: BigNumParams<N, MOD_BITS> = self.params;
-        Self { limbs: neg::<N, MOD_BITS>(params, self.limbs), params }
+        Self { limbs: neg::<N, MOD_BITS>(&params, &self.limbs), params }
     }
 }
 
@@ -330,14 +330,14 @@ impl<let N: u32, let MOD_BITS: u32> std::cmp::Eq for RuntimeBigNum<N, MOD_BITS> 
     fn eq(self, other: Self) -> bool {
         let params = self.params;
         assert(params == other.params);
-        eq::<N, MOD_BITS>(params, self.limbs, other.limbs)
+        eq::<N, MOD_BITS>(&params, &self.limbs, &other.limbs)
     }
 }
 
 impl<let N: u32, let MOD_BITS: u32> std::cmp::Ord for RuntimeBigNum<N, MOD_BITS> {
     fn cmp(self, other: Self) -> Ordering {
         assert(self.params == other.params);
-        cmp::<N, MOD_BITS>(self.limbs, other.limbs)
+        cmp::<N, MOD_BITS>(&self.limbs, &other.limbs)
     }
 }
 
@@ -354,13 +354,13 @@ pub fn __compute_quadratic_expression<let N: u32, let MOD_BITS: u32, let LHS_N: 
     // Safety: Unconstrained function simulation
     let (q_limbs, r_limbs): ([u128; N], [u128; N]) = unsafe {
         crate::fns::expressions::__compute_quadratic_expression::<N, MOD_BITS, LHS_N, RHS_N, NUM_PRODUCTS, ADD_N>(
-            params,
-            map(&lhs_terms, |bns| map(bns, |bn| bn.get_limbs())),
-            lhs_flags,
-            map(&rhs_terms, |bns| map(bns, |bn| bn.get_limbs())),
-            rhs_flags,
-            map(&linear_terms, |bn| bn.get_limbs()),
-            linear_flags,
+            &params,
+            &map(&lhs_terms, |bns| map(bns, |bn| bn.get_limbs())),
+            &lhs_flags,
+            &map(&rhs_terms, |bns| map(bns, |bn| bn.get_limbs())),
+            &rhs_flags,
+            &map(&linear_terms, |bn| bn.get_limbs()),
+            &linear_flags,
         )
     };
     (RuntimeBigNum { limbs: q_limbs, params }, RuntimeBigNum { limbs: r_limbs, params })
@@ -376,13 +376,13 @@ pub fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let LHS_N: u
     linear_flags: [bool; ADD_N],
 ) {
     crate::fns::expressions::evaluate_quadratic_expression::<N, MOD_BITS, LHS_N, RHS_N, NUM_PRODUCTS, ADD_N>(
-        params,
-        map(&lhs_terms, |bns| map(bns, |bn| bn.get_limbs())),
-        lhs_flags,
-        map(&rhs_terms, |bns| map(bns, |bn| bn.get_limbs())),
-        rhs_flags,
-        map(&linear_terms, |bn| bn.get_limbs()),
-        linear_flags,
+        &params,
+        &map(&lhs_terms, |bns| map(bns, |bn| bn.get_limbs())),
+        &lhs_flags,
+        &map(&rhs_terms, |bns| map(bns, |bn| bn.get_limbs())),
+        &rhs_flags,
+        &map(&linear_terms, |bn| bn.get_limbs()),
+        &linear_flags,
     )
 }
 
@@ -394,9 +394,10 @@ pub fn __batch_invert<let N: u32, let MOD_BITS: u32, let M: u32>(
     assert(params.has_multiplicative_inverse);
     // Safety: Unconstrained function simulation
     let all_limbs: [[u128; N]; M] = unsafe {
+        let limb_arr = x.map(|bn| bn.get_limbs());
         crate::fns::unconstrained_ops::batch_invert::<_, MOD_BITS, _>(
-            params,
-            x.map(|bn| bn.get_limbs()),
+            &params,
+            &limb_arr,
         )
     };
     all_limbs.map(|limbs: [u128; N]| RuntimeBigNum { limbs, params })
@@ -408,7 +409,7 @@ pub unconstrained fn __batch_invert_slice<let N: u32, let MOD_BITS: u32, let M: 
     let params: BigNumParams<N, MOD_BITS> = x[0].params;
     assert(params.has_multiplicative_inverse);
     let all_limbs: [[u128; N]] = crate::fns::unconstrained_ops::batch_invert_slice::<N, MOD_BITS>(
-        params,
+        &params,
         x.map(|bn| bn.get_limbs()),
     );
 

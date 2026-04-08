@@ -239,7 +239,7 @@ fn test_udiv_mod_extra_modulus_regression(xseed: [u8; 1], yseed: [u8; 2]) {
     // Safety: test code
     q_ = unsafe { __helper_add(q_, modulus) };
 
-    validate_udiv_mod_expression::<3, 257>(x.get_limbs(), y.get_limbs(), q_, r.get_limbs());
+    validate_udiv_mod_expression::<3, 257>(&x.get_limbs(), &y.get_limbs(), &q_, &r.get_limbs());
 }
 
 // This tests that `validate_gt` no longer accepts identical inputs
@@ -247,7 +247,9 @@ fn test_udiv_mod_extra_modulus_regression(xseed: [u8; 1], yseed: [u8; 2]) {
 fn test_validate_gt_regression_BN() {
     let x: BN254_Fq = BN254_Fq::derive_from_seed([1, 2, 3, 4]);
     let y: BN254_Fq = BN254_Fq::derive_from_seed([1, 2, 3, 4]);
-    validate_gt::<3, 254>(x.get_limbs(), y.get_limbs());
+    let x_limbs = x.get_limbs();
+    let y_limbs = y.get_limbs();
+    validate_gt::<3, 254>(&x_limbs, &y_limbs);
 }
 
 // ------------------------------ BASIC TESTS ------------------------------
@@ -1542,12 +1544,12 @@ fn test_sqrt_equality_fuzz(seed: [u8; 3]) {
     let b: BLS12_381_Fq = a * a;
     // Safety: test code
     let c: BLS12_381_Fq = unsafe {
-        BLS12_381_Fq::from_limbs(__tonelli_shanks_sqrt(BLS12_381_Fq::params(), b.get_limbs())
+        BLS12_381_Fq::from_limbs(__tonelli_shanks_sqrt(&BLS12_381_Fq::params(), &b.get_limbs())
             .unwrap())
     };
     // Safety: test code
     let d: BLS12_381_Fq = unsafe {
-        BLS12_381_Fq::from_limbs(__easy_sqrt(BLS12_381_Fq::params(), b.get_limbs()).unwrap())
+        BLS12_381_Fq::from_limbs(__easy_sqrt(&BLS12_381_Fq::params(), &b.get_limbs()).unwrap())
     };
     assert((c == d) | (c == -d));
 }

@@ -20,7 +20,7 @@ use crate::params::BigNumParams;
 ///
 /// See more information in `constrained_ops.nr`: `derive_from_seed`
 pub unconstrained fn __derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(
-    params: BigNumParams<N, MOD_BITS>,
+    params: &BigNumParams<N, MOD_BITS>,
     seed: [u8; SeedBytes],
 ) -> [u128; N] {
     derive_from_seed::<N, MOD_BITS, SeedBytes>(params, seed)
@@ -29,20 +29,20 @@ pub unconstrained fn __derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedB
 // ------------------------------ COMPARISON FUNCTIONS ------------------------------
 
 /// Compare two limb arrays for equality (unconstrained)
-pub unconstrained fn __eq<let N: u32>(lhs: [u128; N], rhs: [u128; N]) -> bool {
-    lhs == rhs
+pub unconstrained fn __eq<let N: u32>(lhs: &[u128; N], rhs: &[u128; N]) -> bool {
+    *lhs == *rhs
 }
 
 /// Compare a limb array to a zero array (unconstrained)
-pub unconstrained fn __is_zero<let N: u32>(limbs: [u128; N]) -> bool {
-    limbs == [0; N]
+pub unconstrained fn __is_zero<let N: u32>(limbs: &[u128; N]) -> bool {
+    *limbs == [0; N]
 }
 
 /// Compare two little-endian limb arrays for `lhs >= rhs` over integers (unconstrained)
 ///
 /// Starts from the most significant limb (`N - 1`) and returns true
 /// if `lhs` is greater or equal to `rhs`
-pub(crate) unconstrained fn __gte<let N: u32>(lhs: [u128; N], rhs: [u128; N]) -> bool {
+pub(crate) unconstrained fn __gte<let N: u32>(lhs: &[u128; N], rhs: &[u128; N]) -> bool {
     let mut result: bool = true;
     for i in 0..N {
         let idx: u32 = N - 1 - i;
@@ -60,7 +60,7 @@ pub(crate) unconstrained fn __gte<let N: u32>(lhs: [u128; N], rhs: [u128; N]) ->
 ///
 /// ## Note
 /// The input is assumed to be less than modulus
-pub unconstrained fn __neg<let N: u32>(modulus: [u128; N], limbs: [u128; N]) -> [u128; N] {
+pub unconstrained fn __neg<let N: u32>(modulus: &[u128; N], limbs: &[u128; N]) -> [u128; N] {
     __helper_sub(modulus, limbs)
 }
 
@@ -73,9 +73,9 @@ pub unconstrained fn __neg<let N: u32>(modulus: [u128; N], limbs: [u128; N]) -> 
 /// The `carry` must be `0` at the end of the loop.
 /// No explicit assertion is made, as this condition is validated during evaluation.
 pub unconstrained fn __add<let N: u32>(
-    modulus: [u128; N],
-    lhs: [u128; N],
-    rhs: [u128; N],
+    modulus: &[u128; N],
+    lhs: &[u128; N],
+    rhs: &[u128; N],
 ) -> [u128; N] {
     let mut result: [u128; N] = [0; N];
     let mut carry: u128 = 0;
@@ -88,8 +88,8 @@ pub unconstrained fn __add<let N: u32>(
     }
 
     // check if the result is greater than the modulus
-    if __gte(result, modulus) {
-        __helper_sub(result, modulus)
+    if __gte(&result, modulus) {
+        __helper_sub(&result, modulus)
     } else {
         result
     }
@@ -99,11 +99,11 @@ pub unconstrained fn __add<let N: u32>(
 ///
 /// Computes `x + (m - y)` (mod m)
 pub unconstrained fn __sub<let N: u32>(
-    modulus: [u128; N],
-    lhs: [u128; N],
-    rhs: [u128; N],
+    modulus: &[u128; N],
+    lhs: &[u128; N],
+    rhs: &[u128; N],
 ) -> [u128; N] {
-    __add(modulus, lhs, __neg(modulus, rhs))
+    __add(modulus, lhs, &__neg(modulus, rhs))
 }
 
 /// Multiply `x` and `y` and reduce via Barrett, returning (Q, R) (unconstrained).
@@ -112,29 +112,29 @@ pub unconstrained fn __sub<let N: u32>(
 ///      x * y = R + Q * m, 0 <= R < m
 /// See `__barrett_reduction` for details.
 pub(crate) unconstrained fn __mul_with_quotient<let N: u32, let MOD_BITS: u32>(
-    params: BigNumParams<N, MOD_BITS>,
-    lhs: [u128; N],
-    rhs: [u128; N],
+    params: &BigNumParams<N, MOD_BITS>,
+    lhs: &[u128; N],
+    rhs: &[u128; N],
 ) -> ([u128; N], [u128; N]) {
     let to_reduce: [u128; N * 2] = __helper_mul(lhs, rhs);
     let (q, r): ([u128; N], [u128; N]) =
-        __barrett_reduction(to_reduce, params.redc_param, MOD_BITS, params.modulus);
+        __barrett_reduction(&to_reduce, &params.redc_param, MOD_BITS, &params.modulus);
     (q, r)
 }
 
 /// Multiplies two `BigNum` values with modular reduction (unconstrained).
 pub unconstrained fn __mul<let N: u32, let MOD_BITS: u32>(
-    params: BigNumParams<N, MOD_BITS>,
-    lhs: [u128; N],
-    rhs: [u128; N],
+    params: &BigNumParams<N, MOD_BITS>,
+    lhs: &[u128; N],
+    rhs: &[u128; N],
 ) -> [u128; N] {
     __mul_with_quotient::<N, MOD_BITS>(params, lhs, rhs).1
 }
 
 /// Squares a `BigNum` value with modular reduction (unconstrained).
 pub unconstrained fn __sqr<let N: u32, let MOD_BITS: u32>(
-    params: BigNumParams<N, MOD_BITS>,
-    val: [u128; N],
+    params: &BigNumParams<N, MOD_BITS>,
+    val: &[u128; N],
 ) -> [u128; N] {
     __mul_with_quotient::<N, MOD_BITS>(params, val, val).1
 }
@@ -147,19 +147,19 @@ pub unconstrained fn __sqr<let N: u32, let MOD_BITS: u32>(
 /// For the loop, we are using `MOD_BITS` instead of `__get_msb`
 /// because it is much much cheaper
 pub unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
-    params: BigNumParams<N, MOD_BITS>,
-    val: [u128; N],
-    exponent: [u128; N],
+    params: &BigNumParams<N, MOD_BITS>,
+    val: &[u128; N],
+    exponent: &[u128; N],
 ) -> [u128; N] {
     let mut accumulator: [u128; N] = __one();
-    let mut x: [u128; N] = val;
+    let mut x: [u128; N] = *val;
     let num_bits: u32 = MOD_BITS + 1;
 
     for i in 0..num_bits {
         if __get_bit(exponent, i) {
-            accumulator = __mul::<N, MOD_BITS>(params, accumulator, x);
+            accumulator = __mul::<N, MOD_BITS>(params, &accumulator, &x);
         }
-        x = __sqr::<N, MOD_BITS>(params, x);
+        x = __sqr::<N, MOD_BITS>(params, &x);
     }
     accumulator
 }
@@ -174,14 +174,14 @@ pub unconstrained fn __pow<let N: u32, let MOD_BITS: u32>(
 /// - `modulus` must be odd (required by `__half_mod_odd`)
 /// - `gcd(val, modulus) == 1` (i.e. `val` is invertible modulo `modulus`)
 pub unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
-    params: BigNumParams<N, MOD_BITS>,
-    val: [u128; N],
+    params: &BigNumParams<N, MOD_BITS>,
+    val: &[u128; N],
 ) -> [u128; N] {
     assert(params.has_multiplicative_inverse);
-    if (__is_zero(val) | __eq(val, params.modulus)) {
+    if (__is_zero(val) | __eq(val, &params.modulus)) {
         [0; N]
     } else {
-        let mut u: [u128; N] = val;
+        let mut u: [u128; N] = *val;
         let mut v: [u128; N] = params.modulus;
 
         let one: [u128; N] = __one::<N>();
@@ -189,30 +189,30 @@ pub unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
         let mut x1: [u128; N] = one;
         let mut x2: [u128; N] = [0; N];
 
-        while (!__eq(u, one) & !__eq(v, one)) {
+        while (!__eq(&u, &one) & !__eq(&v, &one)) {
             // Get rid of the even part of u
-            while __is_even(u) {
+            while __is_even(&u) {
                 u = __shr1(u);
-                x1 = __half_mod_odd(params.modulus, x1);
+                x1 = __half_mod_odd(&params.modulus, &x1);
             }
 
             // Get rid of the even part of v
-            while __is_even(v) {
+            while __is_even(&v) {
                 v = __shr1(v);
-                x2 = __half_mod_odd(params.modulus, x2);
+                x2 = __half_mod_odd(&params.modulus, &x2);
             }
 
             // Update the intermediate values after both (u, v) are odd
-            if __gte(u, v) {
-                u = __helper_sub(u, v);
-                x1 = __sub(params.modulus, x1, x2);
+            if __gte(&u, &v) {
+                u = __helper_sub(&u, &v);
+                x1 = __sub(&params.modulus, &x1, &x2);
             } else {
-                v = __helper_sub(v, u);
-                x2 = __sub(params.modulus, x2, x1);
+                v = __helper_sub(&v, &u);
+                x2 = __sub(&params.modulus, &x2, &x1);
             }
         }
 
-        if __eq(u, one) {
+        if __eq(&u, &one) {
             x1
         } else {
             x2
@@ -228,12 +228,12 @@ pub unconstrained fn __invmod<let N: u32, let MOD_BITS: u32>(
 /// The divisor must be nonzero
 /// No explicit assertion is made, as this condition is validated during evaluation
 pub unconstrained fn __div<let N: u32, let MOD_BITS: u32>(
-    params: BigNumParams<N, MOD_BITS>,
-    numerator: [u128; N],
-    divisor: [u128; N],
+    params: &BigNumParams<N, MOD_BITS>,
+    numerator: &[u128; N],
+    divisor: &[u128; N],
 ) -> [u128; N] {
     let inv_divisor: [u128; N] = __invmod::<N, MOD_BITS>(params, divisor);
-    __mul::<N, MOD_BITS>(params, numerator, inv_divisor)
+    __mul::<N, MOD_BITS>(params, numerator, &inv_divisor)
 }
 
 /// Given the `BigNum` inputs `x, y`, compute integer division x / y (unconstrained)
@@ -247,39 +247,39 @@ pub unconstrained fn __div<let N: u32, let MOD_BITS: u32>(
 /// The divisor must be nonzero
 /// No explicit assertion is made, as this condition is validated during evaluation
 pub unconstrained fn __udiv_mod<let N: u32>(
-    numerator: [u128; N],
-    divisor: [u128; N],
+    numerator: &[u128; N],
+    divisor: &[u128; N],
 ) -> ([u128; N], [u128; N]) {
     let mut quotient: [u128; N] = [0; N];
-    let mut remainder: [u128; N] = numerator;
-    let b: [u128; N] = divisor;
+    let mut remainder: [u128; N] = *numerator;
+    let b: [u128; N] = *divisor;
 
     let numerator_msb: u32 = __get_msb(numerator);
     let divisor_msb: u32 = __get_msb(divisor);
     if divisor_msb > numerator_msb {
-        ([0; N], numerator)
+        ([0; N], *numerator)
     } else {
-        let bit_difference: u32 = __get_msb(remainder) - __get_msb(divisor);
+        let bit_difference: u32 = __get_msb(&remainder) - __get_msb(divisor);
         let mut divisor: [u128; N] = __shl(divisor, bit_difference);
-        let mut accumulator: [u128; N] = __shl(__one(), bit_difference);
+        let mut accumulator: [u128; N] = __shl(&__one(), bit_difference);
 
         // The same as divisor > remainder
-        if (__gte(divisor, __increment(remainder))) {
+        if (__gte(&divisor, &__increment(&remainder))) {
             divisor = __shr1(divisor);
             accumulator = __shr1(accumulator);
         }
 
         for _ in 0..(N * 120) {
-            if (__gte(remainder, b) == false) {
+            if (__gte(&remainder, &b) == false) {
                 break;
             }
             // we've shunted 'divisor' up to have the same bit length as our remainder.
             // If remainder >= divisor, then a is at least '1 << bit_difference' multiples of b
-            if (__gte(remainder, divisor)) {
-                remainder = __helper_sub(remainder, divisor);
+            if (__gte(&remainder, &divisor)) {
+                remainder = __helper_sub(&remainder, &divisor);
                 // we can use OR here instead of +, as
                 // accumulator is always a nice power of two
-                quotient = __helper_add(quotient, accumulator);
+                quotient = __helper_add(&quotient, &accumulator);
             }
             divisor = __shr1(divisor);
             accumulator = __shr1(accumulator);
@@ -322,26 +322,26 @@ pub unconstrained fn __udiv_mod<let N: u32>(
 /// This edge case should be rare, but it's worth keeping in mind when
 /// composing operations or debugging unexpected behavior
 pub(crate) unconstrained fn batch_invert<let N: u32, let MOD_BITS: u32, let M: u32>(
-    params: BigNumParams<N, MOD_BITS>,
-    vals: [[u128; N]; M],
+    params: &BigNumParams<N, MOD_BITS>,
+    vals: &[[u128; N]; M],
 ) -> [[u128; N]; M] {
     let mut accumulator: [u128; N] = __one();
     let mut temporaries: [[u128; N]; M] = [[0; N]; M];
 
     for i in 0..M {
         temporaries[i] = accumulator;
-        if (!__is_zero(vals[i])) {
-            accumulator = __mul::<N, MOD_BITS>(params, accumulator, vals[i]);
+        if (!__is_zero(&vals[i])) {
+            accumulator = __mul::<N, MOD_BITS>(params, &accumulator, &vals[i]);
         }
     }
 
     let mut result: [[u128; N]; M] = [[0; N]; M];
-    accumulator = __invmod::<N, MOD_BITS>(params, accumulator);
+    accumulator = __invmod::<N, MOD_BITS>(params, &accumulator);
     for i in 0..M {
         let idx: u32 = M - 1 - i;
-        if (!__is_zero(vals[idx])) {
-            let T0: [u128; N] = __mul::<N, MOD_BITS>(params, accumulator, temporaries[idx]);
-            accumulator = __mul::<N, MOD_BITS>(params, accumulator, vals[idx]);
+        if (!__is_zero(&vals[idx])) {
+            let T0: [u128; N] = __mul::<N, MOD_BITS>(params, &accumulator, &temporaries[idx]);
+            accumulator = __mul::<N, MOD_BITS>(params, &accumulator, &vals[idx]);
             result[idx] = T0;
         }
     }
@@ -352,7 +352,7 @@ pub(crate) unconstrained fn batch_invert<let N: u32, let MOD_BITS: u32, let M: u
 ///
 /// See `batch_invert` for details
 pub(crate) unconstrained fn batch_invert_slice<let N: u32, let MOD_BITS: u32>(
-    params: BigNumParams<N, MOD_BITS>,
+    params: &BigNumParams<N, MOD_BITS>,
     vals: [[u128; N]],
 ) -> [[u128; N]] {
     let mut accumulator: [u128; N] = __one();
@@ -362,18 +362,18 @@ pub(crate) unconstrained fn batch_invert_slice<let N: u32, let MOD_BITS: u32>(
 
     for i in 0..M {
         temporaries = temporaries.push_back(accumulator);
-        if (!__is_zero(vals[i])) {
-            accumulator = __mul::<N, MOD_BITS>(params, accumulator, vals[i]);
+        if (!__is_zero(&vals[i])) {
+            accumulator = __mul::<N, MOD_BITS>(params, &accumulator, &vals[i]);
         }
     }
 
     let mut result: [[u128; N]] = [];
-    accumulator = __invmod::<N, MOD_BITS>(params, accumulator);
+    accumulator = __invmod::<N, MOD_BITS>(params, &accumulator);
     for i in 0..M {
         let idx: u32 = M - 1 - i;
-        if (!__is_zero(vals[idx])) {
-            let T0: [u128; N] = __mul::<N, MOD_BITS>(params, accumulator, temporaries[idx]);
-            accumulator = __mul::<N, MOD_BITS>(params, accumulator, vals[idx]);
+        if (!__is_zero(&vals[idx])) {
+            let T0: [u128; N] = __mul::<N, MOD_BITS>(params, &accumulator, &temporaries[idx]);
+            accumulator = __mul::<N, MOD_BITS>(params, &accumulator, &vals[idx]);
             result = result.push_front(T0);
         } else {
             result = result.push_front([0; N]);
@@ -385,8 +385,8 @@ pub(crate) unconstrained fn batch_invert_slice<let N: u32, let MOD_BITS: u32>(
 
 /// Compute a modular square root in a prime field (unconstrained)
 pub unconstrained fn __sqrt<let N: u32, let MOD_BITS: u32>(
-    params: BigNumParams<N, MOD_BITS>,
-    input: [u128; N],
+    params: &BigNumParams<N, MOD_BITS>,
+    input: &[u128; N],
 ) -> std::option::Option<[u128; N]> {
     assert(
         params.has_multiplicative_inverse,
@@ -394,7 +394,7 @@ pub unconstrained fn __sqrt<let N: u32, let MOD_BITS: u32>(
     );
 
     if (__is_zero(input)) {
-        Option::some(input)
+        Option::some(*input)
     } else if (params.modulus[0] % 4 == 3) {
         __easy_sqrt(params, input)
     } else {
@@ -446,15 +446,15 @@ pub unconstrained fn __sqrt<let N: u32, let MOD_BITS: u32>(
 ///
 /// The input is assumed to be a nonzero value
 pub(crate) unconstrained fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>(
-    params: BigNumParams<N, MOD_BITS>,
-    input: [u128; N],
+    params: &BigNumParams<N, MOD_BITS>,
+    input: &[u128; N],
 ) -> std::option::Option<[u128; N]> {
     let mut result: Option<[u128; N]> = Option::none();
 
     let one: [u128; N] = __one();
-    let s: u32 = __primitive_root_log_size(params.modulus); // p - 1 = 2^s * Q, where Q is odd
-    let Q: [u128; N] = __shr(__helper_sub(params.modulus, one), s);
-    let Q_minus_one_over_two: [u128; N] = __shr1(__helper_sub(Q, one)); // (Q - 1) / 2
+    let s: u32 = __primitive_root_log_size(&params.modulus); // p - 1 = 2^s * Q, where Q is odd
+    let Q: [u128; N] = __shr(&__helper_sub(&params.modulus, &one), s);
+    let Q_minus_one_over_two: [u128; N] = __shr1(__helper_sub(&Q, &one)); // (Q - 1) / 2
 
     let z: [u128; N] = __quadratic_non_residue::<N, MOD_BITS>(params);
 
@@ -462,18 +462,18 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>
     // b = a^{(Q - 1)/2}
     // R = a * b = a^{(Q + 1) / 2} => R^2 = a * a^Q
     // t = R * b = a^Q
-    let mut b: [u128; N] = __pow::<N, MOD_BITS>(params, input, Q_minus_one_over_two);
-    let mut r: [u128; N] = __mul::<N, MOD_BITS>(params, input, b);
-    let mut t: [u128; N] = __mul::<N, MOD_BITS>(params, r, b);
+    let mut b: [u128; N] = __pow::<N, MOD_BITS>(params, input, &Q_minus_one_over_two);
+    let mut r: [u128; N] = __mul::<N, MOD_BITS>(params, input, &b);
+    let mut t: [u128; N] = __mul::<N, MOD_BITS>(params, &r, &b);
 
     let mut check: [u128; N] = t;
     // Assure t^{2^{s - 1}} = a^{(p -1)/2} = 1, otherwise we have met a non-residue
     for _ in 0..s - 1 {
-        check = __sqr::<N, MOD_BITS>(params, check);
+        check = __sqr::<N, MOD_BITS>(params, &check);
     }
-    if (__eq(check, one)) {
+    if (__eq(&check, &one)) {
         let mut m: u32 = s;
-        let mut c: [u128; N] = __pow::<N, MOD_BITS>(params, z, Q); // z^Q - proper 2^{M}'th root of unity
+        let mut c: [u128; N] = __pow::<N, MOD_BITS>(params, &z, &Q); // z^Q - proper 2^{M}'th root of unity
 
         // Tonelli-Shanks main loop
 
@@ -499,21 +499,21 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>
         //
         // The loop runs at most s times because M strictly decreases
         for _ in 0..s {
-            if (__eq(t, one)) {
+            if (__eq(&t, &one)) {
                 result = Option::some(r);
                 break;
             }
-            let i: u32 = __tonelli_shanks_sqrt_find_i::<N, MOD_BITS>(params, t);
+            let i: u32 = __tonelli_shanks_sqrt_find_i::<N, MOD_BITS>(params, &t);
             let j: u32 = m - i - 1;
             b = c;
             for _ in 0..j {
-                b = __sqr(params, b);
+                b = __sqr(params, &b);
             }
 
-            let b2: [u128; N] = __sqr::<N, MOD_BITS>(params, b);
+            let b2: [u128; N] = __sqr::<N, MOD_BITS>(params, &b);
             c = b2;
-            t = __mul::<N, MOD_BITS>(params, t, b2);
-            r = __mul::<N, MOD_BITS>(params, r, b);
+            t = __mul::<N, MOD_BITS>(params, &t, &b2);
+            r = __mul::<N, MOD_BITS>(params, &r, &b);
             m = i;
         }
     }
@@ -532,19 +532,19 @@ pub(crate) unconstrained fn __tonelli_shanks_sqrt<let N: u32, let MOD_BITS: u32>
 ///
 /// This is much cheaper than `__tonelli_shanks_sqrt`
 pub(crate) unconstrained fn __easy_sqrt<let N: u32, let MOD_BITS: u32>(
-    params: BigNumParams<N, MOD_BITS>,
-    input: [u128; N],
+    params: &BigNumParams<N, MOD_BITS>,
+    input: &[u128; N],
 ) -> std::option::Option<[u128; N]> {
     let mut result: Option<[u128; N]> = Option::none();
 
     let one: [u128; N] = __one();
-    let p_minus_one_over_two: [u128; N] = __shr1(__helper_sub(params.modulus, one));
-    let check: [u128; N] = __pow(params, input, p_minus_one_over_two);
-    if (__eq(check, one)) {
+    let p_minus_one_over_two: [u128; N] = __shr1(__helper_sub(&params.modulus, &one));
+    let check: [u128; N] = __pow(params, input, &p_minus_one_over_two);
+    if (__eq(&check, &one)) {
         // a = (MOD - 1) / 2
         // b = (a + 1) / 2 = ((MOD - 1) / 2 + 1) / 2 = (MOD + 1) / 4
-        let p_plus_one_over_four: [u128; N] = __shr1(__increment(p_minus_one_over_two));
-        result = Option::some(__pow(params, input, p_plus_one_over_four));
+        let p_plus_one_over_four: [u128; N] = __shr1(__increment(&p_minus_one_over_two));
+        result = Option::some(__pow(params, input, &p_plus_one_over_four));
     }
     result
 }

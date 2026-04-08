@@ -20,7 +20,7 @@ use crate::utils::map::invert_array;
 /// In principle, accumulating `u8` values already bounds the integer,
 /// but relying on Noir to infer a `u128` from a large linear combination
 /// would trigger a very general (and expensive) range checks
-pub fn from_be_bytes<let N: u32, let MOD_BITS: u32>(x: [u8; (MOD_BITS + 7) / 8]) -> [u128; N] {
+pub fn from_be_bytes<let N: u32, let MOD_BITS: u32>(x: &[u8; (MOD_BITS + 7) / 8]) -> [u128; N] {
     let num_bytes: u32 = (MOD_BITS + 7) / 8;
 
     let mut result: [u128; N] = [0; N];
@@ -65,7 +65,7 @@ pub fn from_be_bytes<let N: u32, let MOD_BITS: u32>(x: [u8; (MOD_BITS + 7) / 8])
 /// Consistency between `N` and `MOD_BITS` is expected:
 ///     - the most significant limb contributes `((MOD_BITS + 7) / 8) - (N - 1) * 15` bytes;
 ///     - all other limbs are serialized as full 15-byte chunks.
-pub fn to_be_bytes<let N: u32, let MOD_BITS: u32>(val: [u128; N]) -> [u8; (MOD_BITS + 7) / 8] {
+pub fn to_be_bytes<let N: u32, let MOD_BITS: u32>(val: &[u128; N]) -> [u8; (MOD_BITS + 7) / 8] {
     let mut result: [u8; (MOD_BITS + 7) / 8] = [0; (MOD_BITS + 7) / 8];
 
     let last_limb_num_bytes: u32 = (MOD_BITS + 7) / 8 - (N - 1) * 15;
@@ -94,9 +94,9 @@ pub fn to_be_bytes<let N: u32, let MOD_BITS: u32>(val: [u128; N]) -> [u8; (MOD_B
 /// Reverse an array and apply `from_be_bytes`
 ///
 /// See `from_be_bytes` for details
-pub fn from_le_bytes<let N: u32, let MOD_BITS: u32>(x: [u8; (MOD_BITS + 7) / 8]) -> [u128; N] {
+pub fn from_le_bytes<let N: u32, let MOD_BITS: u32>(x: &[u8; (MOD_BITS + 7) / 8]) -> [u128; N] {
     let be_x: [u8; (MOD_BITS + 7) / 8] = invert_array(x);
-    from_be_bytes(be_x)
+    from_be_bytes(&be_x)
 }
 
 /// Construct a little-endian byte array from a `BigNum` value
@@ -104,7 +104,7 @@ pub fn from_le_bytes<let N: u32, let MOD_BITS: u32>(x: [u8; (MOD_BITS + 7) / 8])
 /// Apply `to_be_bytes` and reverse an array
 ///
 /// See `to_be_bytes` for details
-pub fn to_le_bytes<let N: u32, let MOD_BITS: u32>(val: [u128; N]) -> [u8; (MOD_BITS + 7) / 8] {
+pub fn to_le_bytes<let N: u32, let MOD_BITS: u32>(val: &[u128; N]) -> [u8; (MOD_BITS + 7) / 8] {
     let result_be: [u8; (MOD_BITS + 7) / 8] = to_be_bytes(val);
-    invert_array(result_be)
+    invert_array(&result_be)
 }
