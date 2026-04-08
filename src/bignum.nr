@@ -717,16 +717,16 @@ pub unconstrained fn compute_quadratic_expression<T: BigNum, let LHS_N: u32, let
     let (q_limbs, r_limbs) = crate::fns::expressions::__compute_quadratic_expression(
         params,
         crate::utils::map::map(
-            lhs_terms,
-            |bns| crate::utils::map::map(bns, |bn: T| bn.get_limbs()),
+            &lhs_terms,
+            |bns| crate::utils::map::map(bns, |bn: &T| bn.get_limbs()),
         ),
         lhs_flags,
         crate::utils::map::map(
-            rhs_terms,
-            |bns| crate::utils::map::map(bns, |bn: T| bn.get_limbs()),
+            &rhs_terms,
+            |bns| crate::utils::map::map(bns, |bn: &T| bn.get_limbs()),
         ),
         rhs_flags,
-        crate::utils::map::map(linear_terms, |bn: T| bn.get_limbs()),
+        crate::utils::map::map(&linear_terms, |bn: &T| bn.get_limbs()),
         linear_flags,
     );
     (T::from_limbs(q_limbs), T::from_limbs(r_limbs))
@@ -801,16 +801,16 @@ pub fn evaluate_quadratic_expression<T: BigNum, let LHS_N: u32, let RHS_N: u32, 
     crate::fns::expressions::evaluate_quadratic_expression(
         params,
         crate::utils::map::map(
-            lhs_terms,
-            |bns| crate::utils::map::map(bns, |bn: T| bn.get_limbs()),
+            &lhs_terms,
+            |bns| crate::utils::map::map(bns, |bn: &T| bn.get_limbs()),
         ),
         lhs_flags,
         crate::utils::map::map(
-            rhs_terms,
-            |bns| crate::utils::map::map(bns, |bn: T| bn.get_limbs()),
+            &rhs_terms,
+            |bns| crate::utils::map::map(bns, |bn: &T| bn.get_limbs()),
         ),
         rhs_flags,
-        crate::utils::map::map(linear_terms, |bn: T| bn.get_limbs()),
+        crate::utils::map::map(&linear_terms, |bn: &T| bn.get_limbs()),
         linear_flags,
     )
 }

@@ -355,11 +355,11 @@ pub fn __compute_quadratic_expression<let N: u32, let MOD_BITS: u32, let LHS_N: 
     let (q_limbs, r_limbs): ([u128; N], [u128; N]) = unsafe {
         crate::fns::expressions::__compute_quadratic_expression::<N, MOD_BITS, LHS_N, RHS_N, NUM_PRODUCTS, ADD_N>(
             params,
-            map(lhs_terms, |bns| map(bns, |bn| bn.get_limbs())),
+            map(&lhs_terms, |bns| map(bns, |bn| bn.get_limbs())),
             lhs_flags,
-            map(rhs_terms, |bns| map(bns, |bn| bn.get_limbs())),
+            map(&rhs_terms, |bns| map(bns, |bn| bn.get_limbs())),
             rhs_flags,
-            map(linear_terms, |bn| bn.get_limbs()),
+            map(&linear_terms, |bn| bn.get_limbs()),
             linear_flags,
         )
     };
@@ -377,11 +377,11 @@ pub fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let LHS_N: u
 ) {
     crate::fns::expressions::evaluate_quadratic_expression::<N, MOD_BITS, LHS_N, RHS_N, NUM_PRODUCTS, ADD_N>(
         params,
-        map(lhs_terms, |bns| map(bns, |bn| bn.get_limbs())),
+        map(&lhs_terms, |bns| map(bns, |bn| bn.get_limbs())),
         lhs_flags,
-        map(rhs_terms, |bns| map(bns, |bn| bn.get_limbs())),
+        map(&rhs_terms, |bns| map(bns, |bn| bn.get_limbs())),
         rhs_flags,
-        map(linear_terms, |bn| bn.get_limbs()),
+        map(&linear_terms, |bn| bn.get_limbs()),
         linear_flags,
     )
 }
