@@ -166,7 +166,11 @@ pub(crate) unconstrained fn compute_gte_flags<let N: u32>(
 ) -> (bool, [bool; N - 1]) {
     let underflow: bool = !__gte(lhs, rhs);
     // swap if underflow so we're computing borrow flags for larger - smaller
-    let (a, b): ([u128; N], [u128; N]) = if underflow { (*rhs, *lhs) } else { (*lhs, *rhs) };
+    let (a, b): ([u128; N], [u128; N]) = if underflow {
+        (*rhs, *lhs)
+    } else {
+        (*lhs, *rhs)
+    };
 
     let borrow_flags = compute_borrow_flags(&a, &b);
     (underflow, borrow_flags)
@@ -301,7 +305,10 @@ pub(crate) unconstrained fn __increment<let N: u32>(val: &[u128; N]) -> [u128; N
 /// ## Note
 /// The `carry` must be `0` at the end of the loop.
 /// No explicit assertion is made, as this condition is validated during evaluation.
-pub(crate) unconstrained fn __helper_add<let N: u32>(lhs: &[u128; N], rhs: &[u128; N]) -> [u128; N] {
+pub(crate) unconstrained fn __helper_add<let N: u32>(
+    lhs: &[u128; N],
+    rhs: &[u128; N],
+) -> [u128; N] {
     let mut result: [u128; N] = [0; N];
 
     let mut carry: u128 = 0;
@@ -320,7 +327,10 @@ pub(crate) unconstrained fn __helper_add<let N: u32>(lhs: &[u128; N], rhs: &[u12
 /// ## Note
 /// The `borrow` must be `0` at the end of the loop.
 /// No explicit assertion is made, as this condition is validated during evaluation.
-pub(crate) unconstrained fn __helper_sub<let N: u32>(lhs: &[u128; N], rhs: &[u128; N]) -> [u128; N] {
+pub(crate) unconstrained fn __helper_sub<let N: u32>(
+    lhs: &[u128; N],
+    rhs: &[u128; N],
+) -> [u128; N] {
     let mut result: [u128; N] = [0; N];
 
     let mut borrow: u128 = 0;

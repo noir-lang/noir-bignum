@@ -160,7 +160,8 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == divisor.params);
         // Safety: Unconstrained function simulation
-        let limbs: [u128; N] = unsafe { __div::<_, MOD_BITS>(&params, &self.limbs, &divisor.limbs) };
+        let limbs: [u128; N] =
+            unsafe { __div::<_, MOD_BITS>(&params, &self.limbs, &divisor.limbs) };
         Self { params, limbs }
     }
 
@@ -186,7 +187,8 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == exponent.params);
         // Safety: Unconstrained function simulation
-        let limbs: [u128; N] = unsafe { __pow::<_, MOD_BITS>(&params, &self.limbs, &exponent.limbs) };
+        let limbs: [u128; N] =
+            unsafe { __pow::<_, MOD_BITS>(&params, &self.limbs, &exponent.limbs) };
         Self { limbs, params }
     }
 
@@ -395,10 +397,7 @@ pub fn __batch_invert<let N: u32, let MOD_BITS: u32, let M: u32>(
     // Safety: Unconstrained function simulation
     let all_limbs: [[u128; N]; M] = unsafe {
         let limb_arr = x.map(|bn| bn.get_limbs());
-        crate::fns::unconstrained_ops::batch_invert::<_, MOD_BITS, _>(
-            &params,
-            &limb_arr,
-        )
+        crate::fns::unconstrained_ops::batch_invert::<_, MOD_BITS, _>(&params, &limb_arr)
     };
     all_limbs.map(|limbs: [u128; N]| RuntimeBigNum { limbs, params })
 }

@@ -1549,7 +1549,9 @@ fn test_sqrt_equality_fuzz(seed: [u8; 3]) {
     };
     // Safety: test code
     let d: BLS12_381_Fq = unsafe {
-        BLS12_381_Fq::from_limbs(__easy_sqrt(&BLS12_381_Fq::params(), &b.get_limbs()).unwrap())
+        BLS12_381_Fq::from_limbs(
+            __easy_sqrt(&BLS12_381_Fq::params(), &b.get_limbs()).unwrap(),
+        )
     };
     assert((c == d) | (c == -d));
 }

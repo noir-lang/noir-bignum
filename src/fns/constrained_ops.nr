@@ -698,7 +698,11 @@ pub fn cmp<let N: u32, let MOD_BITS: u32>(lhs: &[u128; N], rhs: &[u128; N]) -> O
     let (underflow, borrow_flags): (bool, [bool; N - 1]) = unsafe { compute_gte_flags(lhs, rhs) };
 
     // if underflow is true, swap lhs and rhs so we compute larger - smaller
-    let (a, b): ([u128; N], [u128; N]) = if underflow { (*rhs, *lhs) } else { (*lhs, *rhs) };
+    let (a, b): ([u128; N], [u128; N]) = if underflow {
+        (*rhs, *lhs)
+    } else {
+        (*lhs, *rhs)
+    };
 
     // Enforce correctness of `underflow` by asserting that the subtraction does not overflow.
     let _: [u128; N] = assert_sub_no_overflow::<N, MOD_BITS>(&a, &b, &borrow_flags);
@@ -885,14 +889,7 @@ pub fn add<let N: u32, let MOD_BITS: u32>(
             unsafe { compute_add_flags(&modulus, lhs, rhs) };
 
         // Compute and validate the result in constrained code
-        compute_add_result::<N, MOD_BITS>(
-            &modulus,
-            lhs,
-            rhs,
-            &carry_flags,
-            &borrow_flags,
-            overflow,
-        )
+        compute_add_result::<N, MOD_BITS>(&modulus, lhs, rhs, &carry_flags, &borrow_flags, overflow)
     }
 }
 
@@ -1203,7 +1200,10 @@ pub fn udiv_mod<let N: u32, let MOD_BITS: u32>(
 ///
 /// Returns `floor(numerator / divisor)`.
 /// All constraints and soundness details are handled inside `udiv_mod`.
-pub fn udiv<let N: u32, let MOD_BITS: u32>(numerator: &[u128; N], divisor: &[u128; N]) -> [u128; N] {
+pub fn udiv<let N: u32, let MOD_BITS: u32>(
+    numerator: &[u128; N],
+    divisor: &[u128; N],
+) -> [u128; N] {
     udiv_mod::<N, MOD_BITS>(numerator, divisor).0
 }
 
@@ -1211,6 +1211,9 @@ pub fn udiv<let N: u32, let MOD_BITS: u32>(numerator: &[u128; N], divisor: &[u12
 ///
 /// Returns `numerator % divisor`.
 /// All constraints and soundness details are handled inside `udiv_mod`.
-pub fn umod<let N: u32, let MOD_BITS: u32>(numerator: &[u128; N], divisor: &[u128; N]) -> [u128; N] {
+pub fn umod<let N: u32, let MOD_BITS: u32>(
+    numerator: &[u128; N],
+    divisor: &[u128; N],
+) -> [u128; N] {
     udiv_mod::<N, MOD_BITS>(numerator, divisor).1
 }
