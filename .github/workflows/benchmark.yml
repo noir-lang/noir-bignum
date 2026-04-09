@@ -137,11 +137,14 @@ jobs:
 
       - name: Compare Brillig execution reports
         id: brillig_execution_diff
+        # Will fail on first run (no baseline on main yet) — remove continue-on-error
+        # once the first main build has uploaded a baseline artifact.
+        continue-on-error: true
         uses: noir-lang/noir-gates-diff@dbe920a8dcc3370af4be4f702ca9cef29317bec1
         with:
           report: brillig_execution_report.json
           header: |
-            # Changes to Brillig execution (opcodes executed at runtime)
+            # Changes to number of Brillig opcodes executed
           brillig_report: true
           summaryQuantile: 0.9
 
