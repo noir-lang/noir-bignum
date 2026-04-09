@@ -144,7 +144,7 @@ jobs:
         with:
           report: brillig_execution_report.json
           header: |
-            # Changes to Brillig execution (opcodes executed at runtime)
+            # Changes to number of Brillig opcodes executed
           brillig_report: true
           summaryQuantile: 0.9
 
