@@ -24,7 +24,7 @@ impl<let N: u32, let MOD_BITS: u32> BigNumParams<N, MOD_BITS> {
         Self {
             has_multiplicative_inverse,
             modulus,
-            double_modulus: get_double_modulus(modulus),
+            double_modulus: get_double_modulus(&modulus),
             redc_param,
         }
     }
@@ -39,7 +39,7 @@ impl<let N: u32, let MOD_BITS: u32> std::cmp::Eq for BigNumParams<N, MOD_BITS> {
     }
 }
 
-fn get_double_modulus<let N: u32>(modulus: [u128; N]) -> [u128; N] {
+fn get_double_modulus<let N: u32>(modulus: &[u128; N]) -> [u128; N] {
     let mut result: [u128; N] = [0; N];
     let mut carry: u128 = 0;
     for i in 0..N {
