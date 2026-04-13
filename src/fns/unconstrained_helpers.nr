@@ -62,16 +62,16 @@ pub(crate) unconstrained fn __from_field<let N: u32>(val: Field) -> [u128; N] {
 /// - borrow_flags: borrows from subtracting modulus when overflow occurs
 /// - overflow: true if lhs + rhs >= modulus (so we need to subtract modulus)
 pub(crate) unconstrained fn compute_add_flags<let N: u32>(
-    modulus: [u128; N],
-    lhs: [u128; N],
-    rhs: [u128; N],
+    modulus: &[u128; N],
+    lhs: &[u128; N],
+    rhs: &[u128; N],
 ) -> ([bool; N - 1], [bool; N - 1], bool) {
     let mask: u128 = TWO_POW_120 - 1;
 
     let add_res: [u128; N] = __helper_add(lhs, rhs);
-    let overflow: bool = __gte(add_res, modulus);
+    let overflow: bool = __gte(&add_res, modulus);
 
-    let subtrahend: [u128; N] = if overflow { modulus } else { [0; N] };
+    let subtrahend: [u128; N] = if overflow { *modulus } else { [0; N] };
 
     let mut borrow_flags: [bool; N - 1] = [false; N - 1];
     let mut carry_flags: [bool; N - 1] = [false; N - 1];
@@ -107,15 +107,15 @@ pub(crate) unconstrained fn compute_add_flags<let N: u32>(
 /// - borrow_flags: borrows from subtracting rhs
 /// - underflow: true if lhs < rhs (so we need to add modulus)
 pub(crate) unconstrained fn compute_sub_flags<let N: u32>(
-    modulus: [u128; N],
-    lhs: [u128; N],
-    rhs: [u128; N],
+    modulus: &[u128; N],
+    lhs: &[u128; N],
+    rhs: &[u128; N],
 ) -> ([bool; N - 1], [bool; N - 1], bool) {
     let mask: u128 = TWO_POW_120 - 1;
 
     let underflow: bool = !__gte(lhs, rhs);
 
-    let addend: [u128; N] = if underflow { modulus } else { [0; N] };
+    let addend: [u128; N] = if underflow { *modulus } else { [0; N] };
 
     let mut borrow_flags: [bool; N - 1] = [false; N - 1];
     let mut carry_flags: [bool; N - 1] = [false; N - 1];
@@ -144,8 +144,8 @@ pub(crate) unconstrained fn compute_sub_flags<let N: u32>(
 ///
 /// The result is computed in constrained code using `compute_gte_result`
 pub(crate) unconstrained fn compute_borrow_flags<let N: u32>(
-    lhs: [u128; N],
-    rhs: [u128; N],
+    lhs: &[u128; N],
+    rhs: &[u128; N],
 ) -> [bool; N - 1] {
     let mut borrow_flags: [bool; N - 1] = [false; N - 1];
     borrow_flags[0] = lhs[0] < rhs[0];
@@ -161,14 +161,18 @@ pub(crate) unconstrained fn compute_borrow_flags<let N: u32>(
 /// - underflow is true if lhs < rhs
 /// - borrow_flags correspond to max(lhs, rhs) - min(lhs, rhs)
 pub(crate) unconstrained fn compute_gte_flags<let N: u32>(
-    lhs: [u128; N],
-    rhs: [u128; N],
+    lhs: &[u128; N],
+    rhs: &[u128; N],
 ) -> (bool, [bool; N - 1]) {
     let underflow: bool = !__gte(lhs, rhs);
     // swap if underflow so we're computing borrow flags for larger - smaller
-    let (a, b): ([u128; N], [u128; N]) = if underflow { (rhs, lhs) } else { (lhs, rhs) };
+    let (a, b): ([u128; N], [u128; N]) = if underflow {
+        (*rhs, *lhs)
+    } else {
+        (*lhs, *rhs)
+    };
 
-    let borrow_flags = compute_borrow_flags(a, b);
+    let borrow_flags = compute_borrow_flags(&a, &b);
     (underflow, borrow_flags)
 }
 
@@ -235,10 +239,10 @@ global BARRETT_REDUCTION_OVERFLOW_BITS: u32 = 6;
 /// (for example (a1 + b1) * (c1 + d1) + ... 64 times)
 /// This is highly unlikely though, but there should be more reductions in that case.
 pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
-    x: [u128; 2 * N],
-    redc_param: [u128; N],
+    x: &[u128; 2 * N],
+    redc_param: &[u128; N],
     k: u32,
-    modulus: [u128; N],
+    modulus: &[u128; N],
 ) -> ([u128; N], [u128; N]) {
     // TODO: switch to __helper_mul, once the compiler is smart enough to handle this
     let mut mulout_field: [Field; 3 * N] = [0; 3 * N];
@@ -249,7 +253,7 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     }
     let mulout: [u128; 3 * N] = __normalize_limbs(mulout_field);
 
-    let quotient: [u128; 3 * N] = __shr(mulout, (k + k + BARRETT_REDUCTION_OVERFLOW_BITS));
+    let quotient: [u128; 3 * N] = __shr(&mulout, (k + k + BARRETT_REDUCTION_OVERFLOW_BITS));
 
     // Remove a bunch of zeros from the end
     let mut smaller_quotient: [u128; N] = [0; N];
@@ -258,8 +262,8 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
     }
 
     // long_quotient_mul_modulus can never exceed input value `x` so can fit into size-2 array
-    let long_quotient_mul_modulus: [u128; 2 * N] = __helper_mul(smaller_quotient, modulus);
-    let long_remainder: [u128; 2 * N] = __helper_sub(x, long_quotient_mul_modulus);
+    let long_quotient_mul_modulus: [u128; 2 * N] = __helper_mul(&smaller_quotient, modulus);
+    let long_remainder: [u128; 2 * N] = __helper_sub(x, &long_quotient_mul_modulus);
 
     // Remove a bunch of zeros from the end
     let mut remainder: [u128; N] = [0; N];
@@ -267,9 +271,9 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
         remainder[i] = long_remainder[i];
     }
 
-    if (__gte(remainder, modulus)) {
-        remainder = __helper_sub(remainder, modulus);
-        smaller_quotient = __increment(smaller_quotient);
+    if (__gte(&remainder, modulus)) {
+        remainder = __helper_sub(&remainder, modulus);
+        smaller_quotient = __increment(&smaller_quotient);
     }
 
     (smaller_quotient, remainder)
@@ -283,7 +287,7 @@ pub(crate) unconstrained fn __barrett_reduction<let N: u32>(
 /// ## Note
 /// The `carry` must be `0` at the end of the loop.
 /// No explicit assertion is made, as this condition is validated during evaluation.
-pub(crate) unconstrained fn __increment<let N: u32>(val: [u128; N]) -> [u128; N] {
+pub(crate) unconstrained fn __increment<let N: u32>(val: &[u128; N]) -> [u128; N] {
     let mask: u128 = TWO_POW_120 - 1;
 
     let mut result: [u128; N] = [0; N];
@@ -301,7 +305,10 @@ pub(crate) unconstrained fn __increment<let N: u32>(val: [u128; N]) -> [u128; N]
 /// ## Note
 /// The `carry` must be `0` at the end of the loop.
 /// No explicit assertion is made, as this condition is validated during evaluation.
-pub(crate) unconstrained fn __helper_add<let N: u32>(lhs: [u128; N], rhs: [u128; N]) -> [u128; N] {
+pub(crate) unconstrained fn __helper_add<let N: u32>(
+    lhs: &[u128; N],
+    rhs: &[u128; N],
+) -> [u128; N] {
     let mut result: [u128; N] = [0; N];
 
     let mut carry: u128 = 0;
@@ -320,7 +327,10 @@ pub(crate) unconstrained fn __helper_add<let N: u32>(lhs: [u128; N], rhs: [u128;
 /// ## Note
 /// The `borrow` must be `0` at the end of the loop.
 /// No explicit assertion is made, as this condition is validated during evaluation.
-pub(crate) unconstrained fn __helper_sub<let N: u32>(lhs: [u128; N], rhs: [u128; N]) -> [u128; N] {
+pub(crate) unconstrained fn __helper_sub<let N: u32>(
+    lhs: &[u128; N],
+    rhs: &[u128; N],
+) -> [u128; N] {
     let mut result: [u128; N] = [0; N];
 
     let mut borrow: u128 = 0;
@@ -341,8 +351,8 @@ pub(crate) unconstrained fn __helper_sub<let N: u32>(lhs: [u128; N], rhs: [u128;
 /// limbs intentionally as the extra high limb safely absorbs a possible single limb overflow
 /// for moduli close to `120 * N` bits.
 pub(crate) unconstrained fn __helper_mul<let N: u32>(
-    lhs: [u128; N],
-    rhs: [u128; N],
+    lhs: &[u128; N],
+    rhs: &[u128; N],
 ) -> [u128; 2 * N] {
     let mut result: [Field; 2 * N] = [0; 2 * N];
     for i in 0..N {
@@ -362,11 +372,11 @@ pub(crate) unconstrained fn __helper_mul<let N: u32>(
 /// ## Note
 /// - `MOD` must be odd.
 pub(crate) unconstrained fn __half_mod_odd<let N: u32>(
-    modulus: [u128; N],
-    x: [u128; N],
+    modulus: &[u128; N],
+    x: &[u128; N],
 ) -> [u128; N] {
     let temp = if __is_even::<N>(x) {
-        x
+        *x
     } else {
         __helper_add(x, modulus)
     };
@@ -386,7 +396,7 @@ pub(crate) unconstrained fn __half_mod_odd<let N: u32>(
 /// No bounds check is performed on `num_shifted_limbs`.
 /// However, we use it only in `__udiv_mod`, where it is not possible to reach
 /// `num_shifted_limbs` > `N`
-pub(crate) unconstrained fn __shl<let N: u32>(input: [u128; N], shift: u32) -> [u128; N] {
+pub(crate) unconstrained fn __shl<let N: u32>(input: &[u128; N], shift: u32) -> [u128; N] {
     let mut result: [u128; N] = [0; N];
 
     let num_shifted_limbs: u32 = shift / 120;
@@ -415,7 +425,7 @@ pub(crate) unconstrained fn __shl<let N: u32>(input: [u128; N], shift: u32) -> [
 /// No bounds check is performed on `num_shifted_limbs`.
 /// However, we use it only in `__tonelli_shanks_sqrt`, where it is not possible to reach
 /// `num_shifted_limbs` > `N`
-pub(crate) unconstrained fn __shr<let N: u32>(input: [u128; N], shift: u32) -> [u128; N] {
+pub(crate) unconstrained fn __shr<let N: u32>(input: &[u128; N], shift: u32) -> [u128; N] {
     let mut result: [u128; N] = [0; N];
 
     let num_shifted_limbs: u32 = shift / 120;
@@ -455,7 +465,7 @@ pub(crate) unconstrained fn __shr1<let N: u32>(mut input: [u128; N]) -> [u128; N
 }
 
 /// Returns the index of the most significant set bit in a `BigNum` value (unconstrained).
-pub(crate) unconstrained fn __get_msb<let N: u32>(val: [u128; N]) -> u32 {
+pub(crate) unconstrained fn __get_msb<let N: u32>(val: &[u128; N]) -> u32 {
     let mut count: u32 = 0;
     for i in 0..N {
         let idx: u32 = N - 1 - i;
@@ -472,7 +482,7 @@ pub(crate) unconstrained fn __get_msb<let N: u32>(val: [u128; N]) -> u32 {
 ///
 /// ## Note
 /// No bounds check is performed on `bit`
-pub(crate) fn __get_bit<let N: u32>(input: [u128; N], bit: u32) -> bool {
+pub(crate) fn __get_bit<let N: u32>(input: &[u128; N], bit: u32) -> bool {
     let segment_index: u32 = bit / 120;
     let uint_index: u128 = (bit % 120) as u128;
 
@@ -482,7 +492,7 @@ pub(crate) fn __get_bit<let N: u32>(input: [u128; N], bit: u32) -> bool {
 }
 
 /// Returns `true` if the `BigNum` value is even (unconstrained)
-pub(crate) unconstrained fn __is_even<let N: u32>(x: [u128; N]) -> bool {
+pub(crate) unconstrained fn __is_even<let N: u32>(x: &[u128; N]) -> bool {
     (x[0] & 1) == 0
 }
 
@@ -493,10 +503,10 @@ pub(crate) unconstrained fn __is_even<let N: u32>(x: [u128; N]) -> bool {
 ///
 /// Find the maximum value s such that `MOD = 2^s * q + 1`, where `q` is odd
 ///       This is needed for our Tonelli-Shanks sqrt algorithm
-pub(crate) unconstrained fn __primitive_root_log_size<let N: u32>(modulus: [u128; N]) -> u32 {
-    let target: [u128; N] = __helper_sub(modulus, __one());
+pub(crate) unconstrained fn __primitive_root_log_size<let N: u32>(modulus: &[u128; N]) -> u32 {
+    let target: [u128; N] = __helper_sub(modulus, &__one());
     let mut result: u32 = 0;
-    while !__get_bit(target, result) {
+    while !__get_bit(&target, result) {
         result += 1;
     }
     result
@@ -509,21 +519,21 @@ pub(crate) unconstrained fn __primitive_root_log_size<let N: u32>(modulus: [u128
 /// ## Note
 /// WARNING If the field is not prime, this function will enter an infinite loop!
 pub(crate) unconstrained fn __quadratic_non_residue<let N: u32, let MOD_BITS: u32>(
-    params: BigNumParams<N, MOD_BITS>,
+    params: &BigNumParams<N, MOD_BITS>,
 ) -> [u128; N] {
     let one: [u128; N] = __one();
-    let neg_one: [u128; N] = __neg(params.modulus, one);
+    let neg_one: [u128; N] = __neg(&params.modulus, &one);
 
-    let p_minus_one_over_two: [u128; N] = __shr1(__helper_sub(params.modulus, __one()));
+    let p_minus_one_over_two: [u128; N] = __shr1(__helper_sub(&params.modulus, &__one()));
 
     // We start with 2
     let mut target: [u128; N] = [0; N];
     target[0] = 2;
 
-    let mut expd: [u128; N] = __pow(params, target, p_minus_one_over_two);
-    while !__eq(expd, neg_one) {
-        target = __increment(target);
-        expd = __pow(params, target, p_minus_one_over_two);
+    let mut expd: [u128; N] = __pow(params, &target, &p_minus_one_over_two);
+    while !__eq(&expd, &neg_one) {
+        target = __increment(&target);
+        expd = __pow(params, &target, &p_minus_one_over_two);
     }
     target
 }
@@ -533,16 +543,16 @@ pub(crate) unconstrained fn __quadratic_non_residue<let N: u32, let MOD_BITS: u3
 /// ## Note
 /// Multiplicative order of t must divide 2^v2(MOD-1), otherwise you'll end up in an infinite loop!
 pub(crate) unconstrained fn __tonelli_shanks_sqrt_find_i<let N: u32, let MOD_BITS: u32>(
-    params: BigNumParams<N, MOD_BITS>,
-    t: [u128; N],
+    params: &BigNumParams<N, MOD_BITS>,
+    t: &[u128; N],
 ) -> u32 {
     let one: [u128; N] = __one();
-    let mut c: [u128; N] = t;
+    let mut c: [u128; N] = *t;
 
     let mut i: u32 = 0;
     // Compute t^{2^k} until it hits 1 for the first time
-    while !__eq(c, one) {
-        c = __sqr::<N, MOD_BITS>(params, c);
+    while !__eq(&c, &one) {
+        c = __sqr::<N, MOD_BITS>(params, &c);
         i += 1;
     }
     i
