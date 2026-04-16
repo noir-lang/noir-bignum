@@ -1,5 +1,9 @@
 target
 .vscode/launch.json
-export/* 
+export/*
+benchmark-inputs/
 gates_report.json
 opcode_report.json
+brillig_report.json
+brillig_execution_report.json
+benchmark-*.json
