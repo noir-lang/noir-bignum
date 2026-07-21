@@ -39,10 +39,10 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
     let derive_from_seed_13_elements_bench_name =
         f"derive_from_seed_13_elements_{module_name}".quoted_contents();
 
+    let evaluate_quadratic_expression_1_element_bench_name =
+        f"evaluate_quadratic_expression_1_element_{module_name}".quoted_contents();
     let evaluate_quadratic_expression_3_elements_bench_name =
         f"evaluate_quadratic_expression_3_elements_{module_name}".quoted_contents();
-    let evaluate_quadratic_expression_12_elements_bench_name =
-        f"evaluate_quadratic_expression_12_elements_{module_name}".quoted_contents();
 
     // Unconstrained methods' benchmarks
     let batch_invert_10_elements_bench_name =
@@ -175,12 +175,17 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
             $BigNum::derive_from_seed(a)
         }
 
+        // `evaluate_quadratic_expression` bounds `NUM_PRODUCTS * LHS_N * RHS_N` so that
+        // the product limbs cannot exceed 2^246 (see `assert_product_limbs_fit_in_246_bits`).
+        // The tightest configuration benchmarked here is U2048 (`N = 18`), which admits at
+        // most 3 sub-products in total, so these benchmarks use single-term linear
+        // combinations and at most 3 products.
         #[export]
-        fn $evaluate_quadratic_expression_3_elements_bench_name(
-            lhs: [[$typ; 3]; 3],
-            lhs_flags: [[bool; 3]; 3],
-            rhs: [[$typ; 3]; 3],
-            rhs_flags: [[bool; 3]; 3],
+        fn $evaluate_quadratic_expression_1_element_bench_name(
+            lhs: [[$typ; 1]; 1],
+            lhs_flags: [[bool; 1]; 1],
+            rhs: [[$typ; 1]; 1],
+            rhs_flags: [[bool; 1]; 1],
             add: [$typ; 3],
             add_flags: [bool; 3],
         ) {
@@ -188,11 +193,11 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
         }
 
         #[export]
-        fn $evaluate_quadratic_expression_12_elements_bench_name(
-            lhs: [[$typ; 3]; 12],
-            lhs_flags: [[bool; 3]; 12],
-            rhs: [[$typ; 3]; 12],
-            rhs_flags: [[bool; 3]; 12],
+        fn $evaluate_quadratic_expression_3_elements_bench_name(
+            lhs: [[$typ; 1]; 3],
+            lhs_flags: [[bool; 1]; 3],
+            rhs: [[$typ; 1]; 3],
+            rhs_flags: [[bool; 1]; 3],
             add: [$typ; 3],
             add_flags: [bool; 3],
         ) {
