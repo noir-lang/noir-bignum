@@ -5,9 +5,12 @@ use crate::fns::{
     constrained_ops::{
         add, assert_is_not_equal, assert_is_not_zero, assert_is_not_zero_integer, cmp,
         derive_from_seed, div, eq, is_zero, is_zero_integer, mul, neg, sqr, sub, udiv, udiv_mod,
-        umod, validate_in_field, validate_in_range,
+        udiv_mod_unsafe, udiv_unsafe, umod, umod_unsafe, validate_in_field, validate_in_range,
     },
-    serialization::{from_be_bytes, from_le_bytes, to_be_bytes, to_le_bytes},
+    serialization::{
+        from_be_bytes, from_be_bytes_unsafe, from_le_bytes, from_le_bytes_unsafe, to_be_bytes,
+        to_be_bytes_unsafe, to_le_bytes, to_le_bytes_unsafe,
+    },
     unconstrained_ops::{
         __add, __derive_from_seed, __div, __eq, __invmod, __is_zero, __mul, __neg, __pow, __sqr,
         __sqrt, __sub, __udiv_mod,
@@ -54,27 +57,52 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     }
 
     pub fn from_slice(params: BigNumParams<N, MOD_BITS>, limbs: [u128]) -> Self {
-        Self { limbs: limbs.as_array(), params }
+        let limbs_array: [u128; N] = limbs.as_array();
+        validate_in_range::<N, MOD_BITS>(&limbs_array);
+        Self { limbs: limbs_array, params }
     }
 
     pub fn from_array(params: BigNumParams<N, MOD_BITS>, limbs: [u128; N]) -> Self {
+        validate_in_range::<N, MOD_BITS>(&limbs);
         Self { limbs, params }
     }
 
     pub fn from_be_bytes(params: BigNumParams<N, MOD_BITS>, x: [u8; (MOD_BITS + 7) / 8]) -> Self {
-        Self { limbs: from_be_bytes::<N, MOD_BITS>(&x), params }
+        Self { limbs: from_be_bytes::<N, MOD_BITS>(&params, &x), params }
+    }
+
+    pub fn from_be_bytes_unsafe(
+        params: BigNumParams<N, MOD_BITS>,
+        x: [u8; (MOD_BITS + 7) / 8],
+    ) -> Self {
+        Self { limbs: from_be_bytes_unsafe::<N, MOD_BITS>(&x), params }
     }
 
     pub fn from_le_bytes(params: BigNumParams<N, MOD_BITS>, x: [u8; (MOD_BITS + 7) / 8]) -> Self {
-        Self { limbs: from_le_bytes::<N, MOD_BITS>(&x), params }
+        Self { limbs: from_le_bytes::<N, MOD_BITS>(&params, &x), params }
+    }
+
+    pub fn from_le_bytes_unsafe(
+        params: BigNumParams<N, MOD_BITS>,
+        x: [u8; (MOD_BITS + 7) / 8],
+    ) -> Self {
+        Self { limbs: from_le_bytes_unsafe::<N, MOD_BITS>(&x), params }
     }
 
     pub fn to_be_bytes(&self) -> [u8; (MOD_BITS + 7) / 8] {
-        to_be_bytes::<N, MOD_BITS>(&self.limbs)
+        to_be_bytes::<N, MOD_BITS>(&self.params, &self.limbs)
+    }
+
+    pub fn to_be_bytes_unsafe(&self) -> [u8; (MOD_BITS + 7) / 8] {
+        to_be_bytes_unsafe::<N, MOD_BITS>(&self.limbs)
     }
 
     pub fn to_le_bytes(&self) -> [u8; (MOD_BITS + 7) / 8] {
-        to_le_bytes::<N, MOD_BITS>(&self.limbs)
+        to_le_bytes::<N, MOD_BITS>(&self.params, &self.limbs)
+    }
+
+    pub fn to_le_bytes_unsafe(&self) -> [u8; (MOD_BITS + 7) / 8] {
+        to_le_bytes_unsafe::<N, MOD_BITS>(&self.limbs)
     }
 
     pub fn modulus(&self) -> Self {
@@ -98,8 +126,16 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
         self.limbs[idx]
     }
 
-    /// Note: You have to properly constrain the limbs prior calling this method
     pub fn set_limb(&mut self, idx: u32, value: u128) {
+        if idx != (N - 1) {
+            (value as Field).assert_max_bit_size::<120>();
+        } else {
+            (value as Field).assert_max_bit_size::<MOD_BITS - 120 * (N - 1)>();
+        }
+        self.limbs[idx] = value;
+    }
+
+    pub fn set_limb_unsafe(&mut self, idx: u32, value: u128) {
         self.limbs[idx] = value;
     }
 
@@ -215,7 +251,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     }
 
     pub fn validate_in_range(&self) {
-        validate_in_range::<u128, N, MOD_BITS>(&self.limbs);
+        validate_in_range::<N, MOD_BITS>(&self.limbs);
     }
 
     pub fn assert_is_not_equal(&self, other: &Self) {
@@ -232,20 +268,39 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
     pub fn udiv_mod(&self, divisor: &Self) -> (Self, Self) {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == divisor.params);
-        let (q, r) = udiv_mod::<N, MOD_BITS>(&self.limbs, &divisor.limbs);
+        let (q, r) = udiv_mod::<N, MOD_BITS>(&params, &self.limbs, &divisor.limbs);
+        (Self { limbs: q, params }, Self { limbs: r, params })
+    }
+
+    pub fn udiv_mod_unsafe(&self, divisor: &Self) -> (Self, Self) {
+        let params: BigNumParams<N, MOD_BITS> = self.params;
+        assert(params == divisor.params);
+        let (q, r) = udiv_mod_unsafe::<N, MOD_BITS>(&self.limbs, &divisor.limbs);
         (Self { limbs: q, params }, Self { limbs: r, params })
     }
 
     pub fn udiv(&self, divisor: &Self) -> Self {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == divisor.params);
-        Self { limbs: udiv::<N, MOD_BITS>(&self.limbs, &divisor.limbs), params }
+        Self { limbs: udiv::<N, MOD_BITS>(&params, &self.limbs, &divisor.limbs), params }
+    }
+
+    pub fn udiv_unsafe(&self, divisor: &Self) -> Self {
+        let params: BigNumParams<N, MOD_BITS> = self.params;
+        assert(params == divisor.params);
+        Self { limbs: udiv_unsafe::<N, MOD_BITS>(&self.limbs, &divisor.limbs), params }
     }
 
     pub fn umod(&self, divisor: &Self) -> Self {
         let params: BigNumParams<N, MOD_BITS> = self.params;
         assert(params == divisor.params);
-        Self { limbs: umod::<N, MOD_BITS>(&self.limbs, &divisor.limbs), params }
+        Self { limbs: umod::<N, MOD_BITS>(&params, &self.limbs, &divisor.limbs), params }
+    }
+
+    pub fn umod_unsafe(&self, divisor: &Self) -> Self {
+        let params: BigNumParams<N, MOD_BITS> = self.params;
+        assert(params == divisor.params);
+        Self { limbs: umod_unsafe::<N, MOD_BITS>(&self.limbs, &divisor.limbs), params }
     }
 
     pub fn is_zero(&self) -> bool {
@@ -253,7 +308,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
         is_zero(&params, &self.limbs)
     }
 
-    pub fn is_zero_integer(&self) -> bool {
+    pub fn unsafe_is_zero_integer(&self) -> bool {
         is_zero_integer(&self.limbs)
     }
 
@@ -262,7 +317,7 @@ impl<let N: u32, let MOD_BITS: u32> RuntimeBigNum<N, MOD_BITS> {
         assert_is_not_zero::<N, MOD_BITS>(&params, &self.limbs);
     }
 
-    pub fn assert_is_not_zero_integer(&self) {
+    pub fn unsafe_assert_is_not_zero_integer(&self) {
         assert_is_not_zero_integer(&self.limbs);
     }
 }

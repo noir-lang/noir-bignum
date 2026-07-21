@@ -39,10 +39,10 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
     let derive_from_seed_13_elements_bench_name =
         f"derive_from_seed_13_elements_{module_name}".quoted_contents();
 
+    let evaluate_quadratic_expression_1_element_bench_name =
+        f"evaluate_quadratic_expression_1_element_{module_name}".quoted_contents();
     let evaluate_quadratic_expression_3_elements_bench_name =
         f"evaluate_quadratic_expression_3_elements_{module_name}".quoted_contents();
-    let evaluate_quadratic_expression_12_elements_bench_name =
-        f"evaluate_quadratic_expression_12_elements_{module_name}".quoted_contents();
 
     // Unconstrained methods' benchmarks
     let batch_invert_10_elements_bench_name =
@@ -70,7 +70,7 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
             -a
         }
 
-        #[export] 
+        #[export]
         fn $sub_bench_name(a: $typ, b: $typ) -> $typ {
             a - b
         }
@@ -85,7 +85,7 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
             a / b
         }
 
-        #[export]  
+        #[export]
         fn $udiv_mod_bench_name(a: $typ, b: $typ) -> ($typ, $typ) {
             $BigNum::udiv_mod(&a, &b)
         }
@@ -112,7 +112,7 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
 
         #[export]
         fn $is_zero_integer_bench_name(a: $typ) -> bool {
-            $BigNum::is_zero_integer(&a)
+            $BigNum::unsafe_is_zero_integer(&a)
         }
 
         #[export]
@@ -127,7 +127,7 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
 
         #[export]
         fn $assert_is_not_zero_integer_bench_name(a: $typ) {
-            $BigNum::assert_is_not_zero_integer(&a)
+            $BigNum::unsafe_assert_is_not_zero_integer(&a)
         }
 
         #[export]
@@ -138,7 +138,7 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
         #[export]
         fn $validate_in_field_bench_name(a: $typ) {
             $BigNum::validate_in_field(&a)
-        }        
+        }
 
         #[export]
         fn $from_field_bench_name(a: Field) -> $typ {
@@ -151,23 +151,23 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
         }
 
         #[export]
-        fn $from_be_bytes_bench_name(a: [u8; ($MOD_BITS+7) / 8]) -> [u128; $N] {
-            crate::fns::serialization::from_be_bytes::<$N, $MOD_BITS>(&a)
+        fn $from_be_bytes_bench_name(a: [u8; ($MOD_BITS + 7) / 8]) -> [u128; $N] {
+            crate::fns::serialization::from_be_bytes_unsafe::<$N, $MOD_BITS>(&a)
         }
 
         #[export]
-        fn $to_be_bytes_bench_name(a: $typ) -> [u8; ($MOD_BITS+7) / 8] {
-            crate::fns::serialization::to_be_bytes::<$N, $MOD_BITS>(&$BigNum::get_limbs(&a))
+        fn $to_be_bytes_bench_name(a: $typ) -> [u8; ($MOD_BITS + 7) / 8] {
+            crate::fns::serialization::to_be_bytes_unsafe::<$N, $MOD_BITS>(&$BigNum::get_limbs(&a))
         }
 
         #[export]
-        fn $from_le_bytes_bench_name(a: [u8; ($MOD_BITS+7) / 8]) -> [u128; $N] {
-            crate::fns::serialization::from_le_bytes::<$N, $MOD_BITS>(&a)
+        fn $from_le_bytes_bench_name(a: [u8; ($MOD_BITS + 7) / 8]) -> [u128; $N] {
+            crate::fns::serialization::from_le_bytes_unsafe::<$N, $MOD_BITS>(&a)
         }
 
         #[export]
-        fn $to_le_bytes_bench_name(a: $typ) -> [u8; ($MOD_BITS+7) / 8] {
-            crate::fns::serialization::to_le_bytes::<$N, $MOD_BITS>(&$BigNum::get_limbs(&a))
+        fn $to_le_bytes_bench_name(a: $typ) -> [u8; ($MOD_BITS + 7) / 8] {
+            crate::fns::serialization::to_le_bytes_unsafe::<$N, $MOD_BITS>(&$BigNum::get_limbs(&a))
         }
 
         #[export]
@@ -175,12 +175,29 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
             $BigNum::derive_from_seed(a)
         }
 
+        // `evaluate_quadratic_expression` bounds `NUM_PRODUCTS * LHS_N * RHS_N` so that
+        // the product limbs cannot exceed 2^246 (see `assert_product_limbs_fit_in_246_bits`).
+        // The tightest configuration benchmarked here is U2048 (`N = 18`), which admits at
+        // most 3 sub-products in total, so these benchmarks use single-term linear
+        // combinations and at most 3 products.
+        #[export]
+        fn $evaluate_quadratic_expression_1_element_bench_name(
+            lhs: [[$typ; 1]; 1],
+            lhs_flags: [[bool; 1]; 1],
+            rhs: [[$typ; 1]; 1],
+            rhs_flags: [[bool; 1]; 1],
+            add: [$typ; 3],
+            add_flags: [bool; 3],
+        ) {
+            crate::bignum::evaluate_quadratic_expression(lhs, lhs_flags, rhs, rhs_flags, add, add_flags)
+        }
+
         #[export]
         fn $evaluate_quadratic_expression_3_elements_bench_name(
-            lhs: [[$typ; 3]; 3],
-            lhs_flags: [[bool; 3]; 3],
-            rhs: [[$typ; 3]; 3],
-            rhs_flags: [[bool; 3]; 3],
+            lhs: [[$typ; 1]; 3],
+            lhs_flags: [[bool; 1]; 3],
+            rhs: [[$typ; 1]; 3],
+            rhs_flags: [[bool; 1]; 3],
             add: [$typ; 3],
             add_flags: [bool; 3],
         ) {
@@ -188,35 +205,29 @@ comptime fn make_bench(m: Module, params: Quoted) -> Quoted {
         }
 
         #[export]
-        fn $evaluate_quadratic_expression_12_elements_bench_name(
-            lhs: [[$typ; 3]; 12],
-            lhs_flags: [[bool; 3]; 12],
-            rhs: [[$typ; 3]; 12],
-            rhs_flags: [[bool; 3]; 12],
-            add: [$typ; 3],
-            add_flags: [bool; 3],
-        ) {
-            crate::bignum::evaluate_quadratic_expression(lhs, lhs_flags, rhs, rhs_flags, add, add_flags)
+        fn $batch_invert_10_elements_bench_name(a: [$typ; 10]) -> [$typ; 10] {
+            // Safety: Benchmarking
+            unsafe {
+                crate::bignum::batch_invert(a)
+            }
         }
 
         #[export]
-        fn $batch_invert_10_elements_bench_name(a: [$typ; 10]) -> [$typ; 10]{
-           // Safety: Benchmarking 
-           unsafe { crate::bignum::batch_invert(a) }                         
-        }
-
-        #[export]
-        fn $pow_bench_name(a: $typ, b: $typ) -> $typ{
-           // Safety: Benchmarking 
-           unsafe { $BigNum::__pow(&a, &b) }                         
+        fn $pow_bench_name(a: $typ, b: $typ) -> $typ {
+            // Safety: Benchmarking
+            unsafe {
+                $BigNum::__pow(&a, &b)
+            }
         }
 
         #[export]
         fn $sqrt_bench_name(a: $typ) -> Option<$typ> {
-           // Safety: Benchmarking 
-            unsafe { $BigNum::__sqrt(&a) }
+            // Safety: Benchmarking
+            unsafe {
+                $BigNum::__sqrt(&a)
+            }
         }
-   }
+    }
 }
 
 // the types we will be benchmarking

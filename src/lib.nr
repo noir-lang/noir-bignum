@@ -38,7 +38,10 @@ pub mod internal {
     pub use crate::fns::constrained_ops::sub;
     pub use crate::fns::constrained_ops::udiv;
     pub use crate::fns::constrained_ops::udiv_mod;
+    pub use crate::fns::constrained_ops::udiv_mod_unsafe;
+    pub use crate::fns::constrained_ops::udiv_unsafe;
     pub use crate::fns::constrained_ops::umod;
+    pub use crate::fns::constrained_ops::umod_unsafe;
     pub use crate::fns::constrained_ops::validate_in_field;
     pub use crate::fns::constrained_ops::validate_in_range;
 
@@ -59,9 +62,13 @@ pub mod internal {
 
     // Serialization functions
     pub use crate::fns::serialization::from_be_bytes;
+    pub use crate::fns::serialization::from_be_bytes_unsafe;
     pub use crate::fns::serialization::from_le_bytes;
+    pub use crate::fns::serialization::from_le_bytes_unsafe;
     pub use crate::fns::serialization::to_be_bytes;
+    pub use crate::fns::serialization::to_be_bytes_unsafe;
     pub use crate::fns::serialization::to_le_bytes;
+    pub use crate::fns::serialization::to_le_bytes_unsafe;
 }
 
 // Re-export the main structs so that users don't have to specify the paths

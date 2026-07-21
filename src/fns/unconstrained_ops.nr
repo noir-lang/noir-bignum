@@ -56,12 +56,16 @@ pub(crate) unconstrained fn __gte<let N: u32>(lhs: &[u128; N], rhs: &[u128; N]) 
 
 // ------------------------------ ARITHMETIC FUNCTIONS ------------------------------
 
-/// Negates a `BigNum` value, returning `m - x` (unconstrained)
+/// Negates a `BigNum` value, returning `-x mod (MOD)` (unconstrained)
 ///
 /// ## Note
 /// The input is assumed to be less than modulus
 pub unconstrained fn __neg<let N: u32>(modulus: &[u128; N], limbs: &[u128; N]) -> [u128; N] {
-    __helper_sub(modulus, limbs)
+    if __is_zero(limbs) {
+        *limbs
+    } else {
+        __helper_sub(modulus, limbs)
+    }
 }
 
 /// Adds two `BigNum` values with modular reduction (unconstrained)
@@ -313,14 +317,6 @@ pub unconstrained fn __udiv_mod<let N: u32>(
 ///
 /// ## Note
 /// Zero elements are allowed and are left unchanged in the resulting array
-///
-/// This interacts poorly with `neg(zero)`:
-/// Calling `neg` on `zero` yields `modulus` rather than `0`.
-/// A value in this form will **not** satisfy
-/// the `__is_zero` check and will lead to incorrect results.
-///
-/// This edge case should be rare, but it's worth keeping in mind when
-/// composing operations or debugging unexpected behavior
 pub(crate) unconstrained fn batch_invert<let N: u32, let MOD_BITS: u32, let M: u32>(
     params: &BigNumParams<N, MOD_BITS>,
     vals: &[[u128; N]; M],
@@ -554,26 +550,6 @@ mod test_invmod {
     use crate::fields::bls12_381Fq::BLS12_381_Fq;
     use crate::fields::bn254Fq::BN254_Fq;
     use crate::fields::ed25519Fq::ED25519_Fq;
-
-    /// test inverting neg(zero)
-    unconstrained fn helper_invmod_neg_zero<BN: BigNum>() {
-        let zero: BN = BN::zero();
-        let neg_zero: BN = zero.__neg();
-        let modulus: BN = BN::modulus();
-
-        assert(neg_zero == modulus, "neg(zero) should equal modulus");
-
-        let result: BN = neg_zero.__invmod();
-
-        assert(result.__is_zero(), "invmod(modulus) should return zero");
-    }
-
-    #[test]
-    unconstrained fn test_invmod_neg_zero() {
-        helper_invmod_neg_zero::<BN254_Fq>();
-        helper_invmod_neg_zero::<ED25519_Fq>();
-        helper_invmod_neg_zero::<BLS12_381_Fq>();
-    }
 
     /// test inverting modulus
     unconstrained fn helper_invmod_on_modulus_value<BN: BigNum>() {

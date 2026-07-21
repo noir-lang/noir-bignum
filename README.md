@@ -226,6 +226,7 @@ These methods can be used using operators (`+`, `-`, `*`, `/`).
 - `udiv`/`udiv_mod` - Expensive!
 - `umod` - Expensive!
   - Integer modular reduction which uses `udiv`
+- `udiv_unsafe`/`udiv_mod_unsafe`/`umod_unsafe` - Unsafe versions of the above that skip `validate_in_field` on the inputs. Use when both operands are already known to be in canonical form (i.e. in `[0, MOD)`).
 
 `derive_bignum` will also implement conversions from a native `Field` type. For example, if you have a `Field` type `Fq`, you can convert it to your `BigNum` type `MyBigNum` by using the following syntax:
 
@@ -235,6 +236,8 @@ let my_bignum: Fq = Fq::from(a);
 ```
 We also support comparison operators (`==`, `!=`) for `BigNum` types. Equality is tested modulo `modulus`
 And we support (`>`, `>=`, `<`, `<=`) in pure integer sense for `BigNum` types.
+
+> **Important:** Comparison operators (`>`, `>=`, `<`, `<=`) compare values as integers over their limb representation, **not** as field elements. Both operands must be in canonical form (i.e. in `[0, MOD)`). Call `validate_in_field` on each operand before comparing, otherwise non-canonical representations (e.g. `MOD` vs `0`) will produce incorrect results.
 
 
 > **Note:** `div`, `udiv` and `umod` are expensive due to requiring modular exponentiations during witness computation. It is worth modifying witness generation algorithms to minimize the number of modular exponentiations required. (for example, using batch inverses)
@@ -253,28 +256,30 @@ Other constrained functions:
 - `derive_from_seed` - generates a `"random"` bignum value based on an input byte array `[u8; M]` - seed
 
 **Limb access**
-- `from_limbs`, returns a bignum from an array of limbs. **Note:** you should call `.validate_in_range()` on the resulting bignum.
+- `from_limbs`, returns a bignum from an array of limbs. Limbs are automatically range-checked.
+- `from_limbs_unsafe`, same as `from_limbs` but without range-checking. Use for values that intentionally exceed the normal BigNum range.
 - `get_limbs`, returns the limbs of the bignum at index `idx`
-- `set_limb(idx, value)`, sets limb at `idx` to a new value. **Note:** you should call `.validate_in_range()` on the resulting bignum.
+- `set_limb(idx, value)`, sets limb at `idx` to a new value. The new value is automatically range-checked.
+- `set_limb_unsafe(idx, value)`, same as `set_limb` but without range-checking.
 
 **Byte conversions**
-- `from_be_bytes`, returns a bignum from a big-endian byte array
-- `from_le_bytes`, returns a bignum from a little-endian byte array
-- `to_be_bytes`, returns the big-endian byte representation of a bignum
-- `to_le_bytes`, returns the little-endian byte representation of a bignum
+- `from_be_bytes`, returns a bignum from a big-endian byte array. Validates the result is in `[0, MOD)` via `validate_in_field`.
+- `from_le_bytes`, returns a bignum from a little-endian byte array. Validates the result is in `[0, MOD)` via `validate_in_field`.
+- `to_be_bytes`, returns the big-endian byte representation of a bignum. Validates the input is in `[0, MOD)` via `validate_in_field`.
+- `to_le_bytes`, returns the little-endian byte representation of a bignum. Validates the input is in `[0, MOD)` via `validate_in_field`.
+- `from_be_bytes_unsafe`/`from_le_bytes_unsafe`/`to_be_bytes_unsafe`/`to_le_bytes_unsafe` - Unsafe versions of the above that skip `validate_in_field`. Use when the value is already known to be in canonical form (i.e. in `[0, MOD)`).
 
 **Comparison operators**
 - `eq`, also available with operator `==`
 - `assert_is_not_equal`, assert 2 bignums are distinct. **Note:** this is cheaper than `assert(a != b)`
 - `is_zero`, returns a boolean, that is `true` if the bignum value is 0 or `modulus`. **Note:** this is cheaper than `assert(a == bignum::zero())`.
-- `is_zero_integer`, returns a boolean, that is `true` if the bignum value is strictly 0 (all limbs are 0). **Note:** equivalent to `assert(a.get_limbs() == [0; N])` but cheaper.
+- `unsafe_is_zero_integer`, returns a boolean, that is `true` if the bignum value is strictly 0 (all limbs are 0). **Note:** equivalent to `assert(a.get_limbs() == [0; N])` but cheaper.
 - `assert_is_not_zero`, assert that a bignum is not 0 or `modulus`, **Note:** this is cheaper than `assert(!a.is_zero())` or `assert(a != bignum::zero())`.
-- `assert_is_not_zero_integer`, assert that a bignum is not strictly 0 (**all limbs are 0**). **Note:** cheaper than `assert(!a.is_zero_integer())` and `assert(a.get_limbs() != [0; N])`.
+- `unsafe_assert_is_not_zero_integer`, assert that a bignum is not strictly 0 (**all limbs are 0**). **Note:** cheaper than `assert(!a.is_zero_integer())` and `assert(a.get_limbs() != [0; N])`.
 
 **Range operators**
 - `validate_in_range`, validates the bignum doesn't have more bits than `modulus_bits` and each limb is a strict `120-bit` value
-- `validate_in_field` – validates `self <= modulus`.
-  - **Note:** `self == modulus` is allowed (consistent with the rest of the library).
+- `validate_in_field` – validates `self < modulus`.
   - **Note:** `validate_in_range` constraints are *deduplicated* (cached) per value, so calling it multiple times on the same `BigNum` will not add duplicate constraints. `validate_in_field` is *not* deduplicated, so repeated calls will add the check again.
   - **Note:** `validate_in_field` is a stronger assertion than `validate_in_range`
 
@@ -314,7 +319,9 @@ The method `evaluate_quadratic_expression` has the following interface:
 
 `ADD_N` represents the number of `BigNum` objects being added
 
-The flag parameters `lhs_flags, rhs_flags, add_flags` define whether an operand in the expression will be negated. 
+The flag parameters `lhs_flags, rhs_flags, add_flags` define whether an operand in the expression will be negated.
+
+**Parameter limits:** The combination of `NUM_PRODUCTS`, `LHS_N`, and `RHS_N` must be small enough that intermediate product limbs do not exceed 2^{246}. Exceeding this bound breaks the 126-bit range check used internally. The library enforces this at compile time and will reject parameter combinations that could overflow. As a rough guideline, `NUM_PRODUCTS * LHS_N * RHS_N` should stay well below 64 for typical moduli. For example, with `BN254_Fq` (3 limbs, 254-bit modulus), `NUM_PRODUCTS=33` with `LHS_N=RHS_N=1`, or `NUM_PRODUCTS=1` with `LHS_N=RHS_N=6`, will be rejected.
 
 For example, for the earlier example we wanted to calculate `a * b + (c + d) * e + f = g`. To constrain this, we pass `a * b + (c + d) * e + f - g = 0` to `evaluate_quadratic_expression`. The parameters then become:
 - `NUM_PRODUCTS` = 2. The products are `a * b` and `(c + d) * e`
@@ -447,6 +454,14 @@ For example, after cloning and building the tool, for a `modulus` of 1024 bits f
 #### Provide parameters for runtime known modulus
 
 For a modulus that is known at runtime, the needed parameters in `BigNumParams` can be provided as witnesses. In the program, use `RuntimeBigNum`, which only requires the number of limbs and number of bits of modulus at the type definition.  
+
+**Security warning: private modulus**
+
+If the modulus is provided as a **private witness** (not a public input), the prover is free to choose any modulus that fits within `MOD_BITS`. The circuit only checks that arithmetic is internally consistent modulo the provided value - it does not verify *which* modulus was used.
+
+A malicious prover can exploit this by substituting a weak modulus (e.g. a smooth composite number - a product of small primes). Equations that would be hard to solve over the intended modulus become trivial: solve mod each small factor separately, then combine via CRT.
+
+**For cryptographic use cases, the modulus should be a public input or otherwise constrained by the surrounding circuit.** If your application relies on the modulus being a specific value (or having specific properties like primality), you must enforce that yourself - `RuntimeBigNum` will not do it for you.
 
 ```rust
 use dep::bignum::BigNum;
