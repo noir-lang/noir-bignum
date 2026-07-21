@@ -1,3 +1,5 @@
+use crate::fns::constrained_ops::validate_in_field;
+use crate::params::BigNumParams;
 use crate::utils::map::invert_array;
 
 // Conversions between big endian and little endian byte arrays and BigNum instances
@@ -7,11 +9,31 @@ use crate::utils::map::invert_array;
 /// Construct a `BigNum` value from a big-endian byte array.
 ///
 /// The input encodes an integer in base 256, which we split into `N` 120-bit limbs.
+/// Validates that the result is in canonical form (i.e. in `[0, MOD)`) via `validate_in_field`.
 ///
 /// ## Note
-/// We only enforce that the value is < 2^MOD_BITS. We do not enforce that it is
-/// reduced modulo the field modulus.
+/// Consistency between `N` and `MOD_BITS` is expected:
+///     - `N * 15 >= num_bytes`
+///     - `num_bytes > (N - 1) * 15`
+pub fn from_be_bytes<let N: u32, let MOD_BITS: u32>(
+    params: &BigNumParams<N, MOD_BITS>,
+    x: &[u8; (MOD_BITS + 7) / 8],
+) -> [u128; N] {
+    let result: [u128; N] = from_be_bytes_unsafe::<N, MOD_BITS>(x);
+    validate_in_field(params, &result);
+    result
+}
+
+/// Construct a `BigNum` value from a big-endian byte array without canonical validation.
 ///
+/// The input encodes an integer in base 256, which we split into `N` 120-bit limbs.
+///
+/// ## Safety
+/// Only enforces that the value is < 2^MOD_BITS. Does **not** enforce that it is
+/// reduced modulo the field modulus. Use `from_be_bytes` for canonical validation,
+/// or call `validate_in_field` on the result if needed.
+///
+/// ## Note
 /// Consistency between `N` and `MOD_BITS` is expected:
 ///     - `N * 15 >= num_bytes`
 ///     - `num_bytes > (N - 1) * 15`
@@ -19,8 +41,10 @@ use crate::utils::map::invert_array;
 /// Enforcing range constraints on each limb is crucial for efficiency.
 /// In principle, accumulating `u8` values already bounds the integer,
 /// but relying on Noir to infer a `u128` from a large linear combination
-/// would trigger a very general (and expensive) range checks
-pub fn from_be_bytes<let N: u32, let MOD_BITS: u32>(x: &[u8; (MOD_BITS + 7) / 8]) -> [u128; N] {
+/// would trigger very general (and expensive) range checks.
+pub fn from_be_bytes_unsafe<let N: u32, let MOD_BITS: u32>(
+    x: &[u8; (MOD_BITS + 7) / 8],
+) -> [u128; N] {
     let num_bytes: u32 = (MOD_BITS + 7) / 8;
 
     let mut result: [u128; N] = [0; N];
@@ -58,6 +82,20 @@ pub fn from_be_bytes<let N: u32, let MOD_BITS: u32>(x: &[u8; (MOD_BITS + 7) / 8]
 
 /// Construct a big-endian byte array from a `BigNum` value.
 ///
+/// Validates that the input is in canonical form (i.e. in `[0, MOD)`) via `validate_in_field`
+/// before serializing.
+///
+/// The output contains `(MOD_BITS + 7) / 8` bytes.
+pub fn to_be_bytes<let N: u32, let MOD_BITS: u32>(
+    params: &BigNumParams<N, MOD_BITS>,
+    val: &[u128; N],
+) -> [u8; (MOD_BITS + 7) / 8] {
+    validate_in_field(params, val);
+    to_be_bytes_unsafe::<N, MOD_BITS>(val)
+}
+
+/// Construct a big-endian byte array from a `BigNum` value without canonical validation.
+///
 /// The output contains `(MOD_BITS + 7) / 8` bytes. We serialize the most
 /// significant limb first, which may occupy fewer than 15 bytes, followed by
 /// the remaining full 15-byte limbs in big-endian order.
@@ -65,7 +103,14 @@ pub fn from_be_bytes<let N: u32, let MOD_BITS: u32>(x: &[u8; (MOD_BITS + 7) / 8]
 /// Consistency between `N` and `MOD_BITS` is expected:
 ///     - the most significant limb contributes `((MOD_BITS + 7) / 8) - (N - 1) * 15` bytes;
 ///     - all other limbs are serialized as full 15-byte chunks.
-pub fn to_be_bytes<let N: u32, let MOD_BITS: u32>(val: &[u128; N]) -> [u8; (MOD_BITS + 7) / 8] {
+///
+/// ## Safety
+/// Does not enforce the input to be in canonical form. Use `to_be_bytes` for
+/// canonical validation, or call `validate_in_field` on the input before
+/// serializing if a canonical byte representation is required.
+pub fn to_be_bytes_unsafe<let N: u32, let MOD_BITS: u32>(
+    val: &[u128; N],
+) -> [u8; (MOD_BITS + 7) / 8] {
     let mut result: [u8; (MOD_BITS + 7) / 8] = [0; (MOD_BITS + 7) / 8];
 
     let last_limb_num_bytes: u32 = (MOD_BITS + 7) / 8 - (N - 1) * 15;
@@ -89,22 +134,55 @@ pub fn to_be_bytes<let N: u32, let MOD_BITS: u32>(val: &[u128; N]) -> [u8; (MOD_
     result
 }
 
-/// Construct a `BigNum` value from little-endian byte array
+/// Construct a `BigNum` value from a little-endian byte array.
 ///
-/// Reverse an array and apply `from_be_bytes`
+/// Validates that the result is in canonical form (i.e. in `[0, MOD)`) via `validate_in_field`.
 ///
-/// See `from_be_bytes` for details
-pub fn from_le_bytes<let N: u32, let MOD_BITS: u32>(x: &[u8; (MOD_BITS + 7) / 8]) -> [u128; N] {
+/// See `from_be_bytes` for details.
+pub fn from_le_bytes<let N: u32, let MOD_BITS: u32>(
+    params: &BigNumParams<N, MOD_BITS>,
+    x: &[u8; (MOD_BITS + 7) / 8],
+) -> [u128; N] {
     let be_x: [u8; (MOD_BITS + 7) / 8] = invert_array(x);
-    from_be_bytes(&be_x)
+    from_be_bytes(params, &be_x)
 }
 
-/// Construct a little-endian byte array from a `BigNum` value
+/// Construct a `BigNum` value from a little-endian byte array without canonical validation.
 ///
-/// Apply `to_be_bytes` and reverse an array
+/// ## Safety
+/// Only enforces that the value is < 2^MOD_BITS. Does **not** enforce that it is
+/// reduced modulo the field modulus. Use `from_le_bytes` for canonical validation,
+/// or call `validate_in_field` on the result if needed.
+pub fn from_le_bytes_unsafe<let N: u32, let MOD_BITS: u32>(
+    x: &[u8; (MOD_BITS + 7) / 8],
+) -> [u128; N] {
+    let be_x: [u8; (MOD_BITS + 7) / 8] = invert_array(x);
+    from_be_bytes_unsafe(&be_x)
+}
+
+/// Construct a little-endian byte array from a `BigNum` value.
 ///
-/// See `to_be_bytes` for details
-pub fn to_le_bytes<let N: u32, let MOD_BITS: u32>(val: &[u128; N]) -> [u8; (MOD_BITS + 7) / 8] {
-    let result_be: [u8; (MOD_BITS + 7) / 8] = to_be_bytes(val);
+/// Validates that the input is in canonical form (i.e. in `[0, MOD)`) via `validate_in_field`
+/// before serializing.
+///
+/// See `to_be_bytes` for details.
+pub fn to_le_bytes<let N: u32, let MOD_BITS: u32>(
+    params: &BigNumParams<N, MOD_BITS>,
+    val: &[u128; N],
+) -> [u8; (MOD_BITS + 7) / 8] {
+    let result_be: [u8; (MOD_BITS + 7) / 8] = to_be_bytes(params, val);
+    invert_array(&result_be)
+}
+
+/// Construct a little-endian byte array from a `BigNum` value without canonical validation.
+///
+/// ## Safety
+/// Does not enforce the input to be in canonical form. Use `to_le_bytes` for
+/// canonical validation, or call `validate_in_field` on the input before
+/// serializing if a canonical byte representation is required.
+pub fn to_le_bytes_unsafe<let N: u32, let MOD_BITS: u32>(
+    val: &[u128; N],
+) -> [u8; (MOD_BITS + 7) / 8] {
+    let result_be: [u8; (MOD_BITS + 7) / 8] = to_be_bytes_unsafe(val);
     invert_array(&result_be)
 }

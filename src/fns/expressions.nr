@@ -256,6 +256,9 @@ pub(crate) unconstrained fn __compute_quadratic_expression<let N: u32, let MOD_B
 /// 1. Negative terms are implemented by adding `double_modulus`
 /// `double_modulus` is chosen so that all limbs except the top one
 /// are > 2^{120}, which prevents underflows in intermediate computations.
+/// However it can cause completeness issues. Refer to the "Note on negation flags"
+/// section of `assert_product_limbs_fit_in_246_bits` and the
+/// `test_evaluate_quadratic_expression_limb_overflow` test.
 ///
 /// 2. For the most significant limb we slightly reduce the padding (to keep the
 /// overall value equal to `2 * MOD`), so in principle there is a narrow edge
@@ -515,6 +518,67 @@ fn validate_expression_is_zero<let N: u32>(mut limbs: [Field; N]) {
     assert(limbs[N - 1] == 0);
 }
 
+/// Completeness check for `evaluate_quadratic_expression`: ensure that each limb
+/// of the convolution product `lhs_linear * rhs_linear` is strictly below `2^{246}`,
+/// so that the 126-bit range check in `validate_expression_is_zero` can succeed for
+/// honest witnesses.
+///
+/// Each input is validated to have limbs `< 2^{120}` (non-top) or `< 2^{TOP_LIMB_BITS}`
+/// (top), where `TOP_LIMB_BITS = MOD_BITS - (N - 1) * 120`. After
+/// `compute_linear_expressions` sums `LHS_N` terms per side, each non-top limb of
+/// `lhs_linear` is at most `LHS_N * (2^{120} - 1)` and the top limb is at most
+/// `LHS_N * (2^{TOP_LIMB_BITS} - 1)`. Similarly for `rhs_linear`.
+///
+/// The product has `2N - 1` limbs. At position `k`, the convolution is
+/// `sum_{i + j = k} lhs_linear[i] * rhs_linear[j]`. The two candidate positions for
+/// the largest value are:
+///
+///   - Position `N - 2`: `N - 1` pairs, all non-top * non-top. Dominates when
+///     `TOP_LIMB_BITS < 120` (the common case).
+///   - Position `N - 1`: `N` pairs, two of which mix a top limb with a non-top limb.
+///     Dominates only when `TOP_LIMB_BITS == 120`.
+///
+/// ## Note on negation flags
+/// When a flag is true the per-term contribution becomes `double_modulus[i] - term[i]`,
+/// which can reach `~3 * 2^{120}` per non-top limb (vs `2^{120} - 1` when unflagged).
+/// The checks below use the unflagged bound; with flags the actual max could be
+/// `~9x` larger. However, flags are per-term (not per-limb), so the relative
+/// ordering of limb positions is preserved: `N - 2` and `N - 1` remain the correct
+/// positions to check.
+///
+/// ## Note on `Field.lt()` precision
+/// These checks use `Field` arithmetic. If the product exceeds the field modulus
+/// `p` (`~2^{254}`), `Field.lt()` could wrap around and give a false pass. This
+/// requires roughly `NUM_PRODUCTS * LHS_N * RHS_N * (N - 1) > 2^{14}`, which is
+/// unrealistic in practice.
+pub(crate) fn assert_product_limbs_fit_in_246_bits<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32>() {
+    let top_limb_bits: u128 = (MOD_BITS - (N - 1) * 120) as u128;
+    let max_non_top_limb: Field = (TWO_POW_120 - 1) as Field;
+    let max_top_limb: Field = ((1u128 << top_limb_bits) - 1) as Field;
+
+    // Over the whole expression, each convolution coefficient is summed `NUM_PRODUCTS`
+    // times, and each pair of linear combinations contributes `LHS_N * RHS_N` sub-products.
+    let num_sub_products_per_limb: Field = NUM_PRODUCTS as Field * LHS_N as Field * RHS_N as Field;
+
+    // Position `N - 1` has `N` pairs: two mix a top limb with a non-top limb,
+    // the remaining `N - 2` are both non-top.
+    let n_minus_1: u32 = N - 1;
+    let max_limb_at_pos_n_minus_1: Field =
+        max_non_top_limb * (2 * max_top_limb + (N - 2) as Field * max_non_top_limb);
+    assert(
+        (num_sub_products_per_limb * max_limb_at_pos_n_minus_1).lt(TWO_POW_246),
+        f"product limbs may exceed 2^246 at limb {n_minus_1}",
+    );
+
+    // Position `N - 2` has `N - 1` pairs, all non-top * non-top.
+    let n_minus_2: u32 = N - 2;
+    let max_limb_at_pos_n_minus_2: Field = (N - 1) as Field * max_non_top_limb * max_non_top_limb;
+    assert(
+        (num_sub_products_per_limb * max_limb_at_pos_n_minus_2).lt(TWO_POW_246),
+        f"product limbs may exceed 2^246 at limb {n_minus_2}",
+    );
+}
+
 /// Constrain a degree-2 `BigNum` expression to be equal to 0 (mod `MOD`)
 ///
 //
@@ -647,16 +711,15 @@ pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let L
     linear_terms: &[[u128; N]; ADD_N],
     linear_flags: &[bool; ADD_N],
 ) {
-    assert(NUM_PRODUCTS < 64, f"evaluate_quadratic_expression overflow in operands count");
-    // NUM_PRODUCTS < 64 is a light bound that tries to ensure each limb sum < 2^{246} so that the 126-bit bound is valid.
+    assert_product_limbs_fit_in_246_bits::<N, MOD_BITS, LHS_N, RHS_N, NUM_PRODUCTS>();
 
     lhs_terms.for_each(|lhs_limbs: [[u128; N]; LHS_N]| {
-        lhs_limbs.for_each(|term: [u128; N]| validate_in_range::<u128, N, MOD_BITS>(&term))
+        lhs_limbs.for_each(|term: [u128; N]| validate_in_range::<N, MOD_BITS>(&term))
     });
     rhs_terms.for_each(|rhs_limbs: [[u128; N]; RHS_N]| {
-        rhs_limbs.for_each(|term: [u128; N]| validate_in_range::<u128, N, MOD_BITS>(&term))
+        rhs_limbs.for_each(|term: [u128; N]| validate_in_range::<N, MOD_BITS>(&term))
     });
-    linear_terms.for_each(|term: [u128; N]| validate_in_range::<u128, N, MOD_BITS>(&term));
+    linear_terms.for_each(|term: [u128; N]| validate_in_range::<N, MOD_BITS>(&term));
 
     let expression_limbs: [Field; 2 * N - 1] = compute_quadratic_expression_with_modulus::<N, MOD_BITS, LHS_N, RHS_N, NUM_PRODUCTS, ADD_N>(
         params,
@@ -806,10 +869,14 @@ pub(crate) fn validate_udiv_mod_expression<let N: u32, let MOD_BITS: u32>(
     quotient: &[u128; N],
     remainder: &[u128; N],
 ) {
-    validate_in_range::<u128, N, MOD_BITS>(numerator);
-    validate_in_range::<u128, N, MOD_BITS>(divisor);
-    validate_in_range::<u128, N, MOD_BITS>(quotient);
-    validate_in_range::<u128, N, MOD_BITS>(remainder);
+    // The relation `quotient * divisor + remainder - numerator = 0` is a single
+    // degree-2 product with no linear combinations, i.e. NUM_PRODUCTS = LHS_N = RHS_N = 1.
+    assert_product_limbs_fit_in_246_bits::<N, MOD_BITS, 1, 1, 1>();
+
+    validate_in_range::<N, MOD_BITS>(numerator);
+    validate_in_range::<N, MOD_BITS>(divisor);
+    validate_in_range::<N, MOD_BITS>(quotient);
+    validate_in_range::<N, MOD_BITS>(remainder);
 
     let expression_limbs: [Field; N] =
         compute_udiv_mod_expression::<N, MOD_BITS>(numerator, divisor, quotient, remainder);

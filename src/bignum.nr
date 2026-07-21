@@ -75,20 +75,17 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
 
     /// Constructs a BigNum from raw limbs.
     ///
-    /// # Safety
-    /// **FOOTGUN**: The limbs are NOT validated. You MUST call `validate_in_range()` on the
-    /// result if the limbs come from untrusted input, otherwise malicious witnesses could
-    /// bypass range checks.
-    ///
-    /// Each limb should be at most 120 bits, except the top limb which should be at most
-    /// `MOD_BITS - 120 * (N - 1)` bits.
-    ///
-    /// # Example
-    /// ```
-    /// let bn = MyBigNum::from_limbs([1, 0, 0]);
-    /// bn.validate_in_range(); // Always validate untrusted input!
-    /// ```
+    /// Each limb is range-checked automatically: at most 120 bits for non-top limbs,
+    /// and at most `MOD_BITS - 120 * (N - 1)` bits for the top limb.
     fn from_limbs(limbs: [u128; N]) -> Self;
+
+    /// Constructs a BigNum from raw limbs without range-checking.
+    ///
+    /// # Safety
+    /// No range checks are performed on the limbs. The resulting value may not
+    /// represent a valid BigNum. Use for cases where limbs intentionally exceed
+    /// the normal range (e.g. quotients from unconstrained computation).
+    fn from_limbs_unsafe(limbs: [u128; N]) -> Self;
 
     /// Returns the raw limb representation.
     ///
@@ -97,10 +94,15 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
 
     /// Sets a specific limb to a new value.
     ///
-    /// # Safety
-    /// **FOOTGUN**: The new limb value is NOT validated. You MUST call `validate_in_range()`
-    /// after modification if the value comes from untrusted input.
+    /// The new value is range-checked automatically: at most 120 bits for non-top limbs,
+    /// and at most `MOD_BITS - 120 * (N - 1)` bits for the top limb.
     fn set_limb(self: &mut Self, idx: u32, value: u128);
+
+    /// Sets a specific limb to a new value without range-checking.
+    ///
+    /// # Safety
+    /// No range check is performed on the new value.
+    fn set_limb_unsafe(self: &mut Self, idx: u32, value: u128);
 
     /// Returns the limb at the given index.
     fn get_limb(&self, idx: u32) -> u128;
@@ -125,6 +127,7 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     unconstrained fn __derive_from_seed<let SeedBytes: u32>(seed: [u8; SeedBytes]) -> Self;
 
     /// Constructs a BigNum from big-endian bytes.
+    /// Validates that the result is in canonical form (i.e. in `[0, MOD)`) via `validate_in_field`.
     ///
     /// The byte array length must be exactly `(MOD_BITS + 7) / 8`.
     ///
@@ -132,10 +135,29 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     /// Panics if the value represented by the bytes is >= 2^MOD_BITS.
     fn from_be_bytes(x: [u8; (MOD_BITS + 7) / 8]) -> Self;
 
+    /// Constructs a BigNum from big-endian bytes without canonical validation.
+    ///
+    /// The byte array length must be exactly `(MOD_BITS + 7) / 8`.
+    ///
+    /// # Panics
+    /// Panics if the value represented by the bytes is >= 2^MOD_BITS.
+    ///
+    /// # Safety
+    /// Only enforces that the value is < 2^MOD_BITS. Does **not** enforce `< MOD`.
+    fn from_be_bytes_unsafe(x: [u8; (MOD_BITS + 7) / 8]) -> Self;
+
     /// Converts to big-endian byte representation.
+    /// Validates that `self` is in canonical form (i.e. in `[0, MOD)`) via `validate_in_field`.
     fn to_be_bytes(&self) -> [u8; (MOD_BITS + 7) / 8];
 
+    /// Converts to big-endian byte representation without canonical validation.
+    ///
+    /// # Safety
+    /// Does not enforce that `self` is in canonical form.
+    fn to_be_bytes_unsafe(&self) -> [u8; (MOD_BITS + 7) / 8];
+
     /// Constructs a BigNum from little-endian bytes.
+    /// Validates that the result is in canonical form (i.e. in `[0, MOD)`) via `validate_in_field`.
     ///
     /// The byte array length must be exactly `(MOD_BITS + 7) / 8`.
     ///
@@ -143,8 +165,26 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     /// Panics if the value represented by the bytes is >= 2^MOD_BITS.
     fn from_le_bytes(x: [u8; (MOD_BITS + 7) / 8]) -> Self;
 
+    /// Constructs a BigNum from little-endian bytes without canonical validation.
+    ///
+    /// The byte array length must be exactly `(MOD_BITS + 7) / 8`.
+    ///
+    /// # Panics
+    /// Panics if the value represented by the bytes is >= 2^MOD_BITS.
+    ///
+    /// # Safety
+    /// Only enforces that the value is < 2^MOD_BITS. Does **not** enforce `< MOD`.
+    fn from_le_bytes_unsafe(x: [u8; (MOD_BITS + 7) / 8]) -> Self;
+
     /// Converts to little-endian byte representation.
+    /// Validates that `self` is in canonical form (i.e. in `[0, MOD)`) via `validate_in_field`.
     fn to_le_bytes(&self) -> [u8; (MOD_BITS + 7) / 8];
+
+    /// Converts to little-endian byte representation without canonical validation.
+    ///
+    /// # Safety
+    /// Does not enforce that `self` is in canonical form.
+    fn to_le_bytes_unsafe(&self) -> [u8; (MOD_BITS + 7) / 8];
 
     /// Unconstrained equality check.
     ///
@@ -167,9 +207,6 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     unconstrained fn __is_zero(&self) -> bool;
 
     /// Unconstrained negation: computes `-self (mod MOD)`.
-    ///
-    /// # Note
-    /// When `self` is zero, this returns the modulus (which is equivalent to zero mod MOD).
     ///
     /// # Safety
     /// No constraints are generated. Constrain the result using `evaluate_quadratic_expression`.
@@ -199,10 +236,12 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     /// No constraints are generated. Constrain the result using `evaluate_quadratic_expression`.
     unconstrained fn __sqr(&self) -> Self;
 
-    /// Unconstrained modular division: computes `self * other^{-1} (mod MOD)`.
+    /// Unconstrained modular division: computes `self * other^{-1} (mod MOD)`
+    /// when `MOD` is prime (`params.has_multiplicative_inverse == true`)
+    ///
+    /// Unconstrained unsigned Integer division: computes `floor(self / other)` otherwise
     ///
     /// # Requirements
-    /// - `MOD` must be prime (`params.has_multiplicative_inverse == true`)
     /// - `other` must not be zero
     ///
     /// # Performance Warning
@@ -291,7 +330,7 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     /// # Note
     /// Unlike `is_zero()`, this returns `false` for the modulus value even though
     /// `modulus == 0 (mod MOD)`.
-    fn is_zero_integer(&self) -> bool;
+    fn unsafe_is_zero_integer(&self) -> bool;
 
     /// Asserts that `self != 0 (mod MOD)`.
     ///
@@ -306,7 +345,7 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     ///
     /// # Performance Note
     /// Cheaper than `assert(!self.is_zero_integer())`.
-    fn assert_is_not_zero_integer(&self);
+    fn unsafe_assert_is_not_zero_integer(&self);
 
     /// Validates that each limb is properly range-constrained.
     ///
@@ -325,11 +364,9 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     /// This does NOT guarantee `self < MOD`. Use `validate_in_field()` for that.
     fn validate_in_range(&self);
 
-    /// Validates that `self <= MOD`.
+    /// Validates that `self < MOD`.
     ///
     /// # Note
-    /// - This allows `self == MOD` (which equals 0 in modular arithmetic), consistent with
-    ///   the library's treatment of the modulus as a valid representation of zero.
     /// - This is a STRONGER check than `validate_in_range()`.
     /// - Unlike `validate_in_range()`, this check is NOT deduplicated. Repeated calls will
     ///   add redundant constraints.
@@ -356,6 +393,12 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     /// This is INTEGER division. For modular division on prime fields, use the `/` operator.
     fn udiv_mod(&self, divisor: &Self) -> (Self, Self);
 
+    /// Unsafe version of `udiv_mod`. Does not call `validate_in_field` on the inputs.
+    ///
+    /// # Safety
+    /// Both operands **must** already be in canonical form (i.e. in `[0, MOD)`).
+    fn udiv_mod_unsafe(&self, divisor: &Self) -> (Self, Self);
+
     /// Constrained integer division: returns `floor(self / divisor)`.
     ///
     /// # Performance Warning
@@ -365,6 +408,12 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     /// This is INTEGER division, not modular. The remainder is discarded.
     fn udiv(&self, divisor: &Self) -> Self;
 
+    /// Unsafe version of `udiv`. Does not call `validate_in_field` on the inputs.
+    ///
+    /// # Safety
+    /// Both operands **must** already be in canonical form (i.e. in `[0, MOD)`).
+    fn udiv_unsafe(&self, divisor: &Self) -> Self;
+
     /// Constrained integer modulo: returns `self % divisor`.
     ///
     /// # Performance Warning
@@ -373,6 +422,12 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     /// # Note
     /// This is INTEGER modulo. The result is the remainder after integer division.
     fn umod(&self, divisor: &Self) -> Self;
+
+    /// Unsafe version of `umod`. Does not call `validate_in_field` on the inputs.
+    ///
+    /// # Safety
+    /// Both operands **must** already be in canonical form (i.e. in `[0, MOD)`).
+    fn umod_unsafe(&self, divisor: &Self) -> Self;
 }
 
 // We need macros that implement the BigNum, Default, From, Neg, Add, Sub, Mul, Div, Eq, Ord traits for each bignum type
@@ -410,8 +465,13 @@ pub comptime fn derive_bignum(
                 Self {limbs: [0; $N]}
             }
 
-            /// Note: You have to properly constrain the limbs prior calling this method
             fn from_limbs(limbs: [u128; $N]) -> Self {
+                let res = Self { limbs };
+                res.validate_in_range();
+                res
+            }
+
+            fn from_limbs_unsafe(limbs: [u128; $N]) -> Self {
                 Self { limbs }
             }
 
@@ -419,8 +479,16 @@ pub comptime fn derive_bignum(
                 self.limbs
             }
 
-            /// Note: You have to properly constrain the limb prior calling this method
             fn set_limb(self: &mut Self, idx: u32, value: u128) {
+                if idx != ($N - 1){
+                    (value as Field).assert_max_bit_size::<120>();
+                } else {
+                    (value as Field).assert_max_bit_size::<$MOD_BITS - 120 * ($N - 1)>();
+                }
+                self.limbs[idx] = value;
+            }
+
+            fn set_limb_unsafe(self: &mut Self, idx: u32, value: u128) {
                 self.limbs[idx] = value;
             }
 
@@ -449,19 +517,39 @@ pub comptime fn derive_bignum(
             }
 
             fn from_be_bytes(x: [u8; ($MOD_BITS + 7) / 8]) -> Self {
-                Self { limbs: $crate::internal::from_be_bytes::<$N, $MOD_BITS>(&x) }
+                let params = Self::params();
+                Self { limbs: $crate::internal::from_be_bytes::<$N, $MOD_BITS>(&params, &x) }
+            }
+
+            fn from_be_bytes_unsafe(x: [u8; ($MOD_BITS + 7) / 8]) -> Self {
+                Self { limbs: $crate::internal::from_be_bytes_unsafe::<$N, $MOD_BITS>(&x) }
             }
 
             fn to_be_bytes(&self) -> [u8; ($MOD_BITS + 7) / 8] {
-                $crate::internal::to_be_bytes::<$N, $MOD_BITS>(&self.limbs)
+                let params = Self::params();
+                $crate::internal::to_be_bytes::<$N, $MOD_BITS>(&params, &self.limbs)
+            }
+
+            fn to_be_bytes_unsafe(&self) -> [u8; ($MOD_BITS + 7) / 8] {
+                $crate::internal::to_be_bytes_unsafe::<$N, $MOD_BITS>(&self.limbs)
             }
 
             fn from_le_bytes(x: [u8; ($MOD_BITS + 7) / 8]) -> Self {
-                Self { limbs: $crate::internal::from_le_bytes::<$N, $MOD_BITS>(&x) }
+                let params = Self::params();
+                Self { limbs: $crate::internal::from_le_bytes::<$N, $MOD_BITS>(&params, &x) }
+            }
+
+            fn from_le_bytes_unsafe(x: [u8; ($MOD_BITS + 7) / 8]) -> Self {
+                Self { limbs: $crate::internal::from_le_bytes_unsafe::<$N, $MOD_BITS>(&x) }
             }
 
             fn to_le_bytes(&self) -> [u8; ($MOD_BITS + 7) / 8] {
-                $crate::internal::to_le_bytes::<$N, $MOD_BITS>(&self.limbs)
+                let params = Self::params();
+                $crate::internal::to_le_bytes::<$N, $MOD_BITS>(&params, &self.limbs)
+            }
+
+            fn to_le_bytes_unsafe(&self) -> [u8; ($MOD_BITS + 7) / 8] {
+                $crate::internal::to_le_bytes_unsafe::<$N, $MOD_BITS>(&self.limbs)
             }
 
             unconstrained fn __eq(&self, other: &Self) -> bool {
@@ -553,7 +641,7 @@ pub comptime fn derive_bignum(
 
             fn validate_in_range(&self) {
                 let limbs = self.get_limbs();
-                $crate::internal::validate_in_range::<u128, $N, $MOD_BITS>(&limbs);
+                $crate::internal::validate_in_range::<$N, $MOD_BITS>(&limbs);
             }
 
             fn sqr(&self) -> Self {
@@ -562,22 +650,44 @@ pub comptime fn derive_bignum(
             }
 
             fn udiv_mod(&self, divisor: &Self) -> (Self, Self) {
+                let params = Self::params();
                 let self_limbs = self.get_limbs();
                 let divisor_limbs = divisor.get_limbs();
-                let (q, r) = $crate::internal::udiv_mod::<$N, $MOD_BITS>(&self_limbs, &divisor_limbs);
+                let (q, r) = $crate::internal::udiv_mod::<$N, $MOD_BITS>(&params, &self_limbs, &divisor_limbs);
                 (Self {limbs: q}, Self {limbs: r})
             }
 
             fn udiv(&self, divisor: &Self) -> Self {
+                let params = Self::params();
                 let self_limbs = self.get_limbs();
                 let divisor_limbs = divisor.get_limbs();
-                Self {limbs: $crate::internal::udiv::<$N, $MOD_BITS>(&self_limbs, &divisor_limbs)}
+                Self {limbs: $crate::internal::udiv::<$N, $MOD_BITS>(&params, &self_limbs, &divisor_limbs)}
+            }
+
+            fn udiv_unsafe(&self, divisor: &Self) -> Self {
+                let self_limbs = self.get_limbs();
+                let divisor_limbs = divisor.get_limbs();
+                Self {limbs: $crate::internal::udiv_unsafe::<$N, $MOD_BITS>(&self_limbs, &divisor_limbs)}
             }
 
             fn umod(&self, divisor: &Self) -> Self {
+                let params = Self::params();
                 let self_limbs = self.get_limbs();
                 let divisor_limbs = divisor.get_limbs();
-                Self {limbs: $crate::internal::umod::<$N, $MOD_BITS>(&self_limbs, &divisor_limbs)}
+                Self {limbs: $crate::internal::umod::<$N, $MOD_BITS>(&params, &self_limbs, &divisor_limbs)}
+            }
+
+            fn umod_unsafe(&self, divisor: &Self) -> Self {
+                let self_limbs = self.get_limbs();
+                let divisor_limbs = divisor.get_limbs();
+                Self {limbs: $crate::internal::umod_unsafe::<$N, $MOD_BITS>(&self_limbs, &divisor_limbs)}
+            }
+
+            fn udiv_mod_unsafe(&self, divisor: &Self) -> (Self, Self) {
+                let self_limbs = self.get_limbs();
+                let divisor_limbs = divisor.get_limbs();
+                let (q, r) = $crate::internal::udiv_mod_unsafe::<$N, $MOD_BITS>(&self_limbs, &divisor_limbs);
+                (Self {limbs: q}, Self {limbs: r})
             }
 
             fn is_zero(&self) -> bool {
@@ -586,9 +696,9 @@ pub comptime fn derive_bignum(
                 $crate::internal::is_zero::<$N, $MOD_BITS>(&params, &limbs)
             }
 
-            fn is_zero_integer(&self) -> bool {
+            fn unsafe_is_zero_integer(&self) -> bool {
                 let limbs = self.get_limbs();
-                $crate::internal::is_zero_integer::<u128,$N>(&limbs)
+                $crate::internal::is_zero_integer::<$N>(&limbs)
             }
 
             fn assert_is_not_zero(&self) {
@@ -597,7 +707,7 @@ pub comptime fn derive_bignum(
                 $crate::internal::assert_is_not_zero::<$N, $MOD_BITS>(&params, &limbs);
             }
 
-            fn assert_is_not_zero_integer(&self) {
+            fn unsafe_assert_is_not_zero_integer(&self) {
                 let limbs = self.get_limbs();
                 $crate::internal::assert_is_not_zero_integer(&limbs);
             }
@@ -645,7 +755,7 @@ pub comptime fn derive_bignum(
                 if $params.has_multiplicative_inverse {
                     $typ { limbs: $crate::internal::div::<$N, $MOD_BITS>($params, self.limbs, other.limbs) }
                 } else {
-                    $typ { limbs: $crate::internal::udiv::<$N, $MOD_BITS>(&self.limbs, &other.limbs) }
+                    $typ { limbs: $crate::internal::udiv::<$N, $MOD_BITS>(&$params, &self.limbs, &other.limbs) }
                 }
             }
         }
@@ -656,6 +766,14 @@ pub comptime fn derive_bignum(
             }
         }
 
+        /// Integer ordering comparison (`>`, `>=`, `<`, `<=`).
+        ///
+        /// Compares values as integers over their limb representation, **not** modular ordering.
+        ///
+        /// # Safety
+        /// Both operands **must** be in canonical form (i.e. in `[0, MOD)`).
+        /// Call `validate_in_field` on each operand before comparing, otherwise
+        /// non-canonical representations (e.g. `MOD` vs `0`) will produce incorrect results.
         impl std::cmp::Ord for $typ {
             fn cmp(self, other: Self) -> std::cmp::Ordering {
                 $crate::internal::cmp::<$N, $MOD_BITS>(&self.limbs, &other.limbs)
@@ -743,7 +861,7 @@ pub unconstrained fn compute_quadratic_expression<T: BigNum, let LHS_N: u32, let
         &crate::utils::map::map(&linear_terms, |bn: &T| bn.get_limbs()),
         &linear_flags,
     );
-    (T::from_limbs(q_limbs), T::from_limbs(r_limbs))
+    (T::from_limbs_unsafe(q_limbs), T::from_limbs_unsafe(r_limbs))
 }
 
 /// Constrains a quadratic expression to equal zero modulo `MOD`.
@@ -861,7 +979,7 @@ pub unconstrained fn batch_invert<T: BigNum, let M: u32>(x: [T; M]) -> [T; M] {
     assert(params.has_multiplicative_inverse);
     let limb_arr = x.map(|bn: T| bn.get_limbs());
     crate::fns::unconstrained_ops::batch_invert(&params, &limb_arr).map(|limbs| {
-        T::from_limbs(limbs)
+        T::from_limbs_unsafe(limbs)
     })
 }
 
@@ -881,7 +999,7 @@ pub unconstrained fn batch_invert_slice<T: BigNum>(x: [T]) -> [T] {
     let params = T::params();
     assert(params.has_multiplicative_inverse);
     crate::fns::unconstrained_ops::batch_invert_slice(&params, x.map(|bn: T| bn.get_limbs()))
-        .map(|limbs| T::from_limbs(limbs))
+        .map(|limbs| T::from_limbs_unsafe(limbs))
 }
 
 /// Converts a BigNum to a native circuit Field element.

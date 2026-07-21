@@ -79,6 +79,7 @@ comptime fn make_test(_m: Module, N: u32, MOD_BITS: u32, params: Quoted) -> Quot
     let __one = quote { crate::fns::unconstrained_helpers::__one };
     let __shl = quote { crate::fns::unconstrained_helpers::__shl };
     let udiv = quote { crate::fns::constrained_ops::udiv };
+    let udiv_unsafe = quote { crate::fns::constrained_ops::udiv_unsafe };
     let sub = quote { crate::fns::constrained_ops::sub };
     quote {
 
@@ -319,9 +320,9 @@ fn test_is_zero() {
     let b: $RuntimeBigNum<$N, $MOD_BITS> = $RuntimeBigNum::derive_from_seed(params, [1, 2, 3, 4]);
 
     assert(a.is_zero() == true);
-    assert(a.is_zero_integer() == true);
+    assert(a.unsafe_is_zero_integer() == true);
     assert(b.is_zero() == false);
-    assert(b.is_zero_integer() == false);
+    assert(b.unsafe_is_zero_integer() == false);
 
     b.assert_is_not_zero();
 }
@@ -390,11 +391,11 @@ fn test_cmp_fuzz(seed: [u8; 2]){
     one[0] = 1;
     if modulus[0] % 2 == 0 {
         // if modulus is even, half_modulus is modulus / 2
-        half_modulus = $RuntimeBigNum {limbs: $udiv::<$N, $MOD_BITS>(&modulus, &two), params};
+        half_modulus = $RuntimeBigNum {limbs: $udiv_unsafe::<$N, $MOD_BITS>(&modulus, &two), params};
     } else {
         // if modulus is odd, half_modulus is (modulus - 1) / 2
-        let modulus_minus_one = $sub(&params,&modulus, &one);
-        half_modulus = $RuntimeBigNum {limbs: $udiv::<$N, $MOD_BITS>(&modulus_minus_one, &two), params};
+        let modulus_minus_one = $sub(&params, &modulus, &one);
+        half_modulus = $RuntimeBigNum {limbs: $udiv::<$N, $MOD_BITS>(&params, &modulus_minus_one, &two), params};
     }
 
 
@@ -457,25 +458,25 @@ fn test_quadratic_expression() {
 }
 }
 
-#[make_test(3, 254, quote {crate::fields::bn254Fq::BN254_Fq_PARAMS})]
+#[make_test(3, 254, quote { crate::fields::bn254Fq::BN254_Fq_PARAMS })]
 pub mod BNTests {}
 
-#[make_test(3, 256, quote {crate::fields::secp256k1Fq::Secp256k1_Fq_PARAMS})]
+#[make_test(3, 256, quote { crate::fields::secp256k1Fq::Secp256k1_Fq_PARAMS })]
 pub mod Secp256K1FqTests {}
 
-#[make_test(4, 381, quote {crate::fields::bls12_381Fq::BLS12_381_Fq_PARAMS})]
+#[make_test(4, 381, quote { crate::fields::bls12_381Fq::BLS12_381_Fq_PARAMS })]
 pub mod BLS12_381FqTests {}
 
-#[make_test(18, 2048, quote {super::TEST_2048_PARAMS})]
+#[make_test(18, 2048, quote { super::TEST_2048_PARAMS })]
 pub mod Test2048Tests {}
 
-#[make_test(3, 255, quote {crate::fields::bls12_381Fr::BLS12_381_Fr_PARAMS})]
+#[make_test(3, 255, quote { crate::fields::bls12_381Fr::BLS12_381_Fr_PARAMS })]
 pub mod BLS12_381_Fr_ParamsTests {}
 
-#[make_test(4, 377, quote {crate::fields::bls12_377Fq::BLS12_377_Fq_PARAMS})]
+#[make_test(4, 377, quote { crate::fields::bls12_377Fq::BLS12_377_Fq_PARAMS })]
 pub mod BLS12_377_Fq_ParamsTests {}
 
-#[make_test(3, 253, quote {crate::fields::bls12_377Fr::BLS12_377_Fr_PARAMS})]
+#[make_test(3, 253, quote { crate::fields::bls12_377Fr::BLS12_377_Fr_PARAMS })]
 pub mod BLS12_377_Fr_ParamsTests {}
 
 // 98760
@@ -681,4 +682,18 @@ fn test_barrett_reduction_fix() {
     let (_quotient, remainder) =
         unsafe { __barrett_reduction(&to_reduce, &params.redc_param, 1024, &params.modulus) };
     assert((remainder[8] as Field).lt(params.modulus[8] as Field));
+}
+
+// BigNumParams::new must reject a modulus shorter than MOD_BITS (top bit not set).
+#[test(should_fail)]
+fn test_runtime_bignum_params_modulus_too_small() {
+    let modulus: [u128; 3] = [1, 0, 0];
+    let _: BigNumParams<3, 254> = BigNumParams::new(false, modulus, [0 as u128; 3]);
+}
+
+// BigNumParams::new must reject a modulus with limbs exceeding the expected bit width.
+#[test(should_fail)]
+fn test_runtime_bignum_params_modulus_too_large() {
+    let modulus: [u128; 3] = [1, 0, 0x10000];
+    let _: BigNumParams<3, 254> = BigNumParams::new(false, modulus, [0 as u128; 3]);
 }
