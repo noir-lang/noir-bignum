@@ -7,7 +7,7 @@ on:
   pull_request:
 
 env:
-  MINIMUM_NOIR_VERSION: nightly-2026-04-08
+  MINIMUM_NOIR_VERSION: 1.0.0-beta.24
 
 jobs:
   test:
@@ -28,7 +28,7 @@ jobs:
       - name: Install bb
         run: |
           curl -L https://bbup.aztec.network | bash
-          ~/.bb/bbup -v 4.0.0-nightly.20260120
+          ~/.bb/bbup -v 5.0.1
 
       - name: Build Noir benchmark programs
         run: nargo export
