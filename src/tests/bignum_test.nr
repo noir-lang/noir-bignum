@@ -708,11 +708,11 @@ fn test_to_from_field_2() {
 /// modulus by construction and `to_field` must not attempt (and fail) to compare against it.
 #[test]
 fn test_to_field_mod_bits_below_254() {
-    let one: BLS12_377_Fr = BigNum::one();
+    let one = BLS12_377_Fr::one();
     assert(to_field(one) == 1);
 
     // the largest representable value, `modulus - 1`
-    let max: BLS12_377_Fr = BigNum::modulus() - BigNum::one();
+    let max = BLS12_377_Fr::modulus() - BLS12_377_Fr::one();
     assert(
         to_field(max)
             == 8444461749428370424248824938781546531375899335154063827935233455917409239040,
