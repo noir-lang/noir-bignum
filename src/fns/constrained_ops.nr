@@ -22,7 +22,16 @@ pub(crate) fn limbs_to_field<let N: u32, let MOD_BITS: u32>(
     limbs: &[u128; N],
 ) -> Field {
     validate_in_range::<N, MOD_BITS>(limbs);
-    if N > 2 {
+    // `validate_in_range` bounds `limbs` by `2^MOD_BITS`, so when `MOD_BITS < 254` the value is
+    // already known to be smaller than the Grumpkin modulus: the latter's top limb is `0x3064`,
+    // hence `GRUMPKIN_MODULUS > 0x3064 * 2^240 > 2^253`. Only `MOD_BITS >= 254` needs the
+    // explicit comparison below.
+    //
+    // The comparison must be *skipped* rather than left in as a redundant check: `validate_gt`
+    // range-constrains the top limb of `GRUMPKIN_MODULUS - limbs` to `MOD_BITS - (N - 1) * 120`
+    // bits, which for e.g. `MOD_BITS = 253, N = 3` is 13 bits — too tight to hold the Grumpkin
+    // modulus' own 14-bit top limb, so every value would fail the range check.
+    if (N > 2) & (MOD_BITS >= 254) {
         // validate that the `BigNum` is less than the Grumpkin modulus
         let mut grumpkin_modulus: [u128; N] = [0; N];
         grumpkin_modulus[0] = GRUMPKIN_MODULUS[0];
