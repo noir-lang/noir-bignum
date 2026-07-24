@@ -702,6 +702,31 @@ fn test_to_from_field_2() {
     assert(a == c);
 }
 
+/// Regression test for https://github.com/noir-lang/noir-bignum/issues/266
+///
+/// `BLS12_377_Fr` has `MOD_BITS = 253` and `N = 3`, so every value is below the Grumpkin
+/// modulus by construction and `to_field` must not attempt (and fail) to compare against it.
+#[test]
+fn test_to_field_mod_bits_below_254() {
+    let one = BLS12_377_Fr::one();
+    assert_eq(to_field(one), 1);
+
+    // the largest representable value, `modulus - 1`
+    let BLS12_377_FR_MODULUS_MINUS_ONE: Field =
+        8444461749428370424248824938781546531375899335154063827935233455917409239040;
+    let max = BLS12_377_Fr::modulus() - BLS12_377_Fr::one();
+    assert_eq(to_field(max), BLS12_377_FR_MODULUS_MINUS_ONE);
+}
+
+/// Regression test for https://github.com/noir-lang/noir-bignum/issues/266
+#[test]
+fn fuzz_to_from_field_mod_bits_below_254(seed: [u8; 5]) {
+    let a: BLS12_377_Fr = BLS12_377_Fr::derive_from_seed(seed);
+    let b: Field = to_field(a);
+    let c: BLS12_377_Fr = BLS12_377_Fr::from(b);
+    assert_eq(a, c);
+}
+
 #[test]
 fn fuzz_from_le_bytes(seed: [u8; 5]) {
     let a: BN254_Fq = BN254_Fq::derive_from_seed(seed);
