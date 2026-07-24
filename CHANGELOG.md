@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.11.0](https://github.com/noir-lang/noir-bignum/compare/v0.10.0...v0.11.0) (2026-07-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* address audit issues ([#270](https://github.com/noir-lang/noir-bignum/issues/270))
+
+### Bug Fixes
+
+* Address audit issues ([#270](https://github.com/noir-lang/noir-bignum/issues/270)) ([1ddd7b0](https://github.com/noir-lang/noir-bignum/commit/1ddd7b0c79b50c40e6d8db512d52be4eef5a5fb2))
+* Skip Grumpkin modulus check in `to_field` when `MOD_BITS < 254` ([#272](https://github.com/noir-lang/noir-bignum/issues/272)) ([dacecea](https://github.com/noir-lang/noir-bignum/commit/dacecea946237c4e2e5b7d45f318fe9a1b9dd5f5))
+
 ## [0.10.0](https://github.com/noir-lang/noir-bignum/compare/v0.9.2...v0.10.0) (2026-04-08)
 
 
