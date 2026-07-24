@@ -709,23 +709,22 @@ fn test_to_from_field_2() {
 #[test]
 fn test_to_field_mod_bits_below_254() {
     let one = BLS12_377_Fr::one();
-    assert(to_field(one) == 1);
+    assert_eq(to_field(one), 1);
 
     // the largest representable value, `modulus - 1`
+    let BLS12_377_FR_MODULUS_MINUS_ONE: Field =
+        8444461749428370424248824938781546531375899335154063827935233455917409239040;
     let max = BLS12_377_Fr::modulus() - BLS12_377_Fr::one();
-    assert(
-        to_field(max)
-            == 8444461749428370424248824938781546531375899335154063827935233455917409239040,
-    );
+    assert_eq(to_field(max), BLS12_377_FR_MODULUS_MINUS_ONE);
 }
 
 /// Regression test for https://github.com/noir-lang/noir-bignum/issues/266
 #[test]
 fn fuzz_to_from_field_mod_bits_below_254(seed: [u8; 5]) {
-    let a: BLS12_377_Fr = BigNum::derive_from_seed(seed);
+    let a: BLS12_377_Fr = BLS12_377_Fr::derive_from_seed(seed);
     let b: Field = to_field(a);
     let c: BLS12_377_Fr = BLS12_377_Fr::from(b);
-    assert(a == c);
+    assert_eq(a, c);
 }
 
 #[test]
