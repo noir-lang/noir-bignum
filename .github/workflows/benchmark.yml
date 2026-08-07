@@ -130,3 +130,45 @@ jobs:
           # delete the comment in case changes no longer impact circuit sizes
           delete: ${{ !steps.brillig_diff.outputs.markdown }}
           message: ${{ steps.brillig_diff.outputs.markdown }}
+
+      # Brillig execution profiling (runtime opcode counts)
+      - name: Profile Brillig execution
+        run: ./scripts/build-brillig-execution-report.sh
+
+      - name: Compare Brillig execution reports
+        id: brillig_execution_diff
+        # Will fail on first run (no baseline on main yet) — remove continue-on-error
+        # once the first main build has uploaded a baseline artifact.
+        continue-on-error: true
+        uses: noir-lang/noir-gates-diff@dbe920a8dcc3370af4be4f702ca9cef29317bec1
+        with:
+          report: brillig_execution_report.json
+          header: |
+            # Changes to number of Brillig opcodes executed
+          brillig_report: true
+          summaryQuantile: 0.9
+
+      - name: Store Brillig execution benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: "Brillig Execution (opcodes executed)"
+          tool: "customSmallerIsBetter"
+          output-file-path: "benchmark-brillig-execution.json"
+          gh-pages-branch: "gh-pages"
+          benchmark-data-dir-path: "dev/bench"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: ${{ github.ref == 'refs/heads/main' }}
+          comment-always: ${{ contains( github.event.pull_request.labels.*.name, 'bench-show') }}
+          comment-on-alert: true
+          alert-threshold: "105%"
+          fail-on-alert: false
+          max-items-in-chart: 50
+          skip-fetch-gh-pages: true
+
+      - name: Add Brillig execution diff to sticky comment
+        if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: brillig_execution
+          delete: ${{ !steps.brillig_execution_diff.outputs.markdown }}
+          message: ${{ steps.brillig_execution_diff.outputs.markdown }}
