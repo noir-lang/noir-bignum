@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Nargo
-        uses: noir-lang/noirup@v0.1.4
+        uses: noir-lang/noirup@v0.1.5
         with:
           toolchain: ${{env.MINIMUM_NOIR_VERSION}}
 
