@@ -1,6 +1,5 @@
 use crate::fields::bls12_381Fq::BLS12_381_Fq_PARAMS;
 use crate::fields::bn254Fq::BN254_Fq_PARAMS;
-use crate::fns::constrained_ops::{sub, udiv};
 use crate::fns::unconstrained_helpers::{__barrett_reduction, __quadratic_non_residue};
 use crate::params::BigNumParams;
 use crate::runtime_bignum::RuntimeBigNum;
