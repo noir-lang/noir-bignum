@@ -1,382 +1,8 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791981533580,
+  "lastUpdate": 1791983341407,
   "repoUrl": "https://github.com/noir-lang/noir-bignum",
   "entries": {
     "ACIR Opcodes": [
-      {
-        "commit": {
-          "author": {
-            "email": "75146596+Sarkoxed@users.noreply.github.com",
-            "name": "Sarkoxed",
-            "username": "Sarkoxed"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
-          "id": "3cb89cb8821365d2d9ab5eff9c167ae090bb9dd3",
-          "message": "chore(split_bits): add documentation and minor cleanup (#202)",
-          "timestamp": "2025-10-08T21:03:50+03:00",
-          "tree_id": "158ad095adaa3b098ed94d863808ddec6710bcd5",
-          "url": "https://github.com/noir-lang/noir-bignum/commit/3cb89cb8821365d2d9ab5eff9c167ae090bb9dd3"
-        },
-        "date": 1759946662554,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "add_BLS12_377Fq_Bench.json/main",
-            "value": 29,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "add_BLS12_377Fr_Bench.json/main",
-            "value": 22,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "add_BLS12_381Fq_Bench.json/main",
-            "value": 29,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "add_BLS12_381Fr_Bench.json/main",
-            "value": 22,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "add_BN254_Fq_Bench.json/main",
-            "value": 22,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "add_U2048_Bench.json/main",
-            "value": 127,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "add_U256_Bench.json/main",
-            "value": 22,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "div_BLS12_377Fq_Bench.json/main",
-            "value": 61,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "div_BLS12_377Fr_Bench.json/main",
-            "value": 42,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "div_BLS12_381Fq_Bench.json/main",
-            "value": 61,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "div_BLS12_381Fr_Bench.json/main",
-            "value": 42,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "div_BN254_Fq_Bench.json/main",
-            "value": 42,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "div_U2048_Bench.json/main",
-            "value": 37,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "div_U256_Bench.json/main",
-            "value": 7,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_12_elements_BLS12_377Fq_Bench.json/main",
-            "value": 2347,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_12_elements_BLS12_377Fr_Bench.json/main",
-            "value": 1576,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_12_elements_BLS12_381Fq_Bench.json/main",
-            "value": 2347,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_12_elements_BLS12_381Fr_Bench.json/main",
-            "value": 1576,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_12_elements_BN254_Fq_Bench.json/main",
-            "value": 1576,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_12_elements_U2048_Bench.json/main",
-            "value": 28471,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_12_elements_U256_Bench.json/main",
-            "value": 1576,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_3_elements_BLS12_377Fq_Bench.json/main",
-            "value": 655,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_3_elements_BLS12_377Fr_Bench.json/main",
-            "value": 442,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_3_elements_BLS12_381Fq_Bench.json/main",
-            "value": 655,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_3_elements_BLS12_381Fr_Bench.json/main",
-            "value": 442,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_3_elements_BN254_Fq_Bench.json/main",
-            "value": 442,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_3_elements_U2048_Bench.json/main",
-            "value": 7627,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_3_elements_U256_Bench.json/main",
-            "value": 442,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "from_field_BLS12_377Fq_Bench.json/main",
-            "value": 28,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "from_field_BLS12_377Fr_Bench.json/main",
-            "value": 22,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "from_field_BLS12_381Fq_Bench.json/main",
-            "value": 28,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "from_field_BLS12_381Fr_Bench.json/main",
-            "value": 22,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "from_field_BN254_Fq_Bench.json/main",
-            "value": 22,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "from_field_U2048_Bench.json/main",
-            "value": 112,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "from_field_U256_Bench.json/main",
-            "value": 22,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "mul_BLS12_377Fq_Bench.json/main",
-            "value": 61,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "mul_BLS12_377Fr_Bench.json/main",
-            "value": 42,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "mul_BLS12_381Fq_Bench.json/main",
-            "value": 61,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "mul_BLS12_381Fr_Bench.json/main",
-            "value": 42,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "mul_BN254_Fq_Bench.json/main",
-            "value": 42,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "mul_U2048_Bench.json/main",
-            "value": 537,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "mul_U256_Bench.json/main",
-            "value": 42,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "sub_BLS12_377Fq_Bench.json/main",
-            "value": 29,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "sub_BLS12_377Fr_Bench.json/main",
-            "value": 22,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "sub_BLS12_381Fq_Bench.json/main",
-            "value": 29,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "sub_BLS12_381Fr_Bench.json/main",
-            "value": 22,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "sub_BN254_Fq_Bench.json/main",
-            "value": 22,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "sub_U2048_Bench.json/main",
-            "value": 127,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "sub_U256_Bench.json/main",
-            "value": 22,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "udiv_BLS12_377Fq_Bench.json/main",
-            "value": 83,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "udiv_BLS12_377Fr_Bench.json/main",
-            "value": 59,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "udiv_BLS12_381Fq_Bench.json/main",
-            "value": 83,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "udiv_BLS12_381Fr_Bench.json/main",
-            "value": 59,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "udiv_BN254_Fq_Bench.json/main",
-            "value": 59,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "udiv_U2048_Bench.json/main",
-            "value": 629,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "udiv_U256_Bench.json/main",
-            "value": 59,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "udiv_mod_BLS12_377Fq_Bench.json/main",
-            "value": 87,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "udiv_mod_BLS12_377Fr_Bench.json/main",
-            "value": 62,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "udiv_mod_BLS12_381Fq_Bench.json/main",
-            "value": 87,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "udiv_mod_BLS12_381Fr_Bench.json/main",
-            "value": 62,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "udiv_mod_BN254_Fq_Bench.json/main",
-            "value": 62,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "udiv_mod_U2048_Bench.json/main",
-            "value": 647,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "udiv_mod_U256_Bench.json/main",
-            "value": 62,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "validate_in_field_BLS12_377Fq_Bench.json/main",
-            "value": 17,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "validate_in_field_BLS12_377Fr_Bench.json/main",
-            "value": 13,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "validate_in_field_BLS12_381Fq_Bench.json/main",
-            "value": 17,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "validate_in_field_BLS12_381Fr_Bench.json/main",
-            "value": 13,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "validate_in_field_BN254_Fq_Bench.json/main",
-            "value": 13,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "validate_in_field_U2048_Bench.json/main",
-            "value": 73,
-            "unit": "acir_opcodes"
-          },
-          {
-            "name": "validate_in_field_U256_Bench.json/main",
-            "value": 13,
-            "unit": "acir_opcodes"
-          }
-        ]
-      },
       {
         "commit": {
           "author": {
@@ -45544,6 +45170,1010 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/noir-lang/noir-bignum/commit/6b61e2e477d75ef8d5f487563927ff0c82a2c0eb"
         },
         "date": 1791981520319,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "add_BLS12_377Fq_Bench.json/main",
+            "value": 28,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "add_BLS12_377Fr_Bench.json/main",
+            "value": 21,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "add_BLS12_381Fq_Bench.json/main",
+            "value": 28,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "add_BLS12_381Fr_Bench.json/main",
+            "value": 21,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "add_BN254_Fq_Bench.json/main",
+            "value": 21,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "add_U2048_Bench.json/main",
+            "value": 126,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "add_U256_Bench.json/main",
+            "value": 21,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "assert_is_not_equal_BLS12_377Fq_Bench.json/main",
+            "value": 17,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "assert_is_not_equal_BLS12_377Fr_Bench.json/main",
+            "value": 15,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "assert_is_not_equal_BLS12_381Fq_Bench.json/main",
+            "value": 17,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "assert_is_not_equal_BLS12_381Fr_Bench.json/main",
+            "value": 15,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "assert_is_not_equal_BN254_Fq_Bench.json/main",
+            "value": 15,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "assert_is_not_equal_U2048_Bench.json/main",
+            "value": 45,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "assert_is_not_equal_U256_Bench.json/main",
+            "value": 15,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_BLS12_377Fq_Bench.json/main",
+            "value": 12,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_BLS12_377Fr_Bench.json/main",
+            "value": 10,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_BLS12_381Fq_Bench.json/main",
+            "value": 12,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_BLS12_381Fr_Bench.json/main",
+            "value": 10,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_BN254_Fq_Bench.json/main",
+            "value": 10,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_U2048_Bench.json/main",
+            "value": 27,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_U256_Bench.json/main",
+            "value": 10,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_integer_BLS12_377Fq_Bench.json/main",
+            "value": 6,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_integer_BLS12_377Fr_Bench.json/main",
+            "value": 5,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_integer_BLS12_381Fq_Bench.json/main",
+            "value": 6,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_integer_BLS12_381Fr_Bench.json/main",
+            "value": 5,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_integer_BN254_Fq_Bench.json/main",
+            "value": 5,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_integer_U2048_Bench.json/main",
+            "value": 20,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_integer_U256_Bench.json/main",
+            "value": 5,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "batch_invert_10_elements_BLS12_377Fq_Bench.json/main",
+            "value": 121,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "batch_invert_10_elements_BLS12_377Fr_Bench.json/main",
+            "value": 91,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "batch_invert_10_elements_BLS12_381Fq_Bench.json/main",
+            "value": 121,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "batch_invert_10_elements_BLS12_381Fr_Bench.json/main",
+            "value": 91,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "batch_invert_10_elements_BN254_Fq_Bench.json/main",
+            "value": 91,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "batch_invert_10_elements_U2048_Bench.json/main",
+            "value": 541,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "batch_invert_10_elements_U256_Bench.json/main",
+            "value": 91,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "cmp_BLS12_377Fq_Bench.json/main",
+            "value": 47,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "cmp_BLS12_377Fr_Bench.json/main",
+            "value": 37,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "cmp_BLS12_381Fq_Bench.json/main",
+            "value": 47,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "cmp_BLS12_381Fr_Bench.json/main",
+            "value": 37,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "cmp_BN254_Fq_Bench.json/main",
+            "value": 37,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "cmp_U2048_Bench.json/main",
+            "value": 187,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "cmp_U256_Bench.json/main",
+            "value": 37,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "derive_from_seed_13_elements_BLS12_377Fq_Bench.json/main",
+            "value": 1945,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "derive_from_seed_13_elements_BLS12_377Fr_Bench.json/main",
+            "value": 1462,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "derive_from_seed_13_elements_BLS12_381Fq_Bench.json/main",
+            "value": 1945,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "derive_from_seed_13_elements_BLS12_381Fr_Bench.json/main",
+            "value": 1462,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "derive_from_seed_13_elements_BN254_Fq_Bench.json/main",
+            "value": 1462,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "derive_from_seed_13_elements_U2048_Bench.json/main",
+            "value": 8707,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "derive_from_seed_13_elements_U256_Bench.json/main",
+            "value": 1462,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "div_BLS12_377Fq_Bench.json/main",
+            "value": 49,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "div_BLS12_377Fr_Bench.json/main",
+            "value": 37,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "div_BLS12_381Fq_Bench.json/main",
+            "value": 49,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "div_BLS12_381Fr_Bench.json/main",
+            "value": 37,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "div_BN254_Fq_Bench.json/main",
+            "value": 37,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "div_U2048_Bench.json/main",
+            "value": 329,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "div_U256_Bench.json/main",
+            "value": 59,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "eq_BLS12_377Fq_Bench.json/main",
+            "value": 44,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "eq_BLS12_377Fr_Bench.json/main",
+            "value": 34,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "eq_BLS12_381Fq_Bench.json/main",
+            "value": 44,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "eq_BLS12_381Fr_Bench.json/main",
+            "value": 34,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "eq_BN254_Fq_Bench.json/main",
+            "value": 34,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "eq_U2048_Bench.json/main",
+            "value": 184,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "eq_U256_Bench.json/main",
+            "value": 34,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_1_element_BLS12_377Fq_Bench.json/main",
+            "value": 83,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_1_element_BLS12_377Fr_Bench.json/main",
+            "value": 63,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_1_element_BLS12_381Fq_Bench.json/main",
+            "value": 83,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_1_element_BLS12_381Fr_Bench.json/main",
+            "value": 63,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_1_element_BN254_Fq_Bench.json/main",
+            "value": 63,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_1_element_U2048_Bench.json/main",
+            "value": 363,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_1_element_U256_Bench.json/main",
+            "value": 63,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_3_elements_BLS12_377Fq_Bench.json/main",
+            "value": 119,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_3_elements_BLS12_377Fr_Bench.json/main",
+            "value": 91,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_3_elements_BLS12_381Fq_Bench.json/main",
+            "value": 119,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_3_elements_BLS12_381Fr_Bench.json/main",
+            "value": 91,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_3_elements_BN254_Fq_Bench.json/main",
+            "value": 91,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_3_elements_U2048_Bench.json/main",
+            "value": 511,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_3_elements_U256_Bench.json/main",
+            "value": 91,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "from_be_bytes_BLS12_377Fq_Bench.json/main",
+            "value": 60,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "from_be_bytes_BLS12_377Fr_Bench.json/main",
+            "value": 41,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "from_be_bytes_BLS12_381Fq_Bench.json/main",
+            "value": 60,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "from_be_bytes_BLS12_381Fr_Bench.json/main",
+            "value": 41,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "from_be_bytes_BN254_Fq_Bench.json/main",
+            "value": 41,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "from_be_bytes_U2048_Bench.json/main",
+            "value": 311,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "from_be_bytes_U256_Bench.json/main",
+            "value": 42,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "from_field_BLS12_377Fq_Bench.json/main",
+            "value": 24,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "from_field_BLS12_377Fr_Bench.json/main",
+            "value": 19,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "from_field_BLS12_381Fq_Bench.json/main",
+            "value": 24,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "from_field_BLS12_381Fr_Bench.json/main",
+            "value": 19,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "from_field_BN254_Fq_Bench.json/main",
+            "value": 19,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "from_field_U2048_Bench.json/main",
+            "value": 94,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "from_field_U256_Bench.json/main",
+            "value": 19,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "from_le_bytes_BLS12_377Fq_Bench.json/main",
+            "value": 60,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "from_le_bytes_BLS12_377Fr_Bench.json/main",
+            "value": 41,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "from_le_bytes_BLS12_381Fq_Bench.json/main",
+            "value": 60,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "from_le_bytes_BLS12_381Fr_Bench.json/main",
+            "value": 41,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "from_le_bytes_BN254_Fq_Bench.json/main",
+            "value": 41,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "from_le_bytes_U2048_Bench.json/main",
+            "value": 311,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "from_le_bytes_U256_Bench.json/main",
+            "value": 42,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "is_zero_BLS12_377Fq_Bench.json/main",
+            "value": 24,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "is_zero_BLS12_377Fr_Bench.json/main",
+            "value": 19,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "is_zero_BLS12_381Fq_Bench.json/main",
+            "value": 24,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "is_zero_BLS12_381Fr_Bench.json/main",
+            "value": 19,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "is_zero_BN254_Fq_Bench.json/main",
+            "value": 19,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "is_zero_U2048_Bench.json/main",
+            "value": 94,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "is_zero_U256_Bench.json/main",
+            "value": 19,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "is_zero_integer_BLS12_377Fq_Bench.json/main",
+            "value": 9,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "is_zero_integer_BLS12_377Fr_Bench.json/main",
+            "value": 8,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "is_zero_integer_BLS12_381Fq_Bench.json/main",
+            "value": 9,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "is_zero_integer_BLS12_381Fr_Bench.json/main",
+            "value": 8,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "is_zero_integer_BN254_Fq_Bench.json/main",
+            "value": 8,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "is_zero_integer_U2048_Bench.json/main",
+            "value": 23,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "is_zero_integer_U256_Bench.json/main",
+            "value": 8,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "mul_BLS12_377Fq_Bench.json/main",
+            "value": 41,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "mul_BLS12_377Fr_Bench.json/main",
+            "value": 30,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "mul_BLS12_381Fq_Bench.json/main",
+            "value": 41,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "mul_BLS12_381Fr_Bench.json/main",
+            "value": 30,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "mul_BN254_Fq_Bench.json/main",
+            "value": 30,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "mul_U2048_Bench.json/main",
+            "value": 195,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "mul_U256_Bench.json/main",
+            "value": 30,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "neg_BLS12_377Fq_Bench.json/main",
+            "value": 24,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "neg_BLS12_377Fr_Bench.json/main",
+            "value": 18,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "neg_BLS12_381Fq_Bench.json/main",
+            "value": 24,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "neg_BLS12_381Fr_Bench.json/main",
+            "value": 18,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "neg_BN254_Fq_Bench.json/main",
+            "value": 18,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "neg_U2048_Bench.json/main",
+            "value": 108,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "neg_U256_Bench.json/main",
+            "value": 18,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "pow_BLS12_377Fq_Bench.json/main",
+            "value": 17,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "pow_BLS12_377Fr_Bench.json/main",
+            "value": 13,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "pow_BLS12_381Fq_Bench.json/main",
+            "value": 17,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "pow_BLS12_381Fr_Bench.json/main",
+            "value": 13,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "pow_BN254_Fq_Bench.json/main",
+            "value": 13,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "pow_U2048_Bench.json/main",
+            "value": 73,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "pow_U256_Bench.json/main",
+            "value": 13,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "sqrt_BLS12_377Fq_Bench.json/main",
+            "value": 15,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "sqrt_BLS12_377Fr_Bench.json/main",
+            "value": 12,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "sqrt_BLS12_381Fq_Bench.json/main",
+            "value": 15,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "sqrt_BLS12_381Fr_Bench.json/main",
+            "value": 12,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "sqrt_BN254_Fq_Bench.json/main",
+            "value": 12,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "sqrt_U2048_Bench.json/main",
+            "value": 57,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "sqrt_U256_Bench.json/main",
+            "value": 12,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "sub_BLS12_377Fq_Bench.json/main",
+            "value": 28,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "sub_BLS12_377Fr_Bench.json/main",
+            "value": 21,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "sub_BLS12_381Fq_Bench.json/main",
+            "value": 28,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "sub_BLS12_381Fr_Bench.json/main",
+            "value": 21,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "sub_BN254_Fq_Bench.json/main",
+            "value": 21,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "sub_U2048_Bench.json/main",
+            "value": 126,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "sub_U256_Bench.json/main",
+            "value": 21,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "to_be_bytes_BLS12_377Fq_Bench.json/main",
+            "value": 108,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "to_be_bytes_BLS12_377Fr_Bench.json/main",
+            "value": 73,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "to_be_bytes_BLS12_381Fq_Bench.json/main",
+            "value": 108,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "to_be_bytes_BLS12_381Fr_Bench.json/main",
+            "value": 73,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "to_be_bytes_BN254_Fq_Bench.json/main",
+            "value": 73,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "to_be_bytes_U2048_Bench.json/main",
+            "value": 568,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "to_be_bytes_U256_Bench.json/main",
+            "value": 75,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "to_field_BLS12_377Fq_Bench.json/main",
+            "value": 19,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "to_field_BLS12_377Fr_Bench.json/main",
+            "value": 4,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "to_field_BLS12_381Fq_Bench.json/main",
+            "value": 19,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "to_field_BLS12_381Fr_Bench.json/main",
+            "value": 15,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "to_field_BN254_Fq_Bench.json/main",
+            "value": 15,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "to_field_U2048_Bench.json/main",
+            "value": 75,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "to_field_U256_Bench.json/main",
+            "value": 15,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "to_le_bytes_BLS12_377Fq_Bench.json/main",
+            "value": 108,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "to_le_bytes_BLS12_377Fr_Bench.json/main",
+            "value": 73,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "to_le_bytes_BLS12_381Fq_Bench.json/main",
+            "value": 108,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "to_le_bytes_BLS12_381Fr_Bench.json/main",
+            "value": 73,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "to_le_bytes_BN254_Fq_Bench.json/main",
+            "value": 73,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "to_le_bytes_U2048_Bench.json/main",
+            "value": 568,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "to_le_bytes_U256_Bench.json/main",
+            "value": 75,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "udiv_BLS12_377Fq_Bench.json/main",
+            "value": 77,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "udiv_BLS12_377Fr_Bench.json/main",
+            "value": 59,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "udiv_BLS12_381Fq_Bench.json/main",
+            "value": 77,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "udiv_BLS12_381Fr_Bench.json/main",
+            "value": 59,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "udiv_BN254_Fq_Bench.json/main",
+            "value": 59,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "udiv_U2048_Bench.json/main",
+            "value": 329,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "udiv_U256_Bench.json/main",
+            "value": 59,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "udiv_mod_BLS12_377Fq_Bench.json/main",
+            "value": 81,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "udiv_mod_BLS12_377Fr_Bench.json/main",
+            "value": 62,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "udiv_mod_BLS12_381Fq_Bench.json/main",
+            "value": 81,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "udiv_mod_BLS12_381Fr_Bench.json/main",
+            "value": 62,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "udiv_mod_BN254_Fq_Bench.json/main",
+            "value": 62,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "udiv_mod_U2048_Bench.json/main",
+            "value": 347,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "udiv_mod_U256_Bench.json/main",
+            "value": 62,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "validate_in_field_BLS12_377Fq_Bench.json/main",
+            "value": 18,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "validate_in_field_BLS12_377Fr_Bench.json/main",
+            "value": 14,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "validate_in_field_BLS12_381Fq_Bench.json/main",
+            "value": 18,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "validate_in_field_BLS12_381Fr_Bench.json/main",
+            "value": 14,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "validate_in_field_BN254_Fq_Bench.json/main",
+            "value": 14,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "validate_in_field_U2048_Bench.json/main",
+            "value": 74,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "validate_in_field_U256_Bench.json/main",
+            "value": 14,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "validate_in_range_BLS12_377Fq_Bench.json/main",
+            "value": 4,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "validate_in_range_BLS12_377Fr_Bench.json/main",
+            "value": 3,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "validate_in_range_BLS12_381Fq_Bench.json/main",
+            "value": 4,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "validate_in_range_BLS12_381Fr_Bench.json/main",
+            "value": 3,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "validate_in_range_BN254_Fq_Bench.json/main",
+            "value": 3,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "validate_in_range_U2048_Bench.json/main",
+            "value": 18,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "validate_in_range_U256_Bench.json/main",
+            "value": 3,
+            "unit": "acir_opcodes"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49558828+AztecBot@users.noreply.github.com",
+            "name": "Aztec Bot",
+            "username": "AztecBot"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "270468c45733af75a62b040640c2983325308c5b",
+          "message": "chore: bump release-please-action to v5 (#276)",
+          "timestamp": "2026-10-14T14:08:31+01:00",
+          "tree_id": "3be06c683818a32724fea1de33a27096bbe2ebde",
+          "url": "https://github.com/noir-lang/noir-bignum/commit/270468c45733af75a62b040640c2983325308c5b"
+        },
+        "date": 1791983339443,
         "tool": "customSmallerIsBetter",
         "benches": [
           {
