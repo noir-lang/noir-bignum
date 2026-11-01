@@ -768,12 +768,13 @@ pub comptime fn derive_bignum(
 
         /// Integer ordering comparison (`>`, `>=`, `<`, `<=`).
         ///
-        /// Compares values as integers over their limb representation, **not** modular ordering.
+        /// Compares the integer values of the limbs, **not** modular ordering.
+        /// Equal integers never compare Less or Greater; unsupported unnormalised limbs can fail.
         ///
         /// # Safety
-        /// Both operands **must** be in canonical form (i.e. in `[0, MOD)`).
+        /// For modular ordering both operands **must** be in `[0, MOD)`.
         /// Call `validate_in_field` on each operand before comparing, otherwise
-        /// non-canonical representations (e.g. `MOD` vs `0`) will produce incorrect results.
+        /// representatives of the same residue (e.g. `MOD` vs `0`) compare as different integers.
         impl std::cmp::Ord for $typ {
             fn cmp(self, other: Self) -> std::cmp::Ordering {
                 $crate::internal::cmp::<$N, $MOD_BITS>(&self.limbs, &other.limbs)
