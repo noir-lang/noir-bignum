@@ -721,6 +721,27 @@ pub(crate) fn evaluate_quadratic_expression<let N: u32, let MOD_BITS: u32, let L
     });
     linear_terms.for_each(|term: [u128; N]| validate_in_range::<N, MOD_BITS>(&term));
 
+    evaluate_quadratic_expression_prechecked(
+        params,
+        lhs_terms,
+        lhs_flags,
+        rhs_terms,
+        rhs_flags,
+        linear_terms,
+        linear_flags,
+    );
+}
+
+// Private: every caller must range-constrain all input limbs before entering.
+fn evaluate_quadratic_expression_prechecked<let N: u32, let MOD_BITS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
+    params: &BigNumParams<N, MOD_BITS>,
+    lhs_terms: &[[[u128; N]; LHS_N]; NUM_PRODUCTS],
+    lhs_flags: &[[bool; LHS_N]; NUM_PRODUCTS],
+    rhs_terms: &[[[u128; N]; RHS_N]; NUM_PRODUCTS],
+    rhs_flags: &[[bool; RHS_N]; NUM_PRODUCTS],
+    linear_terms: &[[u128; N]; ADD_N],
+    linear_flags: &[bool; ADD_N],
+) {
     let expression_limbs: [Field; 2 * N - 1] = compute_quadratic_expression_with_modulus::<N, MOD_BITS, LHS_N, RHS_N, NUM_PRODUCTS, ADD_N>(
         params,
         lhs_terms,
@@ -881,4 +902,45 @@ pub(crate) fn validate_udiv_mod_expression<let N: u32, let MOD_BITS: u32>(
     let expression_limbs: [Field; N] =
         compute_udiv_mod_expression::<N, MOD_BITS>(numerator, divisor, quotient, remainder);
     validate_expression_is_zero(expression_limbs);
+}
+
+/// Verify several quadratic relations over one pool of limb-bounded values.
+/// Input indices are checked by Noir array indexing. Every pool value is range
+/// constrained here, even if unused. Quotient/carry/relation checks remain per
+/// expression. This validates the modulus width and rebuilds negation metadata.
+/// It does not prove primality or that inputs are canonical residues.
+/// Expression arity and size limits are the same as the single-expression API.
+pub fn evaluate_quadratic_expressions_with_params<let N: u32, let MOD_BITS: u32, let POOL: u32, let EXPRESSIONS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
+    params: &BigNumParams<N, MOD_BITS>,
+    pool: &[[u128; N]; POOL],
+    lhs_indices: &[[[u32; LHS_N]; NUM_PRODUCTS]; EXPRESSIONS],
+    lhs_flags: &[[[bool; LHS_N]; NUM_PRODUCTS]; EXPRESSIONS],
+    rhs_indices: &[[[u32; RHS_N]; NUM_PRODUCTS]; EXPRESSIONS],
+    rhs_flags: &[[[bool; RHS_N]; NUM_PRODUCTS]; EXPRESSIONS],
+    linear_indices: &[[u32; ADD_N]; EXPRESSIONS],
+    linear_flags: &[[bool; ADD_N]; EXPRESSIONS],
+) {
+    // Rebuild negation metadata from the modulus rather than trusting caller-
+    // supplied double_modulus. The reduction parameter only drives hints.
+    let validated_params: BigNumParams<N, MOD_BITS> = BigNumParams::new(
+        params.has_multiplicative_inverse,
+        params.modulus,
+        params.redc_param,
+    );
+    assert_product_limbs_fit_in_246_bits::<N, MOD_BITS, LHS_N, RHS_N, NUM_PRODUCTS>();
+    pool.for_each(|limbs| validate_in_range::<N, MOD_BITS>(&limbs));
+    for i in 0..EXPRESSIONS {
+        let lhs = lhs_indices[i].map(|terms| terms.map(|index| pool[index]));
+        let rhs = rhs_indices[i].map(|terms| terms.map(|index| pool[index]));
+        let linear = linear_indices[i].map(|index| pool[index]);
+        evaluate_quadratic_expression_prechecked(
+            &validated_params,
+            &lhs,
+            &lhs_flags[i],
+            &rhs,
+            &rhs_flags[i],
+            &linear,
+            &linear_flags[i],
+        );
+    }
 }

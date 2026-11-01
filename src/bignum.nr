@@ -1019,3 +1019,33 @@ pub fn to_field<T: BigNum>(bn: T) -> Field {
     let limbs = bn.get_limbs();
     limbs_to_field(&params, &limbs)
 }
+
+/// Batch several quadratic relations over a shared pool of inputs, checking
+/// each pool entry's limb bounds once. Each relation's signed products and
+/// linear terms are given as indices into `pool`; see
+/// `evaluate_quadratic_expression` for the relation semantics, modulus
+/// assumptions and arity limits, which apply unchanged.
+pub fn evaluate_quadratic_expressions<T: BigNum, let POOL: u32, let EXPRESSIONS: u32, let LHS_N: u32, let RHS_N: u32, let NUM_PRODUCTS: u32, let ADD_N: u32>(
+    pool: [T; POOL],
+    lhs_indices: [[[u32; LHS_N]; NUM_PRODUCTS]; EXPRESSIONS],
+    lhs_flags: [[[bool; LHS_N]; NUM_PRODUCTS]; EXPRESSIONS],
+    rhs_indices: [[[u32; RHS_N]; NUM_PRODUCTS]; EXPRESSIONS],
+    rhs_flags: [[[bool; RHS_N]; NUM_PRODUCTS]; EXPRESSIONS],
+    linear_indices: [[u32; ADD_N]; EXPRESSIONS],
+    linear_flags: [[bool; ADD_N]; EXPRESSIONS],
+) {
+    evaluate_quadratic_expressions_with_params(
+        &T::params(),
+        &pool.map(|value| value.get_limbs()),
+        &lhs_indices,
+        &lhs_flags,
+        &rhs_indices,
+        &rhs_flags,
+        &linear_indices,
+        &linear_flags,
+    );
+}
+
+/// The same batch interface for explicitly supplied runtime modulus parameters
+/// and limb arrays. Parameters must satisfy the RuntimeBigNum contract.
+pub use crate::fns::expressions::evaluate_quadratic_expressions_with_params;

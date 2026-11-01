@@ -587,3 +587,35 @@ fn example_ecc_double(x: Fq, y: Fq) -> (Fq, Fq) {
     (x3, y3)
 }
 ```
+
+### Batching quadratic relations over shared inputs
+
+`bignum::evaluate_quadratic_expressions` verifies several quadratic relations
+in one call. The inputs form a shared pool whose limbs are range-checked once,
+and each relation selects its operands by index into that pool, so a value
+consumed by several relations is only checked once. The per-relation quotient,
+carry and zero-equality constraints are unchanged.
+
+```rust
+// a * b - product = 0 and a * a - square = 0, sharing the checked `a`
+evaluate_quadratic_expressions(
+    [a, b, product, square],
+    [[[0]], [[0]]],
+    [[[false]], [[false]]],
+    [[[1]], [[0]]],
+    [[[false]], [[false]]],
+    [[2], [3]],
+    [[true], [true]],
+);
+```
+
+`evaluate_quadratic_expressions_with_params` is the same entry point for
+runtime modulus parameters and raw limb arrays. It validates the modulus width
+and rebuilds the negation metadata from the modulus, so a caller cannot smuggle
+in a corrupted `double_modulus`; `redc_param` only drives unconstrained hints.
+
+All relations in one batch share the same product and linear-term arities, and
+the layout, coefficient and quotient limits of `evaluate_quadratic_expression`
+apply unchanged. Neither entry point proves that inputs are canonical residues.
+Batching is not a universal gate saving: pool indexing adds selection work, and
+the compiler may already deduplicate repeated range checks.
