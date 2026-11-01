@@ -1892,3 +1892,27 @@ fn test_sqrt_equality_fuzz(seed: [u8; 3]) {
     };
     assert((c == d) | (c == -d));
 }
+
+#[test]
+fn test_cmp_equal_integer_with_unnormalised_limbs_BN() {
+    let x: BN254_Fq = std::hint::black_box(BN254_Fq::from_limbs_unsafe([TWO_POW_120, 0, 0]));
+    let y: BN254_Fq = std::hint::black_box(BN254_Fq::from_limbs_unsafe([0, 1, 0]));
+    x.validate_in_field();
+    y.validate_in_field();
+    assert(x.cmp(y) == std::cmp::Ordering::equal());
+    assert(y.cmp(x) == std::cmp::Ordering::equal());
+    assert(!(x < y));
+    assert(!(x > y));
+    assert(!(y < x));
+    assert(!(y > x));
+    assert(x <= y);
+    assert(x >= y);
+}
+
+#[test]
+fn test_cmp_distinct_integer_with_unnormalised_limbs_BN() {
+    let x: BN254_Fq = std::hint::black_box(BN254_Fq::from_limbs_unsafe([TWO_POW_120, 0, 0]));
+    let y: BN254_Fq = std::hint::black_box(BN254_Fq::from_limbs_unsafe([0, 0, 1]));
+    assert(x.cmp(y) == std::cmp::Ordering::less());
+    assert(y.cmp(x) == std::cmp::Ordering::greater());
+}
