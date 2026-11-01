@@ -38,6 +38,64 @@ pub unconstrained fn __is_zero<let N: u32>(limbs: &[u128; N]) -> bool {
     *limbs == [0; N]
 }
 
+/// Hints for the exact modular equality decomposition (unconstrained).
+///
+/// For operands below `2^(MOD_BITS+1) <= 4*MOD` (lower limbs below `2^120`,
+/// only the top limb may carry the extra bit), returns `(q_shift, r, carry_shift)`
+/// such that `lhs - rhs = (q_shift - 4)*MOD + r` over the integers, where `r`
+/// is the canonical residue of `lhs - rhs` modulo `MOD` and `q_shift - 4` is
+/// in `-4..=3`. `carry_shift[i] - 8` is the signed chain carry out of limb `i`
+/// (honest magnitude at most 4); the last entry is an unused placeholder.
+pub(crate) unconstrained fn __eq_hints<let N: u32>(
+    modulus: &[u128; N],
+    lhs: &[u128; N],
+    rhs: &[u128; N],
+) -> (u128, [u128; N], [u128; N]) {
+    // Reduce both operands; values are below 4*MOD so at most 3 subtractions.
+    // `__gte` stays value-correct here: lower limbs are normalised 120-bit
+    // limbs and only the top limbs may exceed 120 bits.
+    let mut ra: [u128; N] = *lhs;
+    let mut qa: u128 = 0;
+    let mut rb: [u128; N] = *rhs;
+    let mut qb: u128 = 0;
+    for _i in 0..3 {
+        if __gte(&ra, modulus) {
+            ra = __helper_sub(&ra, modulus);
+            qa += 1;
+        }
+        if __gte(&rb, modulus) {
+            rb = __helper_sub(&rb, modulus);
+            qb += 1;
+        }
+    }
+    // Canonical residue of lhs - rhs; every intermediate stays below MOD.
+    let mut borrow: u128 = 0;
+    let r: [u128; N] = if __gte(&ra, &rb) {
+        __helper_sub(&ra, &rb)
+    } else {
+        borrow = 1;
+        __helper_sub(modulus, &__helper_sub(&rb, &ra))
+    };
+    // lhs - rhs = k*MOD + r with k = qa - qb - borrow in -4..=3.
+    let q_shift: u128 = 4 + qa - qb - borrow;
+    // Signed chain carries, biased by 8 so they round-trip through u128.
+    let k: Field = (q_shift as Field) - 4;
+    let bias: Field = (TWO_POW_120 as Field) * 8;
+    let mut carry: Field = 0;
+    let mut carry_shift: [u128; N] = [8; N];
+    for i in 0..N - 1 {
+        let limb = (lhs[i] as Field) - (rhs[i] as Field) + carry
+            - k * (modulus[i] as Field)
+            - (r[i] as Field)
+            + bias;
+        // `limb` equals (carry_out + 8) * 2^120 exactly and is below 2^124.
+        let shifted = (limb as u128) >> 120;
+        carry_shift[i] = shifted;
+        carry = (shifted as Field) - 8;
+    }
+    (q_shift, r, carry_shift)
+}
+
 /// Compare two little-endian limb arrays for `lhs >= rhs` over integers (unconstrained)
 ///
 /// Starts from the most significant limb (`N - 1`) and returns true

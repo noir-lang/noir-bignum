@@ -5,7 +5,7 @@ use crate::fns::{
     unconstrained_helpers::{
         __from_field, compute_add_flags, compute_borrow_flags, compute_gte_flags, compute_sub_flags,
     },
-    unconstrained_ops::{__add, __div, __mul, __neg, __sqr, __sub, __udiv_mod},
+    unconstrained_ops::{__add, __div, __eq_hints, __mul, __neg, __sqr, __sub, __udiv_mod},
 };
 
 use crate::params::BigNumParams;
@@ -276,84 +276,107 @@ pub fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(
 
 // ------------------------------ COMPARISON FUNCTIONS ------------------------------
 
-/// Validate lhs != rhs
-///
-/// We compare `A` and `B` via their encodings in the circuit `Field`
-///
-/// Under our range assumptions, equality in `Field` implies equality of the underlying
-/// `BigNum` values, hence equality (mod `MOD`)
-///
-/// In this library it is possible that A or B is a little bit greater than `MOD`
-/// So A == B (mod `MOD`) implies that A == B, A == B + MOD or A == B - MOD over the integers
-/// Hence we can compute everything (mod p) and constrain that
-/// (A - B) * (A - B + MOD) * (A - B - MOD) != 0 (mod p)
-///
-/// ## Soundness
-/// This method is *sound* for checking `A != B (mod MOD)`
-///
-/// If `A == B (mod MOD)`, then `A - B` is in `{0, +-MOD}` as an integer,
-/// so one of the factors `A-B`, `A-B+MOD`, `A-B-MOD` is zero in `Field`, and the product is zero
-/// Therefore, whenever the assertion `target != 0` holds, we must have `A != B (mod MOD)`
-/// under our range assumptions
-///
-/// ## Completeness
-/// In general, this method is not *complete*: if the admissible range of `A` and `B`
-/// is large enough relative to the circuit `Field` prime `p`, an honest prover with
-/// `A != B (mod MOD)` can still hit an alias where
-///     (A - B) * (A - B + MOD) * (A - B - MOD) == 0 (mod p),
-/// i.e.
-///     - A = B       (mod p), or
-///     - A = B + MOD (mod p), or
-///     - A = B - MOD (mod p).
-///
-/// For random `A, B` in such a wide range, the probability of this collision is
-/// roughly 3/p.
-///
-/// In case `MOD` < `p` this function becomes *complete*
+/// Validate lhs != rhs modulo the normalized BigNum modulus.
+/// Asserted complement of the exact equality flag: see `eq` for the operand
+/// envelope (value < 2^(MOD_BITS+1), permitted lazy aliases included) and
+/// the in-circuit modulus and hint checks. No native-field packing shortcut
+/// or subtraction hint is used.
 pub fn assert_is_not_equal<let N: u32, let MOD_BITS: u32>(
     params: &BigNumParams<N, MOD_BITS>,
     lhs: &[u128; N],
     rhs: &[u128; N],
 ) {
-    let mut l: Field = 0;
-    let mut r: Field = 0;
-    let mut modulus_mod_p: Field = 0;
-    for i in 0..N {
-        l *= TWO_POW_120 as Field;
-        r *= TWO_POW_120 as Field;
-        modulus_mod_p *= TWO_POW_120 as Field;
-
-        l += lhs[N - i - 1] as Field;
-        r += rhs[N - i - 1] as Field;
-        modulus_mod_p += params.modulus[N - i - 1] as Field;
-    }
-
-    let diff: Field = l - r;
-    let target: Field = diff * (diff + modulus_mod_p) * (diff - modulus_mod_p);
-    assert(target != 0, "assert_is_not_equal fail");
+    assert(!eq::<N, MOD_BITS>(params, lhs, rhs), "assert_is_not_equal fail");
 }
 
-/// Compute equality flag
+/// Compute modular equality under normalized BigNum parameters.
 ///
-/// A == B (mod MOD)
-/// We compute A - B and check whether it is `0` or `MOD`
-/// This is due to subtract constrains the diff value to be < 2^MOD_BITS, not < `MOD`
+/// Exact over the operand envelope `value < 2^(MOD_BITS+1)` for every
+/// supported layout (N >= 1, 1 <= TOP_BITS <= 120): lower limbs are 120-bit
+/// and the top limb may carry one bit beyond TOP_BITS, which covers canonical
+/// values and the permitted lazy aliases (RuntimeBigNum equality included).
+/// The modulus premise (normalized, exactly MOD_BITS significant bits) is
+/// checked in-circuit, including for runtime parameters constructed without
+/// `BigNumParams::new`.
 ///
-/// ## Soundness
-/// This function is *sound*. See `sub` for details
-///
-/// ## Completeness
-/// This function is *complete*. An honest prover will always be able to execute it.
-///
-/// ## TODO
-/// can do this more efficiently via witngen in unconstrained functions?
+/// The prover supplies `r` (the canonical residue of lhs - rhs mod MOD),
+/// a shifted quotient `k = q_shift - 4` and biased chain carries, and the
+/// circuit asserts the integer identity `lhs - rhs = k*MOD + r`. The flag is
+/// then decided from `r` alone; see `eq_with_hints` for the exactness
+/// argument. No native-field packing shortcut or subtraction hint is used.
 pub fn eq<let N: u32, let MOD_BITS: u32>(
     params: &BigNumParams<N, MOD_BITS>,
     lhs: &[u128; N],
     rhs: &[u128; N],
 ) -> bool {
-    let diff: [u128; N] = sub::<N, MOD_BITS>(params, lhs, rhs);
-    is_zero::<N, MOD_BITS>(params, &diff)
+    // Safety: all three hints are range-checked and bound to the integer
+    // identity lhs - rhs = (q_shift - 4)*MOD + r inside `eq_with_hints`.
+    let (q_shift, r, carry_shift) = unsafe { __eq_hints::<N>(&params.modulus, lhs, rhs) };
+    eq_with_hints::<N, MOD_BITS>(params, lhs, rhs, q_shift, &r, &carry_shift)
+}
+
+/// Constrained core of `eq`, split out so adversarial hints can be tested.
+///
+/// Soundness: each per-limb field equation has every term below 2^124 << p
+/// (operand limbs and r limbs are range-checked, |k| <= 4 after the 3-bit
+/// check on q_shift, |carry| <= 8 after the 4-bit checks), so it holds over
+/// the integers; telescoping the chain gives lhs - rhs = k*MOD + r over the
+/// integers, hence r == lhs - rhs (mod MOD). The modulus premise gives
+/// MOD >= 2^(MOD_BITS-1), so r < 2^MOD_BITS <= 2*MOD and the only values of
+/// r congruent to 0 are 0 and MOD: the returned flag is forced to
+/// `lhs == rhs (mod MOD)` for every witness satisfying the constraints.
+///
+/// Completeness: an honest prover always holds the canonical residue r < MOD,
+/// a quotient k in -4..=3 (|lhs - rhs| < 2^(MOD_BITS+1) <= 4*MOD and
+/// 0 <= r < MOD) and chain carries of magnitude at most 4, so every
+/// assertion passes for equal and unequal operands alike.
+pub(crate) fn eq_with_hints<let N: u32, let MOD_BITS: u32>(
+    params: &BigNumParams<N, MOD_BITS>,
+    lhs: &[u128; N],
+    rhs: &[u128; N],
+    q_shift: u128,
+    r: &[u128; N],
+    carry_shift: &[u128; N],
+) -> bool {
+    let supported = (N > 0) & (MOD_BITS > 120 * (N - 1)) & (MOD_BITS <= 120 * N);
+    assert(supported, "unsupported comparison geometry");
+    // Runtime parameters may be constructed directly; check the proof premise.
+    validate_in_range::<N, MOD_BITS>(&params.modulus);
+    let leading_bit: Field = (1u128 << ((MOD_BITS - 120 * (N - 1) - 1) as u128)) as Field;
+    ((params.modulus[N - 1] as Field) - leading_bit)
+        .assert_max_bit_size::<MOD_BITS - 120 * (N - 1) - 1>();
+    // Operand envelope: preserve the lazy aliases, value < 2^(MOD_BITS+1).
+    for i in 0..N - 1 {
+        (lhs[i] as Field).assert_max_bit_size::<120>();
+        (rhs[i] as Field).assert_max_bit_size::<120>();
+    }
+    (lhs[N - 1] as Field).assert_max_bit_size::<MOD_BITS - 120 * (N - 1) + 1>();
+    (rhs[N - 1] as Field).assert_max_bit_size::<MOD_BITS - 120 * (N - 1) + 1>();
+    // Hint envelope: r < 2^MOD_BITS with 120-bit limbs, k = q_shift - 4 in -4..=3.
+    validate_in_range::<N, MOD_BITS>(r);
+    (q_shift as Field).assert_max_bit_size::<3>();
+    let k: Field = (q_shift as Field) - 4;
+    let big: Field = TWO_POW_120 as Field;
+    let mut carry: Field = 0;
+    for i in 0..N - 1 {
+        (carry_shift[i] as Field).assert_max_bit_size::<4>();
+        let limb = (lhs[i] as Field) - (rhs[i] as Field) + carry
+            - k * (params.modulus[i] as Field)
+            - (r[i] as Field);
+        let carry_out = (carry_shift[i] as Field) - 8;
+        assert(limb == carry_out * big, "eq decomposition fail");
+        carry = carry_out;
+    }
+    let top = (lhs[N - 1] as Field) - (rhs[N - 1] as Field) + carry
+        - k * (params.modulus[N - 1] as Field)
+        - (r[N - 1] as Field);
+    assert(top == 0, "eq decomposition fail");
+    // r is congruent to lhs - rhs and below 2*MOD: equal iff r is 0 or MOD.
+    let mut r_is_modulus: bool = true;
+    for i in 0..N {
+        r_is_modulus = r_is_modulus & (r[i] == params.modulus[i]);
+    }
+    is_zero_integer(r) | r_is_modulus
 }
 
 /// Validate that `val` is not equal to zero when interpreted as an integer.
