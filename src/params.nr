@@ -69,10 +69,72 @@ fn get_double_modulus<let N: u32>(modulus: &[u128; N]) -> [u128; N] {
         result[i] = add_term;
     }
 
-    result[0] += TWO_POW_120;
-    for i in 1..N - 1 {
-        result[i] += (TWO_POW_120 - 1);
+    // Keep the carry above the top radix limb: the top u128 has room for it.
+    result[N - 1] += carry << 120;
+    if N == 1 {
+        result
+    } else {
+        result[0] += TWO_POW_120;
+        for i in 1..N - 1 {
+            result[i] += (TWO_POW_120 - 1);
+        }
+        result[N - 1] -= 1;
+        result
     }
-    result[N - 1] -= 1;
-    result
+}
+
+#[test]
+fn double_modulus_preserves_full_width_top_carry() {
+    let modulus = [0u128, 3u128 << 118];
+    let actual = get_double_modulus(&modulus);
+    assert_eq(actual, [TWO_POW_120, (3u128 << 119) - 1]);
+}
+
+#[test]
+fn double_modulus_single_limb_has_no_borrow_padding() {
+    assert_eq(get_double_modulus(&[3u128 << 118]), [3u128 << 119]);
+}
+
+#[test(should_fail)]
+fn full_width_runtime_modulus_rejects_false_negative_relation() {
+    let params = BigNumParams::<2, 240>::new(
+        false,
+        [0, 3u128 << 118],
+        [443075998594971957634602353426781525, 113427455640312821154458202477256070485],
+    );
+    let x = [0u128, 1u128 << 119];
+    for limb in x {
+        std::as_witness(limb as Field);
+    }
+    crate::fns::expressions::evaluate_quadratic_expression(
+        &params,
+        &[[]],
+        &[[]],
+        &[[]],
+        &[[]],
+        &[x],
+        &[true],
+    );
+}
+
+#[test]
+fn full_width_runtime_modulus_accepts_true_negative_relation() {
+    let params = BigNumParams::<2, 240>::new(
+        false,
+        [0, 3u128 << 118],
+        [443075998594971957634602353426781525, 113427455640312821154458202477256070485],
+    );
+    let x = params.modulus;
+    for limb in x {
+        std::as_witness(limb as Field);
+    }
+    crate::fns::expressions::evaluate_quadratic_expression(
+        &params,
+        &[[]],
+        &[[]],
+        &[[]],
+        &[[]],
+        &[x],
+        &[true],
+    );
 }
