@@ -69,10 +69,85 @@ fn get_double_modulus<let N: u32>(modulus: &[u128; N]) -> [u128; N] {
         result[i] = add_term;
     }
 
-    result[0] += TWO_POW_120;
-    for i in 1..N - 1 {
-        result[i] += (TWO_POW_120 - 1);
+    // Keep the carry above the top radix limb: the top u128 has room for it.
+    result[N - 1] += carry << 120;
+    if N == 1 {
+        result
+    } else {
+        result[0] += TWO_POW_120;
+        for i in 1..N - 1 {
+            result[i] += (TWO_POW_120 - 1);
+        }
+        result[N - 1] -= 1;
+        result
     }
-    result[N - 1] -= 1;
-    result
+}
+
+#[test]
+fn double_modulus_preserves_full_width_top_carry() {
+    let modulus = [0u128, 3u128 << 118];
+    let actual = get_double_modulus(&modulus);
+    assert_eq(actual, [TWO_POW_120, (3u128 << 119) - 1]);
+}
+
+#[test]
+fn double_modulus_single_limb_has_no_borrow_padding() {
+    assert_eq(get_double_modulus(&[3u128 << 118]), [3u128 << 119]);
+}
+
+#[test]
+fn full_width_power_of_two_modulus_constructs() {
+    // 2*MOD = 2^240: the doubled top limb is all carry.
+    let params = BigNumParams::<2, 240>::new(false, [0, 1u128 << 119], [0, 0]);
+    assert_eq(params.double_modulus, [TWO_POW_120, TWO_POW_120 - 1]);
+}
+
+// `-2^239 = 0 (mod 3 * 2^238)` is false. With the top carry dropped,
+// `double_modulus` is short by 2^240 and the negated term becomes
+// `2*MOD - 2^240 - 2^239 = 0`, so the relation is accepted. With the carry kept
+// the term is `2^240`, which is not a multiple of the modulus: the quotient hint
+// finds a non-zero remainder and stops. The failure is therefore raised during
+// witness generation, by the unconstrained hint, not by a constraint.
+#[test(should_fail_with = "quadratic expression is not zero modulo MOD")]
+fn full_width_runtime_modulus_false_relation_has_no_honest_witness() {
+    let params = BigNumParams::<2, 240>::new(
+        false,
+        [0, 3u128 << 118],
+        [443075998594971957634602353426781525, 113427455640312821154458202477256070485],
+    );
+    let x = [0u128, 1u128 << 119];
+    for limb in x {
+        std::as_witness(limb as Field);
+    }
+    crate::fns::expressions::evaluate_quadratic_expression(
+        &params,
+        &[[]],
+        &[[]],
+        &[[]],
+        &[[]],
+        &[x],
+        &[true],
+    );
+}
+
+#[test]
+fn full_width_runtime_modulus_accepts_true_negative_relation() {
+    let params = BigNumParams::<2, 240>::new(
+        false,
+        [0, 3u128 << 118],
+        [443075998594971957634602353426781525, 113427455640312821154458202477256070485],
+    );
+    let x = params.modulus;
+    for limb in x {
+        std::as_witness(limb as Field);
+    }
+    crate::fns::expressions::evaluate_quadratic_expression(
+        &params,
+        &[[]],
+        &[[]],
+        &[[]],
+        &[[]],
+        &[x],
+        &[true],
+    );
 }

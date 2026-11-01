@@ -189,7 +189,7 @@ unconstrained fn __compute_quadratic_expression_with_borrow_flags<let N: u32, le
     );
 
     // This is verified later by the range checks but left for debugging purposes
-    assert(__is_zero(&remainder));
+    assert(__is_zero(&remainder), "quadratic expression is not zero modulo MOD");
 
     // We do not normalize `mulout_n` so we won't fill the `2 * N - 1`
     let mut mulout_n: [Field; 2 * N] = [0; 2 * N];
