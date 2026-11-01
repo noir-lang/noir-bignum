@@ -696,3 +696,16 @@ fn test_runtime_bignum_params_modulus_too_large() {
     let modulus: [u128; 3] = [1, 0, 0x10000];
     let _: BigNumParams<3, 254> = BigNumParams::new(false, modulus, [0 as u128; 3]);
 }
+
+#[test]
+fn test_runtime_cmp_equal_integer_with_unnormalised_limbs() {
+    let params = BN254_Fq_PARAMS;
+    let x: RuntimeBigNum<3, 254> =
+        std::hint::black_box(RuntimeBigNum { limbs: [1 << 120, 0, 0], params });
+    let y: RuntimeBigNum<3, 254> = std::hint::black_box(RuntimeBigNum { limbs: [0, 1, 0], params });
+    x.validate_in_field();
+    y.validate_in_field();
+    assert(x.cmp(y) == std::cmp::Ordering::equal());
+    assert(!(x < y));
+    assert(!(x > y));
+}
