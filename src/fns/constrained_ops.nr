@@ -338,8 +338,10 @@ pub(crate) fn eq_with_hints<let N: u32, let MOD_BITS: u32>(
     r: &[u128; N],
     carry_shift: &[u128; N],
 ) -> bool {
-    let supported = (N > 0) & (MOD_BITS > 120 * (N - 1)) & (MOD_BITS <= 120 * N);
-    assert(supported, "unsupported comparison geometry");
+    std::static_assert(
+        (MOD_BITS > 120 * (N - 1)) & (MOD_BITS <= 120 * N),
+        "MOD_BITS must place the top bit in the top limb",
+    );
     // Runtime parameters may be constructed without `BigNumParams::new`.
     validate_modulus::<N, MOD_BITS>(&params.modulus);
     // Operand envelope: preserve the lazy aliases, value < 2^(MOD_BITS+1).
