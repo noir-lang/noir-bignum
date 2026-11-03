@@ -8,10 +8,8 @@
 
 use crate::fields::bn254Fq::BN254_Fq_PARAMS;
 use crate::fns::constrained_ops::eq_with_hints;
+use crate::tests::eq_fixtures::BN254_MODULUS;
 use std::hint::black_box;
-
-global BN254_FQ_MODULUS: [u128; 3] =
-    [0x816a916871ca8d3c208c16d87cfd47, 0x4e72e131a029b85045b68181585d97, 0x3064];
 
 // Biased encodings: q_shift = k + 4, carry_shift[i] = carry + 8 (last unused).
 global Q_ZERO: u128 = 4;
@@ -43,7 +41,7 @@ fn test_eq_hint_modulus_residue_accepted() {
         &a,
         &a,
         black_box(3),
-        &black_box(BN254_FQ_MODULUS),
+        &black_box(BN254_MODULUS),
         &CARRIES_ZERO,
     ));
 }
@@ -156,7 +154,7 @@ fn test_eq_hint_oversized_residue_rejects() {
     // third representative of zero through, so it must be rejected.
     let mut two_q: [u128; 3] = [0; 3];
     for i in 0..3 {
-        two_q[i] = 2 * BN254_FQ_MODULUS[i];
+        two_q[i] = 2 * BN254_MODULUS[i];
     }
     let a = black_box([0x0, 0x0, 0x0]);
     let _ = eq_with_hints(

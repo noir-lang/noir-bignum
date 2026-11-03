@@ -1,6 +1,9 @@
 use crate::bignum::BigNum;
+use crate::constants::GRUMPKIN_MODULUS;
 use crate::fns::constrained_ops::{assert_is_not_equal, assert_is_not_zero};
-use crate::params::BigNumParams;
+use crate::tests::eq_fixtures::{
+    BN254_LAZY_MAX, BN254_MODULUS, BN254_MODULUS_PLUS_ONE, LIMB_MAX, unchecked_params,
+};
 
 use crate::fields::bls12_381Fq::BLS12_381_Fq;
 use crate::fields::bn254Fq::{BN254_Fq, BN254_Fq_PARAMS};
@@ -19,30 +22,20 @@ fn test_neq_canonical_native_collision() {
 #[test]
 fn test_neq_native_alias() {
     let a = black_box(BN254_Fq::from_limbs([0x0, 0x0, 0x0]));
-    let b = black_box(BN254_Fq::from_limbs([
-        0x33e84879b9709143e1f593f0000001,
-        0x4e72e131a029b85045b68181585d28,
-        0x3064,
-    ]));
+    let b = black_box(BN254_Fq::from_limbs(GRUMPKIN_MODULUS));
     a.assert_is_not_equal(&b);
     b.assert_is_not_equal(&a);
 }
 #[test]
 fn test_neq_lazy_boundary() {
     let a = black_box(BN254_Fq::from_limbs([0x0, 0x0, 0x0]));
-    let b = black_box(BN254_Fq::from_limbs([
-        0xffffffffffffffffffffffffffffff,
-        0xffffffffffffffffffffffffffffff,
-        0x3fff,
-    ]));
+    let b = black_box(BN254_Fq::from_limbs(BN254_LAZY_MAX));
     a.assert_is_not_equal(&b);
     b.assert_is_not_equal(&a);
 }
 #[test]
 fn test_neq_low_carry() {
-    let a = black_box(
-        BN254_Fq::from_limbs([0xffffffffffffffffffffffffffffff, 0x0, 0x0]),
-    );
+    let a = black_box(BN254_Fq::from_limbs([LIMB_MAX, 0x0, 0x0]));
     let b = black_box(BN254_Fq::from_limbs([0x0, 0x1, 0x0]));
     a.assert_is_not_equal(&b);
     b.assert_is_not_equal(&a);
@@ -56,21 +49,13 @@ fn test_neq_same_rejects() {
 #[test(should_fail)]
 fn test_neq_modulus_alias_rejects() {
     black_box(BN254_Fq::from_limbs([0x0, 0x0, 0x0])).assert_is_not_equal(
-        &black_box(BN254_Fq::from_limbs([
-            0x816a916871ca8d3c208c16d87cfd47,
-            0x4e72e131a029b85045b68181585d97,
-            0x3064,
-        ])),
+        &black_box(BN254_Fq::from_limbs(BN254_MODULUS)),
     );
 }
 #[test(should_fail)]
 fn test_neq_lazy_alias_rejects() {
     black_box(BN254_Fq::from_limbs([0x1, 0x0, 0x0])).assert_is_not_equal(
-        &black_box(BN254_Fq::from_limbs([
-            0x816a916871ca8d3c208c16d87cfd48,
-            0x4e72e131a029b85045b68181585d97,
-            0x3064,
-        ])),
+        &black_box(BN254_Fq::from_limbs(BN254_MODULUS_PLUS_ONE)),
     );
 }
 
@@ -86,9 +71,9 @@ fn test_neq_oversized_top_rejects() {
 #[test]
 fn test_neq_generic_canonical_native_alias() {
     let alias = black_box(BLS12_381_Fq::from_limbs([
-        0x33e84879b9709143e1f593f0000001,
-        0x4e72e131a029b85045b68181585d28,
-        0x3064,
+        GRUMPKIN_MODULUS[0],
+        GRUMPKIN_MODULUS[1],
+        GRUMPKIN_MODULUS[2],
         0,
     ]));
     alias.validate_in_field();
@@ -99,21 +84,11 @@ fn test_neq_generic_canonical_native_alias() {
 }
 #[test(should_fail_with = "assert_is_not_equal fail")]
 fn test_neq_generic_three_modulus_alias_rejected() {
-    let params = BigNumParams::<4, 361> {
-        has_multiplicative_inverse: false,
-        modulus: black_box([0, 0, 0, 1]),
-        double_modulus: [0; 4],
-        redc_param: [0; 4],
-    };
+    let params = unchecked_params::<4, 361>(black_box([0, 0, 0, 1]));
     assert_is_not_equal(&params, &black_box([0; 4]), &black_box([0, 0, 0, 3]));
 }
 #[test(should_fail_with = "assert_is_not_equal fail")]
 fn test_neq_generic_two_modulus_nonzero_rejected() {
-    let params = BigNumParams::<4, 361> {
-        has_multiplicative_inverse: false,
-        modulus: black_box([0, 0, 0, 1]),
-        double_modulus: [0; 4],
-        redc_param: [0; 4],
-    };
+    let params = unchecked_params::<4, 361>(black_box([0, 0, 0, 1]));
     assert_is_not_zero(&params, &black_box([0, 0, 0, 2]));
 }
