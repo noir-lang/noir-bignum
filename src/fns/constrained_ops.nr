@@ -343,12 +343,8 @@ pub(crate) fn eq_with_hints<let N: u32, let MOD_BITS: u32>(
     // Runtime parameters may be constructed without `BigNumParams::new`.
     validate_modulus::<N, MOD_BITS>(&params.modulus);
     // Operand envelope: preserve the lazy aliases, value < 2^(MOD_BITS+1).
-    for i in 0..N - 1 {
-        (lhs[i] as Field).assert_max_bit_size::<120>();
-        (rhs[i] as Field).assert_max_bit_size::<120>();
-    }
-    (lhs[N - 1] as Field).assert_max_bit_size::<MOD_BITS - 120 * (N - 1) + 1>();
-    (rhs[N - 1] as Field).assert_max_bit_size::<MOD_BITS - 120 * (N - 1) + 1>();
+    validate_in_range::<N, MOD_BITS + 1>(lhs);
+    validate_in_range::<N, MOD_BITS + 1>(rhs);
     // Hint envelope: r < 2^MOD_BITS with 120-bit limbs, k = q_shift - 4 in -4..=3.
     validate_in_range::<N, MOD_BITS>(r);
     (q_shift as Field).assert_max_bit_size::<3>();
