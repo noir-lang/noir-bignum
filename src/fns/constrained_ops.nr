@@ -372,11 +372,7 @@ pub(crate) fn eq_with_hints<let N: u32, let MOD_BITS: u32>(
         - (r[N - 1] as Field);
     assert(top == 0, "eq decomposition fail");
     // r is congruent to lhs - rhs and below 2*MOD: equal iff r is 0 or MOD.
-    let mut r_is_modulus: bool = true;
-    for i in 0..N {
-        r_is_modulus = r_is_modulus & (r[i] == params.modulus[i]);
-    }
-    is_zero_integer(r) | r_is_modulus
+    is_zero::<N, MOD_BITS>(params, r)
 }
 
 /// Validate that `val` is not equal to zero when interpreted as an integer.
