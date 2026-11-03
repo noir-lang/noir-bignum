@@ -8,14 +8,12 @@
 
 use crate::fields::bn254Fq::BN254_Fq_PARAMS;
 use crate::fns::constrained_ops::eq_with_hints;
+use crate::tests::eq_fixtures::BN254_MODULUS;
 use std::hint::black_box;
 
-global BN254_FQ_MODULUS: [u128; 3] =
-    [0x816a916871ca8d3c208c16d87cfd47, 0x4e72e131a029b85045b68181585d97, 0x3064];
-
-// Biased encodings: q_shift = k + 4, carry_shift[i] = carry + 8 (last unused).
+// Biased encodings: q_shift = k + 4, carry_shift[i] = carry + 8.
 global Q_ZERO: u128 = 4;
-global CARRIES_ZERO: [u128; 3] = [8, 8, 8];
+global CARRIES_ZERO: [u128; 2] = [8, 8];
 
 #[test]
 fn test_eq_hint_zero_residue_accepted() {
@@ -43,7 +41,7 @@ fn test_eq_hint_modulus_residue_accepted() {
         &a,
         &a,
         black_box(3),
-        &black_box(BN254_FQ_MODULUS),
+        &black_box(BN254_MODULUS),
         &CARRIES_ZERO,
     ));
 }
@@ -85,7 +83,7 @@ fn test_eq_hint_fudged_carry_rejects() {
         &black_box([0x0, 0x0, 0x0]),
         Q_ZERO,
         &black_box([0x0, 0x0, 0x0]),
-        &black_box([9, 8, 8]),
+        &black_box([9, 8]),
     );
 }
 
@@ -121,7 +119,7 @@ fn test_eq_hint_top_limb_forced_unequal_rejects() {
     );
 }
 
-#[test(should_fail)]
+#[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_eq_hint_oversized_quotient_rejects() {
     // q_shift must fit 3 bits (k in -4..=3).
     let a = black_box([0x0, 0x0, 0x0]);
@@ -135,7 +133,7 @@ fn test_eq_hint_oversized_quotient_rejects() {
     );
 }
 
-#[test(should_fail)]
+#[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_eq_hint_oversized_carry_rejects() {
     // Each carry_shift must fit 4 bits.
     let a = black_box([0x0, 0x0, 0x0]);
@@ -145,18 +143,18 @@ fn test_eq_hint_oversized_carry_rejects() {
         &a,
         Q_ZERO,
         &black_box([0; 3]),
-        &black_box([16, 8, 8]),
+        &black_box([16, 8]),
     );
 }
 
-#[test(should_fail)]
+#[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_eq_hint_oversized_residue_rejects() {
     // Residue 2*MOD is consistent with the chain for equal operands (k = -2),
     // but exceeds 2^MOD_BITS: without the residue range check it would let a
     // third representative of zero through, so it must be rejected.
     let mut two_q: [u128; 3] = [0; 3];
     for i in 0..3 {
-        two_q[i] = 2 * BN254_FQ_MODULUS[i];
+        two_q[i] = 2 * BN254_MODULUS[i];
     }
     let a = black_box([0x0, 0x0, 0x0]);
     let _ = eq_with_hints(

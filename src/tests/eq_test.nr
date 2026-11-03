@@ -1,274 +1,246 @@
-use crate::{BigNum, BN254_Fq};
+use crate::bignum::BigNum;
+use crate::constants::{GRUMPKIN_MODULUS, TWO_POW_120};
+use crate::fns::constrained_ops::eq;
+use crate::fns::unconstrained_helpers::__helper_sub;
+use crate::fns::unconstrained_ops::__gte;
+use crate::tests::eq_fixtures::{
+    BN254_LAZY_MAX, BN254_MODULUS, BN254_MODULUS_MINUS_ONE, BN254_MODULUS_PLUS_ONE, LIMB_MAX,
+    unchecked_params,
+};
+
+use crate::fields::bls12_381Fq::{BLS12_381_Fq, BLS12_381_Fq_PARAMS};
+use crate::fields::bn254Fq::{BN254_Fq, BN254_Fq_PARAMS};
+
 use std::hint::black_box;
 
 #[test]
 fn test_eq_zero() {
     let a = black_box(BN254_Fq::from_limbs([0x0, 0x0, 0x0]));
     let b = black_box(BN254_Fq::from_limbs([0x0, 0x0, 0x0]));
-    assert((a == b) == true);
-    assert((b == a) == true);
+    assert_eq(a, b);
+    assert_eq(b, a);
 }
 
 #[test]
 fn test_eq_lazy_alias() {
     let a = black_box(BN254_Fq::from_limbs([0x1, 0x0, 0x0]));
-    let b = black_box(BN254_Fq::from_limbs([
-        0x816a916871ca8d3c208c16d87cfd48,
-        0x4e72e131a029b85045b68181585d97,
-        0x3064,
-    ]));
-    assert((a == b) == true);
-    assert((b == a) == true);
+    let b = black_box(BN254_Fq::from_limbs(BN254_MODULUS_PLUS_ONE));
+    assert_eq(a, b);
+    assert_eq(b, a);
 }
 
 #[test]
 fn test_eq_zero_modulus() {
     let a = black_box(BN254_Fq::from_limbs([0x0, 0x0, 0x0]));
-    let b = black_box(BN254_Fq::from_limbs([
-        0x816a916871ca8d3c208c16d87cfd47,
-        0x4e72e131a029b85045b68181585d97,
-        0x3064,
-    ]));
-    assert((a == b) == true);
-    assert((b == a) == true);
+    let b = black_box(BN254_Fq::from_limbs(BN254_MODULUS));
+    assert_eq(a, b);
+    assert_eq(b, a);
 }
 
 #[test]
 fn test_eq_boundary() {
     let a = black_box(BN254_Fq::from_limbs([0x0, 0x0, 0x0]));
-    let b = black_box(BN254_Fq::from_limbs([
-        0xffffffffffffffffffffffffffffff,
-        0xffffffffffffffffffffffffffffff,
-        0x3fff,
-    ]));
-    assert((a == b) == false);
-    assert((b == a) == false);
+    let b = black_box(BN254_Fq::from_limbs(BN254_LAZY_MAX));
+    assert(a != b);
+    assert(b != a);
 }
 
 #[test]
 fn test_eq_lazy_distinct() {
     let a = black_box(BN254_Fq::from_limbs([0x0, 0x0, 0x0]));
-    let b = black_box(BN254_Fq::from_limbs([
-        0x816a916871ca8d3c208c16d87cfd48,
-        0x4e72e131a029b85045b68181585d97,
-        0x3064,
-    ]));
-    assert((a == b) == false);
-    assert((b == a) == false);
+    let b = black_box(BN254_Fq::from_limbs(BN254_MODULUS_PLUS_ONE));
+    assert(a != b);
+    assert(b != a);
 }
 
 #[test]
 fn test_eq_native_alias() {
     let a = black_box(BN254_Fq::from_limbs([0x0, 0x0, 0x0]));
-    let b = black_box(BN254_Fq::from_limbs([
-        0x33e84879b9709143e1f593f0000001,
-        0x4e72e131a029b85045b68181585d28,
-        0x3064,
-    ]));
-    assert((a == b) == false);
-    assert((b == a) == false);
+    let b = black_box(BN254_Fq::from_limbs(GRUMPKIN_MODULUS));
+    assert(a != b);
+    assert(b != a);
 }
 
 #[test]
 fn test_eq_low_carry() {
-    let a = black_box(
-        BN254_Fq::from_limbs([0xffffffffffffffffffffffffffffff, 0x0, 0x0]),
-    );
+    let a = black_box(BN254_Fq::from_limbs([LIMB_MAX, 0x0, 0x0]));
     let b = black_box(BN254_Fq::from_limbs([0x0, 0x1, 0x0]));
-    assert((a == b) == false);
-    assert((b == a) == false);
+    assert(a != b);
+    assert(b != a);
 }
 
 #[test]
 fn test_eq_canonical_max() {
     let a = black_box(BN254_Fq::from_limbs([0x0, 0x0, 0x0]));
-    let b = black_box(BN254_Fq::from_limbs([
-        0x816a916871ca8d3c208c16d87cfd46,
-        0x4e72e131a029b85045b68181585d97,
-        0x3064,
-    ]));
-    assert((a == b) == false);
-    assert((b == a) == false);
+    let b = black_box(BN254_Fq::from_limbs(BN254_MODULUS_MINUS_ONE));
+    assert(a != b);
+    assert(b != a);
 }
 
 #[test]
 fn test_eq_two_limb_carry() {
-    let a = black_box(BN254_Fq::from_limbs([
-        0xffffffffffffffffffffffffffffff,
-        0xffffffffffffffffffffffffffffff,
-        0x0,
-    ]));
+    let a = black_box(BN254_Fq::from_limbs([LIMB_MAX, LIMB_MAX, 0x0]));
     let b = black_box(BN254_Fq::from_limbs([0x0, 0x0, 0x1]));
-    assert((a == b) == false);
-    assert((b == a) == false);
+    assert(a != b);
+    assert(b != a);
 }
 
-#[test(should_fail)]
+#[test(should_fail_with = "unequal values compared equal")]
 fn test_eq_wrong_flag_rejects() {
     assert(
         black_box(BN254_Fq::from_limbs([0x0, 0x0, 0x0]))
             == black_box(BN254_Fq::from_limbs([0x1, 0x0, 0x0])),
+        "unequal values compared equal",
     );
 }
 
-use crate::fields::bn254Fq::BN254_Fq_PARAMS;
-use crate::internal::eq;
+#[test(should_fail_with = "unequal values compared equal")]
+unconstrained fn test_eq_wrong_flag_rejects_unconstrained() {
+    assert(
+        black_box(BN254_Fq::from_limbs([0x0, 0x0, 0x0]))
+            == black_box(BN254_Fq::from_limbs([0x1, 0x0, 0x0])),
+        "unequal values compared equal",
+    );
+}
 
-#[test(should_fail)]
+#[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_eq_oversized_low_limb_rejects() {
     let invalid = black_box([0x1000000000000000000000000000000u128, 0, 0]);
     assert(eq(&BN254_Fq_PARAMS, &invalid, &black_box([0, 1, 0])));
 }
-#[test(should_fail)]
+
+#[test(should_fail_with = "call to assert_max_bit_size")]
+unconstrained fn test_eq_oversized_low_limb_rejects_unconstrained() {
+    let invalid = black_box([0x1000000000000000000000000000000u128, 0, 0]);
+    assert(eq(&BN254_Fq_PARAMS, &invalid, &black_box([0, 1, 0])));
+}
+#[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_eq_oversized_middle_limb_rejects() {
     let invalid = black_box([0u128, 0x1000000000000000000000000000000, 0]);
     assert(eq(&BN254_Fq_PARAMS, &invalid, &black_box([0, 0, 1])));
 }
-#[test(should_fail)]
+
+#[test(should_fail_with = "call to assert_max_bit_size")]
+unconstrained fn test_eq_oversized_middle_limb_rejects_unconstrained() {
+    let invalid = black_box([0u128, 0x1000000000000000000000000000000, 0]);
+    assert(eq(&BN254_Fq_PARAMS, &invalid, &black_box([0, 0, 1])));
+}
+#[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_eq_oversized_top_limb_rejects() {
+    let invalid = black_box([0u128, 0, 0x8000]);
+    assert(eq(&BN254_Fq_PARAMS, &invalid, &invalid));
+}
+
+#[test(should_fail_with = "call to assert_max_bit_size")]
+unconstrained fn test_eq_oversized_top_limb_rejects_unconstrained() {
     let invalid = black_box([0u128, 0, 0x8000]);
     assert(eq(&BN254_Fq_PARAMS, &invalid, &invalid));
 }
 
 #[test]
 fn test_eq_normalized_241_bit_modulus() {
-    let params = crate::params::BigNumParams::<3, 241> {
-        has_multiplicative_inverse: false,
-        modulus: [0x1, 0x0, 0x1],
-        double_modulus: [0; 3],
-        redc_param: [0; 3],
-    };
+    let params = unchecked_params::<3, 241>([0x1, 0x0, 0x1]);
     let a = black_box([0x0, 0x0, 0x0]);
     let b = black_box([0x1, 0x0, 0x1]);
-    assert(eq(&params, &a, &b) == true);
-    assert(eq(&params, &b, &a) == true);
+    assert(eq(&params, &a, &b));
+    assert(eq(&params, &b, &a));
     let a = black_box([0x1, 0x0, 0x0]);
     let b = black_box([0x2, 0x0, 0x1]);
-    assert(eq(&params, &a, &b) == true);
-    assert(eq(&params, &b, &a) == true);
+    assert(eq(&params, &a, &b));
+    assert(eq(&params, &b, &a));
     let a = black_box([0x0, 0x0, 0x0]);
-    let b = black_box(
-        [0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x1],
-    );
-    assert(eq(&params, &a, &b) == false);
-    assert(eq(&params, &b, &a) == false);
+    let b = black_box([LIMB_MAX, LIMB_MAX, 0x1]);
+    assert(!eq(&params, &a, &b));
+    assert(!eq(&params, &b, &a));
     let a = black_box([0x0, 0x0, 0x1]);
     let b = black_box([0x1, 0x0, 0x1]);
-    assert(eq(&params, &a, &b) == false);
-    assert(eq(&params, &b, &a) == false);
-    let a = black_box(
-        [0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x0],
-    );
+    assert(!eq(&params, &a, &b));
+    assert(!eq(&params, &b, &a));
+    let a = black_box([LIMB_MAX, LIMB_MAX, 0x0]);
     let b = black_box([0x0, 0x0, 0x1]);
-    assert(eq(&params, &a, &b) == false);
-    assert(eq(&params, &b, &a) == false);
+    assert(!eq(&params, &a, &b));
+    assert(!eq(&params, &b, &a));
 }
 
 #[test]
 fn test_eq_quotient_extremes() {
+    quotient_extreme_controls();
+}
+
+#[test]
+unconstrained fn test_eq_unconstrained_quotient_extremes() {
+    quotient_extreme_controls();
+}
+
+fn quotient_extreme_controls() {
     // MOD = 2^240 + 1 is barely normalized, so the envelope 2^242 reaches
     // almost 4*MOD and the honest quotient attains both extremes: 4 vs
     // 3*MOD + 5 needs k = -4 (borrowing a modulus for the residue MOD - 1)
     // and k = +3 in the swapped direction.
-    let params = crate::params::BigNumParams::<3, 241> {
-        has_multiplicative_inverse: false,
-        modulus: [0x1, 0x0, 0x1],
-        double_modulus: [0; 3],
-        redc_param: [0; 3],
-    };
+    let params = unchecked_params::<3, 241>([0x1, 0x0, 0x1]);
     let a = black_box([0x4, 0x0, 0x0]);
     let b = black_box([0x8, 0x0, 0x3]);
-    assert(eq(&params, &a, &b) == false);
-    assert(eq(&params, &b, &a) == false);
+    assert(!eq(&params, &a, &b));
+    assert(!eq(&params, &b, &a));
     // Same alias magnitude, equal values: 5 vs 3*MOD + 5 (k = -3 / +3).
     let a = black_box([0x5, 0x0, 0x0]);
-    assert(eq(&params, &a, &b) == true);
-    assert(eq(&params, &b, &a) == true);
+    assert(eq(&params, &a, &b));
+    assert(eq(&params, &b, &a));
 }
 
 #[test]
 fn test_eq_normalized_256_bit_modulus() {
-    let params = crate::params::BigNumParams::<3, 256> {
-        has_multiplicative_inverse: false,
-        modulus: [0xffffffffffffffffffffffffffff43, 0xffffffffffffffffffffffffffffff, 0xffff],
-        double_modulus: [0; 3],
-        redc_param: [0; 3],
-    };
+    let params = unchecked_params::<3, 256>([0xffffffffffffffffffffffffffff43, LIMB_MAX, 0xffff]);
     let a = black_box([0x0, 0x0, 0x0]);
-    let b = black_box(
-        [0xffffffffffffffffffffffffffff43, 0xffffffffffffffffffffffffffffff, 0xffff],
-    );
-    assert(eq(&params, &a, &b) == true);
-    assert(eq(&params, &b, &a) == true);
+    let b = black_box([0xffffffffffffffffffffffffffff43, LIMB_MAX, 0xffff]);
+    assert(eq(&params, &a, &b));
+    assert(eq(&params, &b, &a));
     let a = black_box([0x1, 0x0, 0x0]);
-    let b = black_box(
-        [0xffffffffffffffffffffffffffff44, 0xffffffffffffffffffffffffffffff, 0xffff],
-    );
-    assert(eq(&params, &a, &b) == true);
-    assert(eq(&params, &b, &a) == true);
+    let b = black_box([0xffffffffffffffffffffffffffff44, LIMB_MAX, 0xffff]);
+    assert(eq(&params, &a, &b));
+    assert(eq(&params, &b, &a));
     let a = black_box([0x0, 0x0, 0x0]);
-    let b = black_box(
-        [0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0xffff],
-    );
-    assert(eq(&params, &a, &b) == false);
-    assert(eq(&params, &b, &a) == false);
-    let a = black_box(
-        [0xffffffffffffffffffffffffffff42, 0xffffffffffffffffffffffffffffff, 0xffff],
-    );
-    let b = black_box(
-        [0xffffffffffffffffffffffffffff43, 0xffffffffffffffffffffffffffffff, 0xffff],
-    );
-    assert(eq(&params, &a, &b) == false);
-    assert(eq(&params, &b, &a) == false);
-    let a = black_box(
-        [0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x0],
-    );
+    let b = black_box([LIMB_MAX, LIMB_MAX, 0xffff]);
+    assert(!eq(&params, &a, &b));
+    assert(!eq(&params, &b, &a));
+    let a = black_box([0xffffffffffffffffffffffffffff42, LIMB_MAX, 0xffff]);
+    let b = black_box([0xffffffffffffffffffffffffffff43, LIMB_MAX, 0xffff]);
+    assert(!eq(&params, &a, &b));
+    assert(!eq(&params, &b, &a));
+    let a = black_box([LIMB_MAX, LIMB_MAX, 0x0]);
     let b = black_box([0x0, 0x0, 0x1]);
-    assert(eq(&params, &a, &b) == false);
-    assert(eq(&params, &b, &a) == false);
+    assert(!eq(&params, &a, &b));
+    assert(!eq(&params, &b, &a));
 }
 
 #[test]
 fn test_eq_normalized_360_bit_modulus() {
-    let params = crate::params::BigNumParams::<3, 360> {
-        has_multiplicative_inverse: false,
-        modulus: [0x11, 0x0, 0x800000000000000000000000000000],
-        double_modulus: [0; 3],
-        redc_param: [0; 3],
-    };
+    let params = unchecked_params::<3, 360>([0x11, 0x0, 0x800000000000000000000000000000]);
     let a = black_box([0x0, 0x0, 0x0]);
     let b = black_box([0x11, 0x0, 0x800000000000000000000000000000]);
-    assert(eq(&params, &a, &b) == true);
-    assert(eq(&params, &b, &a) == true);
+    assert(eq(&params, &a, &b));
+    assert(eq(&params, &b, &a));
     let a = black_box([0x1, 0x0, 0x0]);
     let b = black_box([0x12, 0x0, 0x800000000000000000000000000000]);
-    assert(eq(&params, &a, &b) == true);
-    assert(eq(&params, &b, &a) == true);
+    assert(eq(&params, &a, &b));
+    assert(eq(&params, &b, &a));
     let a = black_box([0x0, 0x0, 0x0]);
-    let b = black_box([
-        0xffffffffffffffffffffffffffffff,
-        0xffffffffffffffffffffffffffffff,
-        0xffffffffffffffffffffffffffffff,
-    ]);
-    assert(eq(&params, &a, &b) == false);
-    assert(eq(&params, &b, &a) == false);
+    let b = black_box([LIMB_MAX, LIMB_MAX, LIMB_MAX]);
+    assert(!eq(&params, &a, &b));
+    assert(!eq(&params, &b, &a));
     let a = black_box([0x10, 0x0, 0x800000000000000000000000000000]);
     let b = black_box([0x11, 0x0, 0x800000000000000000000000000000]);
-    assert(eq(&params, &a, &b) == false);
-    assert(eq(&params, &b, &a) == false);
-    let a = black_box(
-        [0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x0],
-    );
+    assert(!eq(&params, &a, &b));
+    assert(!eq(&params, &b, &a));
+    let a = black_box([LIMB_MAX, LIMB_MAX, 0x0]);
     let b = black_box([0x0, 0x0, 0x1]);
-    assert(eq(&params, &a, &b) == false);
-    assert(eq(&params, &b, &a) == false);
+    assert(!eq(&params, &a, &b));
+    assert(!eq(&params, &b, &a));
 }
 
 #[test]
 fn test_eq_wider_lazy_alias() {
-    let a = black_box(
-        [0x816a916871ca8d3c208c16d87cfd46, 0x4e72e131a029b85045b68181585d97, 0x3064],
-    );
+    let a = black_box(BN254_MODULUS_MINUS_ONE);
     let b = black_box(
         [0x2d522d0e3951a7841182db0f9fa8d, 0x9ce5c263405370a08b6d0302b0bb2f, 0x60c8],
     );
@@ -278,55 +250,50 @@ fn test_eq_wider_lazy_alias() {
 
 #[test]
 fn test_eq_wider_multiple_aliases() {
-    let params = crate::params::BigNumParams::<3, 241> {
-        has_multiplicative_inverse: false,
-        modulus: [0x11, 0x0, 0x1],
-        double_modulus: [0; 3],
-        redc_param: [0; 3],
-    };
-    let a = black_box(
-        [0xffffffffffffffffffffffffffffc4, 0xffffffffffffffffffffffffffffff, 0x0],
-    );
-    let b = black_box(
-        [0xffffffffffffffffffffffffffffd5, 0xffffffffffffffffffffffffffffff, 0x1],
-    );
+    let params = unchecked_params::<3, 241>([0x11, 0x0, 0x1]);
+    let a = black_box([0xffffffffffffffffffffffffffffc4, LIMB_MAX, 0x0]);
+    let b = black_box([0xffffffffffffffffffffffffffffd5, LIMB_MAX, 0x1]);
     assert(eq(&params, &a, &b));
     assert(eq(&params, &b, &a));
-    let a = black_box(
-        [0xffffffffffffffffffffffffffffc4, 0xffffffffffffffffffffffffffffff, 0x0],
-    );
-    let b = black_box(
-        [0xffffffffffffffffffffffffffffe6, 0xffffffffffffffffffffffffffffff, 0x2],
-    );
+    let a = black_box([0xffffffffffffffffffffffffffffc4, LIMB_MAX, 0x0]);
+    let b = black_box([0xffffffffffffffffffffffffffffe6, LIMB_MAX, 0x2]);
     assert(eq(&params, &a, &b));
     assert(eq(&params, &b, &a));
-    let a = black_box(
-        [0xffffffffffffffffffffffffffffc4, 0xffffffffffffffffffffffffffffff, 0x0],
-    );
-    let b = black_box(
-        [0xfffffffffffffffffffffffffffff7, 0xffffffffffffffffffffffffffffff, 0x3],
-    );
+    let a = black_box([0xffffffffffffffffffffffffffffc4, LIMB_MAX, 0x0]);
+    let b = black_box([0xfffffffffffffffffffffffffffff7, LIMB_MAX, 0x3]);
     assert(eq(&params, &a, &b));
     assert(eq(&params, &b, &a));
     assert(
         !eq(
             &params,
             &black_box([0x0, 0x0, 0x0]),
-            &black_box(
-                [0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x3],
-            ),
+            &black_box([LIMB_MAX, LIMB_MAX, 0x3]),
         ),
     );
 }
 
-#[test(should_fail)]
+#[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_eq_short_runtime_modulus_rejects() {
     let mut params = BN254_Fq_PARAMS;
     params.modulus = black_box([1u128, 0, 1]);
     assert(eq(&params, &black_box([0; 3]), &black_box([0; 3])));
 }
-#[test(should_fail)]
+
+#[test(should_fail_with = "call to assert_max_bit_size")]
+unconstrained fn test_eq_short_runtime_modulus_rejects_unconstrained() {
+    let mut params = BN254_Fq_PARAMS;
+    params.modulus = black_box([1u128, 0, 1]);
+    assert(eq(&params, &black_box([0; 3]), &black_box([0; 3])));
+}
+#[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_eq_oversized_runtime_modulus_limb_rejects() {
+    let mut params = BN254_Fq_PARAMS;
+    params.modulus[0] = black_box(0x1000000000000000000000000000000);
+    assert(eq(&params, &black_box([0; 3]), &black_box([0; 3])));
+}
+
+#[test(should_fail_with = "call to assert_max_bit_size")]
+unconstrained fn test_eq_oversized_runtime_modulus_limb_rejects_unconstrained() {
     let mut params = BN254_Fq_PARAMS;
     params.modulus[0] = black_box(0x1000000000000000000000000000000);
     assert(eq(&params, &black_box([0; 3]), &black_box([0; 3])));
@@ -334,12 +301,7 @@ fn test_eq_oversized_runtime_modulus_limb_rejects() {
 
 // A normalized power-of-two modulus isolates equality from inversion or primality.
 fn wide_alias_controls<let N: u32, let Bits: u32>(modulus: [u128; N]) {
-    let params = crate::params::BigNumParams::<N, Bits> {
-        has_multiplicative_inverse: false,
-        modulus: black_box(modulus),
-        double_modulus: [0; N],
-        redc_param: [0; N],
-    };
+    let params = unchecked_params::<N, Bits>(black_box(modulus));
     let zero = black_box([0; N]);
     let mut one = [0; N];
     one[0] = 1;
@@ -378,28 +340,39 @@ fn test_eq_seven_limb_aliases() {
 }
 
 #[test]
+unconstrained fn test_eq_unconstrained_aliases() {
+    wide_alias_controls::<1, 8>([128]);
+    wide_alias_controls::<4, 361>([0, 0, 0, 1]);
+}
+
+#[test]
+unconstrained fn test_eq_unconstrained_lazy_alias() {
+    let one = BN254_Fq::from_limbs([0x1, 0x0, 0x0]);
+    let zero = BN254_Fq::zero();
+    let lazy_one = BN254_Fq::from_limbs(BN254_MODULUS_PLUS_ONE);
+    assert_eq(one, lazy_one);
+    assert(zero != lazy_one);
+    assert_eq(zero, BN254_Fq::from_limbs(BN254_MODULUS));
+}
+
+#[test]
 fn test_eq_generic_native_field_alias() {
-    let alias = crate::BLS12_381_Fq::from_limbs([
-        0x33e84879b9709143e1f593f0000001,
-        0x4e72e131a029b85045b68181585d28,
-        0x3064,
+    let alias = BLS12_381_Fq::from_limbs([
+        GRUMPKIN_MODULUS[0],
+        GRUMPKIN_MODULUS[1],
+        GRUMPKIN_MODULUS[2],
         0,
     ]);
     alias.validate_in_field();
-    let zero = crate::BLS12_381_Fq::zero();
+    let zero = BLS12_381_Fq::zero();
     assert(black_box(alias) != black_box(zero));
     assert(black_box(zero) != black_box(alias));
 }
 
 #[test]
 fn test_eq_generic_full_top_carry() {
-    let radix = crate::constants::TWO_POW_120;
-    let params = crate::params::BigNumParams::<2, 240> {
-        has_multiplicative_inverse: false,
-        modulus: black_box([radix - 1; 2]),
-        double_modulus: [0; 2],
-        redc_param: [0; 2],
-    };
+    let radix = TWO_POW_120;
+    let params = unchecked_params::<2, 240>(black_box([radix - 1; 2]));
     let alias = black_box([radix - 2, 2 * radix - 1]);
     let neighbor = black_box([radix - 1, 2 * radix - 1]);
     let zero = black_box([0; 2]);
@@ -408,19 +381,20 @@ fn test_eq_generic_full_top_carry() {
     assert(!eq(&params, &neighbor, &zero));
     assert(!eq(&params, &zero, &neighbor));
 }
-#[test(should_fail)]
+#[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_eq_generic_bad_modulus() {
-    let params = crate::params::BigNumParams::<4, 381> {
-        has_multiplicative_inverse: false,
-        modulus: black_box([0, 0, 0, 1]),
-        double_modulus: [0; 4],
-        redc_param: [0; 4],
-    };
+    let params = unchecked_params::<4, 381>(black_box([0, 0, 0, 1]));
     assert(!eq(&params, &black_box([1, 0, 0, 0]), &black_box([0; 4])));
 }
-#[test(should_fail)]
+
+#[test(should_fail_with = "call to assert_max_bit_size")]
+unconstrained fn test_eq_generic_bad_modulus_unconstrained() {
+    let params = unchecked_params::<4, 381>(black_box([0, 0, 0, 1]));
+    assert(!eq(&params, &black_box([1, 0, 0, 0]), &black_box([0; 4])));
+}
+#[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_eq_generic_bad_low_limb() {
-    let params = crate::fields::bls12_381Fq::BLS12_381_Fq_PARAMS;
+    let params = BLS12_381_Fq_PARAMS;
     assert(
         !eq(
             &params,
@@ -429,9 +403,21 @@ fn test_eq_generic_bad_low_limb() {
         ),
     );
 }
-#[test(should_fail)]
+
+#[test(should_fail_with = "call to assert_max_bit_size")]
+unconstrained fn test_eq_generic_bad_low_limb_unconstrained() {
+    let params = BLS12_381_Fq_PARAMS;
+    assert(
+        !eq(
+            &params,
+            &black_box([1u128 << 120, 0, 0, 0]),
+            &black_box([0; 4]),
+        ),
+    );
+}
+#[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_eq_generic_bad_top_limb() {
-    let params = crate::fields::bls12_381Fq::BLS12_381_Fq_PARAMS;
+    let params = BLS12_381_Fq_PARAMS;
     assert(
         !eq(
             &params,
@@ -439,4 +425,53 @@ fn test_eq_generic_bad_top_limb() {
             &black_box([0; 4]),
         ),
     );
+}
+
+#[test(should_fail_with = "call to assert_max_bit_size")]
+unconstrained fn test_eq_generic_bad_top_limb_unconstrained() {
+    let params = BLS12_381_Fq_PARAMS;
+    assert(
+        !eq(
+            &params,
+            &black_box([0, 0, 0, 1u128 << 22]),
+            &black_box([0; 4]),
+        ),
+    );
+}
+
+/// Masks arbitrary limbs into the BN254 Fq `eq` operand range (`< 2^255`).
+fn to_bn254_eq_operand(limbs: [u128; 3]) -> [u128; 3] {
+    [limbs[0] & LIMB_MAX, limbs[1] & LIMB_MAX, limbs[2] & 0x7fff]
+}
+
+/// Subtracts the modulus once if `val >= MOD`, giving a second representative of `val`.
+unconstrained fn __bn254_subtract_modulus_once(val: [u128; 3]) -> [u128; 3] {
+    if __gte(&val, &BN254_MODULUS) {
+        __helper_sub(&val, &BN254_MODULUS)
+    } else {
+        val
+    }
+}
+
+/// Runs `eq` through the unconstrained fast path.
+unconstrained fn __eq_fast_path(lhs: [u128; 3], rhs: [u128; 3]) -> bool {
+    eq(&BN254_Fq_PARAMS, &lhs, &rhs)
+}
+
+#[test]
+fn test_eq_fast_path_matches_constrained(a: [u128; 3], b: [u128; 3]) {
+    let a = to_bn254_eq_operand(a);
+    let b = to_bn254_eq_operand(b);
+    // Safety: only used to build test inputs.
+    let a_alias = unsafe { __bn254_subtract_modulus_once(a) };
+    assert_fast_path_matches(a, b);
+    assert_fast_path_matches(b, a);
+    assert_fast_path_matches(a, a_alias);
+    assert_fast_path_matches(a_alias, a);
+}
+
+fn assert_fast_path_matches(lhs: [u128; 3], rhs: [u128; 3]) {
+    // Safety: the fast path result is compared against the constrained result.
+    let fast = unsafe { __eq_fast_path(lhs, rhs) };
+    assert_eq(fast, eq(&BN254_Fq_PARAMS, &lhs, &rhs));
 }

@@ -5,7 +5,7 @@ use crate::fns::{
     unconstrained_helpers::{
         __from_field, compute_add_flags, compute_borrow_flags, compute_gte_flags, compute_sub_flags,
     },
-    unconstrained_ops::{__add, __div, __eq_hints, __mul, __neg, __sqr, __sub, __udiv_mod},
+    unconstrained_ops::{__add, __div, __eq_hints, __eq_mod, __mul, __neg, __sqr, __sub, __udiv_mod},
 };
 
 use crate::params::BigNumParams;
@@ -276,11 +276,9 @@ pub fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(
 
 // ------------------------------ COMPARISON FUNCTIONS ------------------------------
 
-/// Validate lhs != rhs modulo the normalized BigNum modulus.
-/// Asserted complement of the exact equality flag: see `eq` for the operand
-/// envelope (value < 2^(MOD_BITS+1), permitted lazy aliases included) and
-/// the in-circuit modulus and hint checks. No native-field packing shortcut
-/// or subtraction hint is used.
+/// Validate that `lhs != rhs (mod MOD)`
+///
+/// Asserts `!eq(params, lhs, rhs)`, so it accepts and rejects the same inputs as `eq`.
 pub fn assert_is_not_equal<let N: u32, let MOD_BITS: u32>(
     params: &BigNumParams<N, MOD_BITS>,
     lhs: &[u128; N],
@@ -289,70 +287,109 @@ pub fn assert_is_not_equal<let N: u32, let MOD_BITS: u32>(
     assert(!eq::<N, MOD_BITS>(params, lhs, rhs), "assert_is_not_equal fail");
 }
 
-/// Compute modular equality under normalized BigNum parameters.
+/// Compute whether `lhs == rhs (mod MOD)`
 ///
-/// Exact over the operand envelope `value < 2^(MOD_BITS+1)` for every
-/// supported layout (N >= 1, 1 <= TOP_BITS <= 120): lower limbs are 120-bit
-/// and the top limb may carry one bit beyond TOP_BITS, which covers canonical
-/// values and the permitted lazy aliases (RuntimeBigNum equality included).
-/// The modulus premise (normalized, exactly MOD_BITS significant bits) is
-/// checked in-circuit, including for runtime parameters constructed without
-/// `BigNumParams::new`.
+/// Returns the exact modular equality flag for operands below `2^(MOD_BITS+1)`, so a
+/// non-canonical value compares equal to its canonical residue (e.g. `MOD + 1` and `1`).
+/// Fails if the inputs do not pass `validate_eq_inputs`.
 ///
-/// The prover supplies `r` (the canonical residue of lhs - rhs mod MOD),
-/// a shifted quotient `k = q_shift - 4` and biased chain carries, and the
-/// circuit asserts the integer identity `lhs - rhs = k*MOD + r`. The flag is
-/// then decided from `r` alone; see `eq_with_hints` for the exactness
-/// argument. No native-field packing shortcut or subtraction hint is used.
+/// ## Constrained path
+/// The prover supplies the canonical residue `r` of `lhs - rhs`, a quotient
+/// `k = q_shift - 4` and the carries of the limb-wise subtraction. `eq_with_hints`
+/// constrains `lhs - rhs = k * MOD + r` over the integers, and the flag is
+/// `r == 0 || r == MOD`. See `eq_with_hints` for soundness and completeness.
+///
+/// ## Unconstrained path
+/// When unconstrained, `eq` skips the hints and compares the reduced operands directly
+/// (`__eq_mod`). Inputs are validated before branching, so both paths return the same
+/// flag and fail on the same inputs with the same messages.
 pub fn eq<let N: u32, let MOD_BITS: u32>(
     params: &BigNumParams<N, MOD_BITS>,
     lhs: &[u128; N],
     rhs: &[u128; N],
 ) -> bool {
-    // Safety: all three hints are range-checked and bound to the integer
-    // identity lhs - rhs = (q_shift - 4)*MOD + r inside `eq_with_hints`.
-    let (q_shift, r, carry_shift) = unsafe { __eq_hints::<N>(&params.modulus, lhs, rhs) };
-    eq_with_hints::<N, MOD_BITS>(params, lhs, rhs, q_shift, &r, &carry_shift)
+    // Both paths reject the same inputs, before any hint code runs.
+    validate_eq_inputs::<N, MOD_BITS>(params, lhs, rhs);
+    if std::runtime::is_unconstrained() {
+        // Safety: inputs are validated above, so `__eq_mod` returns the same
+        // flag the constrained path proves.
+        unsafe {
+            __eq_mod(&params.modulus, lhs, rhs)
+        }
+    } else {
+        // Safety: all three hints are range-checked and bound to the integer
+        // identity lhs - rhs = (q_shift - 4)*MOD + r inside `eq_with_hints`.
+        let (q_shift, r, carry_shift) = unsafe { __eq_hints::<N>(&params.modulus, lhs, rhs) };
+        eq_with_hints::<N, MOD_BITS>(params, lhs, rhs, q_shift, &r, &carry_shift)
+    }
 }
 
-/// Constrained core of `eq`, split out so adversarial hints can be tested.
+/// Validate the inputs accepted by `eq`
 ///
-/// Soundness: each per-limb field equation has every term below 2^124 << p
-/// (operand limbs and r limbs are range-checked, |k| <= 4 after the 3-bit
-/// check on q_shift, |carry| <= 8 after the 4-bit checks), so it holds over
-/// the integers; telescoping the chain gives lhs - rhs = k*MOD + r over the
-/// integers, hence r == lhs - rhs (mod MOD). The modulus premise gives
-/// MOD >= 2^(MOD_BITS-1), so r < 2^MOD_BITS <= 2*MOD and the only values of
-/// r congruent to 0 are 0 and MOD: the returned flag is forced to
-/// `lhs == rhs (mod MOD)` for every witness satisfying the constraints.
+/// Checks that:
+///     - `MOD_BITS` puts the top bit of the modulus in the top limb (at compile time),
+///     - the modulus is exactly `MOD_BITS` bits long (see `validate_modulus`), since
+///       runtime parameters may be constructed without `BigNumParams::new`, and
+///     - each operand is below `2^(MOD_BITS+1)`, with 120-bit lower limbs.
 ///
-/// Completeness: an honest prover always holds the canonical residue r < MOD,
-/// a quotient k in -4..=3 (|lhs - rhs| < 2^(MOD_BITS+1) <= 4*MOD and
-/// 0 <= r < MOD) and chain carries of magnitude at most 4, so every
-/// assertion passes for equal and unequal operands alike.
+/// Values produced by this library are range-checked to `MOD_BITS` bits; the extra bit
+/// also accepts larger limb arrays passed in directly by the caller.
+///
+/// From constrained code these are constraints; when unconstrained they are assertions.
+fn validate_eq_inputs<let N: u32, let MOD_BITS: u32>(
+    params: &BigNumParams<N, MOD_BITS>,
+    lhs: &[u128; N],
+    rhs: &[u128; N],
+) {
+    std::static_assert(
+        (MOD_BITS > 120 * (N - 1)) & (MOD_BITS <= 120 * N),
+        "MOD_BITS must place the top bit in the top limb",
+    );
+    validate_modulus::<N, MOD_BITS>(&params.modulus);
+    validate_in_range::<N, MOD_BITS + 1>(lhs);
+    validate_in_range::<N, MOD_BITS + 1>(rhs);
+}
+
+/// Constrained core of `eq`, split out so adversarial hints can be tested
+///
+/// ## Assumptions
+/// `validate_eq_inputs` has been called on `params`, `lhs` and `rhs`, so:
+///     - `2^(MOD_BITS - 1) <= MOD < 2^MOD_BITS`, and
+///     - `lhs, rhs < 2^(MOD_BITS+1)`, with 120-bit lower limbs.
+///
+/// `eq` guarantees this; any other caller must too.
+///
+/// ## Soundness
+/// This function range-checks the hints:
+///     - `r < 2^MOD_BITS`, with 120-bit lower limbs,
+///     - `q_shift < 2^3`, so `k = q_shift - 4` is in `-4..=3`, and
+///     - `carry_shift[i] < 2^4`, so `c[i] = carry_shift[i] - 8` is in `-8..=7`,
+///
+/// and constrains, with `c[-1] = 0`:
+///
+///     lhs[i]     - rhs[i]     + c[i - 1] - k * MOD[i]     - r[i]     = c[i] * 2^{120},   i = 0..N-2
+///     lhs[N - 1] - rhs[N - 1] + c[N - 2] - k * MOD[N - 1] - r[N - 1] = 0
+///
+/// Under the assumptions every term is below `2^124` in absolute value, far below the
+/// circuit field modulus, so each equation holds over the integers. Summing them with
+/// weights `2^{120 * i}` gives `lhs - rhs = k * MOD + r` over the integers, hence
+/// `r == lhs - rhs (mod MOD)`. Since `r < 2^MOD_BITS <= 2 * MOD`, the only values of `r`
+/// congruent to zero are `0` and `MOD`, so the returned flag `is_zero(r)` equals
+/// `lhs == rhs (mod MOD)` for every satisfying witness.
+///
+/// ## Completeness
+/// The honest hints from `__eq_hints` have `0 <= r < MOD`. Since
+/// `|lhs - rhs| < 2^(MOD_BITS+1) <= 4 * MOD`, the quotient `k` is in `-4..=3`, and the
+/// carries have magnitude at most 4, so every check passes for equal and unequal operands.
 pub(crate) fn eq_with_hints<let N: u32, let MOD_BITS: u32>(
     params: &BigNumParams<N, MOD_BITS>,
     lhs: &[u128; N],
     rhs: &[u128; N],
     q_shift: u128,
     r: &[u128; N],
-    carry_shift: &[u128; N],
+    carry_shift: &[u128; N - 1],
 ) -> bool {
-    let supported = (N > 0) & (MOD_BITS > 120 * (N - 1)) & (MOD_BITS <= 120 * N);
-    assert(supported, "unsupported comparison geometry");
-    // Runtime parameters may be constructed directly; check the proof premise.
-    validate_in_range::<N, MOD_BITS>(&params.modulus);
-    let leading_bit: Field = (1u128 << ((MOD_BITS - 120 * (N - 1) - 1) as u128)) as Field;
-    ((params.modulus[N - 1] as Field) - leading_bit)
-        .assert_max_bit_size::<MOD_BITS - 120 * (N - 1) - 1>();
-    // Operand envelope: preserve the lazy aliases, value < 2^(MOD_BITS+1).
-    for i in 0..N - 1 {
-        (lhs[i] as Field).assert_max_bit_size::<120>();
-        (rhs[i] as Field).assert_max_bit_size::<120>();
-    }
-    (lhs[N - 1] as Field).assert_max_bit_size::<MOD_BITS - 120 * (N - 1) + 1>();
-    (rhs[N - 1] as Field).assert_max_bit_size::<MOD_BITS - 120 * (N - 1) + 1>();
-    // Hint envelope: r < 2^MOD_BITS with 120-bit limbs, k = q_shift - 4 in -4..=3.
+    // Hint ranges: r < 2^MOD_BITS with 120-bit lower limbs, k = q_shift - 4 in -4..=3.
     validate_in_range::<N, MOD_BITS>(r);
     (q_shift as Field).assert_max_bit_size::<3>();
     let k: Field = (q_shift as Field) - 4;
@@ -360,23 +397,37 @@ pub(crate) fn eq_with_hints<let N: u32, let MOD_BITS: u32>(
     let mut carry: Field = 0;
     for i in 0..N - 1 {
         (carry_shift[i] as Field).assert_max_bit_size::<4>();
-        let limb = (lhs[i] as Field) - (rhs[i] as Field) + carry
-            - k * (params.modulus[i] as Field)
-            - (r[i] as Field);
+        let limb = eq_limb_remainder(lhs[i], rhs[i], params.modulus[i], r[i], k, carry);
         let carry_out = (carry_shift[i] as Field) - 8;
         assert(limb == carry_out * big, "eq decomposition fail");
         carry = carry_out;
     }
-    let top = (lhs[N - 1] as Field) - (rhs[N - 1] as Field) + carry
-        - k * (params.modulus[N - 1] as Field)
-        - (r[N - 1] as Field);
+    let top = eq_limb_remainder(
+        lhs[N - 1],
+        rhs[N - 1],
+        params.modulus[N - 1],
+        r[N - 1],
+        k,
+        carry,
+    );
     assert(top == 0, "eq decomposition fail");
     // r is congruent to lhs - rhs and below 2*MOD: equal iff r is 0 or MOD.
-    let mut r_is_modulus: bool = true;
-    for i in 0..N {
-        r_is_modulus = r_is_modulus & (r[i] == params.modulus[i]);
-    }
-    is_zero_integer(r) | r_is_modulus
+    is_zero::<N, MOD_BITS>(params, r)
+}
+
+/// One limb of `lhs - rhs - k * MOD - r`, plus the carry in from the limb below.
+///
+/// `eq_with_hints` constrains this to `carry_out * 2^120` for each lower limb and to
+/// zero for the top limb; `__eq_hints` evaluates it to compute the honest carries.
+pub(crate) fn eq_limb_remainder(
+    lhs: u128,
+    rhs: u128,
+    modulus: u128,
+    r: u128,
+    k: Field,
+    carry_in: Field,
+) -> Field {
+    (lhs as Field) - (rhs as Field) + carry_in - k * (modulus as Field) - (r as Field)
 }
 
 /// Validate that `val` is not equal to zero when interpreted as an integer.
@@ -440,12 +491,13 @@ pub fn assert_is_not_zero<let N: u32, let MOD_BITS: u32>(
 /// Check whether a `BigNum` value is zero modulo `MOD`.
 ///
 /// This treats both the all-zero limb vector and `params.modulus` as
-/// representing zero. It assumes that all valid `BigNum` values are
-/// range-constrained so that no other representatives of `0 (mod MOD)`
-/// can appear.
+/// representing zero. It assumes `val < 2^MOD_BITS` (not checked here): since
+/// `MOD >= 2^(MOD_BITS - 1)`, `0` and `MOD` are then the only representatives
+/// of `0 (mod MOD)`.
 ///
 /// ## Note
-/// This is cheaper than calling `eq(val, [0; N])`
+/// This is cheaper than calling `eq(val, [0; N])`, but unlike `eq` it does not
+/// accept operands in `[2^MOD_BITS, 2^(MOD_BITS+1))`: e.g. `is_zero(2 * MOD)` is `false`.
 pub fn is_zero<let N: u32, let MOD_BITS: u32>(
     params: &BigNumParams<N, MOD_BITS>,
     val: &[u128; N],
@@ -476,6 +528,21 @@ pub fn validate_in_range<let N: u32, let MOD_BITS: u32>(limbs: &[u128; N]) {
     }
 
     (limbs[N - 1] as Field).assert_max_bit_size::<MOD_BITS - ((N - 1) * 120)>();
+}
+
+/// Validate that `modulus` is exactly `MOD_BITS` bits long
+///
+/// Constrains:
+///     - each limb to be in range (see `validate_in_range`), and
+///     - the top limb to have its highest bit set, i.e.
+///       `0 <= top_limb - 2^(TOP_LIMB_BITS - 1) < 2^(TOP_LIMB_BITS - 1)`
+pub(crate) fn validate_modulus<let N: u32, let MOD_BITS: u32>(modulus: &[u128; N]) {
+    validate_in_range::<N, MOD_BITS>(modulus);
+
+    let top_limb: Field = modulus[N - 1] as Field;
+    let top_limb_bits: u128 = (MOD_BITS - (N - 1) * 120) as u128;
+    let min_top_limb: Field = (1u128 << (top_limb_bits - 1)) as Field;
+    (top_limb - min_top_limb).assert_max_bit_size::<MOD_BITS - (N - 1) * 120 - 1>();
 }
 
 /// Validate quotient produced from `evaluate_quadratic_expression` is well-formed
