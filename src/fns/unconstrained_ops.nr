@@ -38,6 +38,39 @@ pub unconstrained fn __is_zero<let N: u32>(limbs: &[u128; N]) -> bool {
     *limbs == [0; N]
 }
 
+/// Modular equality of two `eq` operands (unconstrained)
+///
+/// Accepts the same operands as the constrained `eq` (values below `2^(MOD_BITS+1)`),
+/// so lazy aliases such as `MOD + 1` and `1` compare equal.
+pub(crate) unconstrained fn __eq_mod<let N: u32>(
+    modulus: &[u128; N],
+    lhs: &[u128; N],
+    rhs: &[u128; N],
+) -> bool {
+    __reduce_eq_operand(modulus, lhs).0 == __reduce_eq_operand(modulus, rhs).0
+}
+
+/// Reduce an `eq` operand to its canonical residue (unconstrained)
+///
+/// Operands are below `2^(MOD_BITS+1) <= 4*MOD`, so at most 3 subtractions are needed.
+/// Returns `(residue, quotient)` with `val = quotient * MOD + residue`.
+/// `__gte` is value-correct here: lower limbs are normalised 120-bit limbs and only
+/// the top limb may exceed `TOP_LIMB_BITS`.
+unconstrained fn __reduce_eq_operand<let N: u32>(
+    modulus: &[u128; N],
+    val: &[u128; N],
+) -> ([u128; N], u128) {
+    let mut residue: [u128; N] = *val;
+    let mut quotient: u128 = 0;
+    for _ in 0..3 {
+        if __gte(&residue, modulus) {
+            residue = __helper_sub(&residue, modulus);
+            quotient += 1;
+        }
+    }
+    (residue, quotient)
+}
+
 /// Hints for the exact modular equality decomposition (unconstrained).
 ///
 /// For operands below `2^(MOD_BITS+1) <= 4*MOD` (lower limbs below `2^120`,
@@ -51,23 +84,8 @@ pub(crate) unconstrained fn __eq_hints<let N: u32>(
     lhs: &[u128; N],
     rhs: &[u128; N],
 ) -> (u128, [u128; N], [u128; N - 1]) {
-    // Reduce both operands; values are below 4*MOD so at most 3 subtractions.
-    // `__gte` stays value-correct here: lower limbs are normalised 120-bit
-    // limbs and only the top limbs may exceed 120 bits.
-    let mut ra: [u128; N] = *lhs;
-    let mut qa: u128 = 0;
-    let mut rb: [u128; N] = *rhs;
-    let mut qb: u128 = 0;
-    for _i in 0..3 {
-        if __gte(&ra, modulus) {
-            ra = __helper_sub(&ra, modulus);
-            qa += 1;
-        }
-        if __gte(&rb, modulus) {
-            rb = __helper_sub(&rb, modulus);
-            qb += 1;
-        }
-    }
+    let (ra, qa) = __reduce_eq_operand(modulus, lhs);
+    let (rb, qb) = __reduce_eq_operand(modulus, rhs);
     // Canonical residue of lhs - rhs; every intermediate stays below MOD.
     let mut borrow: u128 = 0;
     let r: [u128; N] = if __gte(&ra, &rb) {

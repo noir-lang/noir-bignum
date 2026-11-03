@@ -5,7 +5,7 @@ use crate::fns::{
     unconstrained_helpers::{
         __from_field, compute_add_flags, compute_borrow_flags, compute_gte_flags, compute_sub_flags,
     },
-    unconstrained_ops::{__add, __div, __eq_hints, __mul, __neg, __sqr, __sub, __udiv_mod},
+    unconstrained_ops::{__add, __div, __eq_hints, __eq_mod, __mul, __neg, __sqr, __sub, __udiv_mod},
 };
 
 use crate::params::BigNumParams;
@@ -309,13 +309,46 @@ pub fn eq<let N: u32, let MOD_BITS: u32>(
     lhs: &[u128; N],
     rhs: &[u128; N],
 ) -> bool {
-    // Safety: all three hints are range-checked and bound to the integer
-    // identity lhs - rhs = (q_shift - 4)*MOD + r inside `eq_with_hints`.
-    let (q_shift, r, carry_shift) = unsafe { __eq_hints::<N>(&params.modulus, lhs, rhs) };
-    eq_with_hints::<N, MOD_BITS>(params, lhs, rhs, q_shift, &r, &carry_shift)
+    // Both paths reject the same inputs, before any hint code runs.
+    validate_eq_inputs::<N, MOD_BITS>(params, lhs, rhs);
+    if std::runtime::is_unconstrained() {
+        // Safety: inputs are validated above, so `__eq_mod` returns the same
+        // flag the constrained path proves.
+        unsafe {
+            __eq_mod(&params.modulus, lhs, rhs)
+        }
+    } else {
+        // Safety: all three hints are range-checked and bound to the integer
+        // identity lhs - rhs = (q_shift - 4)*MOD + r inside `eq_with_hints`.
+        let (q_shift, r, carry_shift) = unsafe { __eq_hints::<N>(&params.modulus, lhs, rhs) };
+        eq_with_hints::<N, MOD_BITS>(params, lhs, rhs, q_shift, &r, &carry_shift)
+    }
+}
+
+/// Validate the inputs accepted by `eq`
+///
+/// Constrains:
+///     - the modulus to be exactly `MOD_BITS` bits long (runtime parameters may be
+///       constructed without `BigNumParams::new`), and
+///     - each operand to be below `2^(MOD_BITS+1)` with 120-bit lower limbs, which
+///       admits the lazy aliases produced by other operations.
+fn validate_eq_inputs<let N: u32, let MOD_BITS: u32>(
+    params: &BigNumParams<N, MOD_BITS>,
+    lhs: &[u128; N],
+    rhs: &[u128; N],
+) {
+    std::static_assert(
+        (MOD_BITS > 120 * (N - 1)) & (MOD_BITS <= 120 * N),
+        "MOD_BITS must place the top bit in the top limb",
+    );
+    validate_modulus::<N, MOD_BITS>(&params.modulus);
+    validate_in_range::<N, MOD_BITS + 1>(lhs);
+    validate_in_range::<N, MOD_BITS + 1>(rhs);
 }
 
 /// Constrained core of `eq`, split out so adversarial hints can be tested.
+///
+/// Assumes `validate_eq_inputs` has been called on `params`, `lhs` and `rhs`.
 ///
 /// Soundness: each per-limb field equation has every term below 2^124 << p
 /// (operand limbs and r limbs are range-checked, |k| <= 4 after the 3-bit
@@ -338,15 +371,6 @@ pub(crate) fn eq_with_hints<let N: u32, let MOD_BITS: u32>(
     r: &[u128; N],
     carry_shift: &[u128; N - 1],
 ) -> bool {
-    std::static_assert(
-        (MOD_BITS > 120 * (N - 1)) & (MOD_BITS <= 120 * N),
-        "MOD_BITS must place the top bit in the top limb",
-    );
-    // Runtime parameters may be constructed without `BigNumParams::new`.
-    validate_modulus::<N, MOD_BITS>(&params.modulus);
-    // Operand envelope: preserve the lazy aliases, value < 2^(MOD_BITS+1).
-    validate_in_range::<N, MOD_BITS + 1>(lhs);
-    validate_in_range::<N, MOD_BITS + 1>(rhs);
     // Hint envelope: r < 2^MOD_BITS with 120-bit limbs, k = q_shift - 4 in -4..=3.
     validate_in_range::<N, MOD_BITS>(r);
     (q_shift as Field).assert_max_bit_size::<3>();

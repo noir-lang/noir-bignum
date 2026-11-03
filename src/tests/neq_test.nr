@@ -46,8 +46,22 @@ fn test_neq_same_rejects() {
         &black_box(BN254_Fq::from_limbs([0x1, 0x0, 0x0])),
     );
 }
+
+#[test(should_fail_with = "assert_is_not_equal fail")]
+unconstrained fn test_neq_same_rejects_unconstrained() {
+    black_box(BN254_Fq::from_limbs([0x1, 0x0, 0x0])).assert_is_not_equal(
+        &black_box(BN254_Fq::from_limbs([0x1, 0x0, 0x0])),
+    );
+}
 #[test(should_fail_with = "assert_is_not_equal fail")]
 fn test_neq_modulus_alias_rejects() {
+    black_box(BN254_Fq::from_limbs([0x0, 0x0, 0x0])).assert_is_not_equal(
+        &black_box(BN254_Fq::from_limbs(BN254_MODULUS)),
+    );
+}
+
+#[test(should_fail_with = "assert_is_not_equal fail")]
+unconstrained fn test_neq_modulus_alias_rejects_unconstrained() {
     black_box(BN254_Fq::from_limbs([0x0, 0x0, 0x0])).assert_is_not_equal(
         &black_box(BN254_Fq::from_limbs(BN254_MODULUS)),
     );
@@ -59,8 +73,24 @@ fn test_neq_lazy_alias_rejects() {
     );
 }
 
+#[test(should_fail_with = "assert_is_not_equal fail")]
+unconstrained fn test_neq_lazy_alias_rejects_unconstrained() {
+    black_box(BN254_Fq::from_limbs([0x1, 0x0, 0x0])).assert_is_not_equal(
+        &black_box(BN254_Fq::from_limbs(BN254_MODULUS_PLUS_ONE)),
+    );
+}
+
 #[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_neq_oversized_top_rejects() {
+    assert_is_not_equal(
+        &BN254_Fq_PARAMS,
+        &black_box([0u128, 0, 0x8000]),
+        &black_box([0; 3]),
+    );
+}
+
+#[test(should_fail_with = "call to assert_max_bit_size")]
+unconstrained fn test_neq_oversized_top_rejects_unconstrained() {
     assert_is_not_equal(
         &BN254_Fq_PARAMS,
         &black_box([0u128, 0, 0x8000]),
@@ -87,8 +117,20 @@ fn test_neq_generic_three_modulus_alias_rejected() {
     let params = unchecked_params::<4, 361>(black_box([0, 0, 0, 1]));
     assert_is_not_equal(&params, &black_box([0; 4]), &black_box([0, 0, 0, 3]));
 }
+
+#[test(should_fail_with = "assert_is_not_equal fail")]
+unconstrained fn test_neq_generic_three_modulus_alias_rejected_unconstrained() {
+    let params = unchecked_params::<4, 361>(black_box([0, 0, 0, 1]));
+    assert_is_not_equal(&params, &black_box([0; 4]), &black_box([0, 0, 0, 3]));
+}
 #[test(should_fail_with = "assert_is_not_equal fail")]
 fn test_neq_generic_two_modulus_nonzero_rejected() {
+    let params = unchecked_params::<4, 361>(black_box([0, 0, 0, 1]));
+    assert_is_not_zero(&params, &black_box([0, 0, 0, 2]));
+}
+
+#[test(should_fail_with = "assert_is_not_equal fail")]
+unconstrained fn test_neq_generic_two_modulus_nonzero_rejected_unconstrained() {
     let params = unchecked_params::<4, 361>(black_box([0, 0, 0, 1]));
     assert_is_not_zero(&params, &black_box([0, 0, 0, 2]));
 }
