@@ -45,12 +45,12 @@ pub unconstrained fn __is_zero<let N: u32>(limbs: &[u128; N]) -> bool {
 /// such that `lhs - rhs = (q_shift - 4)*MOD + r` over the integers, where `r`
 /// is the canonical residue of `lhs - rhs` modulo `MOD` and `q_shift - 4` is
 /// in `-4..=3`. `carry_shift[i] - 8` is the signed chain carry out of limb `i`
-/// (honest magnitude at most 4); the last entry is an unused placeholder.
+/// (honest magnitude at most 4).
 pub(crate) unconstrained fn __eq_hints<let N: u32>(
     modulus: &[u128; N],
     lhs: &[u128; N],
     rhs: &[u128; N],
-) -> (u128, [u128; N], [u128; N]) {
+) -> (u128, [u128; N], [u128; N - 1]) {
     // Reduce both operands; values are below 4*MOD so at most 3 subtractions.
     // `__gte` stays value-correct here: lower limbs are normalised 120-bit
     // limbs and only the top limbs may exceed 120 bits.
@@ -82,7 +82,7 @@ pub(crate) unconstrained fn __eq_hints<let N: u32>(
     let k: Field = (q_shift as Field) - 4;
     let bias: Field = (TWO_POW_120 as Field) * 8;
     let mut carry: Field = 0;
-    let mut carry_shift: [u128; N] = [8; N];
+    let mut carry_shift: [u128; N - 1] = [0; N - 1];
     for i in 0..N - 1 {
         let limb = (lhs[i] as Field) - (rhs[i] as Field) + carry
             - k * (modulus[i] as Field)
