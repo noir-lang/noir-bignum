@@ -12,8 +12,8 @@ use std::hint::black_box;
 fn test_eq_zero() {
     let a = black_box(BN254_Fq::from_limbs([0x0, 0x0, 0x0]));
     let b = black_box(BN254_Fq::from_limbs([0x0, 0x0, 0x0]));
-    assert((a == b) == true);
-    assert((b == a) == true);
+    assert_eq(a, b);
+    assert_eq(b, a);
 }
 
 #[test]
@@ -24,8 +24,8 @@ fn test_eq_lazy_alias() {
         0x4e72e131a029b85045b68181585d97,
         0x3064,
     ]));
-    assert((a == b) == true);
-    assert((b == a) == true);
+    assert_eq(a, b);
+    assert_eq(b, a);
 }
 
 #[test]
@@ -36,8 +36,8 @@ fn test_eq_zero_modulus() {
         0x4e72e131a029b85045b68181585d97,
         0x3064,
     ]));
-    assert((a == b) == true);
-    assert((b == a) == true);
+    assert_eq(a, b);
+    assert_eq(b, a);
 }
 
 #[test]
@@ -48,8 +48,8 @@ fn test_eq_boundary() {
         0xffffffffffffffffffffffffffffff,
         0x3fff,
     ]));
-    assert((a == b) == false);
-    assert((b == a) == false);
+    assert(a != b);
+    assert(b != a);
 }
 
 #[test]
@@ -60,8 +60,8 @@ fn test_eq_lazy_distinct() {
         0x4e72e131a029b85045b68181585d97,
         0x3064,
     ]));
-    assert((a == b) == false);
-    assert((b == a) == false);
+    assert(a != b);
+    assert(b != a);
 }
 
 #[test]
@@ -72,8 +72,8 @@ fn test_eq_native_alias() {
         0x4e72e131a029b85045b68181585d28,
         0x3064,
     ]));
-    assert((a == b) == false);
-    assert((b == a) == false);
+    assert(a != b);
+    assert(b != a);
 }
 
 #[test]
@@ -82,8 +82,8 @@ fn test_eq_low_carry() {
         BN254_Fq::from_limbs([0xffffffffffffffffffffffffffffff, 0x0, 0x0]),
     );
     let b = black_box(BN254_Fq::from_limbs([0x0, 0x1, 0x0]));
-    assert((a == b) == false);
-    assert((b == a) == false);
+    assert(a != b);
+    assert(b != a);
 }
 
 #[test]
@@ -94,8 +94,8 @@ fn test_eq_canonical_max() {
         0x4e72e131a029b85045b68181585d97,
         0x3064,
     ]));
-    assert((a == b) == false);
-    assert((b == a) == false);
+    assert(a != b);
+    assert(b != a);
 }
 
 #[test]
@@ -106,8 +106,8 @@ fn test_eq_two_limb_carry() {
         0x0,
     ]));
     let b = black_box(BN254_Fq::from_limbs([0x0, 0x0, 0x1]));
-    assert((a == b) == false);
-    assert((b == a) == false);
+    assert(a != b);
+    assert(b != a);
 }
 
 #[test(should_fail)]
@@ -144,28 +144,28 @@ fn test_eq_normalized_241_bit_modulus() {
     };
     let a = black_box([0x0, 0x0, 0x0]);
     let b = black_box([0x1, 0x0, 0x1]);
-    assert(eq(&params, &a, &b) == true);
-    assert(eq(&params, &b, &a) == true);
+    assert(eq(&params, &a, &b));
+    assert(eq(&params, &b, &a));
     let a = black_box([0x1, 0x0, 0x0]);
     let b = black_box([0x2, 0x0, 0x1]);
-    assert(eq(&params, &a, &b) == true);
-    assert(eq(&params, &b, &a) == true);
+    assert(eq(&params, &a, &b));
+    assert(eq(&params, &b, &a));
     let a = black_box([0x0, 0x0, 0x0]);
     let b = black_box(
         [0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x1],
     );
-    assert(eq(&params, &a, &b) == false);
-    assert(eq(&params, &b, &a) == false);
+    assert(!eq(&params, &a, &b));
+    assert(!eq(&params, &b, &a));
     let a = black_box([0x0, 0x0, 0x1]);
     let b = black_box([0x1, 0x0, 0x1]);
-    assert(eq(&params, &a, &b) == false);
-    assert(eq(&params, &b, &a) == false);
+    assert(!eq(&params, &a, &b));
+    assert(!eq(&params, &b, &a));
     let a = black_box(
         [0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x0],
     );
     let b = black_box([0x0, 0x0, 0x1]);
-    assert(eq(&params, &a, &b) == false);
-    assert(eq(&params, &b, &a) == false);
+    assert(!eq(&params, &a, &b));
+    assert(!eq(&params, &b, &a));
 }
 
 #[test]
@@ -182,12 +182,12 @@ fn test_eq_quotient_extremes() {
     };
     let a = black_box([0x4, 0x0, 0x0]);
     let b = black_box([0x8, 0x0, 0x3]);
-    assert(eq(&params, &a, &b) == false);
-    assert(eq(&params, &b, &a) == false);
+    assert(!eq(&params, &a, &b));
+    assert(!eq(&params, &b, &a));
     // Same alias magnitude, equal values: 5 vs 3*MOD + 5 (k = -3 / +3).
     let a = black_box([0x5, 0x0, 0x0]);
-    assert(eq(&params, &a, &b) == true);
-    assert(eq(&params, &b, &a) == true);
+    assert(eq(&params, &a, &b));
+    assert(eq(&params, &b, &a));
 }
 
 #[test]
@@ -202,34 +202,34 @@ fn test_eq_normalized_256_bit_modulus() {
     let b = black_box(
         [0xffffffffffffffffffffffffffff43, 0xffffffffffffffffffffffffffffff, 0xffff],
     );
-    assert(eq(&params, &a, &b) == true);
-    assert(eq(&params, &b, &a) == true);
+    assert(eq(&params, &a, &b));
+    assert(eq(&params, &b, &a));
     let a = black_box([0x1, 0x0, 0x0]);
     let b = black_box(
         [0xffffffffffffffffffffffffffff44, 0xffffffffffffffffffffffffffffff, 0xffff],
     );
-    assert(eq(&params, &a, &b) == true);
-    assert(eq(&params, &b, &a) == true);
+    assert(eq(&params, &a, &b));
+    assert(eq(&params, &b, &a));
     let a = black_box([0x0, 0x0, 0x0]);
     let b = black_box(
         [0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0xffff],
     );
-    assert(eq(&params, &a, &b) == false);
-    assert(eq(&params, &b, &a) == false);
+    assert(!eq(&params, &a, &b));
+    assert(!eq(&params, &b, &a));
     let a = black_box(
         [0xffffffffffffffffffffffffffff42, 0xffffffffffffffffffffffffffffff, 0xffff],
     );
     let b = black_box(
         [0xffffffffffffffffffffffffffff43, 0xffffffffffffffffffffffffffffff, 0xffff],
     );
-    assert(eq(&params, &a, &b) == false);
-    assert(eq(&params, &b, &a) == false);
+    assert(!eq(&params, &a, &b));
+    assert(!eq(&params, &b, &a));
     let a = black_box(
         [0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x0],
     );
     let b = black_box([0x0, 0x0, 0x1]);
-    assert(eq(&params, &a, &b) == false);
-    assert(eq(&params, &b, &a) == false);
+    assert(!eq(&params, &a, &b));
+    assert(!eq(&params, &b, &a));
 }
 
 #[test]
@@ -242,30 +242,30 @@ fn test_eq_normalized_360_bit_modulus() {
     };
     let a = black_box([0x0, 0x0, 0x0]);
     let b = black_box([0x11, 0x0, 0x800000000000000000000000000000]);
-    assert(eq(&params, &a, &b) == true);
-    assert(eq(&params, &b, &a) == true);
+    assert(eq(&params, &a, &b));
+    assert(eq(&params, &b, &a));
     let a = black_box([0x1, 0x0, 0x0]);
     let b = black_box([0x12, 0x0, 0x800000000000000000000000000000]);
-    assert(eq(&params, &a, &b) == true);
-    assert(eq(&params, &b, &a) == true);
+    assert(eq(&params, &a, &b));
+    assert(eq(&params, &b, &a));
     let a = black_box([0x0, 0x0, 0x0]);
     let b = black_box([
         0xffffffffffffffffffffffffffffff,
         0xffffffffffffffffffffffffffffff,
         0xffffffffffffffffffffffffffffff,
     ]);
-    assert(eq(&params, &a, &b) == false);
-    assert(eq(&params, &b, &a) == false);
+    assert(!eq(&params, &a, &b));
+    assert(!eq(&params, &b, &a));
     let a = black_box([0x10, 0x0, 0x800000000000000000000000000000]);
     let b = black_box([0x11, 0x0, 0x800000000000000000000000000000]);
-    assert(eq(&params, &a, &b) == false);
-    assert(eq(&params, &b, &a) == false);
+    assert(!eq(&params, &a, &b));
+    assert(!eq(&params, &b, &a));
     let a = black_box(
         [0xffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffff, 0x0],
     );
     let b = black_box([0x0, 0x0, 0x1]);
-    assert(eq(&params, &a, &b) == false);
-    assert(eq(&params, &b, &a) == false);
+    assert(!eq(&params, &a, &b));
+    assert(!eq(&params, &b, &a));
 }
 
 #[test]
