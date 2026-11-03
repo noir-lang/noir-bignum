@@ -119,7 +119,7 @@ fn test_eq_hint_top_limb_forced_unequal_rejects() {
     );
 }
 
-#[test(should_fail)]
+#[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_eq_hint_oversized_quotient_rejects() {
     // q_shift must fit 3 bits (k in -4..=3).
     let a = black_box([0x0, 0x0, 0x0]);
@@ -133,7 +133,7 @@ fn test_eq_hint_oversized_quotient_rejects() {
     );
 }
 
-#[test(should_fail)]
+#[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_eq_hint_oversized_carry_rejects() {
     // Each carry_shift must fit 4 bits.
     let a = black_box([0x0, 0x0, 0x0]);
@@ -147,7 +147,7 @@ fn test_eq_hint_oversized_carry_rejects() {
     );
 }
 
-#[test(should_fail)]
+#[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_eq_hint_oversized_residue_rejects() {
     // Residue 2*MOD is consistent with the chain for equal operands (k = -2),
     // but exceeds 2^MOD_BITS: without the residue range check it would let a

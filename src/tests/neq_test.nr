@@ -40,26 +40,26 @@ fn test_neq_low_carry() {
     a.assert_is_not_equal(&b);
     b.assert_is_not_equal(&a);
 }
-#[test(should_fail)]
+#[test(should_fail_with = "assert_is_not_equal fail")]
 fn test_neq_same_rejects() {
     black_box(BN254_Fq::from_limbs([0x1, 0x0, 0x0])).assert_is_not_equal(
         &black_box(BN254_Fq::from_limbs([0x1, 0x0, 0x0])),
     );
 }
-#[test(should_fail)]
+#[test(should_fail_with = "assert_is_not_equal fail")]
 fn test_neq_modulus_alias_rejects() {
     black_box(BN254_Fq::from_limbs([0x0, 0x0, 0x0])).assert_is_not_equal(
         &black_box(BN254_Fq::from_limbs(BN254_MODULUS)),
     );
 }
-#[test(should_fail)]
+#[test(should_fail_with = "assert_is_not_equal fail")]
 fn test_neq_lazy_alias_rejects() {
     black_box(BN254_Fq::from_limbs([0x1, 0x0, 0x0])).assert_is_not_equal(
         &black_box(BN254_Fq::from_limbs(BN254_MODULUS_PLUS_ONE)),
     );
 }
 
-#[test(should_fail)]
+#[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_neq_oversized_top_rejects() {
     assert_is_not_equal(
         &BN254_Fq_PARAMS,

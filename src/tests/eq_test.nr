@@ -83,25 +83,26 @@ fn test_eq_two_limb_carry() {
     assert(b != a);
 }
 
-#[test(should_fail)]
+#[test(should_fail_with = "unequal values compared equal")]
 fn test_eq_wrong_flag_rejects() {
     assert(
         black_box(BN254_Fq::from_limbs([0x0, 0x0, 0x0]))
             == black_box(BN254_Fq::from_limbs([0x1, 0x0, 0x0])),
+        "unequal values compared equal",
     );
 }
 
-#[test(should_fail)]
+#[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_eq_oversized_low_limb_rejects() {
     let invalid = black_box([0x1000000000000000000000000000000u128, 0, 0]);
     assert(eq(&BN254_Fq_PARAMS, &invalid, &black_box([0, 1, 0])));
 }
-#[test(should_fail)]
+#[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_eq_oversized_middle_limb_rejects() {
     let invalid = black_box([0u128, 0x1000000000000000000000000000000, 0]);
     assert(eq(&BN254_Fq_PARAMS, &invalid, &black_box([0, 0, 1])));
 }
-#[test(should_fail)]
+#[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_eq_oversized_top_limb_rejects() {
     let invalid = black_box([0u128, 0, 0x8000]);
     assert(eq(&BN254_Fq_PARAMS, &invalid, &invalid));
@@ -233,13 +234,13 @@ fn test_eq_wider_multiple_aliases() {
     );
 }
 
-#[test(should_fail)]
+#[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_eq_short_runtime_modulus_rejects() {
     let mut params = BN254_Fq_PARAMS;
     params.modulus = black_box([1u128, 0, 1]);
     assert(eq(&params, &black_box([0; 3]), &black_box([0; 3])));
 }
-#[test(should_fail)]
+#[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_eq_oversized_runtime_modulus_limb_rejects() {
     let mut params = BN254_Fq_PARAMS;
     params.modulus[0] = black_box(0x1000000000000000000000000000000);
@@ -312,12 +313,12 @@ fn test_eq_generic_full_top_carry() {
     assert(!eq(&params, &neighbor, &zero));
     assert(!eq(&params, &zero, &neighbor));
 }
-#[test(should_fail)]
+#[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_eq_generic_bad_modulus() {
     let params = unchecked_params::<4, 381>(black_box([0, 0, 0, 1]));
     assert(!eq(&params, &black_box([1, 0, 0, 0]), &black_box([0; 4])));
 }
-#[test(should_fail)]
+#[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_eq_generic_bad_low_limb() {
     let params = BLS12_381_Fq_PARAMS;
     assert(
@@ -328,7 +329,7 @@ fn test_eq_generic_bad_low_limb() {
         ),
     );
 }
-#[test(should_fail)]
+#[test(should_fail_with = "call to assert_max_bit_size")]
 fn test_eq_generic_bad_top_limb() {
     let params = BLS12_381_Fq_PARAMS;
     assert(
