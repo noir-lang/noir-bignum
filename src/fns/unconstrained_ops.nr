@@ -1,6 +1,6 @@
 // This file contains the unconstrained operations that are used directly by BigNum class
 
-use crate::fns::constrained_ops::derive_from_seed;
+use crate::fns::constrained_ops::{derive_from_seed, eq_limb_remainder};
 
 use crate::fns::unconstrained_helpers::{
     __barrett_reduction, __get_bit, __get_msb, __half_mod_odd, __helper_add, __helper_mul,
@@ -84,10 +84,7 @@ pub(crate) unconstrained fn __eq_hints<let N: u32>(
     let mut carry: Field = 0;
     let mut carry_shift: [u128; N - 1] = [0; N - 1];
     for i in 0..N - 1 {
-        let limb = (lhs[i] as Field) - (rhs[i] as Field) + carry
-            - k * (modulus[i] as Field)
-            - (r[i] as Field)
-            + bias;
+        let limb = eq_limb_remainder(lhs[i], rhs[i], modulus[i], r[i], k, carry) + bias;
         // `limb` equals (carry_out + 8) * 2^120 exactly and is below 2^124.
         let shifted = (limb as u128) >> 120;
         carry_shift[i] = shifted;

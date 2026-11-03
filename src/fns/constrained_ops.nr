@@ -355,19 +355,37 @@ pub(crate) fn eq_with_hints<let N: u32, let MOD_BITS: u32>(
     let mut carry: Field = 0;
     for i in 0..N - 1 {
         (carry_shift[i] as Field).assert_max_bit_size::<4>();
-        let limb = (lhs[i] as Field) - (rhs[i] as Field) + carry
-            - k * (params.modulus[i] as Field)
-            - (r[i] as Field);
+        let limb = eq_limb_remainder(lhs[i], rhs[i], params.modulus[i], r[i], k, carry);
         let carry_out = (carry_shift[i] as Field) - 8;
         assert(limb == carry_out * big, "eq decomposition fail");
         carry = carry_out;
     }
-    let top = (lhs[N - 1] as Field) - (rhs[N - 1] as Field) + carry
-        - k * (params.modulus[N - 1] as Field)
-        - (r[N - 1] as Field);
+    let top = eq_limb_remainder(
+        lhs[N - 1],
+        rhs[N - 1],
+        params.modulus[N - 1],
+        r[N - 1],
+        k,
+        carry,
+    );
     assert(top == 0, "eq decomposition fail");
     // r is congruent to lhs - rhs and below 2*MOD: equal iff r is 0 or MOD.
     is_zero::<N, MOD_BITS>(params, r)
+}
+
+/// One limb of `lhs - rhs - k * MOD - r`, plus the carry in from the limb below.
+///
+/// `eq_with_hints` constrains this to `carry_out * 2^120` for each lower limb and to
+/// zero for the top limb; `__eq_hints` evaluates it to compute the honest carries.
+pub(crate) fn eq_limb_remainder(
+    lhs: u128,
+    rhs: u128,
+    modulus: u128,
+    r: u128,
+    k: Field,
+    carry_in: Field,
+) -> Field {
+    (lhs as Field) - (rhs as Field) + carry_in - k * (modulus as Field) - (r as Field)
 }
 
 /// Validate that `val` is not equal to zero when interpreted as an integer.
