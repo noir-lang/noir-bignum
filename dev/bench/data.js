@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793674099598,
+  "lastUpdate": 1793674106433,
   "repoUrl": "https://github.com/noir-lang/noir-bignum",
   "entries": {
     "ACIR Opcodes": [
@@ -98110,380 +98110,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "bc438c68b1cc5b594f03e2cc5b3a8534dbbe276f",
-          "message": "chore: (unconstrained_ops) document and clean up `__derive_from_seed` and comparison functions (#207)",
-          "timestamp": "2025-10-21T15:03:49+03:00",
-          "tree_id": "d7a0db73bf9be6725bed19862db0f1be30e836cd",
-          "url": "https://github.com/noir-lang/noir-bignum/commit/bc438c68b1cc5b594f03e2cc5b3a8534dbbe276f"
-        },
-        "date": 1761048272326,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "add_BLS12_377Fq_Bench",
-            "value": 302,
-            "unit": "opcodes"
-          },
-          {
-            "name": "add_BLS12_377Fr_Bench",
-            "value": 293,
-            "unit": "opcodes"
-          },
-          {
-            "name": "add_BLS12_381Fq_Bench",
-            "value": 302,
-            "unit": "opcodes"
-          },
-          {
-            "name": "add_BLS12_381Fr_Bench",
-            "value": 293,
-            "unit": "opcodes"
-          },
-          {
-            "name": "add_BN254_Fq_Bench",
-            "value": 293,
-            "unit": "opcodes"
-          },
-          {
-            "name": "add_U2048_Bench",
-            "value": 357,
-            "unit": "opcodes"
-          },
-          {
-            "name": "add_U256_Bench",
-            "value": 291,
-            "unit": "opcodes"
-          },
-          {
-            "name": "div_BLS12_377Fq_Bench",
-            "value": 3869,
-            "unit": "opcodes"
-          },
-          {
-            "name": "div_BLS12_377Fr_Bench",
-            "value": 3748,
-            "unit": "opcodes"
-          },
-          {
-            "name": "div_BLS12_381Fq_Bench",
-            "value": 3869,
-            "unit": "opcodes"
-          },
-          {
-            "name": "div_BLS12_381Fr_Bench",
-            "value": 3748,
-            "unit": "opcodes"
-          },
-          {
-            "name": "div_BN254_Fq_Bench",
-            "value": 3748,
-            "unit": "opcodes"
-          },
-          {
-            "name": "div_U2048_Bench",
-            "value": 98,
-            "unit": "opcodes"
-          },
-          {
-            "name": "div_U256_Bench",
-            "value": 68,
-            "unit": "opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_12_elements_BLS12_377Fq_Bench",
-            "value": 5487,
-            "unit": "opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_12_elements_BLS12_377Fr_Bench",
-            "value": 5320,
-            "unit": "opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_12_elements_BLS12_381Fq_Bench",
-            "value": 5487,
-            "unit": "opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_12_elements_BLS12_381Fr_Bench",
-            "value": 5320,
-            "unit": "opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_12_elements_BN254_Fq_Bench",
-            "value": 5320,
-            "unit": "opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_12_elements_U2048_Bench",
-            "value": 6762,
-            "unit": "opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_12_elements_U256_Bench",
-            "value": 5316,
-            "unit": "opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_3_elements_BLS12_377Fq_Bench",
-            "value": 3726,
-            "unit": "opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_3_elements_BLS12_377Fr_Bench",
-            "value": 3612,
-            "unit": "opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_3_elements_BLS12_381Fq_Bench",
-            "value": 3726,
-            "unit": "opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_3_elements_BLS12_381Fr_Bench",
-            "value": 3612,
-            "unit": "opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_3_elements_BN254_Fq_Bench",
-            "value": 3612,
-            "unit": "opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_3_elements_U2048_Bench",
-            "value": 4244,
-            "unit": "opcodes"
-          },
-          {
-            "name": "evaluate_quadratic_expression_3_elements_U256_Bench",
-            "value": 3608,
-            "unit": "opcodes"
-          },
-          {
-            "name": "from_field_BLS12_377Fq_Bench",
-            "value": 82,
-            "unit": "opcodes"
-          },
-          {
-            "name": "from_field_BLS12_377Fr_Bench",
-            "value": 79,
-            "unit": "opcodes"
-          },
-          {
-            "name": "from_field_BLS12_381Fq_Bench",
-            "value": 82,
-            "unit": "opcodes"
-          },
-          {
-            "name": "from_field_BLS12_381Fr_Bench",
-            "value": 79,
-            "unit": "opcodes"
-          },
-          {
-            "name": "from_field_BN254_Fq_Bench",
-            "value": 79,
-            "unit": "opcodes"
-          },
-          {
-            "name": "from_field_U2048_Bench",
-            "value": 110,
-            "unit": "opcodes"
-          },
-          {
-            "name": "from_field_U256_Bench",
-            "value": 79,
-            "unit": "opcodes"
-          },
-          {
-            "name": "mul_BLS12_377Fq_Bench",
-            "value": 1423,
-            "unit": "opcodes"
-          },
-          {
-            "name": "mul_BLS12_377Fr_Bench",
-            "value": 1362,
-            "unit": "opcodes"
-          },
-          {
-            "name": "mul_BLS12_381Fq_Bench",
-            "value": 1423,
-            "unit": "opcodes"
-          },
-          {
-            "name": "mul_BLS12_381Fr_Bench",
-            "value": 1362,
-            "unit": "opcodes"
-          },
-          {
-            "name": "mul_BN254_Fq_Bench",
-            "value": 1362,
-            "unit": "opcodes"
-          },
-          {
-            "name": "mul_U2048_Bench",
-            "value": 1596,
-            "unit": "opcodes"
-          },
-          {
-            "name": "mul_U256_Bench",
-            "value": 1358,
-            "unit": "opcodes"
-          },
-          {
-            "name": "sub_BLS12_377Fq_Bench",
-            "value": 369,
-            "unit": "opcodes"
-          },
-          {
-            "name": "sub_BLS12_377Fr_Bench",
-            "value": 358,
-            "unit": "opcodes"
-          },
-          {
-            "name": "sub_BLS12_381Fq_Bench",
-            "value": 369,
-            "unit": "opcodes"
-          },
-          {
-            "name": "sub_BLS12_381Fr_Bench",
-            "value": 358,
-            "unit": "opcodes"
-          },
-          {
-            "name": "sub_BN254_Fq_Bench",
-            "value": 358,
-            "unit": "opcodes"
-          },
-          {
-            "name": "sub_U2048_Bench",
-            "value": 425,
-            "unit": "opcodes"
-          },
-          {
-            "name": "sub_U256_Bench",
-            "value": 356,
-            "unit": "opcodes"
-          },
-          {
-            "name": "udiv_BLS12_377Fq_Bench",
-            "value": 1762,
-            "unit": "opcodes"
-          },
-          {
-            "name": "udiv_BLS12_377Fr_Bench",
-            "value": 1748,
-            "unit": "opcodes"
-          },
-          {
-            "name": "udiv_BLS12_381Fq_Bench",
-            "value": 1762,
-            "unit": "opcodes"
-          },
-          {
-            "name": "udiv_BLS12_381Fr_Bench",
-            "value": 1748,
-            "unit": "opcodes"
-          },
-          {
-            "name": "udiv_BN254_Fq_Bench",
-            "value": 1748,
-            "unit": "opcodes"
-          },
-          {
-            "name": "udiv_U2048_Bench",
-            "value": 1823,
-            "unit": "opcodes"
-          },
-          {
-            "name": "udiv_U256_Bench",
-            "value": 1748,
-            "unit": "opcodes"
-          },
-          {
-            "name": "udiv_mod_BLS12_377Fq_Bench",
-            "value": 1774,
-            "unit": "opcodes"
-          },
-          {
-            "name": "udiv_mod_BLS12_377Fr_Bench",
-            "value": 1760,
-            "unit": "opcodes"
-          },
-          {
-            "name": "udiv_mod_BLS12_381Fq_Bench",
-            "value": 1774,
-            "unit": "opcodes"
-          },
-          {
-            "name": "udiv_mod_BLS12_381Fr_Bench",
-            "value": 1760,
-            "unit": "opcodes"
-          },
-          {
-            "name": "udiv_mod_BN254_Fq_Bench",
-            "value": 1760,
-            "unit": "opcodes"
-          },
-          {
-            "name": "udiv_mod_U2048_Bench",
-            "value": 1835,
-            "unit": "opcodes"
-          },
-          {
-            "name": "udiv_mod_U256_Bench",
-            "value": 1760,
-            "unit": "opcodes"
-          },
-          {
-            "name": "validate_in_field_BLS12_377Fq_Bench",
-            "value": 298,
-            "unit": "opcodes"
-          },
-          {
-            "name": "validate_in_field_BLS12_377Fr_Bench",
-            "value": 200,
-            "unit": "opcodes"
-          },
-          {
-            "name": "validate_in_field_BLS12_381Fq_Bench",
-            "value": 298,
-            "unit": "opcodes"
-          },
-          {
-            "name": "validate_in_field_BLS12_381Fr_Bench",
-            "value": 200,
-            "unit": "opcodes"
-          },
-          {
-            "name": "validate_in_field_BN254_Fq_Bench",
-            "value": 200,
-            "unit": "opcodes"
-          },
-          {
-            "name": "validate_in_field_U2048_Bench",
-            "value": 361,
-            "unit": "opcodes"
-          },
-          {
-            "name": "validate_in_field_U256_Bench",
-            "value": 199,
-            "unit": "opcodes"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "75146596+Sarkoxed@users.noreply.github.com",
-            "name": "Sarkoxed",
-            "username": "Sarkoxed"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "4585c991810329ca1abbeaf29860d42c9d0d1b31",
           "message": "chore(benchmarks): extend BigNum benchmark coverage (#208)",
           "timestamp": "2025-10-23T14:54:37+03:00",
@@ -146213,6 +145839,1010 @@ window.BENCHMARK_DATA = {
           {
             "name": "sqrt_BLS12_381Fr_Bench",
             "value": 11361,
+            "unit": "opcodes"
+          },
+          {
+            "name": "sqrt_BN254_Fq_Bench",
+            "value": 2916,
+            "unit": "opcodes"
+          },
+          {
+            "name": "sqrt_U2048_Bench",
+            "value": 64,
+            "unit": "opcodes"
+          },
+          {
+            "name": "sqrt_U256_Bench",
+            "value": 49,
+            "unit": "opcodes"
+          },
+          {
+            "name": "sub_BLS12_377Fq_Bench",
+            "value": 408,
+            "unit": "opcodes"
+          },
+          {
+            "name": "sub_BLS12_377Fr_Bench",
+            "value": 336,
+            "unit": "opcodes"
+          },
+          {
+            "name": "sub_BLS12_381Fq_Bench",
+            "value": 408,
+            "unit": "opcodes"
+          },
+          {
+            "name": "sub_BLS12_381Fr_Bench",
+            "value": 336,
+            "unit": "opcodes"
+          },
+          {
+            "name": "sub_BN254_Fq_Bench",
+            "value": 336,
+            "unit": "opcodes"
+          },
+          {
+            "name": "sub_U2048_Bench",
+            "value": 465,
+            "unit": "opcodes"
+          },
+          {
+            "name": "sub_U256_Bench",
+            "value": 294,
+            "unit": "opcodes"
+          },
+          {
+            "name": "to_be_bytes_BLS12_377Fq_Bench",
+            "value": 251,
+            "unit": "opcodes"
+          },
+          {
+            "name": "to_be_bytes_BLS12_377Fr_Bench",
+            "value": 201,
+            "unit": "opcodes"
+          },
+          {
+            "name": "to_be_bytes_BLS12_381Fq_Bench",
+            "value": 251,
+            "unit": "opcodes"
+          },
+          {
+            "name": "to_be_bytes_BLS12_381Fr_Bench",
+            "value": 201,
+            "unit": "opcodes"
+          },
+          {
+            "name": "to_be_bytes_BN254_Fq_Bench",
+            "value": 201,
+            "unit": "opcodes"
+          },
+          {
+            "name": "to_be_bytes_U2048_Bench",
+            "value": 201,
+            "unit": "opcodes"
+          },
+          {
+            "name": "to_be_bytes_U256_Bench",
+            "value": 209,
+            "unit": "opcodes"
+          },
+          {
+            "name": "to_field_BLS12_377Fq_Bench",
+            "value": 180,
+            "unit": "opcodes"
+          },
+          {
+            "name": "to_field_BLS12_377Fr_Bench",
+            "value": 79,
+            "unit": "opcodes"
+          },
+          {
+            "name": "to_field_BLS12_381Fq_Bench",
+            "value": 180,
+            "unit": "opcodes"
+          },
+          {
+            "name": "to_field_BLS12_381Fr_Bench",
+            "value": 146,
+            "unit": "opcodes"
+          },
+          {
+            "name": "to_field_BN254_Fq_Bench",
+            "value": 146,
+            "unit": "opcodes"
+          },
+          {
+            "name": "to_field_U2048_Bench",
+            "value": 653,
+            "unit": "opcodes"
+          },
+          {
+            "name": "to_field_U256_Bench",
+            "value": 146,
+            "unit": "opcodes"
+          },
+          {
+            "name": "to_le_bytes_BLS12_377Fq_Bench",
+            "value": 294,
+            "unit": "opcodes"
+          },
+          {
+            "name": "to_le_bytes_BLS12_377Fr_Bench",
+            "value": 244,
+            "unit": "opcodes"
+          },
+          {
+            "name": "to_le_bytes_BLS12_381Fq_Bench",
+            "value": 294,
+            "unit": "opcodes"
+          },
+          {
+            "name": "to_le_bytes_BLS12_381Fr_Bench",
+            "value": 244,
+            "unit": "opcodes"
+          },
+          {
+            "name": "to_le_bytes_BN254_Fq_Bench",
+            "value": 244,
+            "unit": "opcodes"
+          },
+          {
+            "name": "to_le_bytes_U2048_Bench",
+            "value": 241,
+            "unit": "opcodes"
+          },
+          {
+            "name": "to_le_bytes_U256_Bench",
+            "value": 252,
+            "unit": "opcodes"
+          },
+          {
+            "name": "udiv_BLS12_377Fq_Bench",
+            "value": 1900,
+            "unit": "opcodes"
+          },
+          {
+            "name": "udiv_BLS12_377Fr_Bench",
+            "value": 1743,
+            "unit": "opcodes"
+          },
+          {
+            "name": "udiv_BLS12_381Fq_Bench",
+            "value": 1900,
+            "unit": "opcodes"
+          },
+          {
+            "name": "udiv_BLS12_381Fr_Bench",
+            "value": 1743,
+            "unit": "opcodes"
+          },
+          {
+            "name": "udiv_BN254_Fq_Bench",
+            "value": 1743,
+            "unit": "opcodes"
+          },
+          {
+            "name": "udiv_U2048_Bench",
+            "value": 1807,
+            "unit": "opcodes"
+          },
+          {
+            "name": "udiv_U256_Bench",
+            "value": 1743,
+            "unit": "opcodes"
+          },
+          {
+            "name": "udiv_mod_BLS12_377Fq_Bench",
+            "value": 1913,
+            "unit": "opcodes"
+          },
+          {
+            "name": "udiv_mod_BLS12_377Fr_Bench",
+            "value": 1756,
+            "unit": "opcodes"
+          },
+          {
+            "name": "udiv_mod_BLS12_381Fq_Bench",
+            "value": 1913,
+            "unit": "opcodes"
+          },
+          {
+            "name": "udiv_mod_BLS12_381Fr_Bench",
+            "value": 1756,
+            "unit": "opcodes"
+          },
+          {
+            "name": "udiv_mod_BN254_Fq_Bench",
+            "value": 1756,
+            "unit": "opcodes"
+          },
+          {
+            "name": "udiv_mod_U2048_Bench",
+            "value": 1820,
+            "unit": "opcodes"
+          },
+          {
+            "name": "udiv_mod_U256_Bench",
+            "value": 1756,
+            "unit": "opcodes"
+          },
+          {
+            "name": "validate_in_field_BLS12_377Fq_Bench",
+            "value": 154,
+            "unit": "opcodes"
+          },
+          {
+            "name": "validate_in_field_BLS12_377Fr_Bench",
+            "value": 125,
+            "unit": "opcodes"
+          },
+          {
+            "name": "validate_in_field_BLS12_381Fq_Bench",
+            "value": 154,
+            "unit": "opcodes"
+          },
+          {
+            "name": "validate_in_field_BLS12_381Fr_Bench",
+            "value": 125,
+            "unit": "opcodes"
+          },
+          {
+            "name": "validate_in_field_BN254_Fq_Bench",
+            "value": 125,
+            "unit": "opcodes"
+          },
+          {
+            "name": "validate_in_field_U2048_Bench",
+            "value": 509,
+            "unit": "opcodes"
+          },
+          {
+            "name": "validate_in_field_U256_Bench",
+            "value": 122,
+            "unit": "opcodes"
+          },
+          {
+            "name": "validate_in_range_BLS12_377Fq_Bench",
+            "value": 80,
+            "unit": "opcodes"
+          },
+          {
+            "name": "validate_in_range_BLS12_377Fr_Bench",
+            "value": 70,
+            "unit": "opcodes"
+          },
+          {
+            "name": "validate_in_range_BLS12_381Fq_Bench",
+            "value": 80,
+            "unit": "opcodes"
+          },
+          {
+            "name": "validate_in_range_BLS12_381Fr_Bench",
+            "value": 70,
+            "unit": "opcodes"
+          },
+          {
+            "name": "validate_in_range_BN254_Fq_Bench",
+            "value": 70,
+            "unit": "opcodes"
+          },
+          {
+            "name": "validate_in_range_U2048_Bench",
+            "value": 220,
+            "unit": "opcodes"
+          },
+          {
+            "name": "validate_in_range_U256_Bench",
+            "value": 70,
+            "unit": "opcodes"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "mike@aztecprotocol.com",
+            "name": "Michael Connor",
+            "username": "iAmMichaelConnor"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ce4cc8fbbe48faf5fe5e4b0e572c5a938861fcf9",
+          "message": "chore: bump minimum Noir version to 1.0.0 and bb to 6.0.0 (#279)",
+          "timestamp": "2026-11-03T10:47:53+08:00",
+          "tree_id": "7a3c74697e9756d9e5b29a5ae5990fdc83ab9ef0",
+          "url": "https://github.com/noir-lang/noir-bignum/commit/ce4cc8fbbe48faf5fe5e4b0e572c5a938861fcf9"
+        },
+        "date": 1793674106408,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "add_BLS12_377Fq_Bench",
+            "value": 296,
+            "unit": "opcodes"
+          },
+          {
+            "name": "add_BLS12_377Fr_Bench",
+            "value": 249,
+            "unit": "opcodes"
+          },
+          {
+            "name": "add_BLS12_381Fq_Bench",
+            "value": 296,
+            "unit": "opcodes"
+          },
+          {
+            "name": "add_BLS12_381Fr_Bench",
+            "value": 249,
+            "unit": "opcodes"
+          },
+          {
+            "name": "add_BN254_Fq_Bench",
+            "value": 249,
+            "unit": "opcodes"
+          },
+          {
+            "name": "add_U2048_Bench",
+            "value": 312,
+            "unit": "opcodes"
+          },
+          {
+            "name": "add_U256_Bench",
+            "value": 216,
+            "unit": "opcodes"
+          },
+          {
+            "name": "assert_is_not_equal_BLS12_377Fq_Bench",
+            "value": 116,
+            "unit": "opcodes"
+          },
+          {
+            "name": "assert_is_not_equal_BLS12_377Fr_Bench",
+            "value": 103,
+            "unit": "opcodes"
+          },
+          {
+            "name": "assert_is_not_equal_BLS12_381Fq_Bench",
+            "value": 116,
+            "unit": "opcodes"
+          },
+          {
+            "name": "assert_is_not_equal_BLS12_381Fr_Bench",
+            "value": 103,
+            "unit": "opcodes"
+          },
+          {
+            "name": "assert_is_not_equal_BN254_Fq_Bench",
+            "value": 103,
+            "unit": "opcodes"
+          },
+          {
+            "name": "assert_is_not_equal_U2048_Bench",
+            "value": 198,
+            "unit": "opcodes"
+          },
+          {
+            "name": "assert_is_not_equal_U256_Bench",
+            "value": 105,
+            "unit": "opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_BLS12_377Fq_Bench",
+            "value": 78,
+            "unit": "opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_BLS12_377Fr_Bench",
+            "value": 71,
+            "unit": "opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_BLS12_381Fq_Bench",
+            "value": 78,
+            "unit": "opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_BLS12_381Fr_Bench",
+            "value": 71,
+            "unit": "opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_BN254_Fq_Bench",
+            "value": 71,
+            "unit": "opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_U2048_Bench",
+            "value": 178,
+            "unit": "opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_U256_Bench",
+            "value": 73,
+            "unit": "opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_integer_BLS12_377Fq_Bench",
+            "value": 69,
+            "unit": "opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_integer_BLS12_377Fr_Bench",
+            "value": 63,
+            "unit": "opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_integer_BLS12_381Fq_Bench",
+            "value": 69,
+            "unit": "opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_integer_BLS12_381Fr_Bench",
+            "value": 63,
+            "unit": "opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_integer_BN254_Fq_Bench",
+            "value": 63,
+            "unit": "opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_integer_U2048_Bench",
+            "value": 153,
+            "unit": "opcodes"
+          },
+          {
+            "name": "assert_is_not_zero_integer_U256_Bench",
+            "value": 63,
+            "unit": "opcodes"
+          },
+          {
+            "name": "batch_invert_10_elements_BLS12_377Fq_Bench",
+            "value": 4622,
+            "unit": "opcodes"
+          },
+          {
+            "name": "batch_invert_10_elements_BLS12_377Fr_Bench",
+            "value": 3827,
+            "unit": "opcodes"
+          },
+          {
+            "name": "batch_invert_10_elements_BLS12_381Fq_Bench",
+            "value": 4622,
+            "unit": "opcodes"
+          },
+          {
+            "name": "batch_invert_10_elements_BLS12_381Fr_Bench",
+            "value": 3845,
+            "unit": "opcodes"
+          },
+          {
+            "name": "batch_invert_10_elements_BN254_Fq_Bench",
+            "value": 3845,
+            "unit": "opcodes"
+          },
+          {
+            "name": "batch_invert_10_elements_U2048_Bench",
+            "value": 359,
+            "unit": "opcodes"
+          },
+          {
+            "name": "batch_invert_10_elements_U256_Bench",
+            "value": 209,
+            "unit": "opcodes"
+          },
+          {
+            "name": "cmp_BLS12_377Fq_Bench",
+            "value": 291,
+            "unit": "opcodes"
+          },
+          {
+            "name": "cmp_BLS12_377Fr_Bench",
+            "value": 251,
+            "unit": "opcodes"
+          },
+          {
+            "name": "cmp_BLS12_381Fq_Bench",
+            "value": 291,
+            "unit": "opcodes"
+          },
+          {
+            "name": "cmp_BLS12_381Fr_Bench",
+            "value": 251,
+            "unit": "opcodes"
+          },
+          {
+            "name": "cmp_BN254_Fq_Bench",
+            "value": 251,
+            "unit": "opcodes"
+          },
+          {
+            "name": "cmp_U2048_Bench",
+            "value": 586,
+            "unit": "opcodes"
+          },
+          {
+            "name": "cmp_U256_Bench",
+            "value": 251,
+            "unit": "opcodes"
+          },
+          {
+            "name": "derive_from_seed_13_elements_BLS12_377Fq_Bench",
+            "value": 2204,
+            "unit": "opcodes"
+          },
+          {
+            "name": "derive_from_seed_13_elements_BLS12_377Fr_Bench",
+            "value": 2003,
+            "unit": "opcodes"
+          },
+          {
+            "name": "derive_from_seed_13_elements_BLS12_381Fq_Bench",
+            "value": 2204,
+            "unit": "opcodes"
+          },
+          {
+            "name": "derive_from_seed_13_elements_BLS12_381Fr_Bench",
+            "value": 2009,
+            "unit": "opcodes"
+          },
+          {
+            "name": "derive_from_seed_13_elements_BN254_Fq_Bench",
+            "value": 2009,
+            "unit": "opcodes"
+          },
+          {
+            "name": "derive_from_seed_13_elements_U2048_Bench",
+            "value": 4468,
+            "unit": "opcodes"
+          },
+          {
+            "name": "derive_from_seed_13_elements_U256_Bench",
+            "value": 1768,
+            "unit": "opcodes"
+          },
+          {
+            "name": "div_BLS12_377Fq_Bench",
+            "value": 2467,
+            "unit": "opcodes"
+          },
+          {
+            "name": "div_BLS12_377Fr_Bench",
+            "value": 1980,
+            "unit": "opcodes"
+          },
+          {
+            "name": "div_BLS12_381Fq_Bench",
+            "value": 2467,
+            "unit": "opcodes"
+          },
+          {
+            "name": "div_BLS12_381Fr_Bench",
+            "value": 1986,
+            "unit": "opcodes"
+          },
+          {
+            "name": "div_BN254_Fq_Bench",
+            "value": 1986,
+            "unit": "opcodes"
+          },
+          {
+            "name": "div_U2048_Bench",
+            "value": 1801,
+            "unit": "opcodes"
+          },
+          {
+            "name": "div_U256_Bench",
+            "value": 1737,
+            "unit": "opcodes"
+          },
+          {
+            "name": "eq_BLS12_377Fq_Bench",
+            "value": 432,
+            "unit": "opcodes"
+          },
+          {
+            "name": "eq_BLS12_377Fr_Bench",
+            "value": 354,
+            "unit": "opcodes"
+          },
+          {
+            "name": "eq_BLS12_381Fq_Bench",
+            "value": 432,
+            "unit": "opcodes"
+          },
+          {
+            "name": "eq_BLS12_381Fr_Bench",
+            "value": 354,
+            "unit": "opcodes"
+          },
+          {
+            "name": "eq_BN254_Fq_Bench",
+            "value": 354,
+            "unit": "opcodes"
+          },
+          {
+            "name": "eq_U2048_Bench",
+            "value": 574,
+            "unit": "opcodes"
+          },
+          {
+            "name": "eq_U256_Bench",
+            "value": 312,
+            "unit": "opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_1_element_BLS12_377Fq_Bench",
+            "value": 2448,
+            "unit": "opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_1_element_BLS12_377Fr_Bench",
+            "value": 2021,
+            "unit": "opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_1_element_BLS12_381Fq_Bench",
+            "value": 2448,
+            "unit": "opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_1_element_BLS12_381Fr_Bench",
+            "value": 2027,
+            "unit": "opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_1_element_BN254_Fq_Bench",
+            "value": 2027,
+            "unit": "opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_1_element_U2048_Bench",
+            "value": 3176,
+            "unit": "opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_1_element_U256_Bench",
+            "value": 1869,
+            "unit": "opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_3_elements_BLS12_377Fq_Bench",
+            "value": 3067,
+            "unit": "opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_3_elements_BLS12_377Fr_Bench",
+            "value": 2635,
+            "unit": "opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_3_elements_BLS12_381Fq_Bench",
+            "value": 3067,
+            "unit": "opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_3_elements_BLS12_381Fr_Bench",
+            "value": 2641,
+            "unit": "opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_3_elements_BN254_Fq_Bench",
+            "value": 2641,
+            "unit": "opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_3_elements_U2048_Bench",
+            "value": 3786,
+            "unit": "opcodes"
+          },
+          {
+            "name": "evaluate_quadratic_expression_3_elements_U256_Bench",
+            "value": 2487,
+            "unit": "opcodes"
+          },
+          {
+            "name": "from_be_bytes_BLS12_377Fq_Bench",
+            "value": 416,
+            "unit": "opcodes"
+          },
+          {
+            "name": "from_be_bytes_BLS12_377Fr_Bench",
+            "value": 298,
+            "unit": "opcodes"
+          },
+          {
+            "name": "from_be_bytes_BLS12_381Fq_Bench",
+            "value": 416,
+            "unit": "opcodes"
+          },
+          {
+            "name": "from_be_bytes_BLS12_381Fr_Bench",
+            "value": 298,
+            "unit": "opcodes"
+          },
+          {
+            "name": "from_be_bytes_BN254_Fq_Bench",
+            "value": 298,
+            "unit": "opcodes"
+          },
+          {
+            "name": "from_be_bytes_U2048_Bench",
+            "value": 456,
+            "unit": "opcodes"
+          },
+          {
+            "name": "from_be_bytes_U256_Bench",
+            "value": 305,
+            "unit": "opcodes"
+          },
+          {
+            "name": "from_field_BLS12_377Fq_Bench",
+            "value": 73,
+            "unit": "opcodes"
+          },
+          {
+            "name": "from_field_BLS12_377Fr_Bench",
+            "value": 70,
+            "unit": "opcodes"
+          },
+          {
+            "name": "from_field_BLS12_381Fq_Bench",
+            "value": 73,
+            "unit": "opcodes"
+          },
+          {
+            "name": "from_field_BLS12_381Fr_Bench",
+            "value": 70,
+            "unit": "opcodes"
+          },
+          {
+            "name": "from_field_BN254_Fq_Bench",
+            "value": 70,
+            "unit": "opcodes"
+          },
+          {
+            "name": "from_field_U2048_Bench",
+            "value": 103,
+            "unit": "opcodes"
+          },
+          {
+            "name": "from_field_U256_Bench",
+            "value": 70,
+            "unit": "opcodes"
+          },
+          {
+            "name": "from_le_bytes_BLS12_377Fq_Bench",
+            "value": 483,
+            "unit": "opcodes"
+          },
+          {
+            "name": "from_le_bytes_BLS12_377Fr_Bench",
+            "value": 365,
+            "unit": "opcodes"
+          },
+          {
+            "name": "from_le_bytes_BLS12_381Fq_Bench",
+            "value": 483,
+            "unit": "opcodes"
+          },
+          {
+            "name": "from_le_bytes_BLS12_381Fr_Bench",
+            "value": 365,
+            "unit": "opcodes"
+          },
+          {
+            "name": "from_le_bytes_BN254_Fq_Bench",
+            "value": 365,
+            "unit": "opcodes"
+          },
+          {
+            "name": "from_le_bytes_U2048_Bench",
+            "value": 497,
+            "unit": "opcodes"
+          },
+          {
+            "name": "from_le_bytes_U256_Bench",
+            "value": 372,
+            "unit": "opcodes"
+          },
+          {
+            "name": "is_zero_BLS12_377Fq_Bench",
+            "value": 80,
+            "unit": "opcodes"
+          },
+          {
+            "name": "is_zero_BLS12_377Fr_Bench",
+            "value": 71,
+            "unit": "opcodes"
+          },
+          {
+            "name": "is_zero_BLS12_381Fq_Bench",
+            "value": 80,
+            "unit": "opcodes"
+          },
+          {
+            "name": "is_zero_BLS12_381Fr_Bench",
+            "value": 71,
+            "unit": "opcodes"
+          },
+          {
+            "name": "is_zero_BN254_Fq_Bench",
+            "value": 71,
+            "unit": "opcodes"
+          },
+          {
+            "name": "is_zero_U2048_Bench",
+            "value": 190,
+            "unit": "opcodes"
+          },
+          {
+            "name": "is_zero_U256_Bench",
+            "value": 70,
+            "unit": "opcodes"
+          },
+          {
+            "name": "is_zero_integer_BLS12_377Fq_Bench",
+            "value": 64,
+            "unit": "opcodes"
+          },
+          {
+            "name": "is_zero_integer_BLS12_377Fr_Bench",
+            "value": 58,
+            "unit": "opcodes"
+          },
+          {
+            "name": "is_zero_integer_BLS12_381Fq_Bench",
+            "value": 64,
+            "unit": "opcodes"
+          },
+          {
+            "name": "is_zero_integer_BLS12_381Fr_Bench",
+            "value": 58,
+            "unit": "opcodes"
+          },
+          {
+            "name": "is_zero_integer_BN254_Fq_Bench",
+            "value": 58,
+            "unit": "opcodes"
+          },
+          {
+            "name": "is_zero_integer_U2048_Bench",
+            "value": 148,
+            "unit": "opcodes"
+          },
+          {
+            "name": "is_zero_integer_U256_Bench",
+            "value": 58,
+            "unit": "opcodes"
+          },
+          {
+            "name": "mul_BLS12_377Fq_Bench",
+            "value": 937,
+            "unit": "opcodes"
+          },
+          {
+            "name": "mul_BLS12_377Fr_Bench",
+            "value": 786,
+            "unit": "opcodes"
+          },
+          {
+            "name": "mul_BLS12_381Fq_Bench",
+            "value": 937,
+            "unit": "opcodes"
+          },
+          {
+            "name": "mul_BLS12_381Fr_Bench",
+            "value": 792,
+            "unit": "opcodes"
+          },
+          {
+            "name": "mul_BN254_Fq_Bench",
+            "value": 792,
+            "unit": "opcodes"
+          },
+          {
+            "name": "mul_U2048_Bench",
+            "value": 1040,
+            "unit": "opcodes"
+          },
+          {
+            "name": "mul_U256_Bench",
+            "value": 650,
+            "unit": "opcodes"
+          },
+          {
+            "name": "neg_BLS12_377Fq_Bench",
+            "value": 178,
+            "unit": "opcodes"
+          },
+          {
+            "name": "neg_BLS12_377Fr_Bench",
+            "value": 150,
+            "unit": "opcodes"
+          },
+          {
+            "name": "neg_BLS12_381Fq_Bench",
+            "value": 178,
+            "unit": "opcodes"
+          },
+          {
+            "name": "neg_BLS12_381Fr_Bench",
+            "value": 150,
+            "unit": "opcodes"
+          },
+          {
+            "name": "neg_BN254_Fq_Bench",
+            "value": 150,
+            "unit": "opcodes"
+          },
+          {
+            "name": "neg_U2048_Bench",
+            "value": 291,
+            "unit": "opcodes"
+          },
+          {
+            "name": "neg_U256_Bench",
+            "value": 140,
+            "unit": "opcodes"
+          },
+          {
+            "name": "pow_BLS12_377Fq_Bench",
+            "value": 1768,
+            "unit": "opcodes"
+          },
+          {
+            "name": "pow_BLS12_377Fr_Bench",
+            "value": 1478,
+            "unit": "opcodes"
+          },
+          {
+            "name": "pow_BLS12_381Fq_Bench",
+            "value": 1768,
+            "unit": "opcodes"
+          },
+          {
+            "name": "pow_BLS12_381Fr_Bench",
+            "value": 1490,
+            "unit": "opcodes"
+          },
+          {
+            "name": "pow_BN254_Fq_Bench",
+            "value": 1490,
+            "unit": "opcodes"
+          },
+          {
+            "name": "pow_U2048_Bench",
+            "value": 1936,
+            "unit": "opcodes"
+          },
+          {
+            "name": "pow_U256_Bench",
+            "value": 1214,
+            "unit": "opcodes"
+          },
+          {
+            "name": "sqrt_BLS12_377Fq_Bench",
+            "value": 13697,
+            "unit": "opcodes"
+          },
+          {
+            "name": "sqrt_BLS12_377Fr_Bench",
+            "value": 11259,
+            "unit": "opcodes"
+          },
+          {
+            "name": "sqrt_BLS12_381Fq_Bench",
+            "value": 3477,
+            "unit": "opcodes"
+          },
+          {
+            "name": "sqrt_BLS12_381Fr_Bench",
+            "value": 11355,
             "unit": "opcodes"
           },
           {
