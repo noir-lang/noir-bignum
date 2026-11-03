@@ -1,6 +1,6 @@
 // This file contains the unconstrained operations that are used directly by BigNum class
 
-use crate::fns::constrained_ops::derive_from_seed;
+use crate::fns::constrained_ops::{derive_from_seed, eq_limb_remainder};
 
 use crate::fns::unconstrained_helpers::{
     __barrett_reduction, __get_bit, __get_msb, __half_mod_odd, __helper_add, __helper_mul,
@@ -36,6 +36,80 @@ pub unconstrained fn __eq<let N: u32>(lhs: &[u128; N], rhs: &[u128; N]) -> bool 
 /// Compare a limb array to a zero array (unconstrained)
 pub unconstrained fn __is_zero<let N: u32>(limbs: &[u128; N]) -> bool {
     *limbs == [0; N]
+}
+
+/// Modular equality of two `eq` operands (unconstrained)
+///
+/// Accepts the same operands as the constrained `eq` (values below `2^(MOD_BITS+1)`),
+/// so non-canonical values such as `MOD + 1` and `1` compare equal. Assumes the inputs
+/// have passed `validate_eq_inputs`, which `eq` checks before calling this.
+pub(crate) unconstrained fn __eq_mod<let N: u32>(
+    modulus: &[u128; N],
+    lhs: &[u128; N],
+    rhs: &[u128; N],
+) -> bool {
+    __reduce_eq_operand(modulus, lhs).0 == __reduce_eq_operand(modulus, rhs).0
+}
+
+/// Reduce an `eq` operand to its canonical residue (unconstrained)
+///
+/// Operands are below `2^(MOD_BITS+1) <= 4*MOD`, so at most 3 subtractions are needed.
+/// Returns `(residue, quotient)` with `val = quotient * MOD + residue`.
+/// `__gte` is value-correct here: lower limbs are normalised 120-bit limbs and only
+/// the top limb may exceed `TOP_LIMB_BITS`.
+unconstrained fn __reduce_eq_operand<let N: u32>(
+    modulus: &[u128; N],
+    val: &[u128; N],
+) -> ([u128; N], u128) {
+    let mut residue: [u128; N] = *val;
+    let mut quotient: u128 = 0;
+    for _ in 0..3 {
+        if __gte(&residue, modulus) {
+            residue = __helper_sub(&residue, modulus);
+            quotient += 1;
+        }
+    }
+    (residue, quotient)
+}
+
+/// Hints for the exact modular equality decomposition (unconstrained).
+///
+/// For operands below `2^(MOD_BITS+1) <= 4*MOD` (lower limbs below `2^120`,
+/// only the top limb may carry the extra bit), returns `(q_shift, r, carry_shift)`
+/// such that `lhs - rhs = (q_shift - 4)*MOD + r` over the integers, where `r`
+/// is the canonical residue of `lhs - rhs` modulo `MOD` and `q_shift - 4` is
+/// in `-4..=3`. `carry_shift[i] - 8` is the signed chain carry out of limb `i`
+/// (honest magnitude at most 4).
+pub(crate) unconstrained fn __eq_hints<let N: u32>(
+    modulus: &[u128; N],
+    lhs: &[u128; N],
+    rhs: &[u128; N],
+) -> (u128, [u128; N], [u128; N - 1]) {
+    let (ra, qa) = __reduce_eq_operand(modulus, lhs);
+    let (rb, qb) = __reduce_eq_operand(modulus, rhs);
+    // Canonical residue of lhs - rhs; every intermediate stays below MOD.
+    let mut borrow: u128 = 0;
+    let r: [u128; N] = if __gte(&ra, &rb) {
+        __helper_sub(&ra, &rb)
+    } else {
+        borrow = 1;
+        __helper_sub(modulus, &__helper_sub(&rb, &ra))
+    };
+    // lhs - rhs = k*MOD + r with k = qa - qb - borrow in -4..=3.
+    let q_shift: u128 = 4 + qa - qb - borrow;
+    // Signed chain carries, biased by 8 so they round-trip through u128.
+    let k: Field = (q_shift as Field) - 4;
+    let bias: Field = (TWO_POW_120 as Field) * 8;
+    let mut carry: Field = 0;
+    let mut carry_shift: [u128; N - 1] = [0; N - 1];
+    for i in 0..N - 1 {
+        let limb = eq_limb_remainder(lhs[i], rhs[i], modulus[i], r[i], k, carry) + bias;
+        // `limb` equals (carry_out + 8) * 2^120 exactly and is below 2^124.
+        let shifted = (limb as u128) >> 120;
+        carry_shift[i] = shifted;
+        carry = (shifted as Field) - 8;
+    }
+    (q_shift, r, carry_shift)
 }
 
 /// Compare two little-endian limb arrays for `lhs >= rhs` over integers (unconstrained)
