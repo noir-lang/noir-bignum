@@ -1,4 +1,11 @@
-use crate::{BigNum, BN254_Fq};
+use crate::bignum::BigNum;
+use crate::constants::TWO_POW_120;
+use crate::fns::constrained_ops::eq;
+use crate::params::BigNumParams;
+
+use crate::fields::bls12_381Fq::{BLS12_381_Fq, BLS12_381_Fq_PARAMS};
+use crate::fields::bn254Fq::{BN254_Fq, BN254_Fq_PARAMS};
+
 use std::hint::black_box;
 
 #[test]
@@ -111,9 +118,6 @@ fn test_eq_wrong_flag_rejects() {
     );
 }
 
-use crate::fields::bn254Fq::BN254_Fq_PARAMS;
-use crate::internal::eq;
-
 #[test(should_fail)]
 fn test_eq_oversized_low_limb_rejects() {
     let invalid = black_box([0x1000000000000000000000000000000u128, 0, 0]);
@@ -132,7 +136,7 @@ fn test_eq_oversized_top_limb_rejects() {
 
 #[test]
 fn test_eq_normalized_241_bit_modulus() {
-    let params = crate::params::BigNumParams::<3, 241> {
+    let params = BigNumParams::<3, 241> {
         has_multiplicative_inverse: false,
         modulus: [0x1, 0x0, 0x1],
         double_modulus: [0; 3],
@@ -170,7 +174,7 @@ fn test_eq_quotient_extremes() {
     // almost 4*MOD and the honest quotient attains both extremes: 4 vs
     // 3*MOD + 5 needs k = -4 (borrowing a modulus for the residue MOD - 1)
     // and k = +3 in the swapped direction.
-    let params = crate::params::BigNumParams::<3, 241> {
+    let params = BigNumParams::<3, 241> {
         has_multiplicative_inverse: false,
         modulus: [0x1, 0x0, 0x1],
         double_modulus: [0; 3],
@@ -188,7 +192,7 @@ fn test_eq_quotient_extremes() {
 
 #[test]
 fn test_eq_normalized_256_bit_modulus() {
-    let params = crate::params::BigNumParams::<3, 256> {
+    let params = BigNumParams::<3, 256> {
         has_multiplicative_inverse: false,
         modulus: [0xffffffffffffffffffffffffffff43, 0xffffffffffffffffffffffffffffff, 0xffff],
         double_modulus: [0; 3],
@@ -230,7 +234,7 @@ fn test_eq_normalized_256_bit_modulus() {
 
 #[test]
 fn test_eq_normalized_360_bit_modulus() {
-    let params = crate::params::BigNumParams::<3, 360> {
+    let params = BigNumParams::<3, 360> {
         has_multiplicative_inverse: false,
         modulus: [0x11, 0x0, 0x800000000000000000000000000000],
         double_modulus: [0; 3],
@@ -278,7 +282,7 @@ fn test_eq_wider_lazy_alias() {
 
 #[test]
 fn test_eq_wider_multiple_aliases() {
-    let params = crate::params::BigNumParams::<3, 241> {
+    let params = BigNumParams::<3, 241> {
         has_multiplicative_inverse: false,
         modulus: [0x11, 0x0, 0x1],
         double_modulus: [0; 3],
@@ -334,7 +338,7 @@ fn test_eq_oversized_runtime_modulus_limb_rejects() {
 
 // A normalized power-of-two modulus isolates equality from inversion or primality.
 fn wide_alias_controls<let N: u32, let Bits: u32>(modulus: [u128; N]) {
-    let params = crate::params::BigNumParams::<N, Bits> {
+    let params = BigNumParams::<N, Bits> {
         has_multiplicative_inverse: false,
         modulus: black_box(modulus),
         double_modulus: [0; N],
@@ -379,22 +383,22 @@ fn test_eq_seven_limb_aliases() {
 
 #[test]
 fn test_eq_generic_native_field_alias() {
-    let alias = crate::BLS12_381_Fq::from_limbs([
+    let alias = BLS12_381_Fq::from_limbs([
         0x33e84879b9709143e1f593f0000001,
         0x4e72e131a029b85045b68181585d28,
         0x3064,
         0,
     ]);
     alias.validate_in_field();
-    let zero = crate::BLS12_381_Fq::zero();
+    let zero = BLS12_381_Fq::zero();
     assert(black_box(alias) != black_box(zero));
     assert(black_box(zero) != black_box(alias));
 }
 
 #[test]
 fn test_eq_generic_full_top_carry() {
-    let radix = crate::constants::TWO_POW_120;
-    let params = crate::params::BigNumParams::<2, 240> {
+    let radix = TWO_POW_120;
+    let params = BigNumParams::<2, 240> {
         has_multiplicative_inverse: false,
         modulus: black_box([radix - 1; 2]),
         double_modulus: [0; 2],
@@ -410,7 +414,7 @@ fn test_eq_generic_full_top_carry() {
 }
 #[test(should_fail)]
 fn test_eq_generic_bad_modulus() {
-    let params = crate::params::BigNumParams::<4, 381> {
+    let params = BigNumParams::<4, 381> {
         has_multiplicative_inverse: false,
         modulus: black_box([0, 0, 0, 1]),
         double_modulus: [0; 4],
@@ -420,7 +424,7 @@ fn test_eq_generic_bad_modulus() {
 }
 #[test(should_fail)]
 fn test_eq_generic_bad_low_limb() {
-    let params = crate::fields::bls12_381Fq::BLS12_381_Fq_PARAMS;
+    let params = BLS12_381_Fq_PARAMS;
     assert(
         !eq(
             &params,
@@ -431,7 +435,7 @@ fn test_eq_generic_bad_low_limb() {
 }
 #[test(should_fail)]
 fn test_eq_generic_bad_top_limb() {
-    let params = crate::fields::bls12_381Fq::BLS12_381_Fq_PARAMS;
+    let params = BLS12_381_Fq_PARAMS;
     assert(
         !eq(
             &params,
