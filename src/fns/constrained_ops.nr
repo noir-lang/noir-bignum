@@ -340,11 +340,8 @@ pub(crate) fn eq_with_hints<let N: u32, let MOD_BITS: u32>(
 ) -> bool {
     let supported = (N > 0) & (MOD_BITS > 120 * (N - 1)) & (MOD_BITS <= 120 * N);
     assert(supported, "unsupported comparison geometry");
-    // Runtime parameters may be constructed directly; check the proof premise.
-    validate_in_range::<N, MOD_BITS>(&params.modulus);
-    let leading_bit: Field = (1u128 << ((MOD_BITS - 120 * (N - 1) - 1) as u128)) as Field;
-    ((params.modulus[N - 1] as Field) - leading_bit)
-        .assert_max_bit_size::<MOD_BITS - 120 * (N - 1) - 1>();
+    // Runtime parameters may be constructed without `BigNumParams::new`.
+    validate_modulus::<N, MOD_BITS>(&params.modulus);
     // Operand envelope: preserve the lazy aliases, value < 2^(MOD_BITS+1).
     for i in 0..N - 1 {
         (lhs[i] as Field).assert_max_bit_size::<120>();
@@ -472,6 +469,21 @@ pub fn validate_in_range<let N: u32, let MOD_BITS: u32>(limbs: &[u128; N]) {
     }
 
     (limbs[N - 1] as Field).assert_max_bit_size::<MOD_BITS - ((N - 1) * 120)>();
+}
+
+/// Validate that `modulus` is exactly `MOD_BITS` bits long
+///
+/// Constrains:
+///     - each limb to be in range (see `validate_in_range`), and
+///     - the top limb to have its highest bit set, i.e.
+///       `0 <= top_limb - 2^(TOP_LIMB_BITS - 1) < 2^(TOP_LIMB_BITS - 1)`
+pub(crate) fn validate_modulus<let N: u32, let MOD_BITS: u32>(modulus: &[u128; N]) {
+    validate_in_range::<N, MOD_BITS>(modulus);
+
+    let top_limb: Field = modulus[N - 1] as Field;
+    let top_limb_bits: u128 = (MOD_BITS - (N - 1) * 120) as u128;
+    let min_top_limb: Field = (1u128 << (top_limb_bits - 1)) as Field;
+    (top_limb - min_top_limb).assert_max_bit_size::<MOD_BITS - (N - 1) * 120 - 1>();
 }
 
 /// Validate quotient produced from `evaluate_quadratic_expression` is well-formed
