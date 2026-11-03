@@ -41,7 +41,8 @@ pub unconstrained fn __is_zero<let N: u32>(limbs: &[u128; N]) -> bool {
 /// Modular equality of two `eq` operands (unconstrained)
 ///
 /// Accepts the same operands as the constrained `eq` (values below `2^(MOD_BITS+1)`),
-/// so lazy aliases such as `MOD + 1` and `1` compare equal.
+/// so non-canonical values such as `MOD + 1` and `1` compare equal. Assumes the inputs
+/// have passed `validate_eq_inputs`, which `eq` checks before calling this.
 pub(crate) unconstrained fn __eq_mod<let N: u32>(
     modulus: &[u128; N],
     lhs: &[u128; N],

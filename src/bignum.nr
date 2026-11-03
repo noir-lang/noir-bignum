@@ -305,11 +305,10 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     /// No constraints are generated.
     unconstrained fn __sqrt(&self) -> std::option::Option<Self>;
 
-    /// Asserts that `self != other (mod MOD)` using exact modular equality.
+    /// Asserts that `self != other (mod MOD)`.
     ///
-    /// Requires a normalized MOD_BITS-bit modulus, 120-bit lower limbs, and
-    /// at most TOP_BITS+1 top bits. Canonical and permitted lazy aliases are
-    /// accepted without native-field packing collisions.
+    /// Equivalent to `assert(self != other)`: a non-canonical value is equal to its
+    /// canonical residue, so e.g. `MOD + 1` and `1` fail this assertion.
     fn assert_is_not_equal(&self, other: &Self);
 
     /// Returns `true` if `self == 0 (mod MOD)`.
@@ -332,7 +331,8 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     /// Asserts that `self != 0 (mod MOD)`.
     ///
     /// # Performance Note
-    /// Cheaper than `assert(!self.is_zero())` or `assert(self != BigNum::zero())`.
+    /// Costs about the same as `assert(self != BigNum::zero())`. Values produced by this
+    /// library are below `2^MOD_BITS`; for those, `assert(!self.is_zero())` is cheaper.
     fn assert_is_not_zero(&self);
 
     /// Asserts that at least one limb is non-zero (integer assertion).

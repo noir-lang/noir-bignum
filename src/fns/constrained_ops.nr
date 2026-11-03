@@ -276,11 +276,9 @@ pub fn derive_from_seed<let N: u32, let MOD_BITS: u32, let SeedBytes: u32>(
 
 // ------------------------------ COMPARISON FUNCTIONS ------------------------------
 
-/// Validate lhs != rhs modulo the normalized BigNum modulus.
-/// Asserted complement of the exact equality flag: see `eq` for the operand
-/// envelope (value < 2^(MOD_BITS+1), permitted lazy aliases included) and
-/// the in-circuit modulus and hint checks. No native-field packing shortcut
-/// or subtraction hint is used.
+/// Validate that `lhs != rhs (mod MOD)`
+///
+/// Asserts `!eq(params, lhs, rhs)`, so it accepts and rejects the same inputs as `eq`.
 pub fn assert_is_not_equal<let N: u32, let MOD_BITS: u32>(
     params: &BigNumParams<N, MOD_BITS>,
     lhs: &[u128; N],
@@ -289,21 +287,22 @@ pub fn assert_is_not_equal<let N: u32, let MOD_BITS: u32>(
     assert(!eq::<N, MOD_BITS>(params, lhs, rhs), "assert_is_not_equal fail");
 }
 
-/// Compute modular equality under normalized BigNum parameters.
+/// Compute whether `lhs == rhs (mod MOD)`
 ///
-/// Exact over the operand envelope `value < 2^(MOD_BITS+1)` for every
-/// supported layout (N >= 1, 1 <= TOP_BITS <= 120): lower limbs are 120-bit
-/// and the top limb may carry one bit beyond TOP_BITS, which covers canonical
-/// values and the permitted lazy aliases (RuntimeBigNum equality included).
-/// The modulus premise (normalized, exactly MOD_BITS significant bits) is
-/// checked in-circuit, including for runtime parameters constructed without
-/// `BigNumParams::new`.
+/// Returns the exact modular equality flag for operands below `2^(MOD_BITS+1)`, so a
+/// non-canonical value compares equal to its canonical residue (e.g. `MOD + 1` and `1`).
+/// Fails if the inputs do not pass `validate_eq_inputs`.
 ///
-/// The prover supplies `r` (the canonical residue of lhs - rhs mod MOD),
-/// a shifted quotient `k = q_shift - 4` and biased chain carries, and the
-/// circuit asserts the integer identity `lhs - rhs = k*MOD + r`. The flag is
-/// then decided from `r` alone; see `eq_with_hints` for the exactness
-/// argument. No native-field packing shortcut or subtraction hint is used.
+/// ## Constrained path
+/// The prover supplies the canonical residue `r` of `lhs - rhs`, a quotient
+/// `k = q_shift - 4` and the carries of the limb-wise subtraction. `eq_with_hints`
+/// constrains `lhs - rhs = k * MOD + r` over the integers, and the flag is
+/// `r == 0 || r == MOD`. See `eq_with_hints` for soundness and completeness.
+///
+/// ## Unconstrained path
+/// When unconstrained, `eq` skips the hints and compares the reduced operands directly
+/// (`__eq_mod`). Inputs are validated before branching, so both paths return the same
+/// flag and fail on the same inputs with the same messages.
 pub fn eq<let N: u32, let MOD_BITS: u32>(
     params: &BigNumParams<N, MOD_BITS>,
     lhs: &[u128; N],
@@ -327,11 +326,16 @@ pub fn eq<let N: u32, let MOD_BITS: u32>(
 
 /// Validate the inputs accepted by `eq`
 ///
-/// Constrains:
-///     - the modulus to be exactly `MOD_BITS` bits long (runtime parameters may be
-///       constructed without `BigNumParams::new`), and
-///     - each operand to be below `2^(MOD_BITS+1)` with 120-bit lower limbs, which
-///       admits the lazy aliases produced by other operations.
+/// Checks that:
+///     - `MOD_BITS` puts the top bit of the modulus in the top limb (at compile time),
+///     - the modulus is exactly `MOD_BITS` bits long (see `validate_modulus`), since
+///       runtime parameters may be constructed without `BigNumParams::new`, and
+///     - each operand is below `2^(MOD_BITS+1)`, with 120-bit lower limbs.
+///
+/// Values produced by this library are range-checked to `MOD_BITS` bits; the extra bit
+/// also accepts larger limb arrays passed in directly by the caller.
+///
+/// From constrained code these are constraints; when unconstrained they are assertions.
 fn validate_eq_inputs<let N: u32, let MOD_BITS: u32>(
     params: &BigNumParams<N, MOD_BITS>,
     lhs: &[u128; N],
@@ -346,23 +350,37 @@ fn validate_eq_inputs<let N: u32, let MOD_BITS: u32>(
     validate_in_range::<N, MOD_BITS + 1>(rhs);
 }
 
-/// Constrained core of `eq`, split out so adversarial hints can be tested.
+/// Constrained core of `eq`, split out so adversarial hints can be tested
 ///
-/// Assumes `validate_eq_inputs` has been called on `params`, `lhs` and `rhs`.
+/// ## Assumptions
+/// `validate_eq_inputs` has been called on `params`, `lhs` and `rhs`, so:
+///     - `2^(MOD_BITS - 1) <= MOD < 2^MOD_BITS`, and
+///     - `lhs, rhs < 2^(MOD_BITS+1)`, with 120-bit lower limbs.
 ///
-/// Soundness: each per-limb field equation has every term below 2^124 << p
-/// (operand limbs and r limbs are range-checked, |k| <= 4 after the 3-bit
-/// check on q_shift, |carry| <= 8 after the 4-bit checks), so it holds over
-/// the integers; telescoping the chain gives lhs - rhs = k*MOD + r over the
-/// integers, hence r == lhs - rhs (mod MOD). The modulus premise gives
-/// MOD >= 2^(MOD_BITS-1), so r < 2^MOD_BITS <= 2*MOD and the only values of
-/// r congruent to 0 are 0 and MOD: the returned flag is forced to
-/// `lhs == rhs (mod MOD)` for every witness satisfying the constraints.
+/// `eq` guarantees this; any other caller must too.
 ///
-/// Completeness: an honest prover always holds the canonical residue r < MOD,
-/// a quotient k in -4..=3 (|lhs - rhs| < 2^(MOD_BITS+1) <= 4*MOD and
-/// 0 <= r < MOD) and chain carries of magnitude at most 4, so every
-/// assertion passes for equal and unequal operands alike.
+/// ## Soundness
+/// This function range-checks the hints:
+///     - `r < 2^MOD_BITS`, with 120-bit lower limbs,
+///     - `q_shift < 2^3`, so `k = q_shift - 4` is in `-4..=3`, and
+///     - `carry_shift[i] < 2^4`, so `c[i] = carry_shift[i] - 8` is in `-8..=7`,
+///
+/// and constrains, with `c[-1] = 0`:
+///
+///     lhs[i]     - rhs[i]     + c[i - 1] - k * MOD[i]     - r[i]     = c[i] * 2^{120},   i = 0..N-2
+///     lhs[N - 1] - rhs[N - 1] + c[N - 2] - k * MOD[N - 1] - r[N - 1] = 0
+///
+/// Under the assumptions every term is below `2^124` in absolute value, far below the
+/// circuit field modulus, so each equation holds over the integers. Summing them with
+/// weights `2^{120 * i}` gives `lhs - rhs = k * MOD + r` over the integers, hence
+/// `r == lhs - rhs (mod MOD)`. Since `r < 2^MOD_BITS <= 2 * MOD`, the only values of `r`
+/// congruent to zero are `0` and `MOD`, so the returned flag `is_zero(r)` equals
+/// `lhs == rhs (mod MOD)` for every satisfying witness.
+///
+/// ## Completeness
+/// The honest hints from `__eq_hints` have `0 <= r < MOD`. Since
+/// `|lhs - rhs| < 2^(MOD_BITS+1) <= 4 * MOD`, the quotient `k` is in `-4..=3`, and the
+/// carries have magnitude at most 4, so every check passes for equal and unequal operands.
 pub(crate) fn eq_with_hints<let N: u32, let MOD_BITS: u32>(
     params: &BigNumParams<N, MOD_BITS>,
     lhs: &[u128; N],
@@ -371,7 +389,7 @@ pub(crate) fn eq_with_hints<let N: u32, let MOD_BITS: u32>(
     r: &[u128; N],
     carry_shift: &[u128; N - 1],
 ) -> bool {
-    // Hint envelope: r < 2^MOD_BITS with 120-bit limbs, k = q_shift - 4 in -4..=3.
+    // Hint ranges: r < 2^MOD_BITS with 120-bit lower limbs, k = q_shift - 4 in -4..=3.
     validate_in_range::<N, MOD_BITS>(r);
     (q_shift as Field).assert_max_bit_size::<3>();
     let k: Field = (q_shift as Field) - 4;
@@ -473,12 +491,13 @@ pub fn assert_is_not_zero<let N: u32, let MOD_BITS: u32>(
 /// Check whether a `BigNum` value is zero modulo `MOD`.
 ///
 /// This treats both the all-zero limb vector and `params.modulus` as
-/// representing zero. It assumes that all valid `BigNum` values are
-/// range-constrained so that no other representatives of `0 (mod MOD)`
-/// can appear.
+/// representing zero. It assumes `val < 2^MOD_BITS` (not checked here): since
+/// `MOD >= 2^(MOD_BITS - 1)`, `0` and `MOD` are then the only representatives
+/// of `0 (mod MOD)`.
 ///
 /// ## Note
-/// This is cheaper than calling `eq(val, [0; N])`
+/// This is cheaper than calling `eq(val, [0; N])`, but unlike `eq` it does not
+/// accept operands in `[2^MOD_BITS, 2^(MOD_BITS+1))`: e.g. `is_zero(2 * MOD)` is `false`.
 pub fn is_zero<let N: u32, let MOD_BITS: u32>(
     params: &BigNumParams<N, MOD_BITS>,
     val: &[u128; N],
