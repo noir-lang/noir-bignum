@@ -8,7 +8,7 @@
 
 use crate::fields::bn254Fq::BN254_Fq_PARAMS;
 use crate::fns::constrained_ops::eq_with_hints;
-use crate::tests::eq_fixtures::BN254_MODULUS;
+use crate::tests::eq_fixtures::{BN254_MODULUS, BN254_TWO_MODULUS, unchecked_params};
 use std::hint::black_box;
 
 // Biased encodings: q_shift = k + 4, carry_shift[i] = carry + 8.
@@ -148,21 +148,54 @@ fn test_eq_hint_oversized_carry_rejects() {
 }
 
 #[test(should_fail_with = "call to assert_max_bit_size")]
-fn test_eq_hint_oversized_residue_rejects() {
-    // Residue 2*MOD is consistent with the chain for equal operands (k = -2),
-    // but exceeds 2^MOD_BITS: without the residue range check it would let a
-    // third representative of zero through, so it must be rejected.
-    let mut two_q: [u128; 3] = [0; 3];
-    for i in 0..3 {
-        two_q[i] = 2 * BN254_MODULUS[i];
-    }
+fn test_eq_hint_oversized_residue_low_limb_rejects() {
+    // lhs - rhs = 2^120, with the residue presented as the single 121-bit low
+    // limb [2^120, 0, 0], k = 0 and carries [-1, 0]. The chain balances and the
+    // top limb is in range, so the 120-bit bound on the residue's lower limbs
+    // is the only check that rejects this encoding.
+    let _ = eq_with_hints(
+        &BN254_Fq_PARAMS,
+        &black_box([0x0, 0x1, 0x0]),
+        &black_box([0x0, 0x0, 0x0]),
+        Q_ZERO,
+        &black_box([0x1000000000000000000000000000000, 0x0, 0x0]),
+        &black_box([7, 8]),
+    );
+}
+
+#[test(should_fail_with = "call to assert_max_bit_size")]
+fn test_eq_hint_two_modulus_residue_rejects() {
+    // Residue 2*MOD for equal operands, with k = -2 and carries [1, 0]. The
+    // chain balances and every lower limb is in range, so the top-limb bound
+    // `r < 2^MOD_BITS` is the only check that rejects this third
+    // representative of zero. `is_zero(r)` would report "not equal" for it.
     let a = black_box([0x0, 0x0, 0x0]);
     let _ = eq_with_hints(
         &BN254_Fq_PARAMS,
         &a,
         &a,
         black_box(2),
-        &black_box(two_q),
-        &CARRIES_ZERO,
+        &black_box(BN254_TWO_MODULUS),
+        &black_box([9, 8]),
+    );
+}
+
+#[test]
+fn test_eq_hint_two_modulus_residue_needs_top_limb_bound() {
+    // Control for the test above: the same operands and hints with the residue
+    // bound loosened by one bit (MOD_BITS = 255 over the same modulus). Every
+    // remaining check passes and equal operands are reported as not equal, so
+    // the rejection above comes from the top-limb bound alone.
+    let params = unchecked_params::<3, 255>(BN254_MODULUS);
+    let a = black_box([0x0, 0x0, 0x0]);
+    assert(
+        !eq_with_hints(
+            &params,
+            &a,
+            &a,
+            black_box(2),
+            &black_box(BN254_TWO_MODULUS),
+            &black_box([9, 8]),
+        ),
     );
 }

@@ -85,22 +85,20 @@ fn test_eq_two_limb_carry() {
     assert(b != a);
 }
 
-#[test(should_fail_with = "unequal values compared equal")]
-fn test_eq_wrong_flag_rejects() {
-    assert(
-        black_box(BN254_Fq::from_limbs([0x0, 0x0, 0x0]))
-            == black_box(BN254_Fq::from_limbs([0x1, 0x0, 0x0])),
-        "unequal values compared equal",
-    );
+#[test]
+fn test_eq_distinct_values_not_equal() {
+    let a = black_box(BN254_Fq::from_limbs([0x0, 0x0, 0x0]));
+    let b = black_box(BN254_Fq::from_limbs([0x1, 0x0, 0x0]));
+    assert(a != b);
+    assert(b != a);
 }
 
-#[test(should_fail_with = "unequal values compared equal")]
-unconstrained fn test_eq_wrong_flag_rejects_unconstrained() {
-    assert(
-        black_box(BN254_Fq::from_limbs([0x0, 0x0, 0x0]))
-            == black_box(BN254_Fq::from_limbs([0x1, 0x0, 0x0])),
-        "unequal values compared equal",
-    );
+#[test]
+unconstrained fn test_eq_distinct_values_not_equal_unconstrained() {
+    let a = black_box(BN254_Fq::from_limbs([0x0, 0x0, 0x0]));
+    let b = black_box(BN254_Fq::from_limbs([0x1, 0x0, 0x0]));
+    assert(a != b);
+    assert(b != a);
 }
 
 #[test(should_fail_with = "call to assert_max_bit_size")]
@@ -173,8 +171,8 @@ unconstrained fn test_eq_unconstrained_quotient_extremes() {
 }
 
 fn quotient_extreme_controls() {
-    // MOD = 2^240 + 1 is barely normalized, so the envelope 2^242 reaches
-    // almost 4*MOD and the honest quotient attains both extremes: 4 vs
+    // MOD = 2^240 + 1 is the smallest 241-bit modulus, so operands below 2^242
+    // reach almost 4*MOD and the honest quotient attains both extremes: 4 vs
     // 3*MOD + 5 needs k = -4 (borrowing a modulus for the residue MOD - 1)
     // and k = +3 in the swapped direction.
     let params = unchecked_params::<3, 241>([0x1, 0x0, 0x1]);

@@ -2,7 +2,8 @@ use crate::bignum::BigNum;
 use crate::constants::GRUMPKIN_MODULUS;
 use crate::fns::constrained_ops::{assert_is_not_equal, assert_is_not_zero};
 use crate::tests::eq_fixtures::{
-    BN254_LAZY_MAX, BN254_MODULUS, BN254_MODULUS_PLUS_ONE, LIMB_MAX, unchecked_params,
+    BN254_LAZY_MAX, BN254_MODULUS, BN254_MODULUS_PLUS_ONE, BN254_TWO_MODULUS, LIMB_MAX,
+    unchecked_params,
 };
 
 use crate::fields::bls12_381Fq::BLS12_381_Fq;
@@ -133,4 +134,16 @@ fn test_neq_generic_two_modulus_nonzero_rejected() {
 unconstrained fn test_neq_generic_two_modulus_nonzero_rejected_unconstrained() {
     let params = unchecked_params::<4, 361>(black_box([0, 0, 0, 1]));
     assert_is_not_zero(&params, &black_box([0, 0, 0, 2]));
+}
+
+#[test(should_fail_with = "assert_is_not_equal fail")]
+fn test_neq_two_modulus_not_zero_rejects() {
+    let two_mod = black_box(BN254_Fq::from_limbs_unsafe(BN254_TWO_MODULUS));
+    two_mod.assert_is_not_zero();
+}
+
+#[test(should_fail_with = "assert_is_not_equal fail")]
+unconstrained fn test_neq_two_modulus_not_zero_rejects_unconstrained() {
+    let two_mod = black_box(BN254_Fq::from_limbs_unsafe(BN254_TWO_MODULUS));
+    two_mod.assert_is_not_zero();
 }
