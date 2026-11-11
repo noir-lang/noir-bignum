@@ -674,13 +674,26 @@ pub fn validate_in_field<let N: u32, let MOD_BITS: u32>(
 
 /// Compare two `BigNum` values, returning their `Ordering`.
 ///
-/// Performs a strict integer comparison over the limb representation,
+/// Performs an integer comparison of the values `sum(limb[i] * 2^(120 * i))`,
 /// **not** modular ordering.
 ///
 /// ## Safety
-/// Both operands **must** be in canonical form (i.e. in `[0, MOD)`).
-/// Call `validate_in_field` on each operand before comparing, otherwise
-/// non-canonical representations (e.g. `MOD` vs `0`) will produce incorrect results.
+/// For modular ordering both operands **must** be in `[0, MOD)`: call
+/// `validate_in_field` on each operand first, otherwise representatives of the
+/// same residue (e.g. `MOD` vs `0`) compare as different integers.
+///
+/// ## Soundness
+/// `Equal` is decided on the constrained difference `a - b`, not on the limb
+/// arrays. Its limbs are range-checked, so it is the integer zero exactly when
+/// the two integers are equal. An operand with an unnormalised limb (for example
+/// `[2^120, 0, 0]` against `[0, 1, 0]`) therefore never compares `Less` or
+/// `Greater` to an equal integer.
+///
+/// ## Completeness
+/// The difference must normalise with borrows in {0, 1}. Operands with limbs in
+/// range (`from_limbs` or `validate_in_range`) always do. Other unnormalised
+/// operands can make cmp fail (for example `[2^120, 0, 1]` against
+/// `[0, 2^120 + 1, 0]`, the same integer); it never returns a wrong order.
 pub fn cmp<let N: u32, let MOD_BITS: u32>(lhs: &[u128; N], rhs: &[u128; N]) -> Ordering {
     // Safety: underflow and borrow_flags are constrained by `assert_sub_no_overflow`:
     // - we swap (a, b) based on underflow, then compute a - b
@@ -696,9 +709,12 @@ pub fn cmp<let N: u32, let MOD_BITS: u32>(lhs: &[u128; N], rhs: &[u128; N]) -> O
     };
 
     // Enforce correctness of `underflow` by asserting that the subtraction does not overflow.
-    let _: [u128; N] = assert_sub_no_overflow::<N, MOD_BITS>(&a, &b, &borrow_flags);
+    let difference: [u128; N] = assert_sub_no_overflow::<N, MOD_BITS>(&a, &b, &borrow_flags);
 
-    if *lhs == *rhs {
+    // `difference` is the integer a - b >= 0 with range-checked limbs, so it is
+    // zero exactly when lhs and rhs are equal integers. A limb-array comparison
+    // would call two encodings of one integer unequal.
+    if is_zero_integer(&difference) {
         Ordering::equal()
     } else if underflow {
         Ordering::less()
