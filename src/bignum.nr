@@ -307,12 +307,8 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
 
     /// Asserts that `self != other (mod MOD)`.
     ///
-    /// # Performance Note
-    /// This is cheaper than `assert(self != other)` because it avoids creating a boolean result.
-    ///
-    /// # Soundness
-    /// Sound for `MOD < circuit_field_modulus`. For very large moduli approaching the circuit
-    /// field size, there's a negligible (~3/p) probability of false positives.
+    /// Equivalent to `assert(self != other)`: a non-canonical value is equal to its
+    /// canonical residue, so e.g. `MOD + 1` and `1` fail this assertion.
     fn assert_is_not_equal(&self, other: &Self);
 
     /// Returns `true` if `self == 0 (mod MOD)`.
@@ -335,7 +331,8 @@ pub trait BigNum: Neg + Add + Sub + Mul + Div + Eq {
     /// Asserts that `self != 0 (mod MOD)`.
     ///
     /// # Performance Note
-    /// Cheaper than `assert(!self.is_zero())` or `assert(self != BigNum::zero())`.
+    /// Costs about the same as `assert(self != BigNum::zero())`. Values produced by this
+    /// library are below `2^MOD_BITS`; for those, `assert(!self.is_zero())` is cheaper.
     fn assert_is_not_zero(&self);
 
     /// Asserts that at least one limb is non-zero (integer assertion).

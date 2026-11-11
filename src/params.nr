@@ -1,5 +1,5 @@
 use crate::constants::TWO_POW_120;
-use crate::fns::constrained_ops::validate_in_range;
+use crate::fns::constrained_ops::validate_modulus;
 
 pub struct BigNumParams<let N: u32, let MOD_BITS: u32> {
     pub has_multiplicative_inverse: bool,
@@ -30,16 +30,7 @@ impl<let N: u32, let MOD_BITS: u32> BigNumParams<N, MOD_BITS> {
         modulus: [u128; N],
         redc_param: [u128; N],
     ) -> Self {
-        // Validate that each limb fits in the expected bit width
-        validate_in_range::<N, MOD_BITS>(&modulus);
-
-        // Validate that the top limb is at least 2^(TOP_LIMB_BITS - 1),
-        // i.e. the modulus truly occupies MOD_BITS bits.
-        // This checks: 0 <= top_limb - 2^(TOP_LIMB_BITS - 1) < 2^(TOP_LIMB_BITS - 1)
-        let top_limb: Field = modulus[N - 1] as Field;
-        let top_limb_bits: u128 = (MOD_BITS - (N - 1) * 120) as u128;
-        let min_top_limb: Field = (1u128 << (top_limb_bits - 1)) as Field;
-        (top_limb - min_top_limb).assert_max_bit_size::<MOD_BITS - (N - 1) * 120 - 1>();
+        validate_modulus::<N, MOD_BITS>(&modulus);
 
         Self {
             has_multiplicative_inverse,
